@@ -12,6 +12,7 @@
 		1996F1B1FD8D70AA4D392B8C /* SearchScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E32BD62CC791873C3A7A608 /* SearchScreen.swift */; };
 		1E175B4FF263E6770D7C1839 /* TmdbRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86FBA348377EC44BFBE7EC09 /* TmdbRepository.swift */; };
 		1FB9569D58719ABED90F0567 /* SyncCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBE5FB38FD8FE5B487B86D93 /* SyncCenter.swift */; };
+		28152517806110B333079052 /* SyncPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD623CC54E5A9952AA82575 /* SyncPayloadTests.swift */; };
 		2A497648C322AF0445BEAB2A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B9DE79D777B1AC1C13B7C4 /* Models.swift */; };
 		3C336A87AA8C3B19FB804832 /* Http.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAA23F4629A957505B6BE7AC /* Http.swift */; };
 		3F0F62B255B75F9700219AD3 /* AnimeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30EEC41F5BE5DCB3460A6AB /* AnimeRepository.swift */; };
@@ -42,6 +43,16 @@
 		F3D9EBB4C750533DD82AF260 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F826764731B47B908379C757 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B511AF39A3D96388430052F0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 79D3EA9CF9B810E6AC88298C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6663376BFD308C57FAF52528;
+			remoteInfo = Omniverse;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		0CD65CEB96516568A8A8B088 /* DeviceTuning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceTuning.swift; sourceTree = "<group>"; };
 		1318A83A4D2B8F41A2045B8F /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
@@ -66,6 +77,7 @@
 		A79ADA91B89A4D5F03635923 /* OnePaceResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnePaceResolver.swift; sourceTree = "<group>"; };
 		BA5EB3E7F2AB1E730BBE5582 /* MediaDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailScreen.swift; sourceTree = "<group>"; };
 		BBE5FB38FD8FE5B487B86D93 /* SyncCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCenter.swift; sourceTree = "<group>"; };
+		BFFC1FE1B14C083EFD357DAD /* OmniverseTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OmniverseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C58CEC98CC3D4711E6420DFD /* LiquidGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlass.swift; sourceTree = "<group>"; };
 		C8D672DE8C833A62A4868125 /* PlayerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerScreen.swift; sourceTree = "<group>"; };
 		C8DA3D9C9A3428C32E36E370 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -77,6 +89,7 @@
 		E56604E7184697AD1040472F /* VidsrcResolveScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VidsrcResolveScreen.swift; sourceTree = "<group>"; };
 		F65C1AA10BF5C2F6DE5694D6 /* RecommendationsEndOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationsEndOverlay.swift; sourceTree = "<group>"; };
 		F826764731B47B908379C757 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FAD623CC54E5A9952AA82575 /* SyncPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPayloadTests.swift; sourceTree = "<group>"; };
 		FED50F57CF7C1173D6A9E43D /* OnePaceScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnePaceScreen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -108,6 +121,7 @@
 			isa = PBXGroup;
 			children = (
 				4AA2A41855BB130DDC356346 /* Omniverse.app */,
+				BFFC1FE1B14C083EFD357DAD /* OmniverseTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -118,6 +132,14 @@
 				DAA23F4629A957505B6BE7AC /* Http.swift */,
 			);
 			path = Networking;
+			sourceTree = "<group>";
+		};
+		22E6700E5C0218FDF4D7B454 /* OmniverseTests */ = {
+			isa = PBXGroup;
+			children = (
+				FAD623CC54E5A9952AA82575 /* SyncPayloadTests.swift */,
+			);
+			path = OmniverseTests;
 			sourceTree = "<group>";
 		};
 		2FC26C1C8F4E7441CD87F193 /* Models */ = {
@@ -198,6 +220,7 @@
 			isa = PBXGroup;
 			children = (
 				440B3E0335F781266D29AD04 /* Omniverse */,
+				22E6700E5C0218FDF4D7B454 /* OmniverseTests */,
 				14D56E6248B257F6CB785A80 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -223,6 +246,24 @@
 			productReference = 4AA2A41855BB130DDC356346 /* Omniverse.app */;
 			productType = "com.apple.product-type.application";
 		};
+		9D4318CCFABF2B813B8470BC /* OmniverseTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00CC88E999485AD1A027B976 /* Build configuration list for PBXNativeTarget "OmniverseTests" */;
+			buildPhases = (
+				FB00760454B9B6E28E5762A2 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0E8B6E278E53C5B0DF7EFC79 /* PBXTargetDependency */,
+			);
+			name = OmniverseTests;
+			packageProductDependencies = (
+			);
+			productName = OmniverseTests;
+			productReference = BFFC1FE1B14C083EFD357DAD /* OmniverseTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -233,6 +274,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					6663376BFD308C57FAF52528 = {
+						DevelopmentTeam = 53RF8LL39N;
+						ProvisioningStyle = Automatic;
+					};
+					9D4318CCFABF2B813B8470BC = {
 						DevelopmentTeam = 53RF8LL39N;
 						ProvisioningStyle = Automatic;
 					};
@@ -253,6 +298,7 @@
 			projectRoot = "";
 			targets = (
 				6663376BFD308C57FAF52528 /* Omniverse */,
+				9D4318CCFABF2B813B8470BC /* OmniverseTests */,
 			);
 		};
 /* End PBXProject section */
@@ -308,7 +354,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FB00760454B9B6E28E5762A2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				28152517806110B333079052 /* SyncPayloadTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0E8B6E278E53C5B0DF7EFC79 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6663376BFD308C57FAF52528 /* Omniverse */;
+			targetProxy = B511AF39A3D96388430052F0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3B4C01CA9DAD11D8C543CCB5 /* Release */ = {
@@ -463,6 +525,42 @@
 			};
 			name = Release;
 		};
+		C0732905894CAA27150870AC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.finix.omniverse.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Omniverse.app/Omniverse";
+			};
+			name = Debug;
+		};
+		D5AD87CC909AD3D18D1EAA46 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.finix.omniverse.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Omniverse.app/Omniverse";
+			};
+			name = Release;
+		};
 		F21813472C100446042ECA9F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -487,6 +585,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		00CC88E999485AD1A027B976 /* Build configuration list for PBXNativeTarget "OmniverseTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0732905894CAA27150870AC /* Debug */,
+				D5AD87CC909AD3D18D1EAA46 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		21A46C0A33B1178680E4275A /* Build configuration list for PBXProject "Omniverse" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
