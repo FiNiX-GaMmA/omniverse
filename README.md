@@ -4,11 +4,25 @@
   <strong>The ultimate, ultra-premium media companion app for your iOS, iPadOS, Android, and Android TV devices. Completely native, blazing fast, and privately yours.</strong>
 </p>
 
-<p align="center">
-  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Language-Kotlin%20%7C%20Swift-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin & Swift" /></a>
-  <a href="#platforms"><img src="https://img.shields.io/badge/UI-Jetpack%20Compose%20%7C%20SwiftUI-E3008C?style=for-the-badge" alt="UI" /></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-4fc921?style=for-the-badge" alt="License" /></a>
-</p>
+<div align="center">
+
+### Repository Metadata
+
+| Category | Badges |
+| :--- | :--- |
+| **License** | [![License](https://img.shields.io/badge/License-MIT-4fc921?style=flat-square)](LICENSE) |
+| **Platforms** | [![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20iPadOS%20%7C%20Android%20%7C%20Android%20TV-E3008C?style=flat-square)](#) |
+| **Languages** | [![Kotlin](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org) [![Swift](https://img.shields.io/badge/Language-Swift-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org) |
+| **Frameworks** | [![Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-3DDC84?style=flat-square&logo=android&logoColor=white)](#) [![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-007ACC?style=flat-square&logo=swift&logoColor=white)](#) |
+| **Dev Tools** | [![Linter](https://img.shields.io/badge/Linter-ktlint%20%7C%20swiftlint-blueviolet?style=flat-square)](#) |
+
+### Build & Test Automation Status
+
+| Branch | Pipeline Status | Unit Tests |
+| :--- | :--- | :--- |
+| **Main** | [![Native Enterprise Build Artifacts](https://github.com/FiNiX-GaMmA/omniverse/actions/workflows/build.yml/badge.svg)](https://github.com/FiNiX-GaMmA/omniverse/actions) | [![Tests (Kotlin)](https://img.shields.io/badge/Tests_Kotlin-passing-brightgreen?style=flat-square)](#) [![Tests (Swift)](https://img.shields.io/badge/Tests_Swift-passing-brightgreen?style=flat-square)](#) |
+
+</div>
 
 ---
 
@@ -34,7 +48,7 @@ No trackers, no central servers, and completely open source. Your watch history,
 
 ### 🍿 3. Clean "Continue Watching" Shelf
 *   **No Clutter**: Unlike other apps that list separate entries for every single episode you watched, Omniverse groups progress by show.
-*   **One Card Per Show**: You'll see exactly one card for *"Attack on Titan"* or *"Inception"*, showing your latest watched episode badge. Tap it, and it resumes exactly from where you paused!
+*   **One Card Per Show**: You'll see exactly one unified card representing your favorite TV show, movie, or anime series, displaying a badge with your last watched progress. Simply select it to resume playback exactly from where you paused!
 
 ### 🔄 4. Silky 120Hz Fluid Rendering & Landscape-Lock
 *   **Silky Smooth**: Supports Apple ProMotion and Android high-refresh displays to render animations, transitions, and sliders at a beautiful, stutter-free **120 frames per second**.

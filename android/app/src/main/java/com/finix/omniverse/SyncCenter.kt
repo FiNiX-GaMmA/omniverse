@@ -34,7 +34,7 @@ object SyncCenter {
         // omitted — they bloat the QR past a scannable density. After scanning,
         // the Trakt tokens above let the device pull the AniList token, settings,
         // watch history and watchlist from the cloud backup automatically.
-        val b64 = Base64.encodeToString(obj.toString().toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+        val b64 = encodeBase64(obj.toString().toByteArray(Charsets.UTF_8))
         return PREFIX + b64
     }
 
@@ -49,14 +49,54 @@ object SyncCenter {
 
         // Try decoding with DEFAULT, NO_WRAP, and URL_SAFE.
         val decodedString = runCatching {
-            String(Base64.decode(b64, Base64.DEFAULT), Charsets.UTF_8)
+            String(decodeBase64(b64), Charsets.UTF_8)
         }.recoverCatching {
-            String(Base64.decode(b64, Base64.NO_WRAP), Charsets.UTF_8)
+            String(decodeBase64NoWrap(b64), Charsets.UTF_8)
         }.recoverCatching {
-            String(Base64.decode(b64, Base64.URL_SAFE), Charsets.UTF_8)
+            String(decodeBase64UrlSafe(b64), Charsets.UTF_8)
         }.getOrNull() ?: return null
 
         return runCatching { JSONObject(decodedString) }.getOrNull()
+    }
+
+    private fun decodeBase64(s: String): ByteArray {
+        return try {
+            Base64.decode(s, Base64.DEFAULT)
+        } catch (e: NoClassDefFoundError) {
+            java.util.Base64.getDecoder().decode(s)
+        } catch (e: RuntimeException) {
+            java.util.Base64.getDecoder().decode(s)
+        }
+    }
+
+    private fun decodeBase64NoWrap(s: String): ByteArray {
+        return try {
+            Base64.decode(s, Base64.NO_WRAP)
+        } catch (e: NoClassDefFoundError) {
+            java.util.Base64.getDecoder().decode(s)
+        } catch (e: RuntimeException) {
+            java.util.Base64.getDecoder().decode(s)
+        }
+    }
+
+    private fun decodeBase64UrlSafe(s: String): ByteArray {
+        return try {
+            Base64.decode(s, Base64.URL_SAFE)
+        } catch (e: NoClassDefFoundError) {
+            java.util.Base64.getUrlDecoder().decode(s)
+        } catch (e: RuntimeException) {
+            java.util.Base64.getUrlDecoder().decode(s)
+        }
+    }
+
+    private fun encodeBase64(bytes: ByteArray): String {
+        return try {
+            Base64.encodeToString(bytes, Base64.NO_WRAP)
+        } catch (e: NoClassDefFoundError) {
+            java.util.Base64.getEncoder().withoutPadding().encodeToString(bytes)
+        } catch (e: RuntimeException) {
+            java.util.Base64.getEncoder().withoutPadding().encodeToString(bytes)
+        }
     }
 
     private fun putIfNotBlank(obj: JSONObject, key: String, value: String) {

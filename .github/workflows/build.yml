@@ -7,6 +7,9 @@ on:
     branches: ["main", "master"]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     name: Build Native Android App
@@ -25,6 +28,11 @@ jobs:
       - name: Make Gradle Wrapper Executable
         run: chmod +x android/gradlew
 
+      - name: Run Kotlin Unit Tests
+        run: |
+          cd android
+          ./gradlew testDebugUnitTest
+
       - name: Compile signed APK (Release)
         run: |
           cd android
@@ -39,10 +47,17 @@ jobs:
 
   build-ios:
     name: Build Native iOS App
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer || \
+          sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer || \
+          sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer || \
+          xcode-select -p
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -51,6 +66,14 @@ jobs:
         run: |
           cd ios
           xcodegen
+
+      - name: Run Swift Unit Tests
+        run: |
+          xcodebuild -project ios/Omniverse.xcodeproj \
+                     -scheme Omniverse \
+                     -sdk iphonesimulator \
+                     -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M5)' \
+                     test
 
       - name: Compile and Archive Swift App Bundle (Unsigned)
         run: |
@@ -78,3 +101,55 @@ jobs:
           name: Omniverse-ios-unsigned-ipa
           path: Omniverse-Unsigned.ipa
           if-no-files-found: error
+
+  publish-release:
+    name: Publish Production Release Assets
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Download Android Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Omniverse-android-release-apk
+          path: out_android
+
+      - name: Download iOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Omniverse-ios-unsigned-ipa
+          path: out_ios
+
+      - name: Package Release Assets
+        run: |
+          mkdir -p release_assets
+          cp out_android/app-release.apk release_assets/Omniverse.apk
+          cp out_ios/Omniverse-Unsigned.ipa release_assets/Omniverse-Unsigned.ipa
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0
+          name: Omniverse v1.0 Release
+          body: |
+            ## 🎉 Omniverse v1.0 — Native Revolution & Sync Mastery
+
+            This milestone release introduces the redesigned, 100% native architecture for iOS, iPadOS, and Android!
+
+            ### 📦 Installation Packages:
+            *   **Android Devices**: Download **`Omniverse.apk`** to install on any Android Mobile, Tablet, or Android TV.
+            *   **iOS/iPadOS Devices**: Download **`Omniverse-Unsigned.ipa`** to deploy/sideload on your Apple hardware.
+
+            ### ✨ Key Features:
+            *   **Zero-Config 1-Second Sync**: Private peer-to-peer-like Base64 QR pairing to sync settings and accounts without any centralized servers.
+            *   **Netflix-Style Autoplay Countdown**: 10-second circular progress countdown with auto-advance and D-pad/remote click support.
+            *   **Clean Continue Watching**: Unified per-show tracking (Netflix style) that dedupes history rows.
+            *   **silicate 120Hz ProMotion & Landscape Lock**: Silky-smooth rendering and absolute playback orientation locks.
+            *   **Unified Build & Deploy Tools**: Build and deploy directly via `./install_ipad.sh` and `./install_android.sh`!
+          draft: false
+          prerelease: false
+          files: |
+            release_assets/Omniverse.apk
+            release_assets/Omniverse-Unsigned.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
