@@ -68,3 +68,15 @@ targets:
               - omniverse
         UIBackgroundModes:
           - audio
+  OmniverseTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: OmniverseTests
+    dependencies:
+      - target: Omniverse
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.finix.omniverse.tests
+        GENERATE_INFOPLIST_FILE: YES
