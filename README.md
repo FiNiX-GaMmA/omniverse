@@ -94,6 +94,23 @@ If you have an Android device connected via USB with USB Debugging enabled:
 
 ---
 
+## 🔑 Required API Keys & Sync Configuration
+
+To keep Omniverse completely private, decentralized, and under your control, **the app connects directly to public media APIs using your own personal credentials**. You will need to provide your own API keys to enable core features like movie discovery, anime tracking, and cloud sync.
+
+For complete, step-by-step instructions on where to register and how to generate these keys, please refer to our dedicated guide:
+
+👉 **[Omniverse API Keys & Sync Configuration Guide](API_SETUP.md)** 👈
+
+### Overview of Supported Integrations:
+*   **TMDB Access Token** (*Required*): Movie & TV metadata, trending collections, poster art, and search results.
+*   **Trakt.tv Developer Keys** (*Highly Recommended*): Real-time play progress scrobbling, watchlist syncing, and fully encrypted configuration backup to your private account.
+*   **AniList Account** (*Highly Recommended for Anime*): Track watched anime episodes and sync listings.
+*   **Pixeldrain API Key** (*Recommended for One Pace*): Restores unrestricted streaming speeds and eliminates download caps on One Pace video files.
+*   **TVDB API Key & PIN** (*Optional*): Extended TV series metadata and live TV guide schedules.
+
+---
+
 ## 🏗️ Repository Architecture
 
 If you're a developer or just curious about how things are structured under the hood, here is the directory layout:
@@ -113,17 +130,6 @@ omniplay/
 ├── install_ipad.sh     # One-click iPad/iOS device installer
 └── install_android.sh  # One-click Android device installer
 ```
-
----
-
-## ☁️ Setting Up Sync Services
-
-To get the most out of Omniverse, we highly recommend linking a free **Trakt.tv** account:
-
-1.  Create a free account at [Trakt.tv](https://trakt.tv).
-2.  When you first launch Omniverse, tap **Connect Trakt.tv**.
-3.  Follow the simple on-screen activation prompt (or scan the QR code to log in on your phone).
-4.  Once linked, your watch progress, watchlists, settings, and custom API integrations will sync automatically across all of your devices!
 
 ---
 
