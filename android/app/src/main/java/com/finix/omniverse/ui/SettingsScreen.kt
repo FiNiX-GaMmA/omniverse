@@ -38,6 +38,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -302,15 +307,22 @@ fun SettingsScreen() {
     updateInfo?.let { info ->
         AlertDialog(
             onDismissRequest = { updateInfo = null },
-            title = { Text("Update available") },
+            title = { Text("Update available", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Black) },
             text = {
                 val notes = info.notes?.takeIf { it.isNotBlank() }
                 Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState())
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        "Version ${info.versionName} is available." + (notes?.let { "\n\n$it" } ?: ""),
+                        "Version ${info.versionName} is available.",
+                        color = LiquidColors.Cyan,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
                     )
+                    notes?.let {
+                        MarkdownText(it)
+                    }
                 }
             },
             confirmButton = {
@@ -453,3 +465,109 @@ private fun textColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = LiquidColors.Cyan, unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
     cursorColor = LiquidColors.Cyan,
 )
+
+@Composable
+private fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val lines = markdown.split("\n")
+        for (line in lines) {
+            val trimmed = line.trim()
+            if (trimmed.isEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                continue
+            }
+
+            when {
+                // Headers (H1, H2, H3, H4)
+                trimmed.startsWith("#") -> {
+                    val hashCount = trimmed.takeWhile { it == '#' }.length
+                    val headerText = trimmed.drop(hashCount).trim()
+                    if (headerText.isNotEmpty()) {
+                        val fontSize = when (hashCount) {
+                            1 -> 22.sp
+                            2 -> 18.sp
+                            3 -> 15.sp
+                            else -> 14.sp
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = parseInlineMarkdown(headerText),
+                            color = Color.White,
+                            fontSize = fontSize,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 2.dp)
+                        )
+                    }
+                }
+                // Bullet list item
+                trimmed.startsWith("* ") || trimmed.startsWith("- ") -> {
+                    val content = trimmed.drop(2).trim()
+                    Row(
+                        modifier = Modifier.padding(start = 12.dp, top = 2.dp, bottom = 2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("•", color = LiquidColors.Cyan, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = parseInlineMarkdown(content),
+                            color = Color.White.copy(alpha = 0.85f),
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp
+                        )
+                    }
+                }
+                // Standard paragraph text
+                else -> {
+                    Text(
+                        text = parseInlineMarkdown(trimmed),
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun parseInlineMarkdown(text: String): AnnotatedString {
+    return buildAnnotatedString {
+        var i = 0
+        while (i < text.length) {
+            when {
+                text.startsWith("**", i) -> {
+                    val end = text.indexOf("**", i + 2)
+                    if (end != -1) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color.White)) {
+                            append(text.substring(i + 2, end))
+                        }
+                        i = end + 2
+                    } else {
+                        append("**")
+                        i += 2
+                    }
+                }
+                text.startsWith("`", i) -> {
+                    val end = text.indexOf("`", i + 1)
+                    if (end != -1) {
+                        withStyle(SpanStyle(
+                            fontFamily = FontFamily.Monospace,
+                            color = Color(0xFFE2E2E2),
+                            background = Color.White.copy(alpha = 0.12f)
+                        )) {
+                            append(" " + text.substring(i + 1, end) + " ")
+                        }
+                        i = end + 1
+                    } else {
+                        append("`")
+                        i += 1
+                    }
+                }
+                else -> {
+                    append(text[i])
+                    i++
+                }
+            }
+        }
+    }
+}

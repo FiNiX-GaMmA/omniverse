@@ -57,10 +57,15 @@ No trackers, no central servers, and completely open source. Your watch history,
 ### 🏴‍☠️ 5. Dedicated "One Pace" & Anime Support
 *   **One Pace Integration**: Automatically scrapes and resolves One Pace arcs, mapping them to standard episode indexes seamlessly.
 *   **Auto-Skip Intros & Outros**: Features deep **AniSkip integration** to automatically skip intro scenes, recaps, and endings.
+*   **One Pace AniSkip Guard**: Automatically detects and disables AniSkip for One Pace's custom-edited timelines to prevent incorrect skips, while keeping AniSkip fully functional for standard anime series—including standard **One Piece** episodes!
 *   **Pro Subtitles & Dual Audio**: Supports complex `.ass` subtitle files and dual-audio (Japanese subbed/English dubbed) stream switching natively.
 
 ### 📺 6. Real Android TV Leanback Support
 *   **TV Parity**: A gorgeous, dedicated layout designed for your TV screen. Focus halos, scale-up highlights, and full native support for your Android TV remote/D-pad.
+
+### 🚀 7. Continuous In-App Update Engine
+*   **Dynamic OTA Updates**: Increments release versions automatically on every push, allowing you to install updates in-place without losing watch history, accounts, or settings.
+*   **Rich Native Markdown Renderer**: Beautiful in-app updater that parses release notes on-the-fly, displaying headers, cyan bullet points, bolds, and monospaced code blocks inside a fully scrollable viewport.
 
 ---
 
