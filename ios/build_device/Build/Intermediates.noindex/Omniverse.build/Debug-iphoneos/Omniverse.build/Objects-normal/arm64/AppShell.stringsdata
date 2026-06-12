@@ -1,0 +1,16 @@
+{
+  "source": "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/AppShell.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Omniverse",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 210
+        }
+      }
+    ]
+  },
+  "version": 1
+}

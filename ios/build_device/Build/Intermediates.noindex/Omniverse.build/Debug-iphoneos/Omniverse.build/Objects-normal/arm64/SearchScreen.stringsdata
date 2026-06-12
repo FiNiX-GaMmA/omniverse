@@ -1,0 +1,40 @@
+{
+  "source": "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/SearchScreen.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Search movies and TV shows",
+        "location": {
+          "startingColumn": 62,
+          "startingLine": 64
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 64
+        }
+      },
+      {
+        "comment": "",
+        "key": "Search Anything in Omniverse",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 121
+        }
+      },
+      {
+        "comment": "",
+        "key": "Type a movie, TV show, or anime title. We search Omniverse for matches and open the same detail screen as the home rows — sources included.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 124
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,40 @@
+{
+  "source": "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/MediaDetailScreen.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%@%@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "No episodes loaded for this season.",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 178
+        }
+      },
+      {
+        "comment": "",
+        "key": "EPISODE %lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 196
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ • %@",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 280
+        }
+      }
+    ]
+  },
+  "version": 1
+}

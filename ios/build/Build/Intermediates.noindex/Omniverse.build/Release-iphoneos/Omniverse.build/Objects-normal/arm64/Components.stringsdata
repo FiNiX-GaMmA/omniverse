@@ -1,0 +1,16 @@
+{
+  "source": "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/Components.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 75
+        }
+      }
+    ]
+  },
+  "version": 1
+}

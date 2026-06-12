@@ -1,0 +1,23 @@
+{
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Repositories/YarrlistRepository.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/YarrlistRepository.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/YarrlistRepository.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/YarrlistRepository.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/YarrlistRepository.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/YarrlistRepository.swiftdeps"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/WebEmbedPlayerScreen.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/WebEmbedPlayerScreen.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/WebEmbedPlayerScreen.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/WebEmbedPlayerScreen.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/WebEmbedPlayerScreen.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/WebEmbedPlayerScreen.swiftdeps"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Models/Models.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/Models.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/Models.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/Models.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/Models.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/Models.swiftdeps"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/OmniverseApp.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/OmniverseApp.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/OmniverseApp.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/OmniverseApp.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/OmniverseApp.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/OmniverseApp.swiftdeps"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/MediaDetailScreen.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/MediaDetailScreen.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/MediaDetailScreen.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/MediaDetailScreen.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/MediaDetailScreen.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/MediaDetailScreen.swiftdeps"
+  }
+}

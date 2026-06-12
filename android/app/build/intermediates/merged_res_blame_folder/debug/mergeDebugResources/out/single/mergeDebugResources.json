@@ -1,0 +1,102 @@
+[
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/xml_file_paths.xml.flat",
+        "source": "com.finix.omniverse.app-main-69:/xml/file_paths.xml"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/drawable-xxhdpi_tv_banner.png.flat",
+        "source": "com.finix.omniverse.app-pngs-63:/drawable-xxhdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/drawable-anydpi-v24_tv_banner.xml.flat",
+        "source": "com.finix.omniverse.app-pngs-63:/drawable-anydpi-v24/tv_banner.xml"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/drawable-mdpi_tv_banner.png.flat",
+        "source": "com.finix.omniverse.app-pngs-63:/drawable-mdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/drawable-ldpi_tv_banner.png.flat",
+        "source": "com.finix.omniverse.app-pngs-63:/drawable-ldpi/tv_banner.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-mdpi_ic_launcher_foreground.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-mdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/drawable-xxxhdpi_tv_banner.png.flat",
+        "source": "com.finix.omniverse.app-pngs-63:/drawable-xxxhdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-hdpi_ic_launcher_foreground.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-hdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-xxxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-xxxhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/drawable-xhdpi_tv_banner.png.flat",
+        "source": "com.finix.omniverse.app-pngs-63:/drawable-xhdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/drawable-hdpi_tv_banner.png.flat",
+        "source": "com.finix.omniverse.app-pngs-63:/drawable-hdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-xhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-xhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.finix.omniverse.app-debug-67:/mipmap-xxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.finix.omniverse.app-main-69:/mipmap-xxhdpi/ic_launcher_foreground.png"
+    }
+]

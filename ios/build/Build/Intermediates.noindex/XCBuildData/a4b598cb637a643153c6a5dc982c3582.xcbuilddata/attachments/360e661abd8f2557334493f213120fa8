@@ -1,0 +1,171 @@
+{
+  "" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-primary.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-primary.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-primary.dia",
+    "emit-module-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-primary-emit-module.dia",
+    "pch" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-primary.swiftdeps"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/DesignSystem/LiquidGlass.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/LiquidGlass.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/LiquidGlass.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/LiquidGlass.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Models/Models.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Models.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Models.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Models.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Networking/Http.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Http.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Http.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Http.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/OmniverseApp.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/OmniverseApp.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/OmniverseApp.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/OmniverseApp.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Platform/DeviceTuning.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/DeviceTuning.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/DeviceTuning.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/DeviceTuning.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Repositories/AnimeRepository.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AnimeRepository.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AnimeRepository.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AnimeRepository.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Repositories/HianimeRepository.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/HianimeRepository.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/HianimeRepository.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/HianimeRepository.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Repositories/LiveTvRepository.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/LiveTvRepository.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/LiveTvRepository.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/LiveTvRepository.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Repositories/TmdbRepository.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TmdbRepository.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TmdbRepository.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TmdbRepository.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Repositories/TraktRepository.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TraktRepository.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TraktRepository.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TraktRepository.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Repositories/TvdbRepository.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TvdbRepository.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TvdbRepository.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TvdbRepository.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Repositories/VidsrcRepository.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcRepository.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcRepository.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcRepository.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Repositories/YarrlistRepository.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/YarrlistRepository.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/YarrlistRepository.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/YarrlistRepository.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/AppShell.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AppShell.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AppShell.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AppShell.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/AutoplayResolver.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AutoplayResolver.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AutoplayResolver.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AutoplayResolver.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/Components.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Components.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Components.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Components.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/HomeScreen.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/HomeScreen.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/HomeScreen.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/HomeScreen.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/LiveTvScreen.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/LiveTvScreen.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/LiveTvScreen.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/LiveTvScreen.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/MediaDetailScreen.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/MediaDetailScreen.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/MediaDetailScreen.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/MediaDetailScreen.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/OnePaceResolver.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/OnePaceResolver.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/OnePaceResolver.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/OnePaceResolver.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/OnePaceScreen.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/OnePaceScreen.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/OnePaceScreen.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/OnePaceScreen.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/PlayerScreen.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/PlayerScreen.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/PlayerScreen.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/PlayerScreen.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/SearchScreen.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/SearchScreen.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/SearchScreen.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/SearchScreen.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/SettingsScreen.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/SettingsScreen.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/SettingsScreen.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/SettingsScreen.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/SyncCenter.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/SyncCenter.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/SyncCenter.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/SyncCenter.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/TraktOnboardingScreen.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TraktOnboardingScreen.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TraktOnboardingScreen.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/TraktOnboardingScreen.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/VidsrcResolveScreen.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcResolveScreen.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcResolveScreen.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcResolveScreen.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/WebEmbedPlayerScreen.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/WebEmbedPlayerScreen.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/WebEmbedPlayerScreen.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/WebEmbedPlayerScreen.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/State/AppState.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AppState.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AppState.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/AppState.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/State/Repositories.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Repositories.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Repositories.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Repositories.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Storage/Stores.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Stores.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Stores.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Stores.o"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

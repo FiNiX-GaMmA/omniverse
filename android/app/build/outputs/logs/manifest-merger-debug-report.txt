@@ -1,0 +1,708 @@
+-- Merging decision tree log ---
+provider#androidx.core.content.FileProvider
+INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:57:9-65:20
+	android:grantUriPermissions
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:61:13-47
+	android:authorities
+		INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:59:13-64
+	android:exported
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:60:13-37
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:58:13-62
+manifest
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:2:1-67:12
+INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:2:1-67:12
+INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:2:1-67:12
+INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:2:1-67:12
+MERGED from [androidx.media3:media3-ui:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0ba6e58c21f44a409d5195778f356dd6/transformed/media3-ui-1.5.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-datasource-okhttp:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/9a9f7f091253fea05f4206d25787410b/transformed/media3-datasource-okhttp-1.5.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-extractor:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/bc1661edbde1e628ff33bf090ba07f48/transformed/media3-extractor-1.5.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-container:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a1c7d87abfe7d8d1ad7f6a45b015467f/transformed/media3-container-1.5.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-datasource:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b0880b61bfc4b079ba613c542accdb87/transformed/media3-datasource-1.5.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-decoder:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c0c389e3c3504ed6e8da970ed015eca9/transformed/media3-decoder-1.5.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-database:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4c2f70334f7349b62b9389bc644277de/transformed/media3-database-1.5.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-common:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/6be16189c7c8048cc73991e4b1f7700b/transformed/media3-common-1.5.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media3:media3-exoplayer-hls:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a4739e750d5538bc17bdc3dcc50f514d/transformed/media3-exoplayer-hls-1.5.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-exoplayer-dash:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2af3d6dc9a3fde91c316956d9ac7c29/transformed/media3-exoplayer-dash-1.5.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-exoplayer:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/af629d55ba20e4faa4c43fb06275da5e/transformed/media3-exoplayer-1.5.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media:media:1.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b7b8b74f1208bcc42b0ba084b9b74bf4/transformed/media-1.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f722cf8a9814e64ca20c0c63c60f4d57/transformed/recyclerview-1.3.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.palette:palette-ktx:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/71bb70319d4a205296d26dca4bf15ff4/transformed/palette-ktx-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.palette:palette:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7875c2e7f56a235196186a00811f40c9/transformed/palette-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [com.google.android.gms:play-services-code-scanner:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4bbf12de4f22b401913fac9e79e9c858/transformed/play-services-code-scanner-16.1.0/AndroidManifest.xml:2:1-23:12
+MERGED from [com.google.mlkit:barcode-scanning-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e16e57a7b0f2290260f01aa4bf8f028/transformed/barcode-scanning-common-17.0.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:2:1-18:12
+MERGED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:2:1-26:12
+MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/85a50c6a0d975662940456e386671c85/transformed/play-services-base-18.1.0/AndroidManifest.xml:16:1-24:12
+MERGED from [com.google.android.gms:play-services-tasks:18.0.2] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ea6a330d2fa3d857598bcf7df1b5bda9/transformed/play-services-tasks-18.0.2/AndroidManifest.xml:2:1-6:12
+MERGED from [com.google.android.gms:play-services-basement:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/deba96818bbdde24cfaf3346de2306a2/transformed/play-services-basement-18.1.0/AndroidManifest.xml:16:1-26:12
+MERGED from [androidx.navigation:navigation-common:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f55a0b2775b1a464ae77b6db7b0229cd/transformed/navigation-common-2.8.4/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.navigation:navigation-runtime:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/77a2c92a1f584fe7a050139b79d1772c/transformed/navigation-runtime-2.8.4/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.navigation:navigation-common-ktx:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/478f28ce2d4deee14a2ed0c50f74c523/transformed/navigation-common-ktx-2.8.4/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.navigation:navigation-runtime-ktx:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/effb17e5edf081aa1d534d11aae9047f/transformed/navigation-runtime-ktx-2.8.4/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.navigation:navigation-compose:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4544f56cb34ad00800ea30d11dd87f2d/transformed/navigation-compose-2.8.4/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.activity:activity:1.9.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/bd53d50e45633d13127114b29f09fe47/transformed/activity-1.9.3/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.activity:activity-ktx:1.9.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/56ba8733e7a41a344d8ce75d55ec1d62/transformed/activity-ktx-1.9.3/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.material3:material3-android:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/736398f456c15d21738b5ab4b5f77975/transformed/material3-release/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.tv:tv-material:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/458c9d547186cc32959aca7e663ffb68/transformed/tv-material-1.0.0/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt:coil-compose:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7ea01a3c2268de07cd3aba4bdd805114/transformed/coil-compose-2.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt:coil-compose-base:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1f9ca55a9470f1714044b89f58a80449/transformed/coil-compose-base-2.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.material:material-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/54c76b89bda84de2572edba828852713/transformed/material-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.animation:animation-core-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/319bdeb7383591ae0dad7c5368457408/transformed/animation-core-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.material:material-ripple-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d9a2e93872d5300604c99345d9d81110/transformed/material-ripple-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.animation:animation-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/6a14278275e7db6985022cbd4e0d6971/transformed/animation-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.foundation:foundation-layout-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ec93df198de3c7f961aa7d72143c0593/transformed/foundation-layout-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.foundation:foundation-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/642953cf9f0ba823af5a01fc89c26a1b/transformed/foundation-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-tooling-data-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/16f61617fc03620aac3f1d2183b99e76/transformed/ui-tooling-data-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-unit-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5ecc65c5578da6e9f0a62b2fa8ace9a3/transformed/ui-unit-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-geometry-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/559dd50ec72ff750d659e7b377a86ac4/transformed/ui-geometry-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-util-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4b66ba6de72d7f3d2ee88b843d413919/transformed/ui-util-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-text-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d7adab8760f29bac248394d8ddf30e7d/transformed/ui-text-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-tooling-preview-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7e0a7407921637dcf944555a597839b2/transformed/ui-tooling-preview-release/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.compose.ui:ui-graphics-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/56c14a5a001a7095987bf7b6f1bc1026/transformed/ui-graphics-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8dfcd9980c992e20c65b323398629cf/transformed/ui-tooling-release/AndroidManifest.xml:17:1-28:12
+MERGED from [androidx.activity:activity-compose:1.9.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/afa42baaa8f09a3da8416dfcd6915547/transformed/activity-compose-1.9.3/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt:coil:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b46100ef11ecfa29632089bb1bcd6c93/transformed/coil-2.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt:coil-base:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5b14c86d1077f0bacd2b94bb2efa4335/transformed/coil-base-2.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.fragment:fragment:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/39b53e1dc82386d041d583f0a047da78/transformed/fragment-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5651c59c27119a0a612fed125259ba65/transformed/savedstate-ktx-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.savedstate:savedstate:1.2.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5cb0fe613d09c6e2676378106df30cca/transformed/savedstate-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.legacy:legacy-support-core-ui:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/fa758bc544c0bff107da8f0e9872c9fe/transformed/legacy-support-core-ui-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b5c5aed86799a4f9095349dadef0a95f/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.loader:loader:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/e55f92ebdf51ef966a0282b3112f0ea2/transformed/loader-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c06a9f458bd8054a42f976813ade414a/transformed/lifecycle-livedata-core-ktx-2.8.7/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d94e6b92d9da1a6396c245fd9e3b4edb/transformed/lifecycle-livedata-2.8.7/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f6b42ba05b9265fc744d2fd3c25794dd/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.lifecycle:lifecycle-runtime-compose-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/726e564f1693fecc730adb709cebcea6/transformed/lifecycle-runtime-compose-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b6bd23ea53edc66193545c64dd42d5aa/transformed/lifecycle-livedata-core-2.8.7/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c02ea6168763ad93e004d8ebc2ffd2ce/transformed/lifecycle-viewmodel-2.8.7/AndroidManifest.xml:2:1-5:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d7c4c2556ea5df587688ce5da075f13a/transformed/lifecycle-viewmodel-release/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-runtime-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a0bdd650478585213d4008e51f559a99/transformed/lifecycle-runtime-release/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/cc39eaa2956e5c79e90cf05d4b8a8e41/transformed/lifecycle-viewmodel-savedstate-2.8.7/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a1e8661e26c7fd12e1fb96c16a5346ae/transformed/lifecycle-viewmodel-ktx-2.8.7/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f4a3825dbe936b46a59f9715a4c6d62e/transformed/lifecycle-runtime-ktx-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-compose-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/2712f1fa8aa37b09fea6dd4a6dcadf20/transformed/lifecycle-viewmodel-compose-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.material:material-icons-extended-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/833b479b237bba0b29034dbb73783d91/transformed/material-icons-extended-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.material:material-icons-core-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/813dd9d52c1b6906c1cd3a5bae038711/transformed/material-icons-core-release/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.accompanist:accompanist-drawablepainter:0.32.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a52a04441c84122198575501fa0a9b76/transformed/accompanist-drawablepainter-0.32.0/AndroidManifest.xml:17:1-23:12
+MERGED from [androidx.compose.ui:ui-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/992291c58b9cdda41ae6ae0b3a7eb90f/transformed/ui-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c269cf28d9e12692a7d32d81a5383d15/transformed/viewpager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/3cd693ba24c999ce6a142af89bc5de6d/transformed/coordinatorlayout-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/e9c7ebe613adc4264ce6023982ee208b/transformed/drawerlayout-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.slidingpanelayout:slidingpanelayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c31594e2feae86cb5161b1d01b582db3/transformed/slidingpanelayout-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.customview:customview:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1c024d0ff9da53281f0def54012dc61d/transformed/customview-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.autofill:autofill:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b54c103565ab9a7f738bbd7b35c1cf55/transformed/autofill-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.graphics:graphics-path:1.0.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/42a765e6d6684df5aab399552a320465/transformed/graphics-path-1.0.1/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d53793a72fcd44fb4594f1888670f970/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/31c9579a2fdf2f26d7f295ddd8261351/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f8f9f6e52b04b98200a6a1ade0f12b4b/transformed/vectordrawable-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/18c1843b64eee7f72545c2ec8212f8c7/transformed/swiperefreshlayout-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.asynclayoutinflater:asynclayoutinflater:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d02d0e226250861e33dbbf799cb9490f/transformed/asynclayoutinflater-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:17:1-30:12
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5575932d8a09db2ba9203e42b57d5904/transformed/customview-poolingcontainer-1.0.0/AndroidManifest.xml:17:1-23:12
+MERGED from [androidx.core:core-ktx:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/fc1217a178fb10c184154ffba77c9fed/transformed/core-ktx-1.15.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.runtime:runtime-saveable-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0a9964601e648df7834eb061c9158857/transformed/runtime-saveable-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.compose.runtime:runtime-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/3cc9d041d860de3d3d44ac330052d820/transformed/runtime-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.core:core-splashscreen:1.0.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/e1ec189604e9017025d3625191be2c16/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/10c0f314fe2d57ac8937c69552517db2/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:17:1-55:12
+MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:15:1-38:12
+MERGED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:15:1-41:12
+MERGED from [com.google.android.datatransport:transport-api:2.2.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8f7e312dc3b25d4b1d9b133e9fefa670/transformed/transport-api-2.2.1/AndroidManifest.xml:15:1-22:12
+MERGED from [com.google.firebase:firebase-components:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/9a7e537b5cbc5bf4a00d132bb164c745/transformed/firebase-components-16.1.0/AndroidManifest.xml:15:1-23:12
+MERGED from [com.google.firebase:firebase-encoders-json:17.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1ae49d49429e74bd988d1cb88242d1f2/transformed/firebase-encoders-json-17.1.0/AndroidManifest.xml:15:1-23:12
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7f00978b0b5b0152202d579264563820/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5b1427a51ebdd6dae0ce93c6c77be47e/transformed/startup-runtime-1.1.1/AndroidManifest.xml:17:1-33:12
+MERGED from [androidx.tracing:tracing:1.2.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0055afdf9ab3392143a8d4beebac798a/transformed/tracing-1.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1e1ce6c259d1a99ae589601d9eded574/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:17:1-27:12
+MERGED from [androidx.exifinterface:exifinterface:1.3.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/69b1d946b37b9a8820fd59b7b224873d/transformed/exifinterface-1.3.7/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.documentfile:documentfile:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d6d3d695188686a1f1995e7a81646ef3/transformed/documentfile-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/770d23b2c774a4863e0f3830bd43f884/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.print:print:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/23b226d1e2bf3bfb3a8e0001a09a2924/transformed/print-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8c93febf4c9fb87738ee26625d0beb7/transformed/core-runtime-2.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/09be5055d951980565a154925ffad60e/transformed/cursoradapter-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/fe9d204e63a57efa09ee04860d51b111/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.android.odml:image:1.0.0-beta1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ee28460df14467469ce533280219b523/transformed/image-1.0.0-beta1/AndroidManifest.xml:2:1-9:12
+	package
+		INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml
+	android:versionName
+		INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml
+	android:versionCode
+		INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:2:11-69
+uses-permission#android.permission.INTERNET
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:4:5-67
+MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:26:5-67
+MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:26:5-67
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:4:22-64
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:5:5-79
+MERGED from [androidx.media3:media3-common:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/6be16189c7c8048cc73991e4b1f7700b/transformed/media3-common-1.5.0/AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-common:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/6be16189c7c8048cc73991e4b1f7700b/transformed/media3-common-1.5.0/AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-exoplayer:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/af629d55ba20e4faa4c43fb06275da5e/transformed/media3-exoplayer-1.5.0/AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-exoplayer:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/af629d55ba20e4faa4c43fb06275da5e/transformed/media3-exoplayer-1.5.0/AndroidManifest.xml:22:5-79
+MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:25:5-79
+MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:25:5-79
+MERGED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:22:5-79
+MERGED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:22:5-79
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:5:22-76
+uses-permission#android.permission.CAMERA
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:6:5-65
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:6:22-62
+uses-permission#android.permission.WAKE_LOCK
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:7:5-68
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:7:22-65
+uses-permission#android.permission.REQUEST_INSTALL_PACKAGES
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:8:5-83
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:8:22-80
+uses-feature#android.software.leanback
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:11:5-87
+	android:required
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:11:60-84
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:11:19-59
+uses-feature#android.hardware.touchscreen
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:12:5-90
+	android:required
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:12:63-87
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:12:19-62
+uses-feature#android.hardware.camera
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:13:5-85
+	android:required
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:13:58-82
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:13:19-57
+application
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:15:5-66:19
+INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:15:5-66:19
+MERGED from [com.google.android.gms:play-services-code-scanner:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4bbf12de4f22b401913fac9e79e9c858/transformed/play-services-code-scanner-16.1.0/AndroidManifest.xml:8:5-21:19
+MERGED from [com.google.android.gms:play-services-code-scanner:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4bbf12de4f22b401913fac9e79e9c858/transformed/play-services-code-scanner-16.1.0/AndroidManifest.xml:8:5-21:19
+MERGED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:8:5-16:19
+MERGED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:8:5-16:19
+MERGED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:8:5-24:19
+MERGED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:8:5-24:19
+MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/85a50c6a0d975662940456e386671c85/transformed/play-services-base-18.1.0/AndroidManifest.xml:19:5-23:19
+MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/85a50c6a0d975662940456e386671c85/transformed/play-services-base-18.1.0/AndroidManifest.xml:19:5-23:19
+MERGED from [com.google.android.gms:play-services-tasks:18.0.2] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ea6a330d2fa3d857598bcf7df1b5bda9/transformed/play-services-tasks-18.0.2/AndroidManifest.xml:5:5-20
+MERGED from [com.google.android.gms:play-services-tasks:18.0.2] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ea6a330d2fa3d857598bcf7df1b5bda9/transformed/play-services-tasks-18.0.2/AndroidManifest.xml:5:5-20
+MERGED from [com.google.android.gms:play-services-basement:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/deba96818bbdde24cfaf3346de2306a2/transformed/play-services-basement-18.1.0/AndroidManifest.xml:20:5-24:19
+MERGED from [com.google.android.gms:play-services-basement:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/deba96818bbdde24cfaf3346de2306a2/transformed/play-services-basement-18.1.0/AndroidManifest.xml:20:5-24:19
+MERGED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8dfcd9980c992e20c65b323398629cf/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
+MERGED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8dfcd9980c992e20c65b323398629cf/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f6b42ba05b9265fc744d2fd3c25794dd/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f6b42ba05b9265fc744d2fd3c25794dd/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:23:5-53:19
+MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:28:5-36:19
+MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:28:5-36:19
+MERGED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:25:5-39:19
+MERGED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:25:5-39:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5b1427a51ebdd6dae0ce93c6c77be47e/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5b1427a51ebdd6dae0ce93c6c77be47e/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1e1ce6c259d1a99ae589601d9eded574/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1e1ce6c259d1a99ae589601d9eded574/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [com.google.android.odml:image:1.0.0-beta1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ee28460df14467469ce533280219b523/transformed/image-1.0.0-beta1/AndroidManifest.xml:7:5-20
+MERGED from [com.google.android.odml:image:1.0.0-beta1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ee28460df14467469ce533280219b523/transformed/image-1.0.0-beta1/AndroidManifest.xml:7:5-20
+	android:extractNativeLibs
+		INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml
+	android:appComponentFactory
+		ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:28:18-86
+	android:supportsRtl
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:22:9-35
+	android:label
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:20:9-34
+	android:roundIcon
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:21:9-54
+	android:icon
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:18:9-43
+	android:allowBackup
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:17:9-35
+	android:banner
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:19:9-45
+	android:theme
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:24:9-54
+	android:usesCleartextTraffic
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:23:9-44
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:16:9-45
+activity#com.finix.omniverse.MainActivity
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:26:9-54:20
+	android:screenOrientation
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:31:13-49
+	android:launchMode
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:29:13-44
+	android:exported
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:28:13-36
+	android:resizeableActivity
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:32:13-46
+	android:configChanges
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:30:13-121
+	android:theme
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:33:13-58
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:27:13-41
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:36:13-39:29
+action#android.intent.action.MAIN
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:37:17-69
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:37:25-66
+category#android.intent.category.LAUNCHER
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:38:17-77
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:38:27-74
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LEANBACK_LAUNCHER
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:41:13-44:29
+category#android.intent.category.LEANBACK_LAUNCHER
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:43:17-86
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:43:27-83
+intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:scheme:omniplay+data:scheme:omniverse
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:47:13-53:29
+	android:autoVerify
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:47:28-54
+action#android.intent.action.VIEW
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:48:17-69
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:48:25-66
+category#android.intent.category.DEFAULT
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:49:17-76
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:49:27-73
+category#android.intent.category.BROWSABLE
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:50:17-78
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:50:27-75
+data
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:51:17-51
+	android:scheme
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:51:23-48
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:62:13-64:54
+	android:resource
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:64:17-51
+	android:name
+		ADDED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml:63:17-67
+uses-sdk
+INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml
+INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml
+MERGED from [androidx.media3:media3-ui:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0ba6e58c21f44a409d5195778f356dd6/transformed/media3-ui-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-ui:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0ba6e58c21f44a409d5195778f356dd6/transformed/media3-ui-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-datasource-okhttp:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/9a9f7f091253fea05f4206d25787410b/transformed/media3-datasource-okhttp-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-datasource-okhttp:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/9a9f7f091253fea05f4206d25787410b/transformed/media3-datasource-okhttp-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-extractor:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/bc1661edbde1e628ff33bf090ba07f48/transformed/media3-extractor-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-extractor:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/bc1661edbde1e628ff33bf090ba07f48/transformed/media3-extractor-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-container:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a1c7d87abfe7d8d1ad7f6a45b015467f/transformed/media3-container-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-container:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a1c7d87abfe7d8d1ad7f6a45b015467f/transformed/media3-container-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-datasource:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b0880b61bfc4b079ba613c542accdb87/transformed/media3-datasource-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-datasource:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b0880b61bfc4b079ba613c542accdb87/transformed/media3-datasource-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-decoder:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c0c389e3c3504ed6e8da970ed015eca9/transformed/media3-decoder-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-decoder:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c0c389e3c3504ed6e8da970ed015eca9/transformed/media3-decoder-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-database:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4c2f70334f7349b62b9389bc644277de/transformed/media3-database-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-database:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4c2f70334f7349b62b9389bc644277de/transformed/media3-database-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-common:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/6be16189c7c8048cc73991e4b1f7700b/transformed/media3-common-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-common:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/6be16189c7c8048cc73991e4b1f7700b/transformed/media3-common-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer-hls:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a4739e750d5538bc17bdc3dcc50f514d/transformed/media3-exoplayer-hls-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer-hls:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a4739e750d5538bc17bdc3dcc50f514d/transformed/media3-exoplayer-hls-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer-dash:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2af3d6dc9a3fde91c316956d9ac7c29/transformed/media3-exoplayer-dash-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer-dash:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2af3d6dc9a3fde91c316956d9ac7c29/transformed/media3-exoplayer-dash-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/af629d55ba20e4faa4c43fb06275da5e/transformed/media3-exoplayer-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer:1.5.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/af629d55ba20e4faa4c43fb06275da5e/transformed/media3-exoplayer-1.5.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media:media:1.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b7b8b74f1208bcc42b0ba084b9b74bf4/transformed/media-1.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.media:media:1.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b7b8b74f1208bcc42b0ba084b9b74bf4/transformed/media-1.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f722cf8a9814e64ca20c0c63c60f4d57/transformed/recyclerview-1.3.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f722cf8a9814e64ca20c0c63c60f4d57/transformed/recyclerview-1.3.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.palette:palette-ktx:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/71bb70319d4a205296d26dca4bf15ff4/transformed/palette-ktx-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.palette:palette-ktx:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/71bb70319d4a205296d26dca4bf15ff4/transformed/palette-ktx-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.palette:palette:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7875c2e7f56a235196186a00811f40c9/transformed/palette-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.palette:palette:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7875c2e7f56a235196186a00811f40c9/transformed/palette-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.gms:play-services-code-scanner:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4bbf12de4f22b401913fac9e79e9c858/transformed/play-services-code-scanner-16.1.0/AndroidManifest.xml:6:5-44
+MERGED from [com.google.android.gms:play-services-code-scanner:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4bbf12de4f22b401913fac9e79e9c858/transformed/play-services-code-scanner-16.1.0/AndroidManifest.xml:6:5-44
+MERGED from [com.google.mlkit:barcode-scanning-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e16e57a7b0f2290260f01aa4bf8f028/transformed/barcode-scanning-common-17.0.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.mlkit:barcode-scanning-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e16e57a7b0f2290260f01aa4bf8f028/transformed/barcode-scanning-common-17.0.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:6:5-44
+MERGED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:6:5-44
+MERGED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:6:5-44
+MERGED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:6:5-44
+MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/85a50c6a0d975662940456e386671c85/transformed/play-services-base-18.1.0/AndroidManifest.xml:18:5-43
+MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/85a50c6a0d975662940456e386671c85/transformed/play-services-base-18.1.0/AndroidManifest.xml:18:5-43
+MERGED from [com.google.android.gms:play-services-tasks:18.0.2] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ea6a330d2fa3d857598bcf7df1b5bda9/transformed/play-services-tasks-18.0.2/AndroidManifest.xml:4:5-43
+MERGED from [com.google.android.gms:play-services-tasks:18.0.2] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ea6a330d2fa3d857598bcf7df1b5bda9/transformed/play-services-tasks-18.0.2/AndroidManifest.xml:4:5-43
+MERGED from [com.google.android.gms:play-services-basement:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/deba96818bbdde24cfaf3346de2306a2/transformed/play-services-basement-18.1.0/AndroidManifest.xml:18:5-43
+MERGED from [com.google.android.gms:play-services-basement:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/deba96818bbdde24cfaf3346de2306a2/transformed/play-services-basement-18.1.0/AndroidManifest.xml:18:5-43
+MERGED from [androidx.navigation:navigation-common:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f55a0b2775b1a464ae77b6db7b0229cd/transformed/navigation-common-2.8.4/AndroidManifest.xml:20:5-44
+MERGED from [androidx.navigation:navigation-common:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f55a0b2775b1a464ae77b6db7b0229cd/transformed/navigation-common-2.8.4/AndroidManifest.xml:20:5-44
+MERGED from [androidx.navigation:navigation-runtime:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/77a2c92a1f584fe7a050139b79d1772c/transformed/navigation-runtime-2.8.4/AndroidManifest.xml:20:5-44
+MERGED from [androidx.navigation:navigation-runtime:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/77a2c92a1f584fe7a050139b79d1772c/transformed/navigation-runtime-2.8.4/AndroidManifest.xml:20:5-44
+MERGED from [androidx.navigation:navigation-common-ktx:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/478f28ce2d4deee14a2ed0c50f74c523/transformed/navigation-common-ktx-2.8.4/AndroidManifest.xml:5:5-44
+MERGED from [androidx.navigation:navigation-common-ktx:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/478f28ce2d4deee14a2ed0c50f74c523/transformed/navigation-common-ktx-2.8.4/AndroidManifest.xml:5:5-44
+MERGED from [androidx.navigation:navigation-runtime-ktx:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/effb17e5edf081aa1d534d11aae9047f/transformed/navigation-runtime-ktx-2.8.4/AndroidManifest.xml:5:5-44
+MERGED from [androidx.navigation:navigation-runtime-ktx:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/effb17e5edf081aa1d534d11aae9047f/transformed/navigation-runtime-ktx-2.8.4/AndroidManifest.xml:5:5-44
+MERGED from [androidx.navigation:navigation-compose:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4544f56cb34ad00800ea30d11dd87f2d/transformed/navigation-compose-2.8.4/AndroidManifest.xml:5:5-44
+MERGED from [androidx.navigation:navigation-compose:2.8.4] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4544f56cb34ad00800ea30d11dd87f2d/transformed/navigation-compose-2.8.4/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity:1.9.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/bd53d50e45633d13127114b29f09fe47/transformed/activity-1.9.3/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity:1.9.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/bd53d50e45633d13127114b29f09fe47/transformed/activity-1.9.3/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity-ktx:1.9.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/56ba8733e7a41a344d8ce75d55ec1d62/transformed/activity-ktx-1.9.3/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity-ktx:1.9.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/56ba8733e7a41a344d8ce75d55ec1d62/transformed/activity-ktx-1.9.3/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material3:material3-android:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/736398f456c15d21738b5ab4b5f77975/transformed/material3-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.material3:material3-android:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/736398f456c15d21738b5ab4b5f77975/transformed/material3-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.tv:tv-material:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/458c9d547186cc32959aca7e663ffb68/transformed/tv-material-1.0.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.tv:tv-material:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/458c9d547186cc32959aca7e663ffb68/transformed/tv-material-1.0.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-compose:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7ea01a3c2268de07cd3aba4bdd805114/transformed/coil-compose-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-compose:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7ea01a3c2268de07cd3aba4bdd805114/transformed/coil-compose-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-compose-base:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1f9ca55a9470f1714044b89f58a80449/transformed/coil-compose-base-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-compose-base:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1f9ca55a9470f1714044b89f58a80449/transformed/coil-compose-base-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/54c76b89bda84de2572edba828852713/transformed/material-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/54c76b89bda84de2572edba828852713/transformed/material-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.animation:animation-core-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/319bdeb7383591ae0dad7c5368457408/transformed/animation-core-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.animation:animation-core-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/319bdeb7383591ae0dad7c5368457408/transformed/animation-core-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-ripple-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d9a2e93872d5300604c99345d9d81110/transformed/material-ripple-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-ripple-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d9a2e93872d5300604c99345d9d81110/transformed/material-ripple-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.animation:animation-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/6a14278275e7db6985022cbd4e0d6971/transformed/animation-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.animation:animation-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/6a14278275e7db6985022cbd4e0d6971/transformed/animation-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.foundation:foundation-layout-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ec93df198de3c7f961aa7d72143c0593/transformed/foundation-layout-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.foundation:foundation-layout-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ec93df198de3c7f961aa7d72143c0593/transformed/foundation-layout-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.foundation:foundation-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/642953cf9f0ba823af5a01fc89c26a1b/transformed/foundation-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.foundation:foundation-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/642953cf9f0ba823af5a01fc89c26a1b/transformed/foundation-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-tooling-data-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/16f61617fc03620aac3f1d2183b99e76/transformed/ui-tooling-data-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-tooling-data-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/16f61617fc03620aac3f1d2183b99e76/transformed/ui-tooling-data-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-unit-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5ecc65c5578da6e9f0a62b2fa8ace9a3/transformed/ui-unit-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-unit-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5ecc65c5578da6e9f0a62b2fa8ace9a3/transformed/ui-unit-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-geometry-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/559dd50ec72ff750d659e7b377a86ac4/transformed/ui-geometry-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-geometry-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/559dd50ec72ff750d659e7b377a86ac4/transformed/ui-geometry-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-util-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4b66ba6de72d7f3d2ee88b843d413919/transformed/ui-util-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-util-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4b66ba6de72d7f3d2ee88b843d413919/transformed/ui-util-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-text-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d7adab8760f29bac248394d8ddf30e7d/transformed/ui-text-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-text-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d7adab8760f29bac248394d8ddf30e7d/transformed/ui-text-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-tooling-preview-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7e0a7407921637dcf944555a597839b2/transformed/ui-tooling-preview-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.ui:ui-tooling-preview-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7e0a7407921637dcf944555a597839b2/transformed/ui-tooling-preview-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.ui:ui-graphics-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/56c14a5a001a7095987bf7b6f1bc1026/transformed/ui-graphics-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-graphics-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/56c14a5a001a7095987bf7b6f1bc1026/transformed/ui-graphics-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8dfcd9980c992e20c65b323398629cf/transformed/ui-tooling-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8dfcd9980c992e20c65b323398629cf/transformed/ui-tooling-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity-compose:1.9.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/afa42baaa8f09a3da8416dfcd6915547/transformed/activity-compose-1.9.3/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity-compose:1.9.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/afa42baaa8f09a3da8416dfcd6915547/transformed/activity-compose-1.9.3/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b46100ef11ecfa29632089bb1bcd6c93/transformed/coil-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b46100ef11ecfa29632089bb1bcd6c93/transformed/coil-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-base:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5b14c86d1077f0bacd2b94bb2efa4335/transformed/coil-base-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt:coil-base:2.7.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5b14c86d1077f0bacd2b94bb2efa4335/transformed/coil-base-2.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.fragment:fragment:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/39b53e1dc82386d041d583f0a047da78/transformed/fragment-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.fragment:fragment:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/39b53e1dc82386d041d583f0a047da78/transformed/fragment-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5651c59c27119a0a612fed125259ba65/transformed/savedstate-ktx-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5651c59c27119a0a612fed125259ba65/transformed/savedstate-ktx-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5cb0fe613d09c6e2676378106df30cca/transformed/savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5cb0fe613d09c6e2676378106df30cca/transformed/savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.legacy:legacy-support-core-ui:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/fa758bc544c0bff107da8f0e9872c9fe/transformed/legacy-support-core-ui-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-ui:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/fa758bc544c0bff107da8f0e9872c9fe/transformed/legacy-support-core-ui-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b5c5aed86799a4f9095349dadef0a95f/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b5c5aed86799a4f9095349dadef0a95f/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/e55f92ebdf51ef966a0282b3112f0ea2/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/e55f92ebdf51ef966a0282b3112f0ea2/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c06a9f458bd8054a42f976813ade414a/transformed/lifecycle-livedata-core-ktx-2.8.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c06a9f458bd8054a42f976813ade414a/transformed/lifecycle-livedata-core-ktx-2.8.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d94e6b92d9da1a6396c245fd9e3b4edb/transformed/lifecycle-livedata-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d94e6b92d9da1a6396c245fd9e3b4edb/transformed/lifecycle-livedata-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f6b42ba05b9265fc744d2fd3c25794dd/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f6b42ba05b9265fc744d2fd3c25794dd/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-compose-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/726e564f1693fecc730adb709cebcea6/transformed/lifecycle-runtime-compose-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-compose-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/726e564f1693fecc730adb709cebcea6/transformed/lifecycle-runtime-compose-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b6bd23ea53edc66193545c64dd42d5aa/transformed/lifecycle-livedata-core-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b6bd23ea53edc66193545c64dd42d5aa/transformed/lifecycle-livedata-core-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c02ea6168763ad93e004d8ebc2ffd2ce/transformed/lifecycle-viewmodel-2.8.7/AndroidManifest.xml:4:5-43
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c02ea6168763ad93e004d8ebc2ffd2ce/transformed/lifecycle-viewmodel-2.8.7/AndroidManifest.xml:4:5-43
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d7c4c2556ea5df587688ce5da075f13a/transformed/lifecycle-viewmodel-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d7c4c2556ea5df587688ce5da075f13a/transformed/lifecycle-viewmodel-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a0bdd650478585213d4008e51f559a99/transformed/lifecycle-runtime-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a0bdd650478585213d4008e51f559a99/transformed/lifecycle-runtime-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/cc39eaa2956e5c79e90cf05d4b8a8e41/transformed/lifecycle-viewmodel-savedstate-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/cc39eaa2956e5c79e90cf05d4b8a8e41/transformed/lifecycle-viewmodel-savedstate-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a1e8661e26c7fd12e1fb96c16a5346ae/transformed/lifecycle-viewmodel-ktx-2.8.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a1e8661e26c7fd12e1fb96c16a5346ae/transformed/lifecycle-viewmodel-ktx-2.8.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f4a3825dbe936b46a59f9715a4c6d62e/transformed/lifecycle-runtime-ktx-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f4a3825dbe936b46a59f9715a4c6d62e/transformed/lifecycle-runtime-ktx-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-compose-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/2712f1fa8aa37b09fea6dd4a6dcadf20/transformed/lifecycle-viewmodel-compose-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-compose-android:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/2712f1fa8aa37b09fea6dd4a6dcadf20/transformed/lifecycle-viewmodel-compose-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-icons-extended-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/833b479b237bba0b29034dbb73783d91/transformed/material-icons-extended-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-icons-extended-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/833b479b237bba0b29034dbb73783d91/transformed/material-icons-extended-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-icons-core-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/813dd9d52c1b6906c1cd3a5bae038711/transformed/material-icons-core-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.material:material-icons-core-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/813dd9d52c1b6906c1cd3a5bae038711/transformed/material-icons-core-release/AndroidManifest.xml:5:5-44
+MERGED from [com.google.accompanist:accompanist-drawablepainter:0.32.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a52a04441c84122198575501fa0a9b76/transformed/accompanist-drawablepainter-0.32.0/AndroidManifest.xml:21:5-44
+MERGED from [com.google.accompanist:accompanist-drawablepainter:0.32.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/a52a04441c84122198575501fa0a9b76/transformed/accompanist-drawablepainter-0.32.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.compose.ui:ui-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/992291c58b9cdda41ae6ae0b3a7eb90f/transformed/ui-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.ui:ui-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/992291c58b9cdda41ae6ae0b3a7eb90f/transformed/ui-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c269cf28d9e12692a7d32d81a5383d15/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c269cf28d9e12692a7d32d81a5383d15/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/3cd693ba24c999ce6a142af89bc5de6d/transformed/coordinatorlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/3cd693ba24c999ce6a142af89bc5de6d/transformed/coordinatorlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/e9c7ebe613adc4264ce6023982ee208b/transformed/drawerlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/e9c7ebe613adc4264ce6023982ee208b/transformed/drawerlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.slidingpanelayout:slidingpanelayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c31594e2feae86cb5161b1d01b582db3/transformed/slidingpanelayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.slidingpanelayout:slidingpanelayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c31594e2feae86cb5161b1d01b582db3/transformed/slidingpanelayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1c024d0ff9da53281f0def54012dc61d/transformed/customview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1c024d0ff9da53281f0def54012dc61d/transformed/customview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.autofill:autofill:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b54c103565ab9a7f738bbd7b35c1cf55/transformed/autofill-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.autofill:autofill:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b54c103565ab9a7f738bbd7b35c1cf55/transformed/autofill-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.graphics:graphics-path:1.0.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/42a765e6d6684df5aab399552a320465/transformed/graphics-path-1.0.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.graphics:graphics-path:1.0.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/42a765e6d6684df5aab399552a320465/transformed/graphics-path-1.0.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d53793a72fcd44fb4594f1888670f970/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d53793a72fcd44fb4594f1888670f970/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/31c9579a2fdf2f26d7f295ddd8261351/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/31c9579a2fdf2f26d7f295ddd8261351/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f8f9f6e52b04b98200a6a1ade0f12b4b/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f8f9f6e52b04b98200a6a1ade0f12b4b/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/18c1843b64eee7f72545c2ec8212f8c7/transformed/swiperefreshlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/18c1843b64eee7f72545c2ec8212f8c7/transformed/swiperefreshlayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.asynclayoutinflater:asynclayoutinflater:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d02d0e226250861e33dbbf799cb9490f/transformed/asynclayoutinflater-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.asynclayoutinflater:asynclayoutinflater:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d02d0e226250861e33dbbf799cb9490f/transformed/asynclayoutinflater-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5575932d8a09db2ba9203e42b57d5904/transformed/customview-poolingcontainer-1.0.0/AndroidManifest.xml:20:5-21:38
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5575932d8a09db2ba9203e42b57d5904/transformed/customview-poolingcontainer-1.0.0/AndroidManifest.xml:20:5-21:38
+MERGED from [androidx.core:core-ktx:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/fc1217a178fb10c184154ffba77c9fed/transformed/core-ktx-1.15.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-ktx:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/fc1217a178fb10c184154ffba77c9fed/transformed/core-ktx-1.15.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.runtime:runtime-saveable-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0a9964601e648df7834eb061c9158857/transformed/runtime-saveable-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.runtime:runtime-saveable-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0a9964601e648df7834eb061c9158857/transformed/runtime-saveable-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.runtime:runtime-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/3cc9d041d860de3d3d44ac330052d820/transformed/runtime-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.compose.runtime:runtime-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/3cc9d041d860de3d3d44ac330052d820/transformed/runtime-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-splashscreen:1.0.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/e1ec189604e9017025d3625191be2c16/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core-splashscreen:1.0.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/e1ec189604e9017025d3625191be2c16/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/10c0f314fe2d57ac8937c69552517db2/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:20:5-44
+MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/10c0f314fe2d57ac8937c69552517db2/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:20:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:21:5-44
+MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:19:5-21:41
+MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:19:5-21:41
+MERGED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.android.datatransport:transport-api:2.2.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8f7e312dc3b25d4b1d9b133e9fefa670/transformed/transport-api-2.2.1/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.android.datatransport:transport-api:2.2.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8f7e312dc3b25d4b1d9b133e9fefa670/transformed/transport-api-2.2.1/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.firebase:firebase-components:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/9a7e537b5cbc5bf4a00d132bb164c745/transformed/firebase-components-16.1.0/AndroidManifest.xml:19:5-21:41
+MERGED from [com.google.firebase:firebase-components:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/9a7e537b5cbc5bf4a00d132bb164c745/transformed/firebase-components-16.1.0/AndroidManifest.xml:19:5-21:41
+MERGED from [com.google.firebase:firebase-encoders-json:17.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1ae49d49429e74bd988d1cb88242d1f2/transformed/firebase-encoders-json-17.1.0/AndroidManifest.xml:19:5-21:41
+MERGED from [com.google.firebase:firebase-encoders-json:17.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1ae49d49429e74bd988d1cb88242d1f2/transformed/firebase-encoders-json-17.1.0/AndroidManifest.xml:19:5-21:41
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7f00978b0b5b0152202d579264563820/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/7f00978b0b5b0152202d579264563820/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5b1427a51ebdd6dae0ce93c6c77be47e/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5b1427a51ebdd6dae0ce93c6c77be47e/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.tracing:tracing:1.2.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0055afdf9ab3392143a8d4beebac798a/transformed/tracing-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.tracing:tracing:1.2.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0055afdf9ab3392143a8d4beebac798a/transformed/tracing-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1e1ce6c259d1a99ae589601d9eded574/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/1e1ce6c259d1a99ae589601d9eded574/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.exifinterface:exifinterface:1.3.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/69b1d946b37b9a8820fd59b7b224873d/transformed/exifinterface-1.3.7/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.exifinterface:exifinterface:1.3.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/69b1d946b37b9a8820fd59b7b224873d/transformed/exifinterface-1.3.7/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.documentfile:documentfile:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d6d3d695188686a1f1995e7a81646ef3/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.documentfile:documentfile:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d6d3d695188686a1f1995e7a81646ef3/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/770d23b2c774a4863e0f3830bd43f884/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/770d23b2c774a4863e0f3830bd43f884/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/23b226d1e2bf3bfb3a8e0001a09a2924/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/23b226d1e2bf3bfb3a8e0001a09a2924/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8c93febf4c9fb87738ee26625d0beb7/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8c93febf4c9fb87738ee26625d0beb7/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/09be5055d951980565a154925ffad60e/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/09be5055d951980565a154925ffad60e/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/fe9d204e63a57efa09ee04860d51b111/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/fe9d204e63a57efa09ee04860d51b111/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.odml:image:1.0.0-beta1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ee28460df14467469ce533280219b523/transformed/image-1.0.0-beta1/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.odml:image:1.0.0-beta1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/ee28460df14467469ce533280219b523/transformed/image-1.0.0-beta1/AndroidManifest.xml:5:5-44
+	android:targetSdkVersion
+		INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /Users/aryaroop.majumder/Documents/omniplay/android/app/src/main/AndroidManifest.xml
+activity#com.google.mlkit.vision.codescanner.internal.GmsBarcodeScanningDelegateActivity
+ADDED from [com.google.android.gms:play-services-code-scanner:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4bbf12de4f22b401913fac9e79e9c858/transformed/play-services-code-scanner-16.1.0/AndroidManifest.xml:15:9-20:20
+	android:screenOrientation
+		ADDED from [com.google.android.gms:play-services-code-scanner:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4bbf12de4f22b401913fac9e79e9c858/transformed/play-services-code-scanner-16.1.0/AndroidManifest.xml:18:13-49
+	android:exported
+		ADDED from [com.google.android.gms:play-services-code-scanner:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4bbf12de4f22b401913fac9e79e9c858/transformed/play-services-code-scanner-16.1.0/AndroidManifest.xml:17:13-37
+	tools:ignore
+		ADDED from [com.google.android.gms:play-services-code-scanner:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4bbf12de4f22b401913fac9e79e9c858/transformed/play-services-code-scanner-16.1.0/AndroidManifest.xml:19:13-42
+	android:name
+		ADDED from [com.google.android.gms:play-services-code-scanner:16.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/4bbf12de4f22b401913fac9e79e9c858/transformed/play-services-code-scanner-16.1.0/AndroidManifest.xml:16:13-107
+service#com.google.mlkit.common.internal.MlKitComponentDiscoveryService
+ADDED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:9:9-15:19
+MERGED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:15:9-23:19
+MERGED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:15:9-23:19
+	android:exported
+		ADDED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:11:13-37
+	tools:targetApi
+		ADDED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:19:13-32
+	android:directBootAware
+		ADDED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:17:13-43
+	android:name
+		ADDED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:10:13-91
+meta-data#com.google.firebase.components:com.google.mlkit.vision.common.internal.VisionCommonRegistrar
+ADDED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:12:13-14:85
+	android:value
+		ADDED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:14:17-82
+	android:name
+		ADDED from [com.google.mlkit:vision-common:17.0.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/0e3a8b97c6a4621a0ac3840bef8d2037/transformed/vision-common-17.0.0/AndroidManifest.xml:13:17-124
+provider#com.google.mlkit.common.internal.MlKitInitProvider
+ADDED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:9:9-13:38
+	android:authorities
+		ADDED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:11:13-69
+	android:exported
+		ADDED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:12:13-37
+	android:initOrder
+		ADDED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:13:13-35
+	android:name
+		ADDED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:10:13-78
+meta-data#com.google.firebase.components:com.google.mlkit.common.internal.CommonComponentRegistrar
+ADDED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:20:13-22:85
+	android:value
+		ADDED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:22:17-82
+	android:name
+		ADDED from [com.google.mlkit:common:18.9.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8fb17f8ebb602b8a29a5f83a4eb56cac/transformed/common-18.9.0/AndroidManifest.xml:21:17-120
+activity#com.google.android.gms.common.api.GoogleApiActivity
+ADDED from [com.google.android.gms:play-services-base:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/85a50c6a0d975662940456e386671c85/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:9-22:45
+	android:exported
+		ADDED from [com.google.android.gms:play-services-base:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/85a50c6a0d975662940456e386671c85/transformed/play-services-base-18.1.0/AndroidManifest.xml:22:19-43
+	android:theme
+		ADDED from [com.google.android.gms:play-services-base:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/85a50c6a0d975662940456e386671c85/transformed/play-services-base-18.1.0/AndroidManifest.xml:21:19-78
+	android:name
+		ADDED from [com.google.android.gms:play-services-base:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/85a50c6a0d975662940456e386671c85/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:19-85
+meta-data#com.google.android.gms.version
+ADDED from [com.google.android.gms:play-services-basement:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/deba96818bbdde24cfaf3346de2306a2/transformed/play-services-basement-18.1.0/AndroidManifest.xml:21:9-23:69
+	android:value
+		ADDED from [com.google.android.gms:play-services-basement:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/deba96818bbdde24cfaf3346de2306a2/transformed/play-services-basement-18.1.0/AndroidManifest.xml:23:13-66
+	android:name
+		ADDED from [com.google.android.gms:play-services-basement:18.1.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/deba96818bbdde24cfaf3346de2306a2/transformed/play-services-basement-18.1.0/AndroidManifest.xml:22:13-58
+activity#androidx.compose.ui.tooling.PreviewActivity
+ADDED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8dfcd9980c992e20c65b323398629cf/transformed/ui-tooling-release/AndroidManifest.xml:23:9-25:39
+	android:exported
+		ADDED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8dfcd9980c992e20c65b323398629cf/transformed/ui-tooling-release/AndroidManifest.xml:25:13-36
+	android:name
+		ADDED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/b8dfcd9980c992e20c65b323398629cf/transformed/ui-tooling-release/AndroidManifest.xml:24:13-71
+provider#androidx.startup.InitializationProvider
+ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f6b42ba05b9265fc744d2fd3c25794dd/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f6b42ba05b9265fc744d2fd3c25794dd/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5b1427a51ebdd6dae0ce93c6c77be47e/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/5b1427a51ebdd6dae0ce93c6c77be47e/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+	tools:node
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:28:13-31
+	android:authorities
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+	android:exported
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+meta-data#androidx.emoji2.text.EmojiCompatInitializer
+ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c85b987347256b01e70e09cee59ed526/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+meta-data#androidx.lifecycle.ProcessLifecycleInitializer
+ADDED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f6b42ba05b9265fc744d2fd3c25794dd/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f6b42ba05b9265fc744d2fd3c25794dd/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/f6b42ba05b9265fc744d2fd3c25794dd/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:30:17-78
+permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:23:9-81
+permission#com.finix.omniverse.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:23:9-81
+uses-permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:26:22-94
+uses-permission#com.finix.omniverse.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.15.0] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2ecb02f157bb8d7beb3799c584f5179/transformed/core-1.15.0/AndroidManifest.xml:26:22-94
+meta-data#androidx.profileinstaller.ProfileInstallerInitializer
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+receiver#androidx.profileinstaller.ProfileInstallReceiver
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+	android:enabled
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+	android:exported
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+	android:permission
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+	android:directBootAware
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+intent-filter#action:name:androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+action#androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+intent-filter#action:name:androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+action#androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+intent-filter#action:name:androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+action#androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+intent-filter#action:name:androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+action#androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/8e1fa68fd04a1d474ac68889d0f76da1/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+service#com.google.android.datatransport.runtime.backends.TransportBackendDiscovery
+ADDED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:29:9-35:19
+MERGED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:36:9-38:40
+MERGED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:36:9-38:40
+	android:exported
+		ADDED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:31:13-37
+	android:name
+		ADDED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:30:13-103
+meta-data#backend:com.google.android.datatransport.cct.CctBackendFactory
+ADDED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:32:13-34:39
+	android:value
+		ADDED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:34:17-36
+	android:name
+		ADDED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/c2e9f36a8b8d82059c3cdd71dcd78190/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:33:17-94
+service#com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService
+ADDED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:26:9-30:19
+	android:exported
+		ADDED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:28:13-37
+	android:permission
+		ADDED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:29:13-69
+	android:name
+		ADDED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:27:13-117
+receiver#com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver
+ADDED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:32:9-34:40
+	android:exported
+		ADDED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:34:13-37
+	android:name
+		ADDED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/aryaroop.majumder/.gradle/caches/8.13/transforms/d8ac449fa21f860c62c781cc738591a1/transformed/transport-runtime-2.2.6/AndroidManifest.xml:33:13-132

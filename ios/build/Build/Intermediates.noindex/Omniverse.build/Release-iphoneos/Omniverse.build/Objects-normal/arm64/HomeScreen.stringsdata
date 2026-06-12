@@ -1,0 +1,80 @@
+{
+  "source": "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/HomeScreen.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Omniverse",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 219
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add your TMDB key in Settings to fill this carousel.",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 220
+        }
+      },
+      {
+        "comment": "",
+        "key": "Refreshing the carousel...",
+        "location": {
+          "startingColumn": 102,
+          "startingLine": 220
+        }
+      },
+      {
+        "comment": "",
+        "key": "Play",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 350
+        }
+      },
+      {
+        "comment": "",
+        "key": "Continue Watching",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 384
+        }
+      },
+      {
+        "comment": "",
+        "key": "Resolving…",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 470
+        }
+      },
+      {
+        "comment": "",
+        "key": "Resume",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 478
+        }
+      },
+      {
+        "comment": "",
+        "key": "Play from beginning",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 483
+        }
+      },
+      {
+        "comment": "",
+        "key": "Details",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 487
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,23 @@
+{
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/SettingsScreen.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/SettingsScreen.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/SettingsScreen.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/SettingsScreen.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/SettingsScreen.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/SettingsScreen.swiftdeps"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/SyncCenter.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/SyncCenter.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/SyncCenter.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/SyncCenter.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/SyncCenter.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/SyncCenter.swiftdeps"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Storage/Stores.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/Stores.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/Stores.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/Stores.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/Stores.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/Stores.swiftdeps"
+  }
+}

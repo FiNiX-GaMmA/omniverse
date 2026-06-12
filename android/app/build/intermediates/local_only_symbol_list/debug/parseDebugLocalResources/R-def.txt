@@ -1,0 +1,17 @@
+R_DEF: Internal format may change without notice
+local
+color cyan
+color deep_teal
+color dusk
+color gold
+color ic_launcher_background
+color ink
+color rose
+drawable tv_banner
+mipmap ic_launcher
+mipmap ic_launcher_foreground
+mipmap ic_launcher_round
+string app_name
+style Theme.Omniverse
+style Theme.Omniverse.Splash
+xml file_paths

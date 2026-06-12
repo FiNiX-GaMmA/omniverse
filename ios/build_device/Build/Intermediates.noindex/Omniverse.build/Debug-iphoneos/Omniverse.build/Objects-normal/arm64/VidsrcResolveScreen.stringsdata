@@ -1,0 +1,24 @@
+{
+  "source": "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/VidsrcResolveScreen.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Close",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 861
+        }
+      },
+      {
+        "comment": "",
+        "key": "Retry",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 858
+        }
+      }
+    ]
+  },
+  "version": 1
+}

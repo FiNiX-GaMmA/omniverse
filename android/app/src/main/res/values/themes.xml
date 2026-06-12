@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Material NoActionBar base with translucent system bars; the Compose
+         edge-to-edge call in MainActivity draws behind them. -->
+    <style name="Theme.Omniverse" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ink</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o">shortEdges</item>
+    </style>
+
+    <!-- Splash screen theme (androidx.core:core-splashscreen). Set as the app/activity
+         theme; MainActivity calls installSplashScreen() then swaps to Theme.Omniverse. -->
+    <style name="Theme.Omniverse.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ink</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Omniverse</item>
+    </style>
+</resources>

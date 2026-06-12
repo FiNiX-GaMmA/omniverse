@@ -1,0 +1,144 @@
+{
+  "source": "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/OnePaceScreen.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Select One Pace Arc / Season",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 62
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select Audio Track & Version",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select Subtitle Language",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 77
+        }
+      },
+      {
+        "comment": "",
+        "key": "Season %lld: %@",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 64
+        }
+      },
+      {
+        "comment": "",
+        "key": "Failed to load One Pace details",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 86
+        }
+      },
+      {
+        "comment": "",
+        "key": "Retry",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 87
+        }
+      },
+      {
+        "comment": "",
+        "key": "Resolving Subtitles...",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "Error loading episodes: %@",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 220
+        }
+      },
+      {
+        "comment": "",
+        "key": "No episodes listed in this quality / category.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 223
+        }
+      },
+      {
+        "comment": "",
+        "key": "Chapters Covered: %@  •  Anime Episodes Covered: %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 152
+        }
+      },
+      {
+        "comment": "",
+        "key": "ONE PACE",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 143
+        }
+      },
+      {
+        "comment": "",
+        "key": "Season %lld • %lld Episodes",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 146
+        }
+      },
+      {
+        "comment": "",
+        "key": "Play S1E1",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 156
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ (Season %lld)",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 178
+        }
+      },
+      {
+        "comment": "",
+        "key": "Subs: %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 206
+        }
+      },
+      {
+        "comment": "",
+        "key": "EPISODE %lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 243
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld MB",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 245
+        }
+      }
+    ]
+  },
+  "version": 1
+}

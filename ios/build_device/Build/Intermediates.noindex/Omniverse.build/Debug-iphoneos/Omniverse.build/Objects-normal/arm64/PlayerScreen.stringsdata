@@ -1,0 +1,48 @@
+{
+  "source": "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/PlayerScreen.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Next Episode Playing in %llds",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 1065
+        }
+      },
+      {
+        "comment": "",
+        "key": "S%lld • E%lld: %@",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 1068
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 1084
+        }
+      },
+      {
+        "comment": "",
+        "key": "Skip Intro",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 1268
+        }
+      },
+      {
+        "comment": "",
+        "key": "Close",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 1547
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,88 @@
+{
+  "source": "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/SettingsScreen.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Settings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 81
+        }
+      },
+      {
+        "comment": "",
+        "key": "Trakt Redirect URI: omniplay://trakt/oauth\nAniList Redirect URI: omniplay://anilist/oauth",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 228
+        }
+      },
+      {
+        "comment": "",
+        "key": "Syncing...",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 261
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sync Now",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 261
+        }
+      },
+      {
+        "comment": "",
+        "key": "Restoring...",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 296
+        }
+      },
+      {
+        "comment": "",
+        "key": "Restore from Cloud",
+        "location": {
+          "startingColumn": 51,
+          "startingLine": 296
+        }
+      },
+      {
+        "comment": "",
+        "key": "SAVE ALL CHANGES",
+        "location": {
+          "startingColumn": 19,
+          "startingLine": 311
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 492
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 494
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 528
+        }
+      }
+    ]
+  },
+  "version": 1
+}

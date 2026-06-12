@@ -1,0 +1,102 @@
+[
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/drawable-xhdpi_tv_banner.png.flat",
+        "source": "com.aryaroop.omniverse.app-pngs-58:/drawable-xhdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-xhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-xhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-xxxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-xxxhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/drawable-xxxhdpi_tv_banner.png.flat",
+        "source": "com.aryaroop.omniverse.app-pngs-58:/drawable-xxxhdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/drawable-anydpi-v24_tv_banner.xml.flat",
+        "source": "com.aryaroop.omniverse.app-pngs-58:/drawable-anydpi-v24/tv_banner.xml"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/drawable-hdpi_tv_banner.png.flat",
+        "source": "com.aryaroop.omniverse.app-pngs-58:/drawable-hdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/drawable-mdpi_tv_banner.png.flat",
+        "source": "com.aryaroop.omniverse.app-pngs-58:/drawable-mdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/drawable-ldpi_tv_banner.png.flat",
+        "source": "com.aryaroop.omniverse.app-pngs-58:/drawable-ldpi/tv_banner.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/xml_file_paths.xml.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/xml/file_paths.xml"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-hdpi_ic_launcher_foreground.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-hdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-xxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-xxhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-mdpi_ic_launcher_foreground.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-mdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/drawable-xxhdpi_tv_banner.png.flat",
+        "source": "com.aryaroop.omniverse.app-pngs-58:/drawable-xxhdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.aryaroop.omniverse.app-release-62:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.aryaroop.omniverse.app-main-63:/mipmap-hdpi/ic_launcher.png"
+    }
+]

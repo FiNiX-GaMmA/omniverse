@@ -1,0 +1,23 @@
+{
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Repositories/TvdbRepository.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/TvdbRepository.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/TvdbRepository.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/TvdbRepository.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/TvdbRepository.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/TvdbRepository.swiftdeps"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Repositories/VidsrcRepository.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcRepository.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcRepository.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcRepository.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcRepository.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcRepository.swiftdeps"
+  },
+  "/Users/aryaroop.majumder/Documents/omniplay/ios/Omniverse/Screens/VidsrcResolveScreen.swift" : {
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcResolveScreen.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcResolveScreen.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcResolveScreen.dia",
+    "object" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcResolveScreen.o",
+    "swift-dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/ios/build_device/Build/Intermediates.noindex/Omniverse.build/Debug-iphoneos/Omniverse.build/Objects-normal/arm64/VidsrcResolveScreen.swiftdeps"
+  }
+}

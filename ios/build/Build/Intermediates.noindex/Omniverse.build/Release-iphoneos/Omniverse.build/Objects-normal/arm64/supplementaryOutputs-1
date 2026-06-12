@@ -1,0 +1,12 @@
+{
+  "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Repositories/AnimeRepository.swift" : {
+    "abi-baseline-json" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse.abi.json",
+    "const-values" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-primary.swiftconstvalues",
+    "dependencies" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-primary.d",
+    "diagnostics" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-primary.dia",
+    "objc-header" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse-Swift.h",
+    "swiftdoc" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse.swiftdoc",
+    "swiftmodule" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse.swiftmodule",
+    "swiftsourceinfo" : "/Users/aryaroop.majumder/Documents/omniplay/native/ios/build/Build/Intermediates.noindex/Omniverse.build/Release-iphoneos/Omniverse.build/Objects-normal/arm64/Omniverse.swiftsourceinfo"
+  }
+}

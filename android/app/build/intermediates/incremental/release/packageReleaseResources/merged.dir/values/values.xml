@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <color name="cyan">#FF8DEBE6</color>
+    <color name="deep_teal">#FF082C2E</color>
+    <color name="dusk">#FF24152B</color>
+    <color name="gold">#FFFFD36E</color>
+    <color name="ic_launcher_background">#FF0B0A12</color>
+    <color name="ink">#FF0B0A12</color>
+    <color name="rose">#FFFF8EA8</color>
+    <string name="app_name">Omniverse</string>
+    <style name="Theme.Omniverse" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ink</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" ns1:targetApi="o">shortEdges</item>
+    </style>
+    <style name="Theme.Omniverse.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ink</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Omniverse</item>
+    </style>
+</resources>

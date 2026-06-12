@@ -1,0 +1,32 @@
+{
+  "source": "/Users/aryaroop.majumder/Documents/omniplay/native/ios/Omniverse/Screens/RecommendationsEndOverlay.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "No recommendations available.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "You're all caught up",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 19
+        }
+      },
+      {
+        "comment": "",
+        "key": "Because you watched %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 20
+        }
+      }
+    ]
+  },
+  "version": 1
+}
