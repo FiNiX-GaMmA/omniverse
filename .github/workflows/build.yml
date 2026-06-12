@@ -129,8 +129,8 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0
-          name: Omniverse v1.0 Release
+          tag_name: v2.1.${{ github.run_number }}
+          name: Omniverse v2.1.${{ github.run_number }} Release
           body: |
             ## 🎉 Omniverse v1.0 — Native Revolution & Sync Mastery
 

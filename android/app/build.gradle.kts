@@ -22,8 +22,9 @@ android {
         applicationId = "com.finix.omniverse"
         minSdk = 23
         targetSdk = 35
-        versionCode = 1
-        versionName = "2.1.0"
+        val runNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
+        versionCode = runNumber
+        versionName = "2.1.$runNumber"
         // Works on phones, tablets, and Android TV — single universal APK.
     }
 
