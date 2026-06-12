@@ -722,7 +722,8 @@ private final class PlaybackEngine {
     // MARK: AniSkip (ported from _fetchSkipIntervals / _maybeAutoSkip)
 
     private func fetchSkipIntervals() async {
-        guard item?.title != "One Pace" else { return }
+        if let title = item?.title.lowercased(), title == "one pace" || title.contains("one pace") { return }
+        if let id = item?.id.lowercased(), id.hasPrefix("onepace:") || id.contains("onepace") { return }
         guard let item, let episode, let anilistId = item.anilistId else { return }
         let lengthSec = durationMs / 1000
         guard lengthSec > 0 else { return }

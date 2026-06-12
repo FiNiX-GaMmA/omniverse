@@ -264,7 +264,7 @@ struct OnePaceScreen: View {
             loadingArcs = false
             if !fetched.isEmpty {
                 // Resume from watch history if present.
-                if let active = state.continueWatching.first(where: { $0.itemId == "anilist:anime:21" }),
+                if let active = state.continueWatching.first(where: { $0.itemId == "onepace:anime:21" || ($0.itemId == "anilist:anime:21" && $0.title == "One Pace") }),
                    let season = active.seasonNumber, season >= 1, season <= fetched.count {
                     selectedSeasonNumber = season
                 } else {

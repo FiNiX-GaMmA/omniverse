@@ -77,7 +77,7 @@ struct HomeScreen: View {
         // fall back to the One Pace browse screen if resolution fails.
         if entry.title == "One Pace"
             || entry.itemId.hasPrefix("onepace:")
-            || entry.itemId.hasPrefix("anilist:anime:21") {
+            || (entry.itemId.hasPrefix("anilist:anime:21") && entry.title == "One Pace") {
             await resumeOnePace(entry, fallbackItem: item, startPositionMs: startPositionMs)
             return
         }

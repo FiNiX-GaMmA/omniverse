@@ -120,7 +120,7 @@ fun OnePaceScreen(nav: NavController) {
             arcs = fetched
             loadingArcs = false
             if (fetched.isNotEmpty()) {
-                val active = state.continueWatching.firstOrNull { it.itemId == "anilist:anime:21" }
+                val active = state.continueWatching.firstOrNull { it.itemId == "onepace:anime:21" || (it.itemId == "anilist:anime:21" && it.title == "One Pace") }
                 selectedSeason = active?.seasonNumber?.takeIf { it in 1..fetched.size } ?: 1
                 groupIndex = 0
                 loadEpisodes(fetched[selectedSeason - 1])

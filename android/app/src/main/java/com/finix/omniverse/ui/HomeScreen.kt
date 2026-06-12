@@ -91,7 +91,7 @@ fun HomeScreen(nav: NavController) {
     suspend fun resolveAndPlay(entry: WatchProgress, startPositionMs: Int): Boolean {
         val item = mediaItemFor(entry)
         // One Pace: resolve the arc/episode and resume playback directly.
-        if (entry.title == "One Pace" || entry.itemId.startsWith("onepace:") || entry.itemId.startsWith("anilist:anime:21")) {
+        if (entry.title == "One Pace" || entry.itemId.startsWith("onepace:") || (entry.itemId.startsWith("anilist:anime:21") && entry.title == "One Pace")) {
             val season = entry.seasonNumber
             val epNum = entry.episodeNumber
             if (season == null || epNum == null) { openDetail(item); return false }

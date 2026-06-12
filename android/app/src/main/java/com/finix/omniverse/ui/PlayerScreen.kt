@@ -394,7 +394,9 @@ fun PlayerScreen(
     // Fetch AniSkip once ready
     LaunchedEffect(isReady, durationMs) {
         if (!isReady || durationMs <= 0) return@LaunchedEffect
-        if (args.item?.title == "One Pace") return@LaunchedEffect
+        val title = args.item?.title?.lowercase() ?: ""
+        val id = args.item?.id?.lowercase() ?: ""
+        if (title == "one pace" || title.contains("one pace") || id.startsWith("onepace:") || id.contains("onepace")) return@LaunchedEffect
         val anilistId = args.item?.anilistId ?: return@LaunchedEffect
         val ep = args.episode ?: return@LaunchedEffect
         val intervals = fetchAniSkip(anilistId, args.aniSkipEpisode ?: ep.episodeNumber, durationMs / 1000)
