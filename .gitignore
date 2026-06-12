@@ -17,6 +17,11 @@ Thumbs.db
 .svn/
 .vscode/
 
+# Temporary screenshots and automation testing dumps
+/screen.png
+/screen_*.png
+/window_dump.xml
+
 # IntelliJ / Android Studio Files
 *.iml
 *.ipr

@@ -438,8 +438,9 @@ fun PlayerScreen(
         } else {
             AndroidView(
                 factory = { ctx ->
-                    PlayerView(ctx).apply {
-                        useController = false
+                    val layoutInflater = android.view.LayoutInflater.from(ctx)
+                    val view = layoutInflater.inflate(com.finix.omniverse.R.layout.player_view, null) as PlayerView
+                    view.apply {
                         this.player = player
                         resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                     }

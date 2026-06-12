@@ -82,7 +82,7 @@ fi
 
 # 4. Installing the APK
 echo -e "${BLUE}info:${NC} Deploying app to ${DEVICE_NAME} (this will replace previous installs)..."
-adb -s "$DEVICE_ID" install -r "$APK_PATH"
+adb -s "$DEVICE_ID" install -r -d "$APK_PATH"
 
 # 5. Launching the App
 echo -e "${BLUE}info:${NC} Booting Omniverse on ${DEVICE_NAME}..."

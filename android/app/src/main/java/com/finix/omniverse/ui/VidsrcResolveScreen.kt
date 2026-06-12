@@ -9,12 +9,15 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -35,6 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -99,6 +104,15 @@ fun VidsrcResolveScreen(
     val servers = remember { mutableStateListOf<VServer>() }
     var currentServer by remember { mutableIntStateOf(0) }
     var serverMenu by remember { mutableStateOf(false) }
+    var controlsVisible by remember { mutableStateOf(true) }
+
+    // Auto-hide Top Bar after 5 seconds of inactivity once video starts playing
+    LaunchedEffect(controlsVisible, finished) {
+        if (controlsVisible && finished) {
+            delay(5000)
+            controlsVisible = false
+        }
+    }
 
     // End-of-show autoplay / recommendations
     var handledFinish by remember { mutableStateOf(false) }
@@ -274,28 +288,30 @@ fun VidsrcResolveScreen(
     }
 
     Box(Modifier.fillMaxSize()) {
-    Column(Modifier.fillMaxSize().background(Color.Black)) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(40.dp).tvFocusable(onClick = { closeOrRecommend() }, corner = 20), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.Close, "Close", tint = Color.White)
-            }
-            Text(args.title, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
-            if (servers.size > 1) {
-                Box {
-                    Text("Servers", color = Color.White, fontSize = 14.sp, modifier = Modifier.tvFocusable(onClick = { serverMenu = true }, corner = 6).padding(8.dp))
-                    DropdownMenu(serverMenu, { serverMenu = false }) {
-                        servers.forEachIndexed { i, s ->
-                            DropdownMenuItem(text = { Text((s.name.ifEmpty { "Server ${i + 1}" }) + (if (i == currentServer) " ✓" else "")) }, onClick = {
-                                serverMenu = false; machine.pollJob?.cancel(); finished = false; currentServer = i; navigateToServer()
-                            })
+    Column(Modifier.fillMaxSize()) {
+        if (controlsVisible || !finished) {
+            Row(Modifier.fillMaxWidth().background(Color.Black).padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(40.dp).tvFocusable(onClick = { closeOrRecommend() }, corner = 20), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Filled.Close, "Close", tint = Color.White)
+                }
+                Text(args.title, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
+                if (servers.size > 1) {
+                    Box {
+                        Text("Servers", color = Color.White, fontSize = 14.sp, modifier = Modifier.tvFocusable(onClick = { serverMenu = true }, corner = 6).padding(8.dp))
+                        DropdownMenu(serverMenu, { serverMenu = false }) {
+                            servers.forEachIndexed { i, s ->
+                                DropdownMenuItem(text = { Text((s.name.ifEmpty { "Server ${i + 1}" }) + (if (i == currentServer) " ✓" else "")) }, onClick = {
+                                    serverMenu = false; machine.pollJob?.cancel(); finished = false; currentServer = i; navigateToServer()
+                                })
+                            }
                         }
                     }
                 }
             }
         }
         if (!finished) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth().background(Color.Black).padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (errorMessage == null) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                 Text(errorMessage ?: status, color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
@@ -303,7 +319,11 @@ fun VidsrcResolveScreen(
         AndroidView(
             factory = { ctx ->
                 WebView(ctx).apply {
-                    setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+                    layoutParams = android.view.ViewGroup.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    setLayerType(android.view.View.LAYER_TYPE_NONE, null)
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
                     settings.databaseEnabled = true
@@ -318,16 +338,29 @@ fun VidsrcResolveScreen(
                     settings.allowFileAccess = true
                     // A WebChromeClient is required for HTML5 video playback in WebView.
                     webChromeClient = android.webkit.WebChromeClient()
-                    // NO custom UA — Turnstile fingerprints WebViews; keep the real UA.
+                    // Spoof standard Mobile Chrome to bypass WebView-specific video player restrictions and ensure proper HLS playback
+                    settings.userAgentString = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
                     setBackgroundColor(AndroidColor.TRANSPARENT)
                     webViewClient = object : WebViewClient() {
                         override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                             if (request?.isForMainFrame != true) return false
-                            val url = (request.url?.toString() ?: "").lowercase()
-                            val allow = url.startsWith("about:") || url.contains("vidsrc-embed") || url.contains("vsembed") ||
-                                url.contains("vsrc.") || url.contains("vidsrcme") || url.contains("cloudnestra") ||
-                                url.contains("rcp/") || url.contains("prorcp/")
+                            val url = request.url?.toString() ?: ""
+                            val urlLower = url.lowercase()
+                            val allow = urlLower.startsWith("about:") || urlLower.contains("vidsrc-embed") || urlLower.contains("vsembed") ||
+                                urlLower.contains("vsrc.") || urlLower.contains("vidsrcme") || urlLower.contains("cloudnestra") ||
+                                urlLower.contains("rcp/") || urlLower.contains("prorcp/")
                             return !allow
+                        }
+                        override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
+                            val url = request?.url?.toString() ?: return null
+                            if (url.contains("disable-devtool")) {
+                                return android.webkit.WebResourceResponse(
+                                    "text/javascript",
+                                    "UTF-8",
+                                    java.io.ByteArrayInputStream("".toByteArray())
+                                )
+                            }
+                            return null
                         }
                         override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                             // Defeat iframe sandboxing as early as possible.
@@ -361,6 +394,20 @@ fun VidsrcResolveScreen(
             }
         }
     }
+
+        // Invisible top area to trigger/toggle controls back on when tapped
+        if (!controlsVisible && finished) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures {
+                            controlsVisible = true
+                        }
+                    }
+            )
+        }
 
         // End-of-show recommendations
         if (recommendations != null || loadingRecommendations) {

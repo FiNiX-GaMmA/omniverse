@@ -68,11 +68,15 @@ fun WebEmbedScreen(args: WebArgs, onClose: () -> Unit) {
         }
     }
 
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    Box(Modifier.fillMaxSize()) {
         AndroidView(
             factory = { ctx ->
                 WebView(ctx).apply {
-                    setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+                    layoutParams = android.view.ViewGroup.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    setLayerType(android.view.View.LAYER_TYPE_NONE, null)
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
                     settings.databaseEnabled = true
@@ -90,8 +94,21 @@ fun WebEmbedScreen(args: WebArgs, onClose: () -> Unit) {
                         override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                             val url = request?.url?.toString() ?: return false
                             // block ad/popunder hosts only when they take over the main frame; subframes allowed
-                            if (request.isForMainFrame && WebGuards.shouldBlock(url)) { blocked++; return true }
+                            if (request.isForMainFrame && WebGuards.shouldBlock(url)) {
+                                blocked++; return true
+                            }
                             return false
+                        }
+                        override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
+                            val url = request?.url?.toString() ?: return null
+                            if (url.contains("disable-devtool")) {
+                                return android.webkit.WebResourceResponse(
+                                    "text/javascript",
+                                    "UTF-8",
+                                    java.io.ByteArrayInputStream("".toByteArray())
+                                )
+                            }
+                            return null
                         }
                         override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                             loading = true
@@ -102,6 +119,9 @@ fun WebEmbedScreen(args: WebArgs, onClose: () -> Unit) {
                             loading = false
                             view?.evaluateJavascript(WebGuards.unsandboxJs, null)
                             view?.evaluateJavascript(WebGuards.embedGuardJs, null)
+                        }
+                        override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
+                            if (request?.isForMainFrame != true) return
                         }
                     }
                     val headers = when {
