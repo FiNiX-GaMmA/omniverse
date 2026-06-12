@@ -85,7 +85,7 @@ fun WebEmbedScreen(args: WebArgs, onClose: () -> Unit) {
                     settings.allowContentAccess = true
                     settings.allowFileAccess = true
                     webChromeClient = android.webkit.WebChromeClient()
-                    setBackgroundColor(AndroidColor.BLACK)
+                    setBackgroundColor(AndroidColor.TRANSPARENT)
                     webViewClient = object : WebViewClient() {
                         override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                             val url = request?.url?.toString() ?: return false

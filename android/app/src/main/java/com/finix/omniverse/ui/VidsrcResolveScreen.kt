@@ -319,7 +319,7 @@ fun VidsrcResolveScreen(
                     // A WebChromeClient is required for HTML5 video playback in WebView.
                     webChromeClient = android.webkit.WebChromeClient()
                     // NO custom UA — Turnstile fingerprints WebViews; keep the real UA.
-                    setBackgroundColor(AndroidColor.BLACK)
+                    setBackgroundColor(AndroidColor.TRANSPARENT)
                     webViewClient = object : WebViewClient() {
                         override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                             if (request?.isForMainFrame != true) return false
