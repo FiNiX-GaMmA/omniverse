@@ -117,15 +117,15 @@ struct SettingsScreen: View {
         VStack(spacing: 24) {
             infoPanel("Live & Secret API keys can be managed securely. All credentials, secret tokens, and application identifiers are encrypted locally and stored within your device's system keychain.")
             section("Secret API Credentials") {
-                SecretField(text: $tmdb, label: "TheMovieDB (TMDB) token", hint: "TMDB API key or v4 bearer token", onCopy: copy)
-                SecretField(text: $tvdb, label: "TVDB v4 API key", hint: "E.g., tvdb_api_key_xxxxxxxx", onCopy: copy)
-                SecretField(text: $tvdbPin, label: "TVDB Subscriber PIN (optional)", hint: "Enter your custom subscriber pin", onCopy: copy)
-                SecretField(text: $pixeldrainApiKey, label: "Pixeldrain API key", hint: "Used for secure One Pace video streams", onCopy: copy)
-                SecretField(text: $anilistAccessToken, label: "AniList Access Token", hint: "Required for real-time completed scrobbling", onCopy: copy)
+                SecretField(text: $tmdb, label: "TheMovieDB (TMDB) token", hint: "TMDB API key or v4 bearer token", logoUrl: "https://themoviedb.org/favicon.ico", onCopy: copy)
+                SecretField(text: $tvdb, label: "TVDB v4 API key", hint: "E.g., tvdb_api_key_xxxxxxxx", logoUrl: "https://thetvdb.com/favicon.ico", onCopy: copy)
+                SecretField(text: $tvdbPin, label: "TVDB Subscriber PIN (optional)", hint: "Enter your custom subscriber pin", logoUrl: "https://thetvdb.com/favicon.ico", onCopy: copy)
+                SecretField(text: $pixeldrainApiKey, label: "Pixeldrain API key", hint: "Used for secure One Pace video streams", logoUrl: "https://pixeldrain.net/favicon.ico", onCopy: copy)
+                SecretField(text: $anilistAccessToken, label: "AniList Access Token", hint: "Required for real-time completed scrobbling", logoUrl: "https://anilist.co/img/icons/android-chrome-512x512.png", onCopy: copy)
             }
             section("Trakt Developer Client Keys") {
-                SecretField(text: $traktId, label: "Trakt Client ID", hint: "Used to authorize Trakt.tv account syncing", onCopy: copy)
-                SecretField(text: $traktSecret, label: "Trakt Client Secret", hint: "Secure Trakt app authorization secret", onCopy: copy)
+                SecretField(text: $traktId, label: "Trakt Client ID", hint: "Used to authorize Trakt.tv account syncing", logoUrl: "https://trakt.tv/favicon.ico", onCopy: copy)
+                SecretField(text: $traktSecret, label: "Trakt Client Secret", hint: "Secure Trakt app authorization secret", logoUrl: "https://trakt.tv/favicon.ico", onCopy: copy)
             }
         }
         .padding(EdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24))
@@ -174,7 +174,8 @@ struct SettingsScreen: View {
                     ? (state.credentials.traktUsername.isEmpty ? "Connected to Trakt" : "Connected as: \(state.credentials.traktUsername)")
                     : "Trakt disconnected (Sync disabled)",
                 iconName: "heart.circle.fill",
-                iconColor: .red
+                iconColor: .red,
+                logoUrl: "https://trakt.tv/favicon.ico"
             ) {
                 glassChip(state.credentials.hasTraktUser ? "Refresh Login" : "Connect Trakt",
                           system: "person.crop.circle", loading: state.traktConnecting) { connectTrakt() }
@@ -202,7 +203,8 @@ struct SettingsScreen: View {
                 isConnected: state.credentials.hasAnilist,
                 statusText: state.credentials.hasAnilist ? "Connected to AniList (Sync Active)" : "AniList disconnected (Sync disabled)",
                 iconName: "play.circle.fill",
-                iconColor: .blue
+                iconColor: .blue,
+                logoUrl: "https://anilist.co/img/icons/android-chrome-512x512.png"
             ) {
                 glassChip(state.credentials.hasAnilist ? "Refresh Login" : "Connect AniList", system: "person.crop.circle") {
                     if let url = URL(string: "https://anilist.co/api/v2/oauth/authorize?client_id=14187&response_type=token") {
@@ -343,12 +345,28 @@ struct SettingsScreen: View {
     }
 
     private func syncCard<C: View>(title: String, isConnected: Bool, statusText: String,
-                                   iconName: String, iconColor: Color,
+                                   iconName: String, iconColor: Color, logoUrl: String? = nil,
                                    @ViewBuilder actions: @escaping () -> C) -> some View {
         GlassPanel(cornerRadius: 20) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 12) {
-                    Image(systemName: iconName).font(.system(size: 28)).foregroundStyle(iconColor)
+                    if let urlString = logoUrl, let url = URL(string: urlString) {
+                        AsyncImage(url: url) { phase in
+                            if let image = phase.image {
+                                image.resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            } else {
+                                Color.clear
+                            }
+                        }
+                        .frame(width: 18, height: 18)
+                        .padding(3)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 5))
+                        .frame(width: 24, height: 24)
+                    } else {
+                        Image(systemName: iconName).font(.system(size: 28)).foregroundStyle(iconColor)
+                    }
                     Text(title).font(.system(size: 16, weight: .black)).foregroundStyle(.white)
                 }
                 HStack(spacing: 8) {
@@ -479,6 +497,7 @@ struct SecretField: View {
     @Binding var text: String
     let label: String
     var hint: String = ""
+    var logoUrl: String? = nil
     var onCopy: (String) -> Void
     @State private var obscure = true
 
@@ -487,6 +506,21 @@ struct SecretField: View {
             Text(label).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white.opacity(0.6))
             HStack(spacing: 12) {
                 HStack(spacing: 8) {
+                    if let urlString = logoUrl, let url = URL(string: urlString) {
+                        AsyncImage(url: url) { phase in
+                            if let image = phase.image {
+                                image.resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            } else {
+                                Color.clear
+                            }
+                        }
+                        .frame(width: 18, height: 18)
+                        .padding(3)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 5))
+                        .frame(width: 24, height: 24)
+                    }
                     Group {
                         if obscure {
                             SecureField("", text: $text, prompt: Text(hint).foregroundColor(.white.opacity(0.4)))

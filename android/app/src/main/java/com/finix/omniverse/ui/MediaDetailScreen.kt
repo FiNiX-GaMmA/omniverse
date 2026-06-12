@@ -1,5 +1,6 @@
 package com.finix.omniverse.ui
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -296,7 +297,29 @@ private fun DetailHero(
             Text(current.type.label + (if (current.genres.isEmpty()) "" else " • " + current.genres.take(3).joinToString(" • ")),
                 color = Color.White.copy(alpha = 0.72f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             if (current.overview.isNotEmpty()) {
-                Text(current.overview, color = Color.White.copy(alpha = 0.82f), fontSize = 14.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                var expanded by remember { mutableStateOf(false) }
+                Column(Modifier.fillMaxWidth().animateContentSize()) {
+                    Text(
+                        current.overview,
+                        color = Color.White.copy(alpha = 0.82f),
+                        fontSize = 14.sp,
+                        maxLines = if (expanded) 20 else 3,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 20.sp
+                    )
+                    if (current.overview.length > 150) {
+                        Text(
+                            text = if (expanded) "Read Less" else "Read More",
+                            color = LiquidColors.Cyan,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .tvFocusable(onClick = { expanded = !expanded }, corner = 4)
+                                .padding(vertical = 4.dp, horizontal = 8.dp)
+                        )
+                    }
+                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 GlassChip(current.releaseDate.split("-").firstOrNull()?.ifEmpty { "2025" } ?: "2025")

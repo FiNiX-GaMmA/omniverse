@@ -141,12 +141,21 @@ jobs:
           tag_name: v2.1.${{ github.run_number }}
           name: Omniverse v2.1.${{ github.run_number }} Release
           body: |
-            ### 🆕 Update Details:
+            ## 🚀 New Update Released!
+
+            ### 🆕 What's New / Changes:
             ${{ env.COMMIT_MSG }}
 
+            ---
+
             ### 📦 Installation Packages:
-            *   **Android Devices**: Download **`Omniverse.apk`** to install on any Android Mobile, Tablet, or Android TV.
-            *   **iOS/iPadOS Devices**: Download **`Omniverse-Unsigned.ipa`** to deploy/sideload on your Apple hardware.
+            *   🤖 **Android Devices**: Download **`Omniverse.apk`** to install directly on any Android Mobile, Tablet, or Android TV / Fire TV.
+            *   🍎 **iOS/iPadOS/macOS Devices**: Download **`Omniverse-Unsigned.ipa`** to sideload or deploy on your Apple hardware.
+
+            ### ⚡ Features Highlight:
+            *   🏴‍☠️ **One Pace Integration**: Fully synchronized One Pace arcs.
+            *   🌸 **AniList Integration**: Live scrobbling for all your favorite animes.
+            *   🍿 **Trakt Sync**: Real-time cloud sync & watchlist manager.
           draft: false
           prerelease: false
           files: |

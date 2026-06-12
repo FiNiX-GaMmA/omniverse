@@ -44,6 +44,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.material3.TextButton
+import coil.compose.AsyncImage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -183,15 +184,15 @@ fun SettingsScreen() {
             when (page) {
                 0 -> {
                     Section("Secret API Credentials") {
-                        SecretField(tmdb, { tmdb = it }, "TheMovieDB (TMDB) token")
-                        SecretField(tvdb, { tvdb = it }, "TVDB v4 API key")
-                        SecretField(tvdbPin, { tvdbPin = it }, "TVDB Subscriber PIN (optional)")
-                        SecretField(pixeldrain, { pixeldrain = it }, "Pixeldrain API key")
-                        SecretField(anilist, { anilist = it }, "AniList Access Token")
+                        SecretField(tmdb, { tmdb = it }, "TheMovieDB (TMDB) token", "https://themoviedb.org/favicon.ico")
+                        SecretField(tvdb, { tvdb = it }, "TVDB v4 API key", "https://thetvdb.com/favicon.ico")
+                        SecretField(tvdbPin, { tvdbPin = it }, "TVDB Subscriber PIN (optional)", "https://thetvdb.com/favicon.ico")
+                        SecretField(pixeldrain, { pixeldrain = it }, "Pixeldrain API key", "https://pixeldrain.net/favicon.ico")
+                        SecretField(anilist, { anilist = it }, "AniList Access Token", "https://anilist.co/img/icons/android-chrome-512x512.png")
                     }
                     Section("Trakt Developer Client Keys") {
-                        SecretField(traktId, { traktId = it }, "Trakt Client ID")
-                        SecretField(traktSecret, { traktSecret = it }, "Trakt Client Secret")
+                        SecretField(traktId, { traktId = it }, "Trakt Client ID", "https://trakt.tv/favicon.ico")
+                        SecretField(traktSecret, { traktSecret = it }, "Trakt Client Secret", "https://trakt.tv/favicon.ico")
                     }
                 }
                 1 -> {
@@ -218,6 +219,7 @@ fun SettingsScreen() {
                         "Trakt.tv Sync Integration", state.credentials.hasTraktUser,
                         if (state.credentials.hasTraktUser) (if (state.credentials.traktUsername.isEmpty()) "Connected to Trakt" else "Connected as: ${state.credentials.traktUsername}")
                         else "Trakt disconnected (Sync disabled)",
+                        "https://trakt.tv/favicon.ico",
                     ) {
                         Chip(if (state.credentials.hasTraktUser) "Refresh Login" else "Connect Trakt") {
                             scope.launch { saveAll(); state.startTraktBrowserAuth()?.let { openUrl(it.toString()) } }
@@ -229,23 +231,25 @@ fun SettingsScreen() {
                     SyncCard(
                         "Cross-Device Login", true,
                         "Move your login, API keys and preferences between devices with a QR code. No server, no re-login.",
+                        null,
                     ) {
                         Chip("Show Sync QR") { showSyncQr = true }
                         Chip("Scan Sync QR") { requestScan() }
                     }
-                    SyncCard("App Updates", true, "Check for a newer version of Omniverse.") {
+                    SyncCard("App Updates", true, "Check for a newer version of Omniverse.", null) {
                         Chip("Check for updates") { checkForUpdates() }
                     }
                     SyncCard(
                         "AniList Sync Integration", state.credentials.hasAnilist,
                         if (state.credentials.hasAnilist) "Connected to AniList (Sync Active)" else "AniList disconnected (Sync disabled)",
+                        "https://anilist.co/img/icons/android-chrome-512x512.png",
                     ) {
                         Chip(if (state.credentials.hasAnilist) "Refresh Login" else "Connect AniList") {
                             openUrl("https://anilist.co/api/v2/oauth/authorize?client_id=14187&response_type=token")
                         }
                         if (state.credentials.hasAnilist) Chip("Disconnect") { scope.launch { state.saveCredentials(state.credentials.copy(anilistAccessToken = "")) } }
                     }
-                    SyncCard("Manual Sync", true, "Push or pull your login, API keys and preferences to/from the cloud now.") {
+                    SyncCard("Manual Sync", true, "Push or pull your login, API keys and preferences to/from the cloud now.", null) {
                         Chip("Sync Now") {
                             scope.launch {
                                 state.syncNow()
@@ -353,13 +357,26 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun SecretField(value: String, onChange: (String) -> Unit, label: String) {
+private fun SecretField(value: String, onChange: (String) -> Unit, label: String, logoUrl: String? = null) {
     var obscure by remember { mutableStateOf(true) }
     Column(Modifier.fillMaxWidth()) {
         Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         OutlinedTextField(
             value = value, onValueChange = onChange, modifier = Modifier.fillMaxWidth(), singleLine = true,
             visualTransformation = if (obscure) PasswordVisualTransformation() else VisualTransformation.None,
+            leadingIcon = logoUrl?.let { url ->
+                {
+                    AsyncImage(
+                        model = url,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color.White)
+                            .padding(3.dp)
+                    )
+                }
+            },
             trailingIcon = { Text(if (obscure) "show" else "hide", color = LiquidColors.Cyan, fontSize = 12.sp, modifier = Modifier.tvFocusable(onClick = { obscure = !obscure }, corner = 4).padding(8.dp)) },
             colors = textColors(),
         )
@@ -405,13 +422,22 @@ private fun ToggleRow(title: String, value: Boolean, onChange: (Boolean) -> Unit
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SyncCard(title: String, connected: Boolean, status: String, actions: @Composable () -> Unit) {
+private fun SyncCard(title: String, connected: Boolean, status: String, logoUrl: String? = null, actions: @Composable () -> Unit) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Color.White.copy(alpha = 0.06f))
             .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp)).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            logoUrl?.let { url ->
+                AsyncImage(
+                    model = url,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp).clip(RoundedCornerShape(6.dp)).background(Color.White).padding(3.dp)
+                )
+            }
+            Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black)
+        }
         Text(status, color = if (connected) Color.White else Color.White.copy(alpha = 0.38f), fontSize = 13.sp, fontWeight = if (connected) FontWeight.Bold else FontWeight.Normal)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { actions() }
     }

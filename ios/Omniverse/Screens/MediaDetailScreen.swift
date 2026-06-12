@@ -18,6 +18,7 @@ struct MediaDetailScreen: View {
     @State private var sheetTitle = ""
     @State private var pendingEpisode: MediaEpisode?
     @State private var player: PlayerRoute?
+    @State private var overviewExpanded = false
     @State private var webEmbed: WebRoute?
     @State private var vidsrc: VidsrcRoute?
 
@@ -85,7 +86,27 @@ struct MediaDetailScreen: View {
                     Text("\(current.type.label)\(current.genres.isEmpty ? "" : " • " + current.genres.prefix(3).joined(separator: " • "))")
                         .font(.system(size: 14, weight: .semibold)).foregroundStyle(.white.opacity(0.72))
                     if !current.overview.isEmpty {
-                        Text(current.overview).font(.system(size: 14)).foregroundStyle(.white.opacity(0.82)).lineLimit(3)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(current.overview)
+                                .font(.system(size: 14))
+                                .foregroundStyle(.white.opacity(0.82))
+                                .lineLimit(overviewExpanded ? 20 : 3)
+                                .lineSpacing(4)
+
+                            if current.overview.count > 150 {
+                                Button {
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                        overviewExpanded.toggle()
+                                    }
+                                } label: {
+                                    Text(overviewExpanded ? "Read Less" : "Read More")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(LiquidColors.cyan)
+                                        .padding(.vertical, 4)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
                     badges
                     actions
