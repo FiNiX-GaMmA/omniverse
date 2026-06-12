@@ -72,7 +72,7 @@ jobs:
           xcodebuild -project ios/Omniverse.xcodeproj \
                      -scheme Omniverse \
                      -sdk iphonesimulator \
-                     -destination 'platform=iOS Simulator,name=iPad (A16)' \
+                     -destination 'platform=iOS Simulator,name=iPad mini (A17 Pro)' \
                      test
 
       - name: Compile and Archive Swift App Bundle (Unsigned)
