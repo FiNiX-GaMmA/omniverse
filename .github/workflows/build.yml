@@ -108,6 +108,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Download Android Artifact
         uses: actions/download-artifact@v4
         with:
@@ -126,26 +129,24 @@ jobs:
           cp out_android/app-release.apk release_assets/Omniverse.apk
           cp out_ios/Omniverse-Unsigned.ipa release_assets/Omniverse-Unsigned.ipa
 
+      - name: Get Latest Commit Message
+        run: |
+          echo "COMMIT_MSG<<EOF" >> $GITHUB_ENV
+          git log -1 --pretty=%B >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v2.1.${{ github.run_number }}
           name: Omniverse v2.1.${{ github.run_number }} Release
           body: |
-            ## 🎉 Omniverse v1.0 — Native Revolution & Sync Mastery
-
-            This milestone release introduces the redesigned, 100% native architecture for iOS, iPadOS, and Android!
+            ### 🆕 Update Details:
+            ${{ env.COMMIT_MSG }}
 
             ### 📦 Installation Packages:
             *   **Android Devices**: Download **`Omniverse.apk`** to install on any Android Mobile, Tablet, or Android TV.
             *   **iOS/iPadOS Devices**: Download **`Omniverse-Unsigned.ipa`** to deploy/sideload on your Apple hardware.
-
-            ### ✨ Key Features:
-            *   **Zero-Config 1-Second Sync**: Private peer-to-peer-like Base64 QR pairing to sync settings and accounts without any centralized servers.
-            *   **Netflix-Style Autoplay Countdown**: 10-second circular progress countdown with auto-advance and D-pad/remote click support.
-            *   **Clean Continue Watching**: Unified per-show tracking (Netflix style) that dedupes history rows.
-            *   **silicate 120Hz ProMotion & Landscape Lock**: Silky-smooth rendering and absolute playback orientation locks.
-            *   **Unified Build & Deploy Tools**: Build and deploy directly via `./install_ipad.sh` and `./install_android.sh`!
           draft: false
           prerelease: false
           files: |

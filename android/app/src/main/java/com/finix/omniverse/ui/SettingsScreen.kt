@@ -305,9 +305,13 @@ fun SettingsScreen() {
             title = { Text("Update available") },
             text = {
                 val notes = info.notes?.takeIf { it.isNotBlank() }
-                Text(
-                    "Version ${info.versionName} is available." + (notes?.let { "\n\n$it" } ?: ""),
-                )
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        "Version ${info.versionName} is available." + (notes?.let { "\n\n$it" } ?: ""),
+                    )
+                }
             },
             confirmButton = {
                 TextButton(onClick = {
