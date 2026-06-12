@@ -865,8 +865,8 @@ struct PlayerScreen: View {
         GeometryReader { geo in
             ZStack {
                 // Backdrop dims as the user drags to dismiss.
-                let dragFraction = min(max(dragOffset / (geo.size.height * 0.22), 0), 1)
-                Color.black.opacity(1 - dragFraction * 0.7).ignoresSafeArea()
+                let dragFraction = Double(min(max(dragOffset / (geo.size.height * 0.22), 0), 1))
+                Color.black.opacity(1.0 - dragFraction * 0.7).ignoresSafeArea()
 
                 content(geo: geo)
                     .offset(y: dragOffset)
