@@ -45,6 +45,8 @@ import com.finix.omniverse.ui.theme.LiquidColors
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import android.graphics.Bitmap
+import org.json.JSONObject
+import okhttp3.RequestBody.Companion.toRequestBody
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
