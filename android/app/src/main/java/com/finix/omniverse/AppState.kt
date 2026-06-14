@@ -21,6 +21,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
+import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 import org.json.JSONObject
 import kotlin.math.ln
 import kotlin.random.Random
@@ -112,6 +115,14 @@ class AppState(context: Context) {
                 while (isActive) {
                     delay(20_000)
                     if (credentials.hasTraktUser && initialized) syncNow()
+                }
+            }
+
+            // Check for newer releases silently in the background on startup
+            scope.launch {
+                delay(3000) // delay slightly to let boot animations finish
+                if (UpdateChecker.check() is UpdateChecker.CheckResult.Available) {
+                    message = "A new update is available! Go to Settings > Update to install."
                 }
             }
         }
@@ -385,15 +396,29 @@ class AppState(context: Context) {
 
         // Handle New Pairing Flow: Scanned Pairing ID from another device
         if (value.startsWith("OMNIVERSE-PAIR1:")) {
-            val pairId = value.removePrefix("OMNIVERSE-PAIR1:").trim()
-            if (pairId.isEmpty()) {
-                message = "Invalid pairing ID."
+            val parts = value.split(":")
+            if (parts.size == 3) {
+                val pairId = parts[1].trim()
+                val secretKey = parts[2].trim()
+                if (pairId.isEmpty() || secretKey.isEmpty()) {
+                    message = "Invalid pairing credentials."
+                    return false
+                }
+                // Encrypt the payload locally using the physically scanned secret key!
+                val rawPayload = SyncCenter.buildSyncString(credentials, settings)
+                val encrypted = runCatching { SimpleAES.encrypt(rawPayload, secretKey) }.getOrNull()
+                if (encrypted == null) {
+                    message = "Could not encrypt pairing payload."
+                    return false
+                }
+
+                pendingPairingId = pairId
+                pendingPairingPayload = encrypted
+                return true
+            } else {
+                message = "Malformed pairing QR code."
                 return false
             }
-            // Trigger confirmation dialog instead of silent upload
-            pendingPairingId = pairId
-            pendingPairingPayload = SyncCenter.buildSyncString(credentials, settings)
-            return true
         }
 
         if (!SyncCenter.isSyncString(value)) {
@@ -701,12 +726,16 @@ class AppState(context: Context) {
         pendingPairingPayload = null
         scope.launch {
             try {
-                // Upload to our private, permanent global bucket
-                val url = "https://kvdb.io/CmMNVWTaFnbJam3Rp6LV8Q/$id"
+                // Upload to our private, permanent global bucket on restful-api.dev
+                val url = "https://api.restful-api.dev/objects/$id"
+                val bodyJson = JSONObject()
+                    .put("name", "Omniverse Pairing")
+                    .put("data", JSONObject().put("payload", payload))
                 val response = Http.request(
                     url = url,
-                    method = "POST",
-                    body = payload.toRequestBody(null)
+                    method = "PUT",
+                    headers = mapOf("Content-Type" to "application/json"),
+                    body = bodyJson.toString().toRequestBody(null)
                 )
                 if (response.ok) {
                     message = "Synced successfully with the other device!"
@@ -718,6 +747,33 @@ class AppState(context: Context) {
             }
         }
     }
+}
+
+// ==============================================================================
+// Symmetric AES-128-CBC Encryption Engine for Zero-Trust Pairing
+// ==============================================================================
+object SimpleAES {
+    fun encrypt(text: String, keyString: String): String {
+        val keyBytes = keyString.toByteArray(Charsets.UTF_8)
+        val keySpec = SecretKeySpec(keyBytes, "AES")
+        val ivSpec = IvParameterSpec(keyBytes)
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec)
+        val encryptedBytes = cipher.doFinal(text.toByteArray(Charsets.UTF_8))
+        return android.util.Base64.encodeToString(encryptedBytes, android.util.Base64.NO_WRAP)
+    }
+
+    fun decrypt(b64Cipher: String, keyString: String): String {
+        val keyBytes = keyString.toByteArray(Charsets.UTF_8)
+        val keySpec = SecretKeySpec(keyBytes, "AES")
+        val ivSpec = IvParameterSpec(keyBytes)
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec)
+        val decodedBytes = android.util.Base64.decode(b64Cipher, android.util.Base64.DEFAULT)
+        val decryptedBytes = cipher.doFinal(decodedBytes)
+        return String(decryptedBytes, Charsets.UTF_8)
+    }
+}
 
     // MARK: - Live TV sources
 

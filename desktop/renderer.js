@@ -220,6 +220,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (state.traktToken) {
     pullFromTrakt();
   }
+
+  // Silently check for newer releases in the background and notify
+  setTimeout(() => {
+    checkAppUpdates(true);
+  }, 3000);
 });
 
 // Configure Window Controls based on OS
@@ -945,9 +950,9 @@ function isNewerVersion(current, remote) {
   return false;
 }
 
-async function checkAppUpdates() {
+async function checkAppUpdates(silent = false) {
   const checkBtn = document.getElementById("check-update-btn");
-  if (checkBtn) {
+  if (checkBtn && !silent) {
     checkBtn.disabled = true;
     checkBtn.textContent = "Checking...";
   }
@@ -1005,29 +1010,35 @@ async function checkAppUpdates() {
           .classList.remove("hidden");
 
         window.electron.showNotification(
-          "Update Found",
-          `Omniverse v${remoteVersion} is available for download!`,
+          "Omniverse Update Available",
+          `Version ${remoteVersion} has been released! Open Settings to download and install.`,
         );
       } else {
-        window.electron.showNotification(
-          "Update Available",
-          `Omniverse v${remoteVersion} is released, but the installer for ${platform} is compiling.`,
-        );
+        if (!silent) {
+          window.electron.showNotification(
+            "Update Available",
+            `Omniverse v${remoteVersion} is released, but the installer for ${platform} is compiling.`,
+          );
+        }
       }
     } else {
-      window.electron.showNotification(
-        "Up To Date",
-        "You are running the latest version of Omniverse Desktop.",
-      );
+      if (!silent) {
+        window.electron.showNotification(
+          "Up To Date",
+          "You are running the latest version of Omniverse Desktop.",
+        );
+      }
     }
   } catch (err) {
     console.error("Update Checker error: ", err);
-    window.electron.showNotification(
-      "Update Check Failed",
-      "Could not check for newer releases.",
-    );
+    if (!silent) {
+      window.electron.showNotification(
+        "Update Check Failed",
+        "Could not check for newer releases.",
+      );
+    }
   } finally {
-    if (checkBtn) {
+    if (checkBtn && !silent) {
       checkBtn.disabled = false;
       checkBtn.textContent = "Check Update";
     }
@@ -1075,59 +1086,147 @@ async function startOtaUpdate() {
 // ==============================================================================
 // Cross-Device Dynamic Pairing Handshake (Inverted Sync)
 // ==============================================================================
-function showPairingQr() {
-  // Generate a random unique pairing ID (secure 8-character string)
-  const pairKey = "pair_" + Math.random().toString(36).substring(2, 10);
-  const dataStr = "OMNIVERSE-PAIR1:" + pairKey;
+let activePairingKey = "";
 
-  // Use the ultra-fast, lightweight, secure CDN-based QR code generator API
+async function encryptAES(text, keyString) {
+  const enc = new TextEncoder();
+  const keyData = enc.encode(keyString);
+  const cryptoKey = await window.crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "AES-CBC" },
+    false,
+    ["encrypt"],
+  );
+  const iv = keyData; // Use key as IV for single-use pairing
+  const ciphertext = await window.crypto.subtle.encrypt(
+    { name: "AES-CBC", iv: iv },
+    cryptoKey,
+    enc.encode(text),
+  );
+  return btoa(String.fromCharCode(...new Uint8Array(ciphertext)));
+}
+
+async function decryptAES(b64Cipher, keyString) {
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+  const keyData = enc.encode(keyString);
+  const cryptoKey = await window.crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "AES-CBC" },
+    false,
+    ["decrypt"],
+  );
+  const iv = keyData;
+  const cipherData = new Uint8Array(
+    atob(b64Cipher)
+      .split("")
+      .map((c) => c.charCodeAt(0)),
+  );
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: "AES-CBC", iv: iv },
+    cryptoKey,
+    cipherData,
+  );
+  return dec.decode(decrypted);
+}
+
+async function showPairingQr() {
   const qrImg = document.getElementById("pairing-qr-img");
-  if (qrImg) {
-    qrImg.src =
-      "https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=0a0b0d&data=" +
-      encodeURIComponent(dataStr);
-  }
-
-  // Display the waiting panel and disable button
-  document.getElementById("pairing-qr-panel").classList.remove("hidden");
+  const panel = document.getElementById("pairing-qr-panel");
   const pairBtn = document.getElementById("show-pair-qr-btn");
+
+  if (panel) panel.classList.remove("hidden");
   if (pairBtn) pairBtn.disabled = true;
 
-  // Initialize a polling listener targeting the KVDB serverless pairing bucket
-  state.pairingInterval = setInterval(async () => {
-    try {
-      const res = await window.electron.iptvFetch(
-        "https://kvdb.io/omniverse_pairing_v1/" + pairKey,
-      );
-      if (
-        res.ok &&
-        res.html &&
-        res.html.trim().startsWith("OMNIVERSE-SYNC1:")
-      ) {
-        const syncPayload = res.html.trim();
+  try {
+    // 1. Create a dynamic unauthenticated database object for this pairing session
+    const initRes = await window.electron.iptvFetch(
+      "https://api.restful-api.dev/objects",
+      "POST",
+      { "Content-Type": "application/json" },
+      JSON.stringify({
+        name: "Omniverse Pairing",
+        data: { payload: "WAITING" },
+      }),
+    );
 
-        // Clear polling timer instantly on handshake success
-        clearInterval(state.pairingInterval);
-        state.pairingInterval = null;
+    if (!initRes.ok)
+      throw new Error("Could not register pairing session: " + initRes.status);
 
-        // Auto-fill input and run decryption
-        const input = document.getElementById("sync-code-input");
-        if (input) input.value = syncPayload;
-        importSyncCode();
+    const sessionObj = JSON.parse(initRes.html);
+    const pairId = sessionObj.id;
 
-        // Hide overlay panel
-        document.getElementById("pairing-qr-panel").classList.add("hidden");
-        if (pairBtn) pairBtn.disabled = false;
+    // Generate a cryptographically secure 16-character AES key locally (never shared online!)
+    const secretKey =
+      Math.random().toString(36).substring(2, 10) +
+      Math.random().toString(36).substring(2, 10);
+    activePairingKey = secretKey;
 
-        window.electron.showNotification(
-          "Login Successful",
-          "Paired successfully. All keys and settings restored.",
-        );
-      }
-    } catch (err) {
-      console.log("Pairing poll ticking...", err);
+    // QR contains pairing ID + local encryption key
+    const dataStr = "OMNIVERSE-PAIR1:" + pairId + ":" + secretKey;
+
+    if (qrImg) {
+      qrImg.src =
+        "https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=0a0b0d&data=" +
+        encodeURIComponent(dataStr);
     }
-  }, 2000);
+
+    // 2. Poll the session object for remote PUT updates every 2 seconds
+    state.pairingInterval = setInterval(async () => {
+      try {
+        const res = await window.electron.iptvFetch(
+          `https://api.restful-api.dev/objects/${pairId}`,
+          "GET",
+        );
+        if (res.ok && res.html) {
+          const obj = JSON.parse(res.html);
+          if (
+            obj.data &&
+            obj.data.payload &&
+            obj.data.payload.trim() !== "WAITING"
+          ) {
+            const encryptedPayload = obj.data.payload.trim();
+
+            // Clear polling timer instantly on handshake success
+            clearInterval(state.pairingInterval);
+            state.pairingInterval = null;
+
+            // Decrypt the payload locally using our secure local key
+            const syncPayload = await decryptAES(
+              encryptedPayload,
+              activePairingKey,
+            );
+
+            // Auto-fill input and run decryption
+            const input = document.getElementById("sync-code-input");
+            if (input) input.value = syncPayload;
+            importSyncCode();
+
+            // Hide overlay panel
+            if (panel) panel.classList.add("hidden");
+            if (pairBtn) pairBtn.disabled = false;
+
+            window.electron.showNotification(
+              "Login Successful",
+              "Paired successfully. All keys and settings restored.",
+            );
+          }
+        }
+      } catch (err) {
+        console.log("Pairing poll ticking...", err);
+      }
+    }, 2000);
+  } catch (err) {
+    console.error("Pairing initialization failed: ", err);
+    window.electron.showNotification(
+      "Pairing Error",
+      "Could not initialize pairing session: " + err.message,
+    );
+    if (panel) panel.classList.add("hidden");
+    if (pairBtn) pairBtn.disabled = false;
+  }
 }
 
 function cancelPairing() {

@@ -63,16 +63,38 @@ fun OnboardingScreen() {
 
     // Start automated low-density QR pairing listener on first install launch
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        val id = "pair_" + (100000 + kotlin.random.Random.nextInt(900000))
-        pairingId = id
-        isPairing = true
-        while (isPairing) {
-            delay(2000)
-            runCatching {
-                val res = Http.request("https://kvdb.io/omniverse_pairing_v1/$id")
-                if (res.ok && res.body.trim().startsWith("OMNIVERSE-SYNC1:")) {
-                    isPairing = false
-                    state.applySyncString(res.body.trim())
+        runCatching {
+            // 1. Register a pairing session object in our free database
+            val bodyJson = JSONObject()
+                .put("name", "Omniverse Pairing")
+                .put("data", JSONObject().put("payload", "WAITING"))
+            val initRes = Http.request(
+                url = "https://api.restful-api.dev/objects",
+                method = "POST",
+                headers = mapOf("Content-Type" to "application/json"),
+                body = bodyJson.toString().toRequestBody(null)
+            )
+            if (initRes.ok) {
+                val sessionObj = JSONObject(initRes.body)
+                val id = sessionObj.getString("id")
+                pairingId = id
+                isPairing = true
+
+                // 2. Poll the session object for scan confirmation
+                while (isPairing) {
+                    delay(2000)
+                    runCatching {
+                        val res = Http.request("https://api.restful-api.dev/objects/$id")
+                        if (res.ok) {
+                            val obj = JSONObject(res.body)
+                            val data = obj.optJSONObject("data")
+                            val payload = data?.optString("payload") ?: ""
+                            if (payload.trim().startsWith("OMNIVERSE-SYNC1:")) {
+                                isPairing = false
+                                state.applySyncString(payload.trim())
+                            }
+                        }
+                    }
                 }
             }
         }

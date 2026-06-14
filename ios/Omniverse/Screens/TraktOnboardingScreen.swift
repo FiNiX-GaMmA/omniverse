@@ -149,34 +149,62 @@ struct TraktOnboardingScreen: View {
         }
         .onAppear {
             // Automatically initialize low-density pairing QR on launch
-            let id = "pair_" + String(Int.random(in: 100000...999999))
-            pairingID = id
-            isPairing = true
-            startPairingPoll(id)
+            startPairingPoll()
         }
         .onDisappear {
             isPairing = false
         }
     }
 
-    private func startPairingPoll(_ id: String) {
+    private func startPairingPoll() {
         Task {
-            while isPairing {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                guard isPairing else { break }
+            do {
+                // 1. Create a dynamic unauthenticated database object for this pairing session
+                let bodyJson: [String: Any] = [
+                    "name": "Omniverse Pairing",
+                    "data": ["payload": "WAITING"]
+                ]
+                let bodyData = try JSONSerialization.data(withJSONObject: bodyJson)
 
-                guard let url = URL(string: "https://kvdb.io/omniverse_pairing_v1/\(id)") else { continue }
-                if let resp = try? await Http.shared.request(url), resp.ok {
-                    let body = resp.bodyString.trimmed
-                    if body.hasPrefix("OMNIVERSE-SYNC1:") {
-                        isPairing = false
-                        let ok = await state.applySyncString(body)
-                        if ok {
-                            showPairingQR = false
-                            await state.refreshTraktPlayback()
+                guard let initUrl = URL(string: "https://api.restful-api.dev/objects") else { return }
+                let initResp = try await Http.shared.request(
+                    initUrl,
+                    method: "POST",
+                    headers: ["Content-Type": "application/json"],
+                    body: bodyData,
+                    timeout: 14
+                )
+
+                guard initResp.ok else { return }
+
+                let dict = initResp.jsonObject()
+                guard let id = dict["id"] as? String else { return }
+
+                pairingID = id
+                isPairing = true
+
+                // 2. Poll the session object for scan confirmation
+                while isPairing {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    guard isPairing else { break }
+
+                    guard let url = URL(string: "https://api.restful-api.dev/objects/\(id)") else { continue }
+                    if let resp = try? await Http.shared.request(url), resp.ok {
+                        let parsed = resp.jsonObject()
+                        let data = parsed["data"] as? [String: Any]
+                        let payload = (data?["payload"] as? String ?? "").trimmed
+
+                        if payload.hasPrefix("OMNIVERSE-SYNC1:") {
+                            isPairing = false
+                            let ok = await state.applySyncString(payload)
+                            if ok {
+                                await state.refreshTraktPlayback()
+                            }
                         }
                     }
                 }
+            } catch {
+                print("Pairing initialization error: \(error)")
             }
         }
     }

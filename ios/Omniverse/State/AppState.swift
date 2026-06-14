@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import UIKit
+import CommonCrypto
 
 @Observable
 @MainActor
@@ -95,14 +96,25 @@ final class AppState {
         pendingPairingId = nil
         pendingPairingPayload = nil
 
-        guard let payloadData = payload.data(using: .utf8) else {
-            message = "Could not format credentials."
+        let bodyJson: [String: Any] = [
+            "name": "Omniverse Pairing",
+            "data": ["payload": payload]
+        ]
+
+        guard let bodyData = try? JSONSerialization.data(withJSONObject: bodyJson) else {
+            message = "Could not format pairing request."
             return
         }
 
         do {
-            let url = URL(string: "https://kvdb.io/CmMNVWTaFnbJam3Rp6LV8Q/\(id)")!
-            let resp = try await Http.shared.request(url, method: "POST", body: payloadData, timeout: 14)
+            let url = URL(string: "https://api.restful-api.dev/objects/\(id)")!
+            let resp = try await Http.shared.request(
+                url,
+                method: "PUT",
+                headers: ["Content-Type": "application/json"],
+                body: bodyData,
+                timeout: 14
+            )
             if resp.ok {
                 message = "Synced successfully with the other device!"
             } else {
@@ -325,15 +337,28 @@ final class AppState {
 
         // Handle New Pairing Flow: Scanned Pairing ID from another device
         if text.hasPrefix("OMNIVERSE-PAIR1:") {
-            let pairId = text.replacingOccurrences(of: "OMNIVERSE-PAIR1:", with: "").trimmed
-            guard !pairId.isEmpty else {
-                message = "Invalid pairing ID."
+            let parts = text.components(separatedBy: ":")
+            if parts.count == 3 {
+                let pairId = parts[1].trimmed
+                let secretKey = parts[2].trimmed
+                guard !pairId.isEmpty, !secretKey.isEmpty else {
+                    message = "Invalid pairing credentials."
+                    return false
+                }
+
+                let rawPayload = SyncPayload.buildSyncString(credentials: credentials, settings: settings)
+                guard let encrypted = SimpleAES.encrypt(rawPayload, key: secretKey) else {
+                    message = "Could not encrypt pairing payload."
+                    return false
+                }
+
+                pendingPairingId = pairId
+                pendingPairingPayload = encrypted
+                return true
+            } else {
+                message = "Malformed pairing QR code."
                 return false
             }
-
-            pendingPairingId = pairId
-            pendingPairingPayload = SyncPayload.buildSyncString(credentials: credentials, settings: settings)
-            return true
         }
 
         if text.hasPrefix("http://") || text.hasPrefix("https://"), let url = URL(string: text) {
@@ -748,5 +773,66 @@ extension WatchProgress {
             episodeTitle: j["episodeTitle"] as? String,
             positionMs: j["positionMs"] as? Int ?? 0, durationMs: j["durationMs"] as? Int ?? 0,
             lastWatchedAt: j["lastWatchedAt"] as? Int ?? Int(Date().timeIntervalSince1970 * 1000))
+    }
+}
+
+// ==============================================================================
+// Symmetric AES-128-CBC Encryption Engine for Zero-Trust Pairing
+// ==============================================================================
+enum SimpleAES {
+    static func encrypt(_ text: String, key: String) -> String? {
+        guard let data = text.data(using: .utf8),
+              let keyData = key.data(using: .utf8) else { return nil }
+
+        var encrypted = Data(count: data.count + kCCBlockSizeAES128)
+        var numBytesEncrypted: Int = 0
+
+        let status = encrypted.withUnsafeMutableBytes { encryptedBytes in
+            data.withUnsafeBytes { dataBytes in
+                keyData.withUnsafeBytes { keyBytes in
+                    CCCrypt(
+                        CCOperation(kCCEncrypt),
+                        CCAlgorithm(kCCAlgorithmAES),
+                        CCOptions(kCCOptionPKCS7Padding),
+                        keyBytes.baseAddress, kCCKeySizeAES128,
+                        keyBytes.baseAddress, // use key as IV for single-use pairing
+                        dataBytes.baseAddress, data.count,
+                        encryptedBytes.baseAddress, encrypted.count,
+                        &numBytesEncrypted
+                    )
+                }
+            }
+        }
+
+        guard status == kCCSuccess else { return nil }
+        return encrypted.prefix(numBytesEncrypted).base64EncodedString()
+    }
+
+    static func decrypt(_ b64Cipher: String, key: String) -> String? {
+        guard let data = Data(base64Encoded: b64Cipher),
+              let keyData = key.data(using: .utf8) else { return nil }
+
+        var decrypted = Data(count: data.count + kCCBlockSizeAES128)
+        var numBytesDecrypted: Int = 0
+
+        let status = decrypted.withUnsafeMutableBytes { decryptedBytes in
+            data.withUnsafeBytes { dataBytes in
+                keyData.withUnsafeBytes { keyBytes in
+                    CCCrypt(
+                        CCOperation(kCCDecrypt),
+                        CCAlgorithm(kCCAlgorithmAES),
+                        CCOptions(kCCOptionPKCS7Padding),
+                        keyBytes.baseAddress, kCCKeySizeAES128,
+                        keyBytes.baseAddress, // use key as IV for single-use pairing
+                        dataBytes.baseAddress, data.count,
+                        decryptedBytes.baseAddress, decrypted.count,
+                        &numBytesDecrypted
+                    )
+                }
+            }
+        }
+
+        guard status == kCCSuccess else { return nil }
+        return String(data: decrypted.prefix(numBytesDecrypted), encoding: .utf8)
     }
 }
