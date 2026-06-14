@@ -13,6 +13,10 @@
   },
   "author": "FiNiX",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FiNiX-GaMmA/omniverse.git"
+  },
   "devDependencies": {
     "electron": "^31.0.0",
     "electron-builder": "^24.13.0"
@@ -20,6 +24,7 @@
   "build": {
     "appId": "com.finix.omniverse.desktop",
     "productName": "Omniverse",
+    "publish": null,
     "directories": {
       "output": "dist"
     },
