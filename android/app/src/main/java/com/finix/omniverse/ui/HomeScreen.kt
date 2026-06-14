@@ -32,7 +32,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import coil.compose.AsyncImage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,16 +68,21 @@ import com.finix.omniverse.ui.theme.LiquidColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(nav: NavController) {
     val state = AppGraph.appState
+    val scope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    var selectedStudio by remember { mutableStateOf<String?>(null) }
+    var studioItems by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
+    var loadingStudio by remember { mutableStateOf(false) }
 
     fun openDetail(item: MediaItem) {
         RouteArgs.detailItem = item
         nav.navigate("detail")
     }
-
-    val scope = rememberCoroutineScope()
 
     fun mediaItemFor(entry: WatchProgress): MediaItem {
         val parts = entry.itemId.split(":")
@@ -129,42 +138,78 @@ fun HomeScreen(nav: NavController) {
     // beginning / Details) rather than silently resolving + navigating.
     var sheetEntry by remember { mutableStateOf<WatchProgress?>(null) }
 
-    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
-        val wide = maxWidth >= 900.dp
-        val landscape = maxWidth > maxHeight
-        // Hero banner enlarged by 20% over the previous sizing.
-        val heroH: Dp =
-            if (landscape) minOf(maxWidth * 9f / 16f, maxHeight * 0.86f) * 1.2f   // 16:9 widescreen banner
-            else minOf(maxWidth * 1.5f, maxHeight * 0.72f) * 1.2f                 // tall poster area
-        val cats = displayCategories()
-
-        LazyColumn(Modifier.fillMaxSize()) {
-            item {
-                HeroCarousel(state.heroPicks, wide, heroH, !landscape, onSelect = ::openDetail)
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            scope.launch {
+                isRefreshing = true
+                state.refreshAll(isManual = true)
+                isRefreshing = false
             }
-            item {
-                val entries = remember(state.watchHistory.toList()) {
-                    val seen = HashSet<String>()
-                    state.continueWatching.filter { it.type != MediaType.LIVE_TV && seen.add(it.itemId) }
+        },
+        modifier = Modifier.fillMaxSize()
+    ) {
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+            val wide = maxWidth >= 900.dp
+            val landscape = maxWidth > maxHeight
+            // Hero banner enlarged by 20% over the previous sizing.
+            val heroH: Dp =
+                if (landscape) minOf(maxWidth * 9f / 16f, maxHeight * 0.86f) * 1.2f   // 16:9 widescreen banner
+                else minOf(maxWidth * 1.5f, maxHeight * 0.72f) * 1.2f                 // tall poster area
+            val cats = displayCategories()
+
+            LazyColumn(Modifier.fillMaxSize()) {
+                item {
+                    HeroCarousel(state.heroPicks, wide, heroH, !landscape, onSelect = ::openDetail)
                 }
-                ContinueWatchingRow(entries) { entry -> sheetEntry = entry }
+                item {
+                    StudiosRow(wide) { studio ->
+                        selectedStudio = studio
+                        scope.launch {
+                            loadingStudio = true
+                            studioItems = state.fetchStudioContent(studio)
+                            loadingStudio = false
+                        }
+                    }
+                }
+                item {
+                    val entries = remember(state.watchHistory.toList()) {
+                        val seen = HashSet<String>()
+                        state.continueWatching.filter { it.type != MediaType.LIVE_TV && seen.add(it.itemId) }
+                    }
+                    ContinueWatchingRow(entries) { entry -> sheetEntry = entry }
+                }
+                items(cats, key = { it.id }) { cat ->
+                    Box(Modifier.animateItem()) {
+                        CategoryRow(cat, wide, ::openDetail)
+                    }
+                }
+                item { Spacer(Modifier.height(110.dp)) }
             }
-            items(cats, key = { it.id }) { cat -> CategoryRow(cat, wide, ::openDetail) }
-            item { Spacer(Modifier.height(110.dp)) }
-        }
 
-        sheetEntry?.let { entry ->
-            ContinueWatchingSheet(
-                entry = entry,
-                onDismiss = { sheetEntry = null },
-                onResume = {
-                    scope.launch { resolveAndPlay(entry, entry.positionMs); sheetEntry = null }
-                },
-                onPlayFromStart = {
-                    scope.launch { resolveAndPlay(entry, 0); sheetEntry = null }
-                },
-                onDetails = { sheetEntry = null; openDetail(mediaItemFor(entry)) },
-            )
+            sheetEntry?.let { entry ->
+                ContinueWatchingSheet(
+                    entry = entry,
+                    onDismiss = { sheetEntry = null },
+                    onResume = {
+                        scope.launch { resolveAndPlay(entry, entry.positionMs); sheetEntry = null }
+                    },
+                    onPlayFromStart = {
+                        scope.launch { resolveAndPlay(entry, 0); sheetEntry = null }
+                    },
+                    onDetails = { sheetEntry = null; openDetail(mediaItemFor(entry)) },
+                )
+            }
+
+            selectedStudio?.let { studio ->
+                StudioContentSheet(
+                    studio = studio,
+                    items = studioItems,
+                    loading = loadingStudio,
+                    onDismiss = { selectedStudio = null; studioItems = emptyList() },
+                    onSelect = { item -> selectedStudio = null; openDetail(item) }
+                )
+            }
         }
     }
 }
@@ -467,5 +512,155 @@ private fun displayCategories(): List<MediaCategory> {
             }
         }
         if (out.isEmpty()) state.categories.toList() else out
+    }
+}
+
+private data class StudioInfo(val id: String, val name: String, val logoUrl: String)
+
+@Composable
+private fun StudiosRow(wide: Boolean, onSelect: (String) -> Unit) {
+    val studios = remember {
+        listOf(
+            StudioInfo("netflix", "Netflix", "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/512px-Netflix_2015_logo.svg.png"),
+            StudioInfo("disney", "Disney+", "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Disney%2B_logo.svg/512px-Disney%2B_logo.svg.png"),
+            StudioInfo("hbo", "HBO Max", "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Max_logo.svg/512px-Max_logo.svg.png"),
+            StudioInfo("prime", "Prime Video", "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Amazon_Prime_Video_logo.svg/512px-Amazon_Prime_Video_logo.svg.png"),
+            StudioInfo("apple", "Apple TV+", "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Apple_TV_Plus_Logo.svg/512px-Apple_TV_Plus_Logo.svg.png"),
+            StudioInfo("paramount", "Paramount+", "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Paramount_Plus_logo.svg/512px-Paramount_Plus_logo.svg.png"),
+            StudioInfo("hulu", "Hulu", "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Hulu_Logo.svg/512px-Hulu_Logo.svg.png"),
+            StudioInfo("peacock", "Peacock", "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Peacock_Logo.svg/512px-Peacock_Logo.svg.png"),
+            StudioInfo("marvel", "Marvel", "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Marvel_Studios_2016_Logo.svg/512px-Marvel_Studios_2016_Logo.svg.png"),
+            StudioInfo("warner", "Warner Bros", "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Warner_Bros_logo.svg/512px-Warner_Bros_logo.svg.png"),
+            StudioInfo("universal", "Universal", "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Universal_Pictures_Logo_2013.svg/512px-Universal_Pictures_Logo_2013.svg.png"),
+            StudioInfo("sony", "Sony Pictures", "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Sony_Pictures_logo.svg/512px-Sony_Pictures_logo.svg.png"),
+            StudioInfo("crunchyroll", "Crunchyroll", "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Crunchyroll_Logo.svg/512px-Crunchyroll_Logo.svg.png")
+        )
+    }
+
+    Column(Modifier.padding(top = 18.dp)) {
+        Text(
+            text = "Studios",
+            color = Color.White,
+            fontSize = 19.sp,
+            fontWeight = FontWeight.Black,
+            modifier = Modifier.padding(horizontal = if (wide) 54.dp else 28.dp)
+        )
+        LazyRow(
+            modifier = Modifier.padding(top = 8.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = if (wide) 54.dp else 28.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            items(studios, key = { it.id }) { studio ->
+                Box(
+                    Modifier
+                        .width(160.dp)
+                        .height(90.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF161A22))
+                        .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                        .tvFocusable(onClick = { onSelect(studio.id) }, corner = 12),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    AsyncImage(
+                        model = studio.logoUrl,
+                        contentDescription = studio.name,
+                        modifier = Modifier.fillMaxSize(0.68f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StudioContentSheet(
+    studio: String,
+    items: List<MediaItem>,
+    loading: Boolean,
+    onDismiss: () -> Unit,
+    onSelect: (MediaItem) -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = Color(0xFF0F1218),
+        contentColor = Color.White
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp)
+        ) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = when (studio.lowercase()) {
+                        "disney" -> "Disney+ Originals"
+                        "netflix" -> "Netflix Originals"
+                        "hbo" -> "HBO Max Originals"
+                        "apple" -> "Apple TV+ Originals"
+                        "paramount" -> "Paramount+ Originals"
+                        "prime" -> "Amazon Prime Originals"
+                        "hulu" -> "Hulu Originals"
+                        "peacock" -> "Peacock Originals"
+                        "marvel" -> "Marvel Studios"
+                        "warner" -> "Warner Bros. Pictures"
+                        "universal" -> "Universal Pictures"
+                        "sony" -> "Sony Pictures"
+                        "crunchyroll" -> "Crunchyroll Anime"
+                        else -> "$studio Originals"
+                    },
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            if (loading) {
+                Box(Modifier.fillMaxWidth().height(250.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = LiquidColors.Cyan)
+                }
+            } else if (items.isEmpty()) {
+                Box(Modifier.fillMaxWidth().height(150.dp), contentAlignment = Alignment.Center) {
+                    Text("No original titles found. Check your API key.", color = Color.White.copy(alpha = 0.6f))
+                }
+            } else {
+                LazyRow(
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    items(items, key = { it.id }) { item ->
+                        Column(
+                            Modifier
+                                .width(135.dp)
+                                .tvFocusable(onClick = { onSelect(item) }, corner = 12)
+                        ) {
+                            Box(
+                                Modifier
+                                    .width(135.dp)
+                                    .height(200.dp)
+                                    .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                            ) {
+                                PosterImage(item.posterUrl ?: item.backdropUrl, Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)))
+                            }
+                            Text(
+                                item.title,
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

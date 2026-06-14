@@ -113,6 +113,11 @@ fun SettingsScreen() {
     var showSyncQr by remember { mutableStateOf(false) }
     var updateInfo by remember { mutableStateOf<UpdateChecker.UpdateInfo?>(null) }
 
+    var tmdbError by remember { mutableStateOf(false) }
+    var tvdbError by remember { mutableStateOf(false) }
+    var pixeldrainError by remember { mutableStateOf(false) }
+    var anilistError by remember { mutableStateOf(false) }
+
     fun openUrl(url: String) = context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
 
     fun launchScanner() {
@@ -169,13 +174,22 @@ fun SettingsScreen() {
         // tab animates the pager; swiping the pager updates the highlighted tab.
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp)) {
             listOf("API KEYS", "PREFERENCES", "CLOUD SYNC").forEachIndexed { i, t ->
+                val active = tab == i
+                val textColor by androidx.compose.animation.animateColorAsState(
+                    targetValue = if (active) Color.White else Color.White.copy(alpha = 0.45f),
+                    label = "textColor"
+                )
+                val indicatorColor by androidx.compose.animation.animateColorAsState(
+                    targetValue = if (active) LiquidColors.Cyan else Color.Transparent,
+                    label = "indicatorColor"
+                )
                 Column(
                     Modifier.weight(1f).tvFocusable(onClick = { scope.launch { pagerState.animateScrollToPage(i) } }, corner = 4),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(t, color = if (tab == i) Color.White else Color.White.copy(alpha = 0.6f), fontSize = 14.sp, fontWeight = FontWeight.Black)
+                    Text(t, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Black)
                     Spacer(Modifier.height(8.dp))
-                    Box(Modifier.fillMaxWidth().height(3.dp).background(if (tab == i) LiquidColors.Cyan else Color.Transparent))
+                    Box(Modifier.fillMaxWidth().height(3.dp).background(indicatorColor))
                 }
             }
         }
@@ -184,11 +198,11 @@ fun SettingsScreen() {
             when (page) {
                 0 -> {
                     Section("Secret API Credentials") {
-                        SecretField(tmdb, { tmdb = it }, "TheMovieDB (TMDB) token", "https://themoviedb.org/favicon.ico")
-                        SecretField(tvdb, { tvdb = it }, "TVDB v4 API key", "https://thetvdb.com/favicon.ico")
+                        SecretField(tmdb, { tmdb = it; tmdbError = false }, "TheMovieDB (TMDB) token", "https://themoviedb.org/favicon.ico", isError = tmdbError)
+                        SecretField(tvdb, { tvdb = it; tvdbError = false }, "TVDB v4 API key", "https://thetvdb.com/favicon.ico", isError = tvdbError)
                         SecretField(tvdbPin, { tvdbPin = it }, "TVDB Subscriber PIN (optional)", "https://thetvdb.com/favicon.ico")
-                        SecretField(pixeldrain, { pixeldrain = it }, "Pixeldrain API key", "https://pixeldrain.net/favicon.ico")
-                        SecretField(anilist, { anilist = it }, "AniList Access Token", "https://anilist.co/img/icons/android-chrome-512x512.png")
+                        SecretField(pixeldrain, { pixeldrain = it; pixeldrainError = false }, "Pixeldrain API key", "https://pixeldrain.net/favicon.ico", isError = pixeldrainError)
+                        SecretField(anilist, { anilist = it; anilistError = false }, "AniList Access Token", "https://anilist.co/img/icons/android-chrome-512x512.png", isError = anilistError)
                     }
 	                    Section("Trakt Developer Client Keys") {
 	                        SecretField(traktId, { traktId = it }, "Trakt Client ID", "https://trakt.tv/favicon.ico")
@@ -217,11 +231,16 @@ fun SettingsScreen() {
                                             r.status == 200
                                         }.getOrDefault(false)
 
+                                        tmdbError = tmdb.trim().isNotEmpty() && !tmdbOk
+                                        tvdbError = tvdb.trim().isNotEmpty() && !tvdbOk
+                                        pixeldrainError = pixeldrain.trim().isNotEmpty() && !pixeldrainOk
+                                        anilistError = anilist.trim().isNotEmpty() && !anilistOk
+
                                         val failedKeys = ArrayList<String>()
-                                        if (tmdb.trim().isNotEmpty() && !tmdbOk) failedKeys.add("TheMovieDB (TMDB) token")
-                                        if (tvdb.trim().isNotEmpty() && !tvdbOk) failedKeys.add("TVDB v4 API key")
-                                        if (pixeldrain.trim().isNotEmpty() && !pixeldrainOk) failedKeys.add("Pixeldrain API key")
-                                        if (anilist.trim().isNotEmpty() && !anilistOk) failedKeys.add("AniList Access Token")
+                                        if (tmdbError) failedKeys.add("TheMovieDB (TMDB) token")
+                                        if (tvdbError) failedKeys.add("TVDB v4 API key")
+                                        if (pixeldrainError) failedKeys.add("Pixeldrain API key")
+                                        if (anilistError) failedKeys.add("AniList Access Token")
 
                                         if (failedKeys.isEmpty()) {
                                             Toast.makeText(context, "✅ All entered API keys are working correctly!", Toast.LENGTH_LONG).show()
@@ -403,12 +422,13 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun SecretField(value: String, onChange: (String) -> Unit, label: String, logoUrl: String? = null) {
+private fun SecretField(value: String, onChange: (String) -> Unit, label: String, logoUrl: String? = null, isError: Boolean = false) {
     var obscure by remember { mutableStateOf(true) }
     Column(Modifier.fillMaxWidth()) {
         Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         OutlinedTextField(
             value = value, onValueChange = onChange, modifier = Modifier.fillMaxWidth(), singleLine = true,
+            isError = isError,
             visualTransformation = if (obscure) PasswordVisualTransformation() else VisualTransformation.None,
             leadingIcon = logoUrl?.let { url ->
                 {

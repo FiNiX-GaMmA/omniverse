@@ -13,6 +13,7 @@ interface TmdbRepository {
     suspend fun fetchSeasonEpisodes(item: MediaItem, seasonNumber: Int, credentials: ApiCredentials, settings: UserSettings): List<MediaEpisode>
     suspend fun fetchRecommendations(item: MediaItem, credentials: ApiCredentials, settings: UserSettings): List<MediaItem>
     suspend fun validate(credentials: ApiCredentials, settings: UserSettings): Boolean
+    suspend fun fetchStudioContent(studio: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem>
 }
 
 interface TvdbRepository {

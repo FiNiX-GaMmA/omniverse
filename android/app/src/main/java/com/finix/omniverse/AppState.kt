@@ -3,6 +3,7 @@ package com.finix.omniverse
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
+import java.util.Calendar
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -91,14 +92,8 @@ class AppState(context: Context) {
             watchHistory.clear(); watchHistory.addAll(settingsStore.loadWatchHistory())
             initialized = true
 
-            // Silent refresh only if cache older than 6 hours.
-            val last = settingsStore.lastRefreshedTime()
-            val diff = System.currentTimeMillis() - last
-            if (diff >= 6L * 3600 * 1000) {
-                scope.launch { refreshAll(isManual = false) }
-            } else {
-                scope.launch { refreshTraktWatchlist() }
-            }
+            // Always perform a silent refresh of all categories, watchlist, and anime on launch to ensure lists are 100% current every time the app opens.
+            scope.launch { refreshAll(isManual = false) }
 
             // Pull API keys + settings saved by other devices on the same Trakt
             // account so they propagate automatically on launch.
@@ -118,12 +113,17 @@ class AppState(context: Context) {
     // MARK: - Refresh
 
     suspend fun refreshAll(isManual: Boolean = true) {
-        if (isManual) { loading = true; message = null }
+        if (isManual) {
+            loading = true
+            message = null
+            categories.clear()
+            animeCategories.clear()
+            clearHeroCache()
+        }
         refreshCategories()
         refreshAnime()
         refreshTraktWatchlist()
         settingsStore.setLastRefreshedTime(System.currentTimeMillis())
-        clearHeroCache()
         if (isManual) loading = false
     }
 
@@ -415,6 +415,9 @@ class AppState(context: Context) {
     }
 
     // MARK: - Search / details / playback
+
+    suspend fun fetchStudioContent(studio: String): List<MediaItem> =
+        repos.tmdb.fetchStudioContent(studio, credentials, settings)
 
     suspend fun searchMedia(query: String): List<MediaItem> =
         repos.tmdb.searchMulti(query, credentials, settings)

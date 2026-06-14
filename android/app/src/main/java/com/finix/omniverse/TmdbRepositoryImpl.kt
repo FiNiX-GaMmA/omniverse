@@ -266,6 +266,39 @@ class TmdbRepositoryImpl : TmdbRepository {
         }
     }
 
+    override suspend fun fetchStudioContent(studio: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem> {
+        if (!credentials.hasTmdb) return emptyList()
+        val (moviePath, queryParams) = when (studio.lowercase()) {
+            "disney" -> Pair("discover/movie", mapOf("with_companies" to "2")) // Walt Disney Pictures
+            "netflix" -> Pair("discover/tv", mapOf("with_networks" to "213")) // Netflix
+            "hbo" -> Pair("discover/tv", mapOf("with_networks" to "3186")) // HBO Max
+            "apple" -> Pair("discover/tv", mapOf("with_networks" to "2552")) // Apple TV+
+            "paramount" -> Pair("discover/movie", mapOf("with_companies" to "4")) // Paramount Pictures
+            "prime" -> Pair("discover/movie", mapOf("with_companies" to "20580")) // Amazon Studios
+            "hulu" -> Pair("discover/tv", mapOf("with_networks" to "453")) // Hulu
+            "peacock" -> Pair("discover/tv", mapOf("with_networks" to "3353")) // Peacock
+            "marvel" -> Pair("discover/movie", mapOf("with_companies" to "420")) // Marvel Studios
+            "warner" -> Pair("discover/movie", mapOf("with_companies" to "174")) // Warner Bros.
+            "universal" -> Pair("discover/movie", mapOf("with_companies" to "33")) // Universal Pictures
+            "sony" -> Pair("discover/movie", mapOf("with_companies" to "5")) // Columbia/Sony Pictures
+            "crunchyroll" -> Pair("discover/tv", mapOf("with_networks" to "1112")) // Crunchyroll
+            else -> Pair("trending/all/week", emptyMap())
+        }
+        return try {
+            val url = uri(moviePath, credentials, settings, queryParams)
+            val response = get(url, credentials)
+            if (response.status >= 400) return emptyList()
+            val (movieGenres, tvGenres) = fetchGenres(credentials, settings)
+            val genreNames = if (moviePath.contains("movie")) movieGenres else tvGenres
+            (response.jsonObject().optArrayOrNull("results")?.objects() ?: emptyList())
+                .mapNotNull { mediaItemFromTmdb(it, if (moviePath.contains("movie")) MediaType.MOVIE else MediaType.SERIES, genreNames) }
+                .filter { it.posterPath != null || it.backdropPath != null }
+                .take(15)
+        } catch (_: Throwable) {
+            emptyList()
+        }
+    }
+
     // MARK: URL + headers
 
     private fun uri(path: String, credentials: ApiCredentials, settings: UserSettings, query: Map<String, String> = emptyMap()): String {
