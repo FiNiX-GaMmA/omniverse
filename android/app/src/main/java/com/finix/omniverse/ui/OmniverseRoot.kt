@@ -151,6 +151,28 @@ fun OmniverseRoot() {
                 }
             }
         }
+
+        // Universal secure pairing confirmation dialog overlay
+        if (state.pendingPairingId != null) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { state.cancelPairing() },
+                title = { Text("Pairing Request", color = Color.White, fontWeight = FontWeight.Bold) },
+                text = { Text("Do you want to pair and sync your settings with this device (ID: ${state.pendingPairingId})?", color = Color.White.copy(alpha = 0.7f)) },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = { state.confirmPairing() }) {
+                        Text("Confirm", color = LiquidColors.Cyan, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = { state.cancelPairing() }) {
+                        Text("Cancel", color = Color.White.copy(alpha = 0.5f))
+                    }
+                },
+                containerColor = Color(0xFF12141C),
+                textContentColor = Color.White
+            )
+        }
+
         MessageBanner()
     }
 }

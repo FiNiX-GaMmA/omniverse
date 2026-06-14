@@ -50,6 +50,22 @@ struct CredentialsStore {
         write(K.anilistAccessToken, c.anilistAccessToken.trimmed)
     }
 
+    func clearAll() {
+        let keys = [
+            K.tmdbToken, K.tvdbKey, K.tvdbPin, K.traktClientId, K.traktClientSecret,
+            K.traktAccessToken, K.traktRefreshToken, K.traktTokenExpiresAt,
+            K.traktUsername, K.pixeldrainApiKey, K.anilistAccessToken
+        ]
+        for key in keys {
+            let base: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: key,
+            ]
+            SecItemDelete(base as CFDictionary)
+        }
+    }
+
     private func read(_ key: String) -> String? {
         let q: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

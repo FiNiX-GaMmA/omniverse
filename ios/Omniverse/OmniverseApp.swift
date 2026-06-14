@@ -52,6 +52,19 @@ struct RootView: View {
                 AppShell()
             }
         }
+        .alert("Pairing Request", isPresented: Binding(
+            get: { state.pendingPairingId != nil },
+            set: { _ in state.cancelPairing() }
+        )) {
+            Button("Confirm", role: .none) {
+                Task { await state.confirmPairing() }
+            }
+            Button("Cancel", role: .cancel) {
+                state.cancelPairing()
+            }
+        } message: {
+            Text("Do you want to pair and sync your settings with this device (ID: \(state.pendingPairingId ?? ""))?")
+        }
         .animation(.easeInOut(duration: 0.4), value: state.initialized)
         .animation(.easeInOut(duration: 0.4), value: splashDone)
         .preferredColorScheme(.dark)

@@ -31,6 +31,10 @@ final class AppState {
     var liveTvScanProgress: Double = 0
     var hasScannedLiveTv = false
 
+    // State properties for interactive pairing confirmation prompt
+    var pendingPairingId: String?
+    var pendingPairingPayload: String?
+
     var needsSetup: Bool { !credentials.hasTmdb }
 
     private var playbackTimer: Timer?
@@ -40,6 +44,13 @@ final class AppState {
     // MARK: - Lifecycle
 
     func initialize() async {
+        // First-Time Launch Detection: UserDefaults is cleared on uninstall, Keychain is not.
+        // If app_installed_before is false, we wipe lingering Keychain items to ensure a 100% clean state!
+        if !UserDefaults.standard.bool(forKey: "app_installed_before") {
+            credentialsStore.clearAll()
+            UserDefaults.standard.set(true, forKey: "app_installed_before")
+        }
+
         settings = settingsStore.loadSettings()
         credentials = credentialsStore.load()
         liveTvSources = settingsStore.loadLiveTvSources()
@@ -71,6 +82,34 @@ final class AppState {
                 guard let self, self.credentials.hasTraktUser, self.initialized else { return }
                 await self.syncNow()
             }
+        }
+    }
+
+    func cancelPairing() {
+        pendingPairingId = nil
+        pendingPairingPayload = nil
+    }
+
+    func confirmPairing() async {
+        guard let id = pendingPairingId, let payload = pendingPairingPayload else { return }
+        pendingPairingId = nil
+        pendingPairingPayload = nil
+
+        guard let payloadData = payload.data(using: .utf8) else {
+            message = "Could not format credentials."
+            return
+        }
+
+        do {
+            let url = URL(string: "https://kvdb.io/CmMNVWTaFnbJam3Rp6LV8Q/\(id)")!
+            let resp = try await Http.shared.request(url, method: "POST", body: payloadData, timeout: 14)
+            if resp.ok {
+                message = "Synced successfully with the other device!"
+            } else {
+                message = "Pairing failed (HTTP \(resp.status))."
+            }
+        } catch {
+            message = "Pairing request failed: \(error.localizedDescription)"
         }
     }
 
@@ -292,26 +331,9 @@ final class AppState {
                 return false
             }
 
-            let payload = SyncPayload.buildSyncString(credentials: credentials, settings: settings)
-            guard let payloadData = payload.data(using: .utf8) else {
-                message = "Could not format credentials."
-                return false
-            }
-
-            do {
-                let url = URL(string: "https://kvdb.io/omniverse_pairing_v1/\(pairId)")!
-                let resp = try await Http.shared.request(url, method: "POST", body: payloadData, timeout: 14)
-                if resp.ok {
-                    message = "Synced successfully with the other device!"
-                    return true
-                } else {
-                    message = "Pairing failed (HTTP \(resp.status))."
-                    return false
-                }
-            } catch {
-                message = "Pairing request failed: \(error.localizedDescription)"
-                return false
-            }
+            pendingPairingId = pairId
+            pendingPairingPayload = SyncPayload.buildSyncString(credentials: credentials, settings: settings)
+            return true
         }
 
         if text.hasPrefix("http://") || text.hasPrefix("https://"), let url = URL(string: text) {

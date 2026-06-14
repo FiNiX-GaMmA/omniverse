@@ -72,6 +72,12 @@ class AppState(context: Context) {
     var hasScannedLiveTv by mutableStateOf(false)
         private set
 
+    // State properties for interactive pairing confirmation prompt
+    var pendingPairingId by mutableStateOf<String?>(null)
+        private set
+    var pendingPairingPayload by mutableStateOf<String?>(null)
+        private set
+
     val needsSetup: Boolean get() = !credentials.hasTmdb
 
     private var heroPicksCache: List<MediaItem> = emptyList()
@@ -384,25 +390,10 @@ class AppState(context: Context) {
                 message = "Invalid pairing ID."
                 return false
             }
-            val payload = SyncCenter.buildSyncString(credentials, settings)
-            return try {
-                val url = "https://kvdb.io/omniverse_pairing_v1/$pairId"
-                val response = Http.request(
-                    url = url,
-                    method = "POST",
-                    body = payload.toRequestBody(null)
-                )
-                if (response.ok) {
-                    message = "Synced successfully with the other device!"
-                    true
-                } else {
-                    message = "Pairing failed (HTTP ${response.status})."
-                    false
-                }
-            } catch (t: Throwable) {
-                message = "Pairing request failed: ${t.localizedMessage}"
-                false
-            }
+            // Trigger confirmation dialog instead of silent upload
+            pendingPairingId = pairId
+            pendingPairingPayload = SyncCenter.buildSyncString(credentials, settings)
+            return true
         }
 
         if (!SyncCenter.isSyncString(value)) {
@@ -696,6 +687,36 @@ class AppState(context: Context) {
     private fun heroScore(item: MediaItem): Double {
         val voteWeight = ln((item.voteCount.coerceAtLeast(1)).toDouble() + 1)
         return item.rating * voteWeight + (if (item.heroBackdropUrl != null) 4 else 0)
+    }
+
+    fun cancelPairing() {
+        pendingPairingId = null
+        pendingPairingPayload = null
+    }
+
+    fun confirmPairing() {
+        val id = pendingPairingId ?: return
+        val payload = pendingPairingPayload ?: return
+        pendingPairingId = null
+        pendingPairingPayload = null
+        scope.launch {
+            try {
+                // Upload to our private, permanent global bucket
+                val url = "https://kvdb.io/CmMNVWTaFnbJam3Rp6LV8Q/$id"
+                val response = Http.request(
+                    url = url,
+                    method = "POST",
+                    body = payload.toRequestBody(null)
+                )
+                if (response.ok) {
+                    message = "Synced successfully with the other device!"
+                } else {
+                    message = "Pairing failed (HTTP ${response.status})."
+                }
+            } catch (t: Throwable) {
+                message = "Pairing request failed: ${t.localizedMessage}"
+            }
+        }
     }
 
     // MARK: - Live TV sources
