@@ -190,10 +190,56 @@ fun SettingsScreen() {
                         SecretField(pixeldrain, { pixeldrain = it }, "Pixeldrain API key", "https://pixeldrain.net/favicon.ico")
                         SecretField(anilist, { anilist = it }, "AniList Access Token", "https://anilist.co/img/icons/android-chrome-512x512.png")
                     }
-                    Section("Trakt Developer Client Keys") {
-                        SecretField(traktId, { traktId = it }, "Trakt Client ID", "https://trakt.tv/favicon.ico")
-                        SecretField(traktSecret, { traktSecret = it }, "Trakt Client Secret", "https://trakt.tv/favicon.ico")
-                    }
+	                    Section("Trakt Developer Client Keys") {
+	                        SecretField(traktId, { traktId = it }, "Trakt Client ID", "https://trakt.tv/favicon.ico")
+	                        SecretField(traktSecret, { traktSecret = it }, "Trakt Client Secret", "https://trakt.tv/favicon.ico")
+	                    }
+                        Section("API Diagnostics & Verification") {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Chip("Test API Keys") {
+                                    scope.launch {
+                                        // Save current input values temporarily so we test the NEW keys immediately
+                                        saveAll()
+
+                                        val tmdbOk = tmdb.trim().isEmpty() || state.repos.tmdb.validate(state.credentials, state.settings)
+                                        val tvdbOk = tvdb.trim().isEmpty() || state.repos.tvdb.validate(state.credentials)
+
+                                        val pixeldrainOk = pixeldrain.trim().isEmpty() || runCatching {
+                                            val basic = android.util.Base64.encodeToString(":$pixeldrain".toByteArray(), android.util.Base64.NO_WRAP)
+                                            val r = com.finix.omniverse.Http.request("https://pixeldrain.net/api/user/key", headers = mapOf("Authorization" to "Basic $basic"))
+                                            r.status == 200
+                                        }.getOrDefault(false)
+
+                                        val anilistOk = anilist.trim().isEmpty() || runCatching {
+                                            val query = "query { Viewer { id name } }"
+                                            val payload = org.json.JSONObject().put("query", query)
+                                            val r = com.finix.omniverse.Http.postJson("https://graphql.anilist.co", payload, headers = mapOf("Authorization" to "Bearer $anilist"))
+                                            r.status == 200
+                                        }.getOrDefault(false)
+
+                                        val failedKeys = ArrayList<String>()
+                                        if (tmdb.trim().isNotEmpty() && !tmdbOk) failedKeys.add("TheMovieDB (TMDB) token")
+                                        if (tvdb.trim().isNotEmpty() && !tvdbOk) failedKeys.add("TVDB v4 API key")
+                                        if (pixeldrain.trim().isNotEmpty() && !pixeldrainOk) failedKeys.add("Pixeldrain API key")
+                                        if (anilist.trim().isNotEmpty() && !anilistOk) failedKeys.add("AniList Access Token")
+
+                                        if (failedKeys.isEmpty()) {
+                                            Toast.makeText(context, "✅ All entered API keys are working correctly!", Toast.LENGTH_LONG).show()
+                                        } else {
+                                            val list = failedKeys.joinToString("\n• ")
+                                            Toast.makeText(context, "❌ The following API keys are invalid:\n• $list", Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                }
+                                Chip("Force Full Refresh") {
+                                    scope.launch {
+                                        saveAll()
+                                        state.refreshAll(isManual = true)
+                                        Toast.makeText(context, "🔄 Full refresh completed with current keys!", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        }
                 }
                 1 -> {
                     Section("Discovery preferences") {

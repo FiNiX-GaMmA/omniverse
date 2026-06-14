@@ -357,14 +357,14 @@ class AppState(context: Context) {
         credentials = n
         credentialsStore.save(n)
         if (credentials.hasTraktUser) scope.launch { runCatching { syncSettingsToTrakt() } }
-        refreshAll()
+        scope.launch { runCatching { refreshAll(isManual = false) } }
     }
 
     suspend fun saveSettings(next: UserSettings) {
         settings = next
         settingsStore.saveSettings(next)
         if (credentials.hasTraktUser) scope.launch { runCatching { syncSettingsToTrakt() } }
-        refreshAll()
+        scope.launch { runCatching { refreshAll(isManual = false) } }
     }
 
     // MARK: - Cross-device QR sync (server-less; see native/SYNC_SPEC.md)

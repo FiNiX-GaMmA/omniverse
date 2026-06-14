@@ -256,6 +256,16 @@ class TmdbRepositoryImpl : TmdbRepository {
         }
     }
 
+    override suspend fun validate(credentials: ApiCredentials, settings: UserSettings): Boolean {
+        if (!credentials.hasTmdb) return false
+        return try {
+            val response = get(uri("genre/movie/list", credentials, settings), credentials)
+            response.status in 200..299
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
     // MARK: URL + headers
 
     private fun uri(path: String, credentials: ApiCredentials, settings: UserSettings, query: Map<String, String> = emptyMap()): String {

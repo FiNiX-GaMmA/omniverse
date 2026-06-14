@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -197,7 +198,7 @@ private fun Shell(nav: androidx.navigation.NavController) {
             if (wide) {
                 GlassRail(tabs, idx, navFocus, Modifier.align(Alignment.CenterStart).padding(start = 16.dp, top = 24.dp, bottom = 24.dp)) { selection = it }
             } else {
-                GlassTabBar(tabs, idx, navFocus, Modifier.align(Alignment.BottomCenter).padding(horizontal = 18.dp, vertical = 8.dp)) { selection = it }
+                GlassTabBar(tabs, idx, navFocus, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(horizontal = 18.dp, vertical = 8.dp)) { selection = it }
             }
         }
     }
