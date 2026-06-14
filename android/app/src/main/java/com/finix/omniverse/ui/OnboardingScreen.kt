@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.finix.omniverse.AppGraph
 import com.finix.omniverse.Http
+import com.finix.omniverse.SimpleAES
 import com.finix.omniverse.ui.theme.LiquidColors
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
