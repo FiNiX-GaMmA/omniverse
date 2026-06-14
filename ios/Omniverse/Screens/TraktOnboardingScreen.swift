@@ -11,6 +11,9 @@ struct TraktOnboardingScreen: View {
     @State private var clientSecret = ""
     @State private var errorMessage: String?
     @State private var showScanner = false
+    @State private var showPairingQR = false
+    @State private var pairingID = ""
+    @State private var isPairing = false
 
     var body: some View {
         ZStack {
@@ -39,12 +42,32 @@ struct TraktOnboardingScreen: View {
                             .multilineTextAlignment(.center)
                             .padding(.bottom, 12)
 
-                        Text("To open the application, please connect your Trakt.tv account. This will automatically restore all your saved watchlists, API keys, preferences, and real-time play progress from other logged-in devices!")
-                            .font(.system(size: 15))
-                            .foregroundStyle(.white.opacity(0.7))
-                            .lineSpacing(3)
-                            .multilineTextAlignment(.center)
-                            .padding(.bottom, 24)
+                        if !pairingID.isEmpty {
+                            Text("Already signed in on another device? Scan this QR code with its camera scanner (Settings > Scan Sync QR) to sync instantly! Or use the options below.")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.white.opacity(0.7))
+                                .lineSpacing(3)
+                                .multilineTextAlignment(.center)
+                                .padding(.bottom, 16)
+
+                            if let qrImg = SyncPayload.qrImage(from: "OMNIVERSE-PAIR1:\(pairingID)") {
+                                Image(uiImage: qrImg)
+                                    .resizable()
+                                    .interpolation(.none)
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 220, height: 250)
+                                    .padding(12)
+                                    .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                                    .padding(.bottom, 24)
+                            }
+                        } else {
+                            Text("To open the application, please connect your Trakt.tv account. This will automatically restore all your saved watchlists, API keys, preferences, and real-time play progress from other logged-in devices!")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.white.opacity(0.7))
+                                .lineSpacing(3)
+                                .multilineTextAlignment(.center)
+                                .padding(.bottom, 24)
+                        }
 
                         if !state.credentials.hasTraktApp {
                             VStack(spacing: 12) {
@@ -68,15 +91,15 @@ struct TraktOnboardingScreen: View {
                                 Text("Connecting to Trakt...").font(.system(size: 15, weight: .bold)).foregroundStyle(.white.opacity(0.7))
                             }
                         } else {
-                            // Primary: instant cross-device sign-in via camera.
+                            // Primary: scan the sync QR of another device (camera).
                             Button { showScanner = true } label: {
-                                Label("Scan Sync QR", systemImage: "qrcode.viewfinder")
-                                    .font(.system(size: 16, weight: .black))
-                                    .foregroundStyle(LiquidColors.ink)
+                                Label("Scan Another Sync QR Instead", systemImage: "qrcode.viewfinder")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundStyle(.white)
                                     .padding(.horizontal, 32).padding(.vertical, 16)
                                     .frame(maxWidth: .infinity)
-                                    .background(LiquidColors.cyan, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-                                    .shadow(color: LiquidColors.cyan.opacity(0.5), radius: 16)
+                                    .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(Color.white.opacity(0.15), lineWidth: 1.5))
+                                    .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
                             }
                             .buttonStyle(.plain)
                             .padding(.bottom, 12)
@@ -123,6 +146,38 @@ struct TraktOnboardingScreen: View {
         .tint(LiquidColors.cyan)
         .sheet(isPresented: $showScanner) {
             SyncScannerSheet { restoreFromQR($0) }
+        }
+        .onAppear {
+            // Automatically initialize low-density pairing QR on launch
+            let id = "pair_" + String(Int.random(in: 100000...999999))
+            pairingID = id
+            isPairing = true
+            startPairingPoll(id)
+        }
+        .onDisappear {
+            isPairing = false
+        }
+    }
+
+    private func startPairingPoll(_ id: String) {
+        Task {
+            while isPairing {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                guard isPairing else { break }
+
+                guard let url = URL(string: "https://kvdb.io/omniverse_pairing_v1/\(id)") else { continue }
+                if let resp = try? await Http.shared.request(url), resp.ok {
+                    let body = resp.bodyString.trimmed
+                    if body.hasPrefix("OMNIVERSE-SYNC1:") {
+                        isPairing = false
+                        let ok = await state.applySyncString(body)
+                        if ok {
+                            showPairingQR = false
+                            await state.refreshTraktPlayback()
+                        }
+                    }
+                }
+            }
         }
     }
 

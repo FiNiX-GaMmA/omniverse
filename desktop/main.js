@@ -231,21 +231,32 @@ ipcMain.handle("download-update-file", async (event, url) => {
   }
 });
 
-ipcMain.handle("iptv-fetch", async (_, url) => {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      },
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const html = await response.text();
-    return { ok: true, html };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-});
+ipcMain.handle(
+  "iptv-fetch",
+  async (_, { url, method = "GET", headers = {}, body = null }) => {
+    try {
+      const fetchOptions = {
+        method: method.toUpperCase(),
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          ...headers,
+        },
+      };
+
+      if (body) {
+        fetchOptions.body =
+          typeof body === "string" ? body : JSON.stringify(body);
+      }
+
+      const response = await fetch(url, fetchOptions);
+      const html = await response.text();
+      return { ok: response.ok, status: response.status, html };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+);
 
 ipcMain.handle("get-adblock-stats", () => adBlockStats.adsBlocked);
 

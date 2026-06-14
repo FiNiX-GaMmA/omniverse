@@ -25,7 +25,8 @@ if (isMainApp) {
     openPipWindow: (url, title) =>
       ipcRenderer.invoke("open-pip-window", { url, title }),
     closePipWindow: () => ipcRenderer.invoke("close-pip-window"),
-    iptvFetch: (url) => ipcRenderer.invoke("iptv-fetch", url),
+    iptvFetch: (url, method = "GET", headers = {}, body = null) =>
+      ipcRenderer.invoke("iptv-fetch", { url, method, headers, body }),
     downloadUpdate: (url) => ipcRenderer.invoke("download-update-file", url),
     onUpdateProgress: (cb) => {
       const handler = (_, pct) => cb(pct);

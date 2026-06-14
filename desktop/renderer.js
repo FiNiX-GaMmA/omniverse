@@ -14,6 +14,13 @@ let state = {
   iptvCountries: [],
   iptvChannels: [],
   filteredIptvChannels: [],
+
+  // Trakt Sync credentials
+  traktToken: localStorage.getItem("omni_trakt_token") || "",
+  traktClientId: localStorage.getItem("omni_trakt_client_id") || "",
+  traktClientSecret: localStorage.getItem("omni_trakt_client_secret") || "",
+  pixeldrainApiKey: localStorage.getItem("omni_pixeldrain_key") || "",
+  watchHistory: JSON.parse(localStorage.getItem("omni_watch_history") || "[]"),
 };
 
 // Curated high-fidelity backup database (ensures app is populated before TMDB token entry)
@@ -205,8 +212,14 @@ document.addEventListener("DOMContentLoaded", () => {
   setupSearchInput();
   setupLiveTvCenter();
   setupOnePaceCenter();
+  renderContinueWatching(); // Initial local history render
   setupAdblockObserver();
   lucide.createIcons();
+
+  // Background cloud sync continue-watching if Trakt connected
+  if (state.traktToken) {
+    pullFromTrakt();
+  }
 });
 
 // Configure Window Controls based on OS
@@ -866,14 +879,39 @@ function importSyncCode() {
         config.settings.vidsrcDomain;
     }
 
+    // Parse Trakt Sync credentials
+    if (config.trakt_access_token) {
+      state.traktToken = config.trakt_access_token;
+      localStorage.setItem("omni_trakt_token", config.trakt_access_token);
+    }
+    if (config.trakt_client_id) {
+      state.traktClientId = config.trakt_client_id;
+      localStorage.setItem("omni_trakt_client_id", config.trakt_client_id);
+    }
+    if (config.trakt_client_secret) {
+      state.traktClientSecret = config.trakt_client_secret;
+      localStorage.setItem(
+        "omni_trakt_client_secret",
+        config.trakt_client_secret,
+      );
+    }
+    if (config.pixeldrain_api_key) {
+      state.pixeldrainApiKey = config.pixeldrain_api_key;
+      localStorage.setItem("omni_pixeldrain_key", config.pixeldrain_api_key);
+    }
+
     input.value = "";
     window.electron.showNotification(
       "Sync Successful",
       "Cloud Sync finished. Re-loaded credentials, accounts, and play preferences.",
     );
 
-    // Refresh feed configurations
+    // Refresh feed configurations and pull history
     renderCatalogFeeds();
+
+    if (state.traktToken) {
+      pullFromTrakt();
+    }
   } catch (err) {
     console.error("Sync parsing error: ", err);
     window.electron.showNotification(
@@ -1282,7 +1320,63 @@ function playOnePaceEpisode(episode, cardEl) {
   if (video) {
     video.src = streamUrl;
     video.load();
+
+    // Seek to previous progress if available
+    const selectEl = document.getElementById("onepace-arc-select");
+    const currentSeason = selectEl ? parseInt(selectEl.value) + 1 : 1;
+    const existing = state.watchHistory.find(
+      (h) =>
+        h.itemId === "onepace:anime:21" &&
+        h.seasonNumber === currentSeason &&
+        h.episodeNumber === episode.episodeNumber,
+    );
+    if (existing && existing.positionMs) {
+      video.addEventListener("loadedmetadata", function seekHandler() {
+        video.currentTime = existing.positionMs / 1000;
+        video.removeEventListener("loadedmetadata", seekHandler);
+      });
+    }
+
     video.play().catch((err) => console.log("Autoplay blocked: ", err));
+
+    // Time update listener to save progress every 5 seconds
+    let lastSaveTime = 0;
+    const timeUpdateHandler = () => {
+      const now = Date.now();
+      if (now - lastSaveTime > 5000) {
+        lastSaveTime = now;
+        const duration = video.duration || 0;
+        if (duration > 0) {
+          const selectedArc = selectEl
+            ? activeOnePaceArcs[parseInt(selectEl.value)]
+            : null;
+
+          saveWatchProgress({
+            itemId: "onepace:anime:21", // MATCH NATIVE MOBILE GLOBAL ID
+            title: "One Pace", // MATCH NATIVE MOBILE GLOBAL TITLE
+            type: "series", // Map onepace to series for mobile compatibility!
+            positionMs: Math.round(video.currentTime * 1000),
+            durationMs: Math.round(duration * 1000),
+            lastWatchedAt: Date.now(),
+            posterPath:
+              selectedArc && selectedArc.backdrop
+                ? selectedArc.backdrop
+                : "https://onepace.net/images/og-backdrop.jpg",
+            backdropPath:
+              selectedArc && selectedArc.backdrop
+                ? selectedArc.backdrop
+                : "https://onepace.net/images/og-backdrop.jpg",
+            seasonNumber: selectEl ? parseInt(selectEl.value) + 1 : 1,
+            episodeNumber: episode.episodeNumber,
+            episodeTitle: episode.cleanTitle,
+          });
+        }
+      }
+    };
+
+    video.removeEventListener("timeupdate", video._timeListener);
+    video._timeListener = timeUpdateHandler;
+    video.addEventListener("timeupdate", timeUpdateHandler);
 
     window.electron.showNotification(
       "One Pace Streaming",
@@ -1395,4 +1489,262 @@ function extractBalancedJson(text, startIdx) {
     i++;
   }
   return text.substring(startIdx);
+}
+
+// ==============================================================================
+// Trakt Bidirectional Sync Engine & Continue Watching Shelf
+// ==============================================================================
+function renderContinueWatching() {
+  const container = document.getElementById("grid-continue-watching");
+  const section = document.getElementById("continue-watching-section");
+  if (!container || !section) return;
+
+  if (state.watchHistory.length === 0) {
+    section.classList.add("hidden");
+    return;
+  }
+
+  section.classList.remove("hidden");
+  container.innerHTML = "";
+
+  // Grouping logic: movie -> standalone, tv/anime/onepace -> group by show title (Clean Continue Watching)
+  const grouped = [];
+  const seenShows = new Set();
+
+  const sortedHistory = [...state.watchHistory].sort(
+    (a, b) => b.lastWatchedAt - a.lastWatchedAt,
+  );
+
+  sortedHistory.forEach((item) => {
+    if (item.type === "movie") {
+      grouped.push(item);
+    } else {
+      const showKey = item.showTitle || item.title;
+      if (!seenShows.has(showKey)) {
+        seenShows.add(showKey);
+        grouped.push(item);
+      }
+    }
+  });
+
+  grouped.forEach((item) => {
+    const card = document.createElement("div");
+    card.className =
+      "media-card bg-brandSec rounded-xl border border-white/[0.04] p-2 hover:border-brandCyan/20 cursor-pointer text-left relative";
+    card.onclick = () => resumeWatchProgress(item);
+
+    const progressPercent = Math.round((item.progress || 0) * 100);
+    let subtitle = item.type.toUpperCase();
+    if (
+      item.type === "tv" ||
+      item.type === "anime" ||
+      item.type === "onepace"
+    ) {
+      subtitle = `S${item.season} E${item.episode}`;
+    }
+
+    card.innerHTML = `
+      <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-2">
+        <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://onepace.net/images/og-backdrop.jpg'">
+        <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60">
+          <div class="bg-brandCyan h-full" style="width: ${progressPercent}%"></div>
+        </div>
+        <span class="absolute top-1.5 right-1.5 bg-cyan-950/80 border border-brandCyan/20 text-brandCyan font-extrabold text-[9px] px-1.5 py-0.5 rounded">
+          ${progressPercent}%
+        </span>
+      </div>
+      <div class="px-1 space-y-0.5">
+        <h4 class="text-xs font-bold text-gray-200 truncate leading-snug">${item.showTitle || item.title}</h4>
+        <div class="flex items-center justify-between text-[10px] text-gray-500 font-medium">
+          <span>${subtitle}</span>
+          <span class="text-[9px] text-brandCyan bg-cyan-950/15 border border-brandCyan/10 px-1 rounded uppercase tracking-wider">${item.type}</span>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+  lucide.createIcons();
+}
+
+function saveWatchProgress(item) {
+  const idx = state.watchHistory.findIndex((h) => h.itemId === item.itemId);
+  if (idx >= 0) {
+    state.watchHistory[idx] = item;
+  } else {
+    state.watchHistory.push(item);
+  }
+
+  localStorage.setItem(
+    "omni_watch_history",
+    JSON.stringify(state.watchHistory),
+  );
+  renderContinueWatching();
+
+  if (state.traktToken) {
+    pushToTrakt();
+  }
+}
+
+function clearWatchHistory() {
+  state.watchHistory = [];
+  localStorage.setItem("omni_watch_history", "[]");
+  renderContinueWatching();
+
+  if (state.traktToken) {
+    pushToTrakt();
+  }
+  window.electron.showNotification(
+    "History Cleared",
+    "Local and cloud watch history has been purged.",
+  );
+}
+
+async function resumeWatchProgress(item) {
+  if (item.itemId === "onepace:anime:21" || item.title === "One Pace") {
+    switchScreen("onepace");
+    const arcIndex = (item.seasonNumber || 1) - 1; // seasonNumber is 1-based arc index!
+    if (arcIndex >= 0 && arcIndex < activeOnePaceArcs.length) {
+      document.getElementById("onepace-arc-select").value = arcIndex;
+      await onOnePaceArcChanged();
+      const ep = activeOnePaceEpisodes.find(
+        (e) => e.episodeNumber === item.episodeNumber,
+      );
+      if (ep) {
+        playOnePaceEpisode(ep);
+      }
+    }
+  } else {
+    // Map WatchProgress back to MediaItem for detail modal
+    const mediaItem = {
+      id: item.itemId,
+      title: item.title,
+      type: item.type,
+      poster: item.posterPath,
+      backdrop: item.backdropPath,
+      year: new Date(item.lastWatchedAt).getFullYear(),
+      rating: "—",
+      overview: item.episodeTitle
+        ? `Resume watching: ${item.episodeTitle}`
+        : "Continue watching from history.",
+      seasons: item.seasonNumber ? item.seasonNumber : 1,
+      tmdbId: parseInt(item.itemId.split(":").pop()) || null,
+    };
+    openDetailModal(mediaItem);
+  }
+}
+
+async function pullFromTrakt() {
+  if (!state.traktToken) return;
+
+  try {
+    const listsUrl = "https://api.trakt.tv/users/me/lists";
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${state.traktToken}`,
+      "trakt-api-version": "2",
+      "trakt-api-key": state.traktClientId,
+    };
+
+    const res = await window.electron.iptvFetch(listsUrl, "GET", headers);
+    if (!res.ok) throw new Error("Could not fetch Trakt lists");
+
+    const lists = JSON.parse(res.html);
+    const syncList = lists.find((l) => l.name === "Omniverse Sync");
+    if (syncList && syncList.description) {
+      const payloadB64 = syncList.description.trim();
+      const decodedString = decodeURIComponent(escape(atob(payloadB64)));
+      const backup = JSON.parse(decodedString);
+
+      if (backup.watch_history && Array.isArray(backup.watch_history)) {
+        mergeWatchHistory(backup.watch_history);
+      }
+
+      if (backup.pixeldrain_api_key && !state.pixeldrainApiKey) {
+        state.pixeldrainApiKey = backup.pixeldrain_api_key;
+        localStorage.setItem("omni_pixeldrain_key", backup.pixeldrain_api_key);
+      }
+    }
+  } catch (err) {
+    console.error("Trakt pull error: ", err);
+  }
+}
+
+function mergeWatchHistory(remoteHistory) {
+  const localMap = new Map(state.watchHistory.map((h) => [h.itemId, h]));
+
+  remoteHistory.forEach((remoteItem) => {
+    const localItem = localMap.get(remoteItem.itemId);
+    if (!localItem || remoteItem.lastWatchedAt > localItem.lastWatchedAt) {
+      localMap.set(remoteItem.itemId, remoteItem);
+    }
+  });
+
+  state.watchHistory = Array.from(localMap.values());
+  localStorage.setItem(
+    "omni_watch_history",
+    JSON.stringify(state.watchHistory),
+  );
+  renderContinueWatching();
+}
+
+let isPushing = false;
+async function pushToTrakt() {
+  if (!state.traktToken || isPushing) return;
+  isPushing = true;
+
+  try {
+    const listsUrl = "https://api.trakt.tv/users/me/lists";
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${state.traktToken}`,
+      "trakt-api-version": "2",
+      "trakt-api-key": state.traktClientId,
+    };
+
+    const res = await window.electron.iptvFetch(listsUrl, "GET", headers);
+    if (!res.ok) throw new Error("Could not check lists");
+
+    const lists = JSON.parse(res.html);
+    const syncList = lists.find((l) => l.name === "Omniverse Sync");
+
+    const payload = {
+      version: 1,
+      pixeldrain_api_key: state.pixeldrainApiKey,
+      trakt_client_id: state.traktClientId,
+      trakt_client_secret: state.traktClientSecret,
+      watch_history: state.watchHistory,
+    };
+
+    const payloadB64 = btoa(
+      unescape(encodeURIComponent(JSON.stringify(payload))),
+    );
+
+    const body = {
+      name: "Omniverse Sync",
+      description: payloadB64,
+      privacy: "private",
+    };
+
+    if (syncList) {
+      // PUT request to update list
+      await window.electron.iptvFetch(
+        `https://api.trakt.tv/users/me/lists/${syncList.ids.trakt}`,
+        "PUT",
+        headers,
+        body,
+      );
+    } else {
+      // POST request to create list
+      await window.electron.iptvFetch(
+        "https://api.trakt.tv/users/me/lists",
+        "POST",
+        headers,
+        body,
+      );
+    }
+  } catch (err) {
+    console.error("Trakt push error: ", err);
+  } finally {
+    isPushing = false;
+  }
 }
