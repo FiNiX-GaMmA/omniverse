@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,6 +40,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import coil.compose.AsyncImage
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,8 +79,6 @@ fun HomeScreen(nav: NavController) {
     var isRefreshing by remember { mutableStateOf(false) }
 
     var selectedStudio by remember { mutableStateOf<String?>(null) }
-    var studioItems by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
-    var loadingStudio by remember { mutableStateOf(false) }
 
     fun openDetail(item: MediaItem) {
         RouteArgs.detailItem = item
@@ -165,11 +166,6 @@ fun HomeScreen(nav: NavController) {
                 item {
                     StudiosRow(wide) { studio ->
                         selectedStudio = studio
-                        scope.launch {
-                            loadingStudio = true
-                            studioItems = state.fetchStudioContent(studio)
-                            loadingStudio = false
-                        }
                     }
                 }
                 item {
@@ -202,12 +198,42 @@ fun HomeScreen(nav: NavController) {
             }
 
             selectedStudio?.let { studio ->
-                StudioContentSheet(
-                    studio = studio,
-                    items = studioItems,
-                    loading = loadingStudio,
-                    onDismiss = { selectedStudio = null; studioItems = emptyList() },
-                    onSelect = { item -> selectedStudio = null; openDetail(item) }
+                StudioDetailsScreen(
+                    studioId = studio,
+                    studioName = when (studio.lowercase()) {
+                        "disney" -> "Disney+"
+                        "netflix" -> "Netflix"
+                        "hbo" -> "HBO Max"
+                        "prime" -> "Prime Video"
+                        "apple" -> "Apple TV+"
+                        "paramount" -> "Paramount+"
+                        "hulu" -> "Hulu"
+                        "peacock" -> "Peacock"
+                        "marvel" -> "Marvel Studios"
+                        "warner" -> "Warner Bros"
+                        "universal" -> "Universal"
+                        "sony" -> "Sony Pictures"
+                        "crunchyroll" -> "Crunchyroll"
+                        else -> studio.replaceFirstChar { it.uppercase() }
+                    },
+                    logoUrl = when (studio.lowercase()) {
+                        "netflix" -> "https://image.tmdb.org/t/p/w500/wwemzKWzjKYJFfCeiB67v84g67V.png"
+                        "disney" -> "https://image.tmdb.org/t/p/w500/uzK9u4w6FQm0zJbi9qRmN0R0ppU.png"
+                        "hbo" -> "https://image.tmdb.org/t/p/w500/aS77vEmdTeE1UdGRZT3lmV3N0KzB.png"
+                        "prime" -> "https://image.tmdb.org/t/p/w500/dqO0T3VGYWxQj1MlEhRpMDZlObC.png"
+                        "apple" -> "https://image.tmdb.org/t/p/w500/4EClm3JjNzdXjVgXoNlM2bTBpTV.png"
+                        "paramount" -> "https://image.tmdb.org/t/p/w500/ge9aWF6Nzm3eWV3cE1IaGNmViB.png"
+                        "hulu" -> "https://image.tmdb.org/t/p/w500/ke60mVEbEw4VlJtLzlZVW12UTNyW.png"
+                        "peacock" -> "https://image.tmdb.org/t/p/w500/8D09aGpmdzIrcjY4UEhET252STd.png"
+                        "marvel" -> "https://image.tmdb.org/t/p/w500/hUze9aWFR6N2kzODAyMG9RVE1wY0Z.png"
+                        "warner" -> "https://image.tmdb.org/t/p/w500/3NBiISDoGNSlKzVFNzhNOT0aGpm.png"
+                        "universal" -> "https://image.tmdb.org/t/p/w500/87XNBeVEH5FTEpoocVJBNDVDb20.png"
+                        "sony" -> "https://image.tmdb.org/t/p/w500/76iXB0ZqUzNDV1RVMQkE5S0QVG.png"
+                        "crunchyroll" -> "https://image.tmdb.org/t/p/w500/yNzSO9lpbWN5NmhyeUtVUzZFY2s.png"
+                        else -> ""
+                    },
+                    onClose = { selectedStudio = null },
+                    onItemSelect = { openDetail(it) }
                 )
             }
         }
@@ -515,25 +541,77 @@ private fun displayCategories(): List<MediaCategory> {
     }
 }
 
-private data class StudioInfo(val id: String, val name: String, val logoUrl: String)
+private data class StudioInfo(val id: String, val name: String, val logoUrl: String, val background: androidx.compose.ui.graphics.Brush)
 
 @Composable
 private fun StudiosRow(wide: Boolean, onSelect: (String) -> Unit) {
     val studios = remember {
         listOf(
-            StudioInfo("netflix", "Netflix", "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/512px-Netflix_2015_logo.svg.png"),
-            StudioInfo("disney", "Disney+", "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Disney%2B_logo.svg/512px-Disney%2B_logo.svg.png"),
-            StudioInfo("hbo", "HBO Max", "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Max_logo.svg/512px-Max_logo.svg.png"),
-            StudioInfo("prime", "Prime Video", "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Amazon_Prime_Video_logo.svg/512px-Amazon_Prime_Video_logo.svg.png"),
-            StudioInfo("apple", "Apple TV+", "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Apple_TV_Plus_Logo.svg/512px-Apple_TV_Plus_Logo.svg.png"),
-            StudioInfo("paramount", "Paramount+", "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Paramount_Plus_logo.svg/512px-Paramount_Plus_logo.svg.png"),
-            StudioInfo("hulu", "Hulu", "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Hulu_Logo.svg/512px-Hulu_Logo.svg.png"),
-            StudioInfo("peacock", "Peacock", "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Peacock_Logo.svg/512px-Peacock_Logo.svg.png"),
-            StudioInfo("marvel", "Marvel", "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Marvel_Studios_2016_Logo.svg/512px-Marvel_Studios_2016_Logo.svg.png"),
-            StudioInfo("warner", "Warner Bros", "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Warner_Bros_logo.svg/512px-Warner_Bros_logo.svg.png"),
-            StudioInfo("universal", "Universal", "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Universal_Pictures_Logo_2013.svg/512px-Universal_Pictures_Logo_2013.svg.png"),
-            StudioInfo("sony", "Sony Pictures", "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Sony_Pictures_logo.svg/512px-Sony_Pictures_logo.svg.png"),
-            StudioInfo("crunchyroll", "Crunchyroll", "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Crunchyroll_Logo.svg/512px-Crunchyroll_Logo.svg.png")
+            StudioInfo(
+                "netflix", "Netflix",
+                "https://unavatar.io/netflix.com",
+                androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color(0xFF0F1E36), Color(0xFF07090E), Color(0xFF2C080E)))
+            ),
+            StudioInfo(
+                "disney", "Disney+",
+                "https://unavatar.io/disneyplus.com",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF0C1428), Color(0xFF03060E)))
+            ),
+            StudioInfo(
+                "hbo", "HBO Max",
+                "https://unavatar.io/hbo.com",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF090E1F), Color(0xFF001150)))
+            ),
+            StudioInfo(
+                "prime", "Prime Video",
+                "https://unavatar.io/primevideo.com",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF1A233A), Color(0xFF0D1424)))
+            ),
+            StudioInfo(
+                "apple", "Apple TV+",
+                "https://unavatar.io/apple.com",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF1E1E1E), Color(0xFF030303)))
+            ),
+            StudioInfo(
+                "paramount", "Paramount+",
+                "https://unavatar.io/paramountplus.com",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF001D40), Color(0xFF000E24)))
+            ),
+            StudioInfo(
+                "hulu", "Hulu",
+                "https://unavatar.io/hulu.com",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF051E14), Color(0xFF020905)))
+            ),
+            StudioInfo(
+                "peacock", "Peacock",
+                "https://unavatar.io/peacocktv.com",
+                androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color(0xFF0D0D14), Color(0xFF1B1B2A)))
+            ),
+            StudioInfo(
+                "marvel", "Marvel",
+                "https://unavatar.io/marvel.com",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFFE2011A), Color(0xFF330006)))
+            ),
+            StudioInfo(
+                "warner", "Warner Bros",
+                "https://unavatar.io/warnerbros.com",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF011C4A), Color(0xFF050F2B)))
+            ),
+            StudioInfo(
+                "universal", "Universal",
+                "https://unavatar.io/universalpictures.com",
+                androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color(0xFF0E1C38), Color(0xFF030713)))
+            ),
+            StudioInfo(
+                "sony", "Sony Pictures",
+                "https://unavatar.io/sonypictures.com",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF1E325A), Color(0xFF0C162E)))
+            ),
+            StudioInfo(
+                "crunchyroll", "Crunchyroll",
+                "https://unavatar.io/crunchyroll.com",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFFF47521), Color(0xFF5E2700)))
+            )
         )
     }
 
@@ -556,107 +634,149 @@ private fun StudiosRow(wide: Boolean, onSelect: (String) -> Unit) {
                         .width(160.dp)
                         .height(90.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF161A22))
+                        .background(studio.background)
                         .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                         .tvFocusable(onClick = { onSelect(studio.id) }, corner = 12),
                     contentAlignment = Alignment.Center,
                 ) {
-                    AsyncImage(
-                        model = studio.logoUrl,
-                        contentDescription = studio.name,
-                        modifier = Modifier.fillMaxSize(0.68f)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp)
+                    ) {
+                        AsyncImage(
+                            model = studio.logoUrl,
+                            contentDescription = studio.name,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                        )
+                        Text(
+                            text = studio.name.uppercase(),
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StudioContentSheet(
-    studio: String,
-    items: List<MediaItem>,
-    loading: Boolean,
-    onDismiss: () -> Unit,
-    onSelect: (MediaItem) -> Unit,
+private fun StudioDetailsScreen(
+    studioId: String,
+    studioName: String,
+    logoUrl: String,
+    onClose: () -> Unit,
+    onItemSelect: (MediaItem) -> Unit,
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Color(0xFF0F1218),
-        contentColor = Color.White
+    val state = AppGraph.appState
+    var movies by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
+    var tvShows by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(studioId) {
+        loading = true
+        movies = state.fetchStudioMovies(studioId)
+        tvShows = state.fetchStudioTVShows(studioId)
+        loading = false
+    }
+
+    // Intercept hardware back button to close the overlay cleanly
+    androidx.activity.compose.BackHandler(onBack = onClose)
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0C0F14)) // Cinematic dark slate background
     ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp)
-        ) {
+        Column(Modifier.fillMaxSize()) {
+            // Header Row
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = when (studio.lowercase()) {
-                        "disney" -> "Disney+ Originals"
-                        "netflix" -> "Netflix Originals"
-                        "hbo" -> "HBO Max Originals"
-                        "apple" -> "Apple TV+ Originals"
-                        "paramount" -> "Paramount+ Originals"
-                        "prime" -> "Amazon Prime Originals"
-                        "hulu" -> "Hulu Originals"
-                        "peacock" -> "Peacock Originals"
-                        "marvel" -> "Marvel Studios"
-                        "warner" -> "Warner Bros. Pictures"
-                        "universal" -> "Universal Pictures"
-                        "sony" -> "Sony Pictures"
-                        "crunchyroll" -> "Crunchyroll Anime"
-                        else -> "$studio Originals"
-                    },
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.weight(1f)
-                )
+                Box(
+                    Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.08f))
+                        .tvFocusable(onClick = onClose, corner = 23),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Close",
+                        tint = Color.White
+                    )
+                }
+                if (logoUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = logoUrl,
+                        contentDescription = studioName,
+                        modifier = Modifier
+                            .height(44.dp)
+                            .widthIn(max = 180.dp)
+                    )
+                } else {
+                    Text(
+                        text = studioName,
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                }
             }
-            Spacer(Modifier.height(16.dp))
+
             if (loading) {
-                Box(Modifier.fillMaxWidth().height(250.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = LiquidColors.Cyan)
                 }
-            } else if (items.isEmpty()) {
-                Box(Modifier.fillMaxWidth().height(150.dp), contentAlignment = Alignment.Center) {
-                    Text("No original titles found. Check your API key.", color = Color.White.copy(alpha = 0.6f))
+            } else if (movies.isEmpty() && tvShows.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        "No content available for this studio.",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 16.sp
+                    )
                 }
             } else {
-                LazyRow(
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.padding(bottom = 16.dp)
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 48.dp)
                 ) {
-                    items(items, key = { it.id }) { item ->
-                        Column(
-                            Modifier
-                                .width(135.dp)
-                                .tvFocusable(onClick = { onSelect(item) }, corner = 12)
-                        ) {
-                            Box(
-                                Modifier
-                                    .width(135.dp)
-                                    .height(200.dp)
-                                    .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                            ) {
-                                PosterImage(item.posterUrl ?: item.backdropUrl, Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)))
-                            }
-                            Text(
-                                item.title,
-                                color = Color.White,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(top = 8.dp)
+                    if (movies.isNotEmpty()) {
+                        item {
+                            val category = MediaCategory(
+                                id = "${studioId}_movies",
+                                title = "Trending Movies",
+                                type = MediaType.MOVIE,
+                                items = movies,
+                                description = "Popular movies from $studioName"
                             )
+                            CategoryRow(category, wide = false, onItem = onItemSelect)
+                        }
+                    }
+                    if (tvShows.isNotEmpty()) {
+                        item {
+                            val category = MediaCategory(
+                                id = "${studioId}_tv",
+                                title = "Trending TV Shows",
+                                type = MediaType.SERIES,
+                                items = tvShows,
+                                description = "Popular series from $studioName"
+                            )
+                            CategoryRow(category, wide = false, onItem = onItemSelect)
                         }
                     }
                 }

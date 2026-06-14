@@ -266,34 +266,67 @@ class TmdbRepositoryImpl : TmdbRepository {
         }
     }
 
-    override suspend fun fetchStudioContent(studio: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem> {
+    override suspend fun fetchStudioMovies(studio: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem> {
         if (!credentials.hasTmdb) return emptyList()
-        val (moviePath, queryParams) = when (studio.lowercase()) {
-            "disney" -> Pair("discover/movie", mapOf("with_companies" to "2")) // Walt Disney Pictures
-            "netflix" -> Pair("discover/tv", mapOf("with_networks" to "213")) // Netflix
-            "hbo" -> Pair("discover/tv", mapOf("with_networks" to "3186")) // HBO Max
-            "apple" -> Pair("discover/tv", mapOf("with_networks" to "2552")) // Apple TV+
-            "paramount" -> Pair("discover/movie", mapOf("with_companies" to "4")) // Paramount Pictures
-            "prime" -> Pair("discover/movie", mapOf("with_companies" to "20580")) // Amazon Studios
-            "hulu" -> Pair("discover/tv", mapOf("with_networks" to "453")) // Hulu
-            "peacock" -> Pair("discover/tv", mapOf("with_networks" to "3353")) // Peacock
-            "marvel" -> Pair("discover/movie", mapOf("with_companies" to "420")) // Marvel Studios
-            "warner" -> Pair("discover/movie", mapOf("with_companies" to "174")) // Warner Bros.
-            "universal" -> Pair("discover/movie", mapOf("with_companies" to "33")) // Universal Pictures
-            "sony" -> Pair("discover/movie", mapOf("with_companies" to "5")) // Columbia/Sony Pictures
-            "crunchyroll" -> Pair("discover/tv", mapOf("with_networks" to "1112")) // Crunchyroll
-            else -> Pair("trending/all/week", emptyMap())
-        }
+        val companyId = when (studio.lowercase()) {
+            "disney" -> "2" // Walt Disney Pictures
+            "netflix" -> "178464" // Netflix Movies
+            "hbo" -> "174" // Warner Bros. (HBO Max Movie parent)
+            "prime" -> "20580" // Amazon Studios
+            "apple" -> "194303" // Apple Studios
+            "paramount" -> "4" // Paramount Pictures
+            "hulu" -> "164090" // Hulu Originals
+            "peacock" -> "161044" // Universal/Peacock Movies
+            "marvel" -> "420" // Marvel Studios
+            "warner" -> "174" // Warner Bros. Pictures
+            "universal" -> "33" // Universal Pictures
+            "sony" -> "5" // Columbia Pictures
+            "crunchyroll" -> "11444" // Crunchyroll Movies
+            else -> null
+        } ?: return emptyList()
         return try {
-            val url = uri(moviePath, credentials, settings, queryParams)
+            val url = uri("discover/movie", credentials, settings, mapOf("with_companies" to companyId))
             val response = get(url, credentials)
             if (response.status >= 400) return emptyList()
-            val (movieGenres, tvGenres) = fetchGenres(credentials, settings)
-            val genreNames = if (moviePath.contains("movie")) movieGenres else tvGenres
+            val (movieGenres, _) = fetchGenres(credentials, settings)
             (response.jsonObject().optArrayOrNull("results")?.objects() ?: emptyList())
-                .mapNotNull { mediaItemFromTmdb(it, if (moviePath.contains("movie")) MediaType.MOVIE else MediaType.SERIES, genreNames) }
+                .mapNotNull { mediaItemFromTmdb(it, MediaType.MOVIE, movieGenres) }
                 .filter { it.posterPath != null || it.backdropPath != null }
-                .take(15)
+                .take(18)
+        } catch (_: Throwable) {
+            emptyList()
+        }
+    }
+
+    override suspend fun fetchStudioTVShows(studio: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem> {
+        if (!credentials.hasTmdb) return emptyList()
+        val networkId = when (studio.lowercase()) {
+            "disney" -> "2739" // Disney+ TV
+            "netflix" -> "213" // Netflix TV
+            "hbo" -> "3186" // HBO Max TV
+            "prime" -> "1024" // Amazon Prime TV
+            "apple" -> "2552" // Apple TV+
+            "paramount" -> "359" // Paramount+ TV
+            "hulu" -> "453" // Hulu TV
+            "peacock" -> "3353" // Peacock TV
+            "marvel" -> "420" // Marvel TV series are tagged under Marvel Company
+            "warner" -> "3186" // Max TV
+            "universal" -> "33" // NBC TV
+            "sony" -> "5" // Sony/Columbia TV
+            "crunchyroll" -> "1112" // Crunchyroll TV
+            else -> null
+        } ?: return emptyList()
+        return try {
+            val isCompanyQuery = studio.lowercase() in listOf("marvel", "universal", "sony")
+            val queryKey = if (isCompanyQuery) "with_companies" else "with_networks"
+            val url = uri("discover/tv", credentials, settings, mapOf(queryKey to networkId))
+            val response = get(url, credentials)
+            if (response.status >= 400) return emptyList()
+            val (_, tvGenres) = fetchGenres(credentials, settings)
+            (response.jsonObject().optArrayOrNull("results")?.objects() ?: emptyList())
+                .mapNotNull { mediaItemFromTmdb(it, MediaType.SERIES, tvGenres) }
+                .filter { it.posterPath != null || it.backdropPath != null }
+                .take(18)
         } catch (_: Throwable) {
             emptyList()
         }

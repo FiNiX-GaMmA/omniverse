@@ -104,6 +104,7 @@ dependencies {
 
     // Images
     implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.coil-kt:coil-svg:2.7.0")
     // Palette — derive hero text colour from the banner image.
     implementation("androidx.palette:palette-ktx:1.0.0")
 

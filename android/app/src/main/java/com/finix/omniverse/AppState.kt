@@ -416,8 +416,11 @@ class AppState(context: Context) {
 
     // MARK: - Search / details / playback
 
-    suspend fun fetchStudioContent(studio: String): List<MediaItem> =
-        repos.tmdb.fetchStudioContent(studio, credentials, settings)
+    suspend fun fetchStudioMovies(studio: String): List<MediaItem> =
+        repos.tmdb.fetchStudioMovies(studio, credentials, settings)
+
+    suspend fun fetchStudioTVShows(studio: String): List<MediaItem> =
+        repos.tmdb.fetchStudioTVShows(studio, credentials, settings)
 
     suspend fun searchMedia(query: String): List<MediaItem> =
         repos.tmdb.searchMulti(query, credentials, settings)
