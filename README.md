@@ -11,6 +11,7 @@
 | Category | Badges |
 | :--- | :--- |
 | **License** | [![License](https://img.shields.io/badge/License-MIT-4fc921?style=flat-square)](LICENSE) |
+| **Downloads** | [![Total Downloads](https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/total?style=flat-square&logo=github&color=06b6d4)](https://github.com/FiNiX-GaMmA/omniverse/releases) [![Latest Release Downloads](https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/latest/total?style=flat-square&logo=github&color=10b981)](#) |
 | **Platforms** | [![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20iPadOS%20%7C%20Android%20%7C%20Android%20TV-E3008C?style=flat-square)](#) |
 | **Languages** | [![Kotlin](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org) [![Swift](https://img.shields.io/badge/Language-Swift-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org) |
 | **Frameworks** | [![Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-3DDC84?style=flat-square&logo=android&logoColor=white)](#) [![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-007ACC?style=flat-square&logo=swift&logoColor=white)](#) |

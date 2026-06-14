@@ -284,6 +284,36 @@ final class AppState {
         let text = s.trimmed
         guard !text.isEmpty else { return false }
 
+        // Handle New Pairing Flow: Scanned Pairing ID from another device
+        if text.hasPrefix("OMNIVERSE-PAIR1:") {
+            let pairId = text.replacingOccurrences(of: "OMNIVERSE-PAIR1:", with: "").trimmed
+            guard !pairId.isEmpty else {
+                message = "Invalid pairing ID."
+                return false
+            }
+
+            let payload = SyncPayload.buildSyncString(credentials: credentials, settings: settings)
+            guard let payloadData = payload.data(using: .utf8) else {
+                message = "Could not format credentials."
+                return false
+            }
+
+            do {
+                let url = URL(string: "https://kvdb.io/omniverse_pairing_v1/\(pairId)")!
+                let resp = try await Http.shared.request(url, method: "POST", body: payloadData, timeout: 14)
+                if resp.ok {
+                    message = "Synced successfully with the other device!"
+                    return true
+                } else {
+                    message = "Pairing failed (HTTP \(resp.status))."
+                    return false
+                }
+            } catch {
+                message = "Pairing request failed: \(error.localizedDescription)"
+                return false
+            }
+        }
+
         if text.hasPrefix("http://") || text.hasPrefix("https://"), let url = URL(string: text) {
             await UIApplication.shared.open(url)
             message = "Opening activation link..."

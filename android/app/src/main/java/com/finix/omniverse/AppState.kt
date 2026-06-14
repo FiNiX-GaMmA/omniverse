@@ -19,6 +19,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.math.ln
@@ -375,6 +376,35 @@ class AppState(context: Context) {
     /// it externally → returns false. Returns false for anything unrecognised.
     suspend fun applySyncString(s: String): Boolean {
         val value = s.trim()
+
+        // Handle New Pairing Flow: Scanned Pairing ID from another device
+        if (value.startsWith("OMNIVERSE-PAIR1:")) {
+            val pairId = value.removePrefix("OMNIVERSE-PAIR1:").trim()
+            if (pairId.isEmpty()) {
+                message = "Invalid pairing ID."
+                return false
+            }
+            val payload = SyncCenter.buildSyncString(credentials, settings)
+            return try {
+                val url = "https://kvdb.io/omniverse_pairing_v1/$pairId"
+                val response = Http.request(
+                    url = url,
+                    method = "POST",
+                    body = payload.toRequestBody(null)
+                )
+                if (response.ok) {
+                    message = "Synced successfully with the other device!"
+                    true
+                } else {
+                    message = "Pairing failed (HTTP ${response.status})."
+                    false
+                }
+            } catch (t: Throwable) {
+                message = "Pairing request failed: ${t.localizedMessage}"
+                false
+            }
+        }
+
         if (!SyncCenter.isSyncString(value)) {
             if (value.startsWith("http://") || value.startsWith("https://")) {
                 runCatching {

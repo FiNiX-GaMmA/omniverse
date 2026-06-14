@@ -129,6 +129,14 @@
                             Center
                         </button>
                         <button
+                            onclick="switchScreen('onepace')"
+                            id="nav-onepace"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
+                        >
+                            <i data-lucide="play-circle" class="w-4 h-4"></i>
+                            One Pace
+                        </button>
+                        <button
                             onclick="switchScreen('livetv')"
                             id="nav-livetv"
                             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
@@ -443,6 +451,133 @@
                 </section>
 
                 <!-- ========================================== -->
+                <!-- SCREEN: ONE PACE FAN-CUT                  -->
+                <!-- ========================================== -->
+                <section
+                    id="screen-onepace"
+                    class="hidden animate-fade-in space-y-6"
+                >
+                    <div
+                        class="flex items-center justify-between border-b border-white/[0.04] pb-4"
+                    >
+                        <div>
+                            <h1 class="text-xl font-black uppercase text-white">
+                                One Pace Project
+                            </h1>
+                            <p class="text-xs text-gray-500">
+                                Stream high-fidelity, filler-free One Piece
+                                episodes parsed directly from Pixeldrain lists
+                            </p>
+                        </div>
+                        <span
+                            class="text-xs text-brandCyan bg-cyan-950/20 border border-brandCyan/10 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider"
+                            >Pixeldrain Native</span
+                        >
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-6 h-[560px]">
+                        <!-- Left: Arcs and Info column -->
+                        <div
+                            class="col-span-4 bg-brandSec border border-white/[0.04] rounded-xl flex flex-col overflow-hidden h-full shadow-lg"
+                        >
+                            <!-- Arc selector dropdown -->
+                            <div
+                                class="p-3 bg-brandDarker border-b border-white/[0.04] flex flex-col gap-2"
+                            >
+                                <span
+                                    class="text-xs font-extrabold uppercase text-gray-400 tracking-wider"
+                                    >Select Arc / Saga</span
+                                >
+                                <select
+                                    id="onepace-arc-select"
+                                    onchange="onOnePaceArcChanged()"
+                                    class="w-full bg-brandTert border border-white/[0.06] rounded-lg p-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan cursor-pointer"
+                                >
+                                    <option value="">Syncing arcs...</option>
+                                </select>
+                            </div>
+
+                            <!-- Selected Arc Info card -->
+                            <div
+                                id="onepace-arc-info"
+                                class="p-4 flex-1 overflow-y-auto space-y-4"
+                            >
+                                <p
+                                    class="text-xs text-gray-500 italic text-center py-10"
+                                >
+                                    Select an Arc above to read details...
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Right: Episodes list and Native player pane -->
+                        <div class="col-span-8 flex flex-col gap-4 h-full">
+                            <!-- Episode lists row -->
+                            <div
+                                class="bg-brandSec border border-white/[0.04] rounded-xl p-3 flex flex-col overflow-hidden h-[180px]"
+                            >
+                                <div
+                                    class="flex items-center justify-between pb-2 border-b border-white/[0.02]"
+                                >
+                                    <span
+                                        class="text-xs font-black text-white uppercase tracking-wider"
+                                        >Episodes</span
+                                    >
+                                    <span
+                                        id="onepace-episodes-count"
+                                        class="text-[10px] text-gray-500 font-bold"
+                                        >0 available</span
+                                    >
+                                </div>
+                                <div
+                                    id="onepace-episodes-container"
+                                    class="flex-1 overflow-x-auto flex gap-4 p-2 items-center"
+                                >
+                                    <!-- Horizontal grid of cards -->
+                                    <p class="text-xs text-gray-600 italic">
+                                        Select an arc to populate episodes list.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Native HTML5 player panel -->
+                            <div
+                                class="flex-1 bg-black rounded-xl border border-white/[0.04] relative flex flex-col justify-center overflow-hidden"
+                            >
+                                <video
+                                    id="onepace-player"
+                                    controls
+                                    class="w-full h-full object-contain focus:outline-none"
+                                ></video>
+
+                                <!-- Overlay Placeholder -->
+                                <div
+                                    id="onepace-player-placeholder"
+                                    class="absolute inset-0 bg-brandSec/95 flex flex-col items-center justify-center gap-3 p-4 z-10"
+                                >
+                                    <i
+                                        data-lucide="play"
+                                        class="w-12 h-12 text-brandCyan/40"
+                                    ></i>
+                                    <div class="text-center space-y-1">
+                                        <h3
+                                            class="text-sm font-bold text-white"
+                                        >
+                                            Select One Pace Episode
+                                        </h3>
+                                        <p class="text-xs text-gray-500">
+                                            Pick an Arc on the left and tap an
+                                            episode to start native fast-speed
+                                            Pixeldrain streaming.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
                 <!-- SCREEN: PREMIUM LIVE TV PLAYER             -->
                 <!-- ========================================== -->
                 <section
@@ -660,7 +795,14 @@
                                         placeholder="Paste OMNIVERSE-SYNC1:base64 code..."
                                         class="w-full bg-brandTert border border-white/[0.06] rounded-lg px-3 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition duration-300 font-mono"
                                     />
-                                    <div class="flex justify-end">
+                                    <div class="flex justify-end gap-2">
+                                        <button
+                                            id="show-pair-qr-btn"
+                                            onclick="showPairingQr()"
+                                            class="bg-white/5 hover:bg-white/10 text-white text-xs font-extrabold px-4 py-2 rounded-lg transition duration-200"
+                                        >
+                                            Show Login QR
+                                        </button>
                                         <button
                                             onclick="importSyncCode()"
                                             class="bg-gradient-to-r from-cyan-500 to-blue-500 text-brandDark hover:from-cyan-400 hover:to-blue-400 text-xs font-extrabold px-4 py-2 rounded-lg transition duration-200"
@@ -668,6 +810,48 @@
                                             Import Sync Code
                                         </button>
                                     </div>
+                                </div>
+
+                                <!-- Pairing QR Overlay (hidden by default) -->
+                                <div
+                                    id="pairing-qr-panel"
+                                    class="hidden bg-brandDark p-5 rounded-xl border border-white/[0.04] flex flex-col items-center justify-center gap-4 animate-fade-in text-center mt-4 shadow-lg"
+                                >
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="w-2 h-2 bg-brandCyan rounded-full animate-ping"
+                                        ></span>
+                                        <h4
+                                            class="text-xs font-black text-brandCyan uppercase tracking-widest"
+                                        >
+                                            Waiting for Device Connection
+                                        </h4>
+                                    </div>
+                                    <p
+                                        class="text-[10px] text-gray-400 leading-relaxed max-w-xs"
+                                    >
+                                        Scan this QR code with the camera
+                                        scanner on your logged-in mobile device
+                                        (Settings > Scan Sync QR). This desktop
+                                        client will sync credentials and log in
+                                        automatically in 1 second!
+                                    </p>
+                                    <div
+                                        class="bg-white p-3 rounded-xl border border-white/[0.06] shadow-xl"
+                                    >
+                                        <img
+                                            id="pairing-qr-img"
+                                            src=""
+                                            alt="Pairing QR"
+                                            class="w-44 h-44"
+                                        />
+                                    </div>
+                                    <button
+                                        onclick="cancelPairing()"
+                                        class="bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 text-[10px] font-extrabold px-4 py-2 rounded-lg transition"
+                                    >
+                                        Cancel Pairing
+                                    </button>
                                 </div>
                             </div>
 
