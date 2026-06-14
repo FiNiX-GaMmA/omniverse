@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="en" class="h-full">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Omniverse</title>
+        <link rel="stylesheet" href="style.css" />
+        <!-- Tailwind CSS CDN -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- hls.js for native IPTV playback in Electron -->
+        <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+        <!-- Lucide Icons CDN -->
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            brandDark: "#0a0b0d",
+                            brandDarker: "#060708",
+                            brandSec: "#12141c",
+                            brandTert: "#1a1d29",
+                            brandCyan: "#06b6d4",
+                            brandCyanDark: "#0891b2",
+                            brandGlow: "rgba(6, 182, 212, 0.15)",
+                        },
+                    },
+                },
+            };
+        </script>
+    </head>
+    <body
+        class="h-full bg-brandDark text-gray-100 flex flex-col font-sans select-none overflow-hidden"
+    >
+        <!-- FRAMELESS WINDOW TITLEBAR (Windows/Linux Custom, macOS Native Space) -->
+        <header id="titlebar" class="flex items-center justify-between px-4">
+            <div class="flex items-center gap-2">
+                <!-- High-fidelity Vector branding logo -->
+                <svg
+                    class="w-5 h-5 text-brandCyan"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                </svg>
+                <span
+                    class="text-sm font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500"
+                    >OMNIVERSE</span
+                >
+            </div>
+
+            <!-- Custom Windows Titlebar Control Buttons (Electron binds to these) -->
+            <div id="window-controls" class="titlebar-controls hidden no-drag">
+                <button
+                    class="titlebar-btn btn-minimize"
+                    onclick="window.electron.minimize()"
+                ></button>
+                <button
+                    class="titlebar-btn btn-maximize"
+                    onclick="window.electron.maximize()"
+                ></button>
+                <button
+                    class="titlebar-btn btn-close"
+                    onclick="window.electron.close()"
+                ></button>
+            </div>
+        </header>
+
+        <!-- MAIN APP CONTAINER -->
+        <div
+            id="main-layout"
+            class="flex flex-1 h-full pt-[44px] overflow-hidden"
+        >
+            <!-- SIDEBAR NAVIGATION PANEL -->
+            <aside
+                class="w-64 bg-brandSec border-r border-white/[0.04] flex flex-col justify-between flex-shrink-0"
+            >
+                <div class="flex flex-col flex-1 p-4 overflow-y-auto">
+                    <!-- GLOBAL SEARCH BAR -->
+                    <div class="relative mb-6 no-drag">
+                        <input
+                            type="text"
+                            id="search-input"
+                            placeholder="Search movies, TV, anime..."
+                            class="w-full bg-brandTert border border-white/[0.06] rounded-lg py-2 pl-9 pr-4 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brandCyan focus:ring-1 focus:ring-brandCyan transition duration-300"
+                        />
+                        <i
+                            data-lucide="search"
+                            class="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-500"
+                        ></i>
+                    </div>
+
+                    <!-- MAIN NAV LINKS -->
+                    <nav class="space-y-1.5 no-drag flex-1">
+                        <button
+                            onclick="switchScreen('home')"
+                            id="nav-home"
+                            class="nav-active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
+                        >
+                            <i data-lucide="home" class="w-4 h-4"></i> Home
+                            Dashboard
+                        </button>
+                        <button
+                            onclick="switchScreen('movies')"
+                            id="nav-movies"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
+                        >
+                            <i data-lucide="film" class="w-4 h-4"></i> Movies
+                            Catalog
+                        </button>
+                        <button
+                            onclick="switchScreen('tv')"
+                            id="nav-tv"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
+                        >
+                            <i data-lucide="tv" class="w-4 h-4"></i> TV Series
+                        </button>
+                        <button
+                            onclick="switchScreen('anime')"
+                            id="nav-anime"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
+                        >
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> Anime
+                            Center
+                        </button>
+                        <button
+                            onclick="switchScreen('livetv')"
+                            id="nav-livetv"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
+                        >
+                            <i data-lucide="radio" class="w-4 h-4"></i> Premium
+                            Live TV
+                        </button>
+                        <button
+                            onclick="switchScreen('settings')"
+                            id="nav-settings"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
+                        >
+                            <i data-lucide="settings" class="w-4 h-4"></i> Sync
+                            & Settings
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- SIDEBAR FOOTER: LIVE ADBLOCK MONITOR -->
+                <div
+                    class="p-4 border-t border-white/[0.04] bg-brandDarker/[0.4] no-drag"
+                >
+                    <div
+                        class="flex items-center justify-between p-2.5 rounded-lg bg-cyan-950/20 border border-brandCyan/10 ad-pulse"
+                    >
+                        <div class="flex items-center gap-2">
+                            <i
+                                data-lucide="shield-check"
+                                class="w-4 h-4 text-brandCyan"
+                            ></i>
+                            <span
+                                class="text-[10px] uppercase font-bold tracking-wider text-brandCyan"
+                                >Ad Shield</span
+                            >
+                        </div>
+                        <span
+                            id="adblock-counter"
+                            class="text-xs font-black text-brandCyan bg-cyan-950 px-2 py-0.5 rounded-full"
+                            >0</span
+                        >
+                    </div>
+                </div>
+            </aside>
+
+            <!-- CONTENT SCROLLER VIEWPORT -->
+            <main
+                id="content-viewport"
+                class="flex-1 overflow-y-auto px-8 py-6 space-y-8 pb-16"
+            >
+                <!-- ========================================== -->
+                <!-- SCREEN: HOME DASHBOARD                     -->
+                <!-- ========================================== -->
+                <section id="screen-home" class="animate-fade-in space-y-8">
+                    <!-- FEATURED HERO CAROUSEL CARD -->
+                    <div
+                        id="hero-banner"
+                        class="relative h-[340px] rounded-2xl overflow-hidden bg-cover bg-center border border-white/[0.04]"
+                    >
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-brandDark via-brandDark/50 to-transparent"
+                        ></div>
+                        <div
+                            class="absolute inset-0 bg-gradient-to-r from-brandDark via-brandDark/40 to-transparent"
+                        ></div>
+                        <div
+                            class="absolute bottom-6 left-8 max-w-xl space-y-3 z-10"
+                        >
+                            <span
+                                class="bg-cyan-500/10 text-brandCyan border border-brandCyan/20 text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-full tracking-wider"
+                                >Featured Release</span
+                            >
+                            <h1
+                                id="hero-title"
+                                class="text-3xl font-black text-white"
+                            >
+                                One Piece
+                            </h1>
+                            <p
+                                id="hero-overview"
+                                class="text-xs text-gray-400 leading-relaxed line-clamp-3"
+                            >
+                                Monkey D. Luffy refuses to let anyone or
+                                anything stand in the way of his quest to become
+                                the king of all pirates. With a course charted
+                                for the treacherous waters of the Grand Line and
+                                beyond, this is one captain who'll never give up
+                                until he's claimed the greatest treasure on
+                                Earth: the Legendary One Piece!
+                            </p>
+                            <div class="flex items-center gap-3 pt-2">
+                                <button
+                                    id="hero-play-btn"
+                                    class="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-brandDark font-extrabold px-5 py-2 rounded-lg text-xs tracking-wider transition duration-300"
+                                >
+                                    <i
+                                        data-lucide="play-circle"
+                                        class="w-4 h-4 fill-brandDark"
+                                    ></i>
+                                    WATCH STREAM
+                                </button>
+                                <button
+                                    id="hero-detail-btn"
+                                    class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-extrabold px-5 py-2 rounded-lg text-xs tracking-wider transition duration-300"
+                                >
+                                    <i data-lucide="info" class="w-4 h-4"></i>
+                                    GET INFO
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- THE PREMIUM "STUDIOS" RAIL -->
+                    <div class="space-y-3">
+                        <h2
+                            class="text-xs font-extrabold text-gray-500 tracking-widest uppercase"
+                        >
+                            Premium Networks
+                        </h2>
+                        <div
+                            class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+                        >
+                            <!-- Disney+ -->
+                            <button
+                                onclick="filterByStudio('disney')"
+                                class="studio-disney h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                            >
+                                <span
+                                    class="text-sm font-black italic tracking-tighter text-white"
+                                    >Disney+</span
+                                >
+                            </button>
+                            <!-- Netflix -->
+                            <button
+                                onclick="filterByStudio('netflix')"
+                                class="studio-netflix h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                            >
+                                <span
+                                    class="text-sm font-black tracking-widest text-red-600 uppercase"
+                                    >Netflix</span
+                                >
+                            </button>
+                            <!-- HBO Max -->
+                            <button
+                                onclick="filterByStudio('hbo')"
+                                class="studio-hbo h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                            >
+                                <span
+                                    class="text-sm font-black tracking-normal text-purple-200 font-serif"
+                                    >HBO MAX</span
+                                >
+                            </button>
+                            <!-- Apple TV+ -->
+                            <button
+                                onclick="filterByStudio('apple')"
+                                class="studio-apple h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                            >
+                                <span
+                                    class="text-sm font-bold text-gray-300 tracking-tight"
+                                    > tv+</span
+                                >
+                            </button>
+                            <!-- Marvel -->
+                            <button
+                                onclick="filterByStudio('marvel')"
+                                class="studio-marvel h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                            >
+                                <span
+                                    class="text-xs font-black bg-red-600 px-2 py-0.5 text-white tracking-tighter uppercase"
+                                    >Marvel</span
+                                >
+                            </button>
+                            <!-- Pixar -->
+                            <button
+                                onclick="filterByStudio('pixar')"
+                                class="studio-pixar h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                            >
+                                <span
+                                    class="text-sm font-semibold tracking-widest text-blue-100 uppercase"
+                                    >PIXAR</span
+                                >
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TRENDING FEED SECTIONS -->
+                    <div id="home-catalogs" class="space-y-8">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h2
+                                    class="text-sm font-black text-white uppercase tracking-wider"
+                                >
+                                    Trending Movies
+                                </h2>
+                                <button
+                                    onclick="switchScreen('movies')"
+                                    class="text-xs text-brandCyan hover:underline font-bold"
+                                >
+                                    See All
+                                </button>
+                            </div>
+                            <div
+                                id="grid-trending-movies"
+                                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
+                            >
+                                <!-- Rendered dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h2
+                                    class="text-sm font-black text-white uppercase tracking-wider"
+                                >
+                                    Popular TV Series
+                                </h2>
+                                <button
+                                    onclick="switchScreen('tv')"
+                                    class="text-xs text-brandCyan hover:underline font-bold"
+                                >
+                                    See All
+                                </button>
+                            </div>
+                            <div
+                                id="grid-trending-tv"
+                                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
+                            >
+                                <!-- Rendered dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- SCREEN: MOVIES CATALOG                     -->
+                <!-- ========================================== -->
+                <section
+                    id="screen-movies"
+                    class="hidden animate-fade-in space-y-6"
+                >
+                    <div
+                        class="flex items-center justify-between border-b border-white/[0.04] pb-4"
+                    >
+                        <div>
+                            <h1 class="text-xl font-black uppercase text-white">
+                                Cinematic Movies
+                            </h1>
+                            <p class="text-xs text-gray-500">
+                                Explore and stream the newest releases
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        id="grid-all-movies"
+                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6"
+                    >
+                        <!-- Dynamically populated -->
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- SCREEN: TV SERIES CATALOG                  -->
+                <!-- ========================================== -->
+                <section
+                    id="screen-tv"
+                    class="hidden animate-fade-in space-y-6"
+                >
+                    <div
+                        class="flex items-center justify-between border-b border-white/[0.04] pb-4"
+                    >
+                        <div>
+                            <h1 class="text-xl font-black uppercase text-white">
+                                TV Shows & Series
+                            </h1>
+                            <p class="text-xs text-gray-500">
+                                Watch full seasons on-demand
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        id="grid-all-tv"
+                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6"
+                    >
+                        <!-- Dynamically populated -->
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- SCREEN: ANIME CENTER                       -->
+                <!-- ========================================== -->
+                <section
+                    id="screen-anime"
+                    class="hidden animate-fade-in space-y-6"
+                >
+                    <div
+                        class="flex items-center justify-between border-b border-white/[0.04] pb-4"
+                    >
+                        <div>
+                            <h1 class="text-xl font-black uppercase text-white">
+                                Anime Universe
+                            </h1>
+                            <p class="text-xs text-gray-500">
+                                Track and stream the finest anime series
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        id="grid-all-anime"
+                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6"
+                    >
+                        <!-- Dynamically populated -->
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- SCREEN: PREMIUM LIVE TV PLAYER             -->
+                <!-- ========================================== -->
+                <section
+                    id="screen-livetv"
+                    class="hidden animate-fade-in space-y-6"
+                >
+                    <div
+                        class="flex items-center justify-between border-b border-white/[0.04] pb-4"
+                    >
+                        <div>
+                            <h1 class="text-xl font-black uppercase text-white">
+                                Premium IPTV Center
+                            </h1>
+                            <p class="text-xs text-gray-500">
+                                Stream free global IPTV news and channels
+                                natively from across the globe
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-6 h-[560px]">
+                        <!-- Left list: Countries & Channels column -->
+                        <div
+                            class="col-span-4 bg-brandSec border border-white/[0.04] rounded-xl flex flex-col overflow-hidden h-full shadow-lg"
+                        >
+                            <!-- Country Selection Dropdown -->
+                            <div
+                                class="p-3 bg-brandDarker border-b border-white/[0.04] flex flex-col gap-2"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <span
+                                        class="text-xs font-extrabold uppercase text-gray-400 tracking-wider"
+                                        >Select Region</span
+                                    >
+                                    <span
+                                        class="text-[9px] bg-cyan-500/10 text-brandCyan border border-brandCyan/10 px-1.5 py-0.5 rounded-full font-bold uppercase"
+                                        >GLOBAL</span
+                                    >
+                                </div>
+                                <select
+                                    id="iptv-country-select"
+                                    onchange="onIptvCountryChanged()"
+                                    class="w-full bg-brandTert border border-white/[0.06] rounded-lg p-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan cursor-pointer"
+                                >
+                                    <option value="">Loading regions...</option>
+                                </select>
+                            </div>
+
+                            <!-- Channels Search Filter -->
+                            <div
+                                class="px-3 py-2 bg-brandDarker/50 border-b border-white/[0.04] relative"
+                            >
+                                <input
+                                    type="text"
+                                    id="iptv-channel-search"
+                                    oninput="filterIptvChannels()"
+                                    placeholder="Filter channels by name..."
+                                    class="w-full bg-brandTert border border-white/[0.06] rounded-lg py-1.5 pl-8 pr-3 text-[11px] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-brandCyan"
+                                />
+                                <i
+                                    data-lucide="search"
+                                    class="absolute left-5 top-4 w-3.5 h-3.5 text-gray-500"
+                                ></i>
+                            </div>
+
+                            <div
+                                id="channel-list-container"
+                                class="flex-1 overflow-y-auto p-2 space-y-1"
+                            >
+                                <!-- Channels are appended here dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Right: HLS Video Player Column -->
+                        <div
+                            class="col-span-8 bg-black rounded-xl border border-white/[0.04] relative flex flex-col justify-center overflow-hidden h-full shadow-2xl"
+                        >
+                            <!-- Resolving Loader Overlay -->
+                            <div
+                                id="iptv-resolving-loader"
+                                class="hidden absolute inset-0 bg-brandSec/90 flex flex-col items-center justify-center gap-3 p-4 z-20"
+                            >
+                                <div
+                                    class="w-8 h-8 rounded-full border-2 border-brandCyan border-t-transparent animate-spin"
+                                ></div>
+                                <div class="text-center">
+                                    <h4 class="text-xs font-bold text-white">
+                                        Resolving Stream Link
+                                    </h4>
+                                    <p class="text-[10px] text-gray-500">
+                                        Extracting HLS media source securely...
+                                    </p>
+                                </div>
+                            </div>
+
+                            <video
+                                id="livetv-player"
+                                controls
+                                class="w-full h-full object-contain focus:outline-none"
+                            ></video>
+
+                            <!-- Overlay Placeholder -->
+                            <div
+                                id="player-placeholder"
+                                class="absolute inset-0 bg-brandSec/95 flex flex-col items-center justify-center gap-3 p-4 z-10"
+                            >
+                                <i
+                                    data-lucide="tv-play"
+                                    class="w-12 h-12 text-brandCyan/40"
+                                ></i>
+                                <div class="text-center space-y-1">
+                                    <h3 class="text-sm font-bold text-white">
+                                        Select a Channel
+                                    </h3>
+                                    <p class="text-xs text-gray-500">
+                                        Pick a country above and choose a live
+                                        stream from the channel index to begin.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- SCREEN: SETTINGS & SYNC CENTER             -->
+                <!-- ========================================== -->
+                <section
+                    id="screen-settings"
+                    class="hidden animate-fade-in space-y-8"
+                >
+                    <div>
+                        <h1 class="text-xl font-black uppercase text-white">
+                            Settings & Synchronization
+                        </h1>
+                        <p class="text-xs text-gray-500">
+                            Configure your API credentials and sync setup
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Setup Keys & Sync -->
+                        <div class="space-y-6">
+                            <!-- TMDB API Panel -->
+                            <div
+                                class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <i
+                                        data-lucide="key"
+                                        class="w-5 h-5 text-brandCyan"
+                                    ></i>
+                                    <h3
+                                        class="font-extrabold text-sm uppercase tracking-wider text-white"
+                                    >
+                                        TMDB Read Access Token
+                                    </h3>
+                                </div>
+                                <p
+                                    class="text-xs text-gray-500 leading-relaxed"
+                                >
+                                    Required to unlock full movie trailers, cast
+                                    lists, images, categories, and dynamic
+                                    searches. Paste your long
+                                    <b>API Read Access Token</b> (starting with
+                                    'ey...'):
+                                </p>
+                                <div class="space-y-2">
+                                    <textarea
+                                        id="tmdb-token-input"
+                                        rows="3"
+                                        placeholder="Paste your long TMDB Read Access Token (starts with ey...)"
+                                        class="w-full bg-brandTert border border-white/[0.06] rounded-lg p-3 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition duration-300 font-mono"
+                                    ></textarea>
+                                    <div class="flex justify-end gap-2">
+                                        <button
+                                            onclick="saveTmdbToken()"
+                                            class="bg-brandCyan hover:bg-cyan-500 text-brandDark text-xs font-extrabold px-4 py-2 rounded-lg transition duration-200"
+                                        >
+                                            Apply Token
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Zero-Config Sync Panel -->
+                            <div
+                                class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <i
+                                        data-lucide="qr-code"
+                                        class="w-5 h-5 text-brandCyan"
+                                    ></i>
+                                    <h3
+                                        class="font-extrabold text-sm uppercase tracking-wider text-white"
+                                    >
+                                        Zero-Config Sync
+                                    </h3>
+                                </div>
+                                <p
+                                    class="text-xs text-gray-500 leading-relaxed"
+                                >
+                                    Connect your Android, Android TV, or iOS app
+                                    settings instantly. Copy the sync code
+                                    string (e.g. starting with
+                                    <code>OMNIVERSE-SYNC1:</code>) from your
+                                    other device, paste it below, and click
+                                    Import:
+                                </p>
+                                <div class="space-y-2">
+                                    <input
+                                        type="text"
+                                        id="sync-code-input"
+                                        placeholder="Paste OMNIVERSE-SYNC1:base64 code..."
+                                        class="w-full bg-brandTert border border-white/[0.06] rounded-lg px-3 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition duration-300 font-mono"
+                                    />
+                                    <div class="flex justify-end">
+                                        <button
+                                            onclick="importSyncCode()"
+                                            class="bg-gradient-to-r from-cyan-500 to-blue-500 text-brandDark hover:from-cyan-400 hover:to-blue-400 text-xs font-extrabold px-4 py-2 rounded-lg transition duration-200"
+                                        >
+                                            Import Sync Code
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- In-App Auto Update Panel -->
+                            <div
+                                class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <i
+                                        data-lucide="refresh-cw"
+                                        class="w-5 h-5 text-brandCyan"
+                                    ></i>
+                                    <h3
+                                        class="font-extrabold text-sm uppercase tracking-wider text-white"
+                                    >
+                                        In-App Update Engine
+                                    </h3>
+                                </div>
+                                <p
+                                    class="text-xs text-gray-500 leading-relaxed"
+                                >
+                                    Omniverse features a continuous Over-The-Air
+                                    (OTA) deployment engine. Check if there are
+                                    new versions available directly on GitHub
+                                    Releases:
+                                </p>
+                                <div
+                                    id="update-status-box"
+                                    class="bg-brandDark p-4 rounded-lg border border-white/[0.04] flex items-center justify-between text-xs"
+                                >
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            id="update-version-indicator"
+                                            class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"
+                                        ></span>
+                                        <span
+                                            class="text-gray-300 font-semibold"
+                                            id="update-version-label"
+                                            >Version 2.1.0 (Latest)</span
+                                        >
+                                    </div>
+                                    <button
+                                        id="check-update-btn"
+                                        onclick="checkAppUpdates()"
+                                        class="bg-white/5 hover:bg-white/10 text-white font-bold px-3 py-1.5 rounded transition text-[11px]"
+                                    >
+                                        Check Update
+                                    </button>
+                                </div>
+
+                                <!-- Update Found Dialog (hidden by default) -->
+                                <div
+                                    id="update-found-panel"
+                                    class="hidden bg-cyan-950/20 border border-brandCyan/10 p-4 rounded-lg space-y-3 animate-fade-in"
+                                >
+                                    <div
+                                        class="flex justify-between items-start"
+                                    >
+                                        <div>
+                                            <h4
+                                                class="text-xs font-black text-brandCyan uppercase tracking-widest"
+                                            >
+                                                Update Available!
+                                            </h4>
+                                            <p
+                                                class="text-[11px] text-gray-400 font-semibold mt-0.5"
+                                                id="new-version-title"
+                                            >
+                                                Version 2.1.4
+                                            </p>
+                                        </div>
+                                        <span
+                                            class="text-[10px] text-brandCyan bg-cyan-950/60 border border-brandCyan/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
+                                            >OTA Sideload</span
+                                        >
+                                    </div>
+                                    <div
+                                        class="bg-brandDark/85 p-3 rounded text-[10px] text-gray-400 font-medium max-h-[85px] overflow-y-auto leading-relaxed"
+                                        id="new-version-notes"
+                                    >
+                                        Release notes loading...
+                                    </div>
+
+                                    <!-- Progress bar -->
+                                    <div
+                                        id="update-progress-container"
+                                        class="hidden space-y-1.5"
+                                    >
+                                        <div
+                                            class="flex justify-between text-[9px] font-bold text-gray-500 uppercase tracking-wider"
+                                        >
+                                            <span>Downloading package...</span>
+                                            <span id="update-progress-pct"
+                                                >0%</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="w-full bg-brandDark rounded-full h-1.5 overflow-hidden"
+                                        >
+                                            <div
+                                                id="update-progress-bar"
+                                                class="bg-brandCyan h-full transition-all duration-100"
+                                                style="width: 0%"
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        id="start-update-btn"
+                                        onclick="startOtaUpdate()"
+                                        class="w-full bg-brandCyan hover:bg-cyan-500 text-brandDark text-xs font-black py-2 rounded-lg transition duration-200 text-center"
+                                    >
+                                        Download & Install Update
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Options & Stats -->
+                        <div class="space-y-6">
+                            <!-- Playback Options -->
+                            <div
+                                class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <i
+                                        data-lucide="sliders"
+                                        class="w-5 h-5 text-brandCyan"
+                                    ></i>
+                                    <h3
+                                        class="font-extrabold text-sm uppercase tracking-wider text-white"
+                                    >
+                                        Playback Preferences
+                                    </h3>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <div class="space-y-1.5">
+                                        <label
+                                            class="text-xs text-gray-400 font-semibold block"
+                                            >Preferred VidSrc Embed
+                                            Domain</label
+                                        >
+                                        <select
+                                            id="vidsrc-domain-select"
+                                            onchange="savePlaybackSettings()"
+                                            class="w-full bg-brandTert border border-white/[0.06] rounded-lg p-2.5 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition"
+                                        >
+                                            <option value="vidsrc.me">
+                                                vidsrc.me (Extremely Stable)
+                                            </option>
+                                            <option value="vidsrc.to">
+                                                vidsrc.to (Fast CDN)
+                                            </option>
+                                            <option value="vidsrc.xyz">
+                                                vidsrc.xyz (Minimal Overhead)
+                                            </option>
+                                            <option value="vidsrc.pro">
+                                                vidsrc.pro
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ad-blocker Stats Dashboard -->
+                            <div
+                                class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <i
+                                        data-lucide="activity"
+                                        class="w-5 h-5 text-brandCyan"
+                                    ></i>
+                                    <h3
+                                        class="font-extrabold text-sm uppercase tracking-wider text-white"
+                                    >
+                                        AdShield Dashboard
+                                    </h3>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div
+                                        class="bg-brandDark p-4 rounded-lg border border-white/[0.04] text-center space-y-1"
+                                    >
+                                        <span
+                                            class="text-2xl font-black text-brandCyan"
+                                            id="dashboard-ads-blocked"
+                                            >0</span
+                                        >
+                                        <span
+                                            class="text-[10px] uppercase font-bold text-gray-500 block"
+                                            >Ads Bypassed</span
+                                        >
+                                    </div>
+                                    <div
+                                        class="bg-brandDark p-4 rounded-lg border border-white/[0.04] text-center space-y-1"
+                                    >
+                                        <span
+                                            class="text-2xl font-black text-emerald-400"
+                                            >100%</span
+                                        >
+                                        <span
+                                            class="text-[10px] uppercase font-bold text-gray-500 block"
+                                            >Devtool Block Safety</span
+                                        >
+                                    </div>
+                                </div>
+                                <p
+                                    class="text-[10px] text-gray-500 text-center italic"
+                                >
+                                    Omniverse actively inspects embed iframe
+                                    requests and blocks known ad networks,
+                                    trackers, popunders, and devtool checkers.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- DETAILS OVERLAY MODAL -->
+        <div
+            id="detail-modal"
+            class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+        >
+            <div
+                class="bg-brandSec border border-white/[0.06] w-full max-w-4xl h-[580px] rounded-2xl overflow-hidden flex flex-col relative animate-fade-in shadow-2xl"
+            >
+                <!-- Close button -->
+                <button
+                    onclick="closeDetailModal()"
+                    class="absolute top-4 right-4 z-50 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white p-2 rounded-full transition duration-200"
+                >
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Content columns -->
+                <div class="flex flex-1 overflow-hidden">
+                    <!-- Poster & Background -->
+                    <div
+                        class="w-1/3 h-full relative border-r border-white/[0.04] flex-shrink-0"
+                    >
+                        <img
+                            id="modal-poster"
+                            src=""
+                            class="w-full h-full object-cover"
+                        />
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-brandSec via-transparent to-transparent"
+                        ></div>
+                    </div>
+
+                    <!-- Detail Meta panel -->
+                    <div
+                        class="w-2/3 h-full p-8 flex flex-col overflow-y-auto space-y-6"
+                    >
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <span
+                                    id="modal-type-chip"
+                                    class="bg-cyan-500/10 text-brandCyan text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded border border-brandCyan/10"
+                                    >Movie</span
+                                >
+                                <span
+                                    id="modal-year-chip"
+                                    class="text-xs text-gray-400 font-bold"
+                                    >2024</span
+                                >
+                                <span
+                                    id="modal-rating-chip"
+                                    class="text-xs text-amber-400 font-extrabold flex items-center gap-0.5"
+                                    ><i
+                                        data-lucide="star"
+                                        class="w-3.5 h-3.5 fill-amber-400"
+                                    ></i>
+                                    8.5</span
+                                >
+                            </div>
+                            <h2
+                                id="modal-title"
+                                class="text-2xl font-black text-white leading-tight"
+                            >
+                                Media Title
+                            </h2>
+                        </div>
+
+                        <p
+                            id="modal-overview"
+                            class="text-xs text-gray-400 leading-relaxed"
+                        >
+                            Detailed storyline synopsis loader...
+                        </p>
+
+                        <!-- Trailer Container link -->
+                        <div class="flex gap-2">
+                            <button
+                                id="modal-play-btn"
+                                class="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-brandDark font-extrabold px-6 py-2.5 rounded-xl text-xs tracking-wider transition duration-300"
+                            >
+                                <i
+                                    data-lucide="play-circle"
+                                    class="w-4 h-4 fill-brandDark"
+                                ></i>
+                                START PLAYBACK
+                            </button>
+                        </div>
+
+                        <!-- Series Seasons and Episodes Container -->
+                        <div
+                            id="modal-episodes-section"
+                            class="space-y-4 pt-4 border-t border-white/[0.04] hidden"
+                        >
+                            <div class="flex items-center justify-between">
+                                <h3
+                                    class="text-xs font-extrabold uppercase tracking-widest text-gray-500"
+                                >
+                                    Seasons & Episodes
+                                </h3>
+                                <select
+                                    id="season-selector"
+                                    onchange="loadSeasonEpisodes()"
+                                    class="bg-brandTert border border-white/[0.06] rounded-lg p-1.5 text-xs text-gray-200 focus:outline-none focus:border-brandCyan"
+                                >
+                                    <!-- Dropdown options -->
+                                </select>
+                            </div>
+                            <div
+                                id="episodes-grid"
+                                class="space-y-2 max-h-[200px] overflow-y-auto pr-2"
+                            >
+                                <!-- Episodes list rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INTEGRATED EMBED STREAM PLAYER OVERLAY -->
+        <div
+            id="player-overlay"
+            class="hidden fixed inset-0 z-[5000] bg-black flex flex-col justify-between overflow-hidden"
+        >
+            <!-- Top controller bar -->
+            <div
+                class="absolute top-4 left-4 right-4 z-[5001] flex items-center justify-between pointer-events-none no-drag"
+            >
+                <div class="flex items-center gap-3">
+                    <button
+                        onclick="exitPlayer()"
+                        class="pointer-events-auto bg-brandSec/80 border border-white/[0.06] backdrop-blur-md hover:bg-red-500/80 hover:border-red-500/10 text-white flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold tracking-wider transition duration-300"
+                    >
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> EXIT
+                        PLAYER
+                    </button>
+                    <span
+                        id="player-stream-title"
+                        class="text-xs font-extrabold text-white bg-brandSec/80 px-3 py-2 rounded-xl backdrop-blur-md border border-white/[0.06]"
+                        >Streaming Source</span
+                    >
+                </div>
+
+                <button
+                    onclick="togglePiP()"
+                    class="pointer-events-auto bg-brandSec/80 border border-white/[0.06] backdrop-blur-md hover:bg-brandCyan hover:text-brandDark text-white flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold tracking-wider transition duration-300"
+                >
+                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                    PICTURE-IN-PICTURE
+                </button>
+            </div>
+
+            <!-- Isolated WebView loader container -->
+            <div id="webview-container" class="w-full h-full">
+                <!-- Embedded webview will be inserted dynamically here -->
+            </div>
+        </div>
+
+        <!-- Main Renderer logic script -->
+        <script src="renderer.js"></script>
+    </body>
+</html>

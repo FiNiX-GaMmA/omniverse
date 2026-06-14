@@ -97,6 +97,22 @@ If you have an Android device connected via USB with USB Debugging enabled:
 2.  The script will auto-detect your device model (e.g. *Samsung Galaxy*), boot Android Studio's bundled JDK, compile, and install the package.
 3.  The app will instantly launch on your Android screen in the foreground!
 
+### 🖥️ C. Compile & Run on Desktop (macOS, Windows, Linux)
+Omniverse includes a premium, ultra-fast Electron-based desktop app supporting zero-config cloud sync, ad-blocked VidSrc streaming, and high-performance Live TV HLS playback natively across Windows, Linux, and macOS (universal builds for both Intel & Apple Silicon).
+
+1.  **To run locally in development mode (requires Node.js 18+):**
+    ```bash
+    cd desktop && npm install && npm start
+    ```
+2.  **To package production native installers for your host platform:**
+    ```bash
+    ./build.sh desktop
+    ```
+    *   **macOS (Intel/Silicon)**: Packages a universal `.dmg` disk image.
+    *   **Windows**: Packages an `.exe` NSIS setup installer and a standalone portable build.
+    *   **Linux**: Packages both safe containerized `.AppImage` and Debian `.deb` installers.
+3.  Your compiled installers will reside in `dist/desktop/`.
+
 ---
 
 ## 🔑 Required API Keys & Sync Configuration
@@ -129,6 +145,11 @@ omniplay/
 │   ├── Omniverse/      # Swift layout views, networking, and assets
 │   ├── Omniverse.xcodeproj # Generated Xcode project bundle
 │   └── project.yml     # XcodeGen configuration sheet
+├── desktop/            # Frameless Electron Desktop App (Windows, macOS Intel/Silicon, Linux)
+│   ├── main.js         # Core process lifecycle, header bypass filters, and strict ad-blocking
+│   ├── preload.js      # Dual-duty context isolation bridge and anti-redirection webview shield
+│   ├── index.html      # Responsive dashboard UI (Tailwind, Lucide)
+│   └── package.json    # Electron dependencies and multi-OS builder configs
 ├── keystore/           # Secure release keystores for signed Android binaries
 ├── SYNC_SPEC.md        # Cryptographic sync protocol specification
 ├── build.sh            # Unified multi-platform build compiler

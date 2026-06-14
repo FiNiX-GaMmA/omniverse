@@ -102,9 +102,83 @@ jobs:
           path: Omniverse-Unsigned.ipa
           if-no-files-found: error
 
+  build-desktop:
+    name: Build Desktop App (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14, windows-latest]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: desktop/package.json
+
+      - name: Install dependencies
+        run: |
+          cd desktop
+          npm install
+
+      - name: Package Desktop Binary (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd desktop
+          npm run dist:win
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Package Desktop Binary (macOS)
+        if: matrix.os == 'macos-14'
+        run: |
+          cd desktop
+          npm run dist:mac
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Package Desktop Binary (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd desktop
+          npm run dist:linux
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Desktop Artifacts (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Omniverse-desktop-windows
+          path: |
+            desktop/dist/*.exe
+          if-no-files-found: error
+
+      - name: Upload Desktop Artifacts (macOS)
+        if: matrix.os == 'macos-14'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Omniverse-desktop-macos
+          path: |
+            desktop/dist/*.dmg
+          if-no-files-found: error
+
+      - name: Upload Desktop Artifacts (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Omniverse-desktop-linux
+          path: |
+            desktop/dist/*.AppImage
+            desktop/dist/*.deb
+          if-no-files-found: error
+
   publish-release:
     name: Publish Production Release Assets
-    needs: [build-android, build-ios]
+    needs: [build-android, build-ios, build-desktop]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     steps:
@@ -123,11 +197,33 @@ jobs:
           name: Omniverse-ios-unsigned-ipa
           path: out_ios
 
+      - name: Download Windows Desktop Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Omniverse-desktop-windows
+          path: out_win
+
+      - name: Download macOS Desktop Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Omniverse-desktop-macos
+          path: out_mac
+
+      - name: Download Linux Desktop Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Omniverse-desktop-linux
+          path: out_linux
+
       - name: Package Release Assets
         run: |
           mkdir -p release_assets
           cp out_android/app-release.apk release_assets/Omniverse.apk
           cp out_ios/Omniverse-Unsigned.ipa release_assets/Omniverse-Unsigned.ipa
+          cp out_win/*.exe release_assets/
+          cp out_mac/*.dmg release_assets/
+          cp out_linux/*.AppImage release_assets/
+          cp out_linux/*.deb release_assets/
 
       - name: Get Latest Commit Message
         run: |
@@ -150,7 +246,10 @@ jobs:
 
             ### 📦 Installation Packages:
             *   🤖 **Android Devices**: Download **`Omniverse.apk`** to install directly on any Android Mobile, Tablet, or Android TV / Fire TV.
-            *   🍎 **iOS/iPadOS/macOS Devices**: Download **`Omniverse-Unsigned.ipa`** to sideload or deploy on your Apple hardware.
+            *   🍎 **iOS/iPadOS/macOS (Native App)**: Download **`Omniverse-Unsigned.ipa`** to sideload or deploy on your Apple hardware.
+            *   💻 **Windows Devices (Desktop App)**: Download the **`.exe`** NSIS setup installer (or portable build) to install on Windows PCs.
+            *   🍏 **macOS Devices (Intel & Silicon Desktop App)**: Download the **`.dmg`** to run natively on any Mac.
+            *   🐧 **Linux Devices (Desktop App)**: Download the **`.AppImage`** or **`.deb`** to install on Linux distributions.
 
             ### ⚡ Features Highlight:
             *   🏴‍☠️ **One Pace Integration**: Fully synchronized One Pace arcs.
@@ -161,5 +260,9 @@ jobs:
           files: |
             release_assets/Omniverse.apk
             release_assets/Omniverse-Unsigned.ipa
+            release_assets/*.exe
+            release_assets/*.dmg
+            release_assets/*.AppImage
+            release_assets/*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

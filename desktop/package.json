@@ -1,0 +1,60 @@
+{
+  "name": "omniverse-desktop",
+  "version": "2.1.0",
+  "description": "The ultimate, ultra-premium media player and discovery desktop app. Zero ads, zero trackers, pure native performance.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "author": "FiNiX",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.0"
+  },
+  "build": {
+    "appId": "com.finix.omniverse.desktop",
+    "productName": "Omniverse",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "renderer.js",
+      "style.css",
+      "logo.png"
+    ],
+    "mac": {
+      "category": "public.app-category.entertainment",
+      "target": {
+        "target": "dmg",
+        "arch": [
+          "universal"
+        ]
+      },
+      "icon": "logo.png"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "logo.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Video;AudioVideo;Player;",
+      "icon": "logo.png"
+    }
+  }
+}
