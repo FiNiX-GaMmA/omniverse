@@ -101,8 +101,7 @@ class TmdbRepositoryImpl : TmdbRepository {
         val firstSeason = seasons.firstOrNull { it.seasonNumber > 0 }
         var episodes: List<MediaEpisode> = emptyList()
         if (item.type == MediaType.SERIES && firstSeason != null) {
-            val fallback = if (item.tmdbId == null) item.copy(tmdbId = json.optIntOrNull("id")) else item
-            episodes = fetchSeasonEpisodes(fallback, firstSeason.seasonNumber, credentials, settings)
+            episodes = fetchSeasonEpisodes(item, firstSeason.seasonNumber, credentials, settings)
         }
 
         val externalIds = json.optObjectOrNull("external_ids")

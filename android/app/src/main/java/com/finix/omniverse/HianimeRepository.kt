@@ -338,7 +338,7 @@ class MegacloudDecryptor(
             if (kind == "captions" || kind == "subtitles") {
                 val lang = track.optString("label", "").lowercase()
                 if (subtitleUrl == null || lang.contains("english")) {
-                    subtitleUrl = track.optString("file", null)
+                    subtitleUrl = track.optStringOrNull("file")
                 }
             }
         }
@@ -348,7 +348,7 @@ class MegacloudDecryptor(
         val sources = json.opt("sources")
         if (!encrypted && sources is JSONArray && sources.length() > 0) {
             val first = sources.optJSONObject(0)
-            if (first != null) streamUrl = first.optString("file", null)
+            if (first != null) streamUrl = first.optStringOrNull("file")
         } else if (encrypted && sources is String && sources.isNotEmpty()) {
             streamUrl = decryptSources(sources)
         }
@@ -368,7 +368,7 @@ class MegacloudDecryptor(
             val parsed = JSONArray(decrypted)
             if (parsed.length() > 0) {
                 val first = parsed.optJSONObject(0)
-                first?.optString("file", null)
+                first?.optStringOrNull("file")
             } else {
                 null
             }

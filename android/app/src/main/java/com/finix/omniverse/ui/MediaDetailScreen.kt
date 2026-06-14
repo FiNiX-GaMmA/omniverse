@@ -21,8 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.PlayArrow
@@ -241,7 +241,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                 .size(44.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.5f))
                 .tvFocusable(onClick = { nav.popBackStack() }, corner = 22),
             contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Filled.ArrowBack, "Back", tint = Color.White) }
+        ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White) }
     }
 
     if (showSheet) {

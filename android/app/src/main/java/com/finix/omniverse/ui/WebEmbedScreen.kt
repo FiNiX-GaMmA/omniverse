@@ -69,6 +69,7 @@ fun WebEmbedScreen(args: WebArgs, onClose: () -> Unit) {
     }
 
     Box(Modifier.fillMaxSize()) {
+        @Suppress("DEPRECATION")
         AndroidView(
             factory = { ctx ->
                 WebView(ctx).apply {

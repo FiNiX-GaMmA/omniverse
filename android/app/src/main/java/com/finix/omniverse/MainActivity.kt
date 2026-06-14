@@ -82,6 +82,7 @@ class MainActivity : ComponentActivity() {
     /// Drive the display at the MAXIMUM refresh rate the panel supports.
     /// On API 23–30 we set preferredRefreshRate; on API 30+ we pick the
     /// display mode whose refresh rate is highest at the native resolution.
+    @Suppress("DEPRECATION")
     private fun applyMaxRefreshRate() {
         val attrs = window.attributes
         val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display else windowManager.defaultDisplay

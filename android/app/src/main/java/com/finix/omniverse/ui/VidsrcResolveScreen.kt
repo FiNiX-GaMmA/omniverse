@@ -316,6 +316,7 @@ fun VidsrcResolveScreen(
                 Text(errorMessage ?: status, color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
         }
+        @Suppress("DEPRECATION")
         AndroidView(
             factory = { ctx ->
                 WebView(ctx).apply {

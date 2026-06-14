@@ -575,7 +575,7 @@ fun PlayerScreen(
 
                         Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(
-                                progress = remainingSecs / 10f,
+                                progress = { remainingSecs / 10f },
                                 color = LiquidColors.Cyan,
                                 trackColor = Color.White.copy(alpha = 0.2f),
                                 strokeWidth = 3.dp,
