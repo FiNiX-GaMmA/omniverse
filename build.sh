@@ -189,9 +189,9 @@ target_desktop() {
     fi
 
     # Move outputs to dist/
-    mkdir -p dist
+    mkdir -p dist/desktop
     if [ -d "desktop/dist" ]; then
-        cp -r desktop/dist dist/desktop
+        cp -r desktop/dist/* dist/desktop/
         echo -e "${GREEN}${BOLD}======================================================================${NC}"
         echo -e "${GREEN}success:${NC} Omniverse Electron Desktop App compiled successfully!"
         echo -e "${BLUE}Output folder:${NC} ${BOLD}dist/desktop/${NC}"

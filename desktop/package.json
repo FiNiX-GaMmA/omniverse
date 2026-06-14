@@ -11,7 +11,7 @@
     "dist:mac": "electron-builder --mac",
     "dist:linux": "electron-builder --linux"
   },
-  "author": "FiNiX",
+  "author": "FiNiX <finix@omniverse.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
