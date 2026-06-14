@@ -61,6 +61,7 @@ fun OnboardingScreen() {
     var error by remember { mutableStateOf<String?>(null) }
 
     var pairingId by remember { mutableStateOf("") }
+    var pairingKey by remember { mutableStateOf("") }
     var isPairing by remember { mutableStateOf(false) }
 
     // Start automated low-density QR pairing listener on first install launch
@@ -79,7 +80,11 @@ fun OnboardingScreen() {
             if (initRes.ok) {
                 val sessionObj = JSONObject(initRes.body)
                 val id = sessionObj.getString("id")
+                val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+                val secretKey = (1..16).map { allowedChars.random() }.joinToString("")
+
                 pairingId = id
+                pairingKey = secretKey
                 isPairing = true
 
                 // 2. Poll the session object for scan confirmation
@@ -90,10 +95,11 @@ fun OnboardingScreen() {
                         if (res.ok) {
                             val obj = JSONObject(res.body)
                             val data = obj.optJSONObject("data")
-                            val payload = data?.optString("payload") ?: ""
-                            if (payload.trim().startsWith("OMNIVERSE-SYNC1:")) {
+                            val encryptedPayload = data?.optString("payload") ?: ""
+                            if (encryptedPayload.trim().isNotEmpty() && encryptedPayload.trim() != "WAITING") {
                                 isPairing = false
-                                state.applySyncString(payload.trim())
+                                val decrypted = SimpleAES.decrypt(encryptedPayload.trim(), pairingKey)
+                                state.applySyncString(decrypted)
                             }
                         }
                     }
@@ -148,8 +154,8 @@ fun OnboardingScreen() {
         ) {
             Text("Welcome to Omniverse", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
 
-            if (pairingId.isNotEmpty()) {
-                val payload = "OMNIVERSE-PAIR1:$pairingId"
+            if (pairingId.isNotEmpty() && pairingKey.isNotEmpty()) {
+                val payload = "OMNIVERSE-PAIR1:$pairingId:$pairingKey"
                 val bitmap = remember(payload) { qrBitmap(payload, 700) }
 
                 Text("Already signed in on another device? Scan this QR code with its camera scanner (Settings > Scan Sync QR) to sync instantly! Or use the options below.",

@@ -13,6 +13,7 @@ struct TraktOnboardingScreen: View {
     @State private var showScanner = false
     @State private var showPairingQR = false
     @State private var pairingID = ""
+    @State private var secretKey = ""
     @State private var isPairing = false
 
     var body: some View {
@@ -50,7 +51,7 @@ struct TraktOnboardingScreen: View {
                                 .multilineTextAlignment(.center)
                                 .padding(.bottom, 16)
 
-                            if let qrImg = SyncPayload.qrImage(from: "OMNIVERSE-PAIR1:\(pairingID)") {
+                            if let qrImg = SyncPayload.qrImage(from: "OMNIVERSE-PAIR1:\(pairingID):\(secretKey)") {
                                 Image(uiImage: qrImg)
                                     .resizable()
                                     .interpolation(.none)
@@ -180,7 +181,11 @@ struct TraktOnboardingScreen: View {
                 let dict = initResp.jsonObject()
                 guard let id = dict["id"] as? String else { return }
 
+                let chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                let key = String((0..<16).map { _ in chars.randomElement()! })
+
                 pairingID = id
+                secretKey = key
                 isPairing = true
 
                 // 2. Poll the session object for scan confirmation
@@ -192,13 +197,16 @@ struct TraktOnboardingScreen: View {
                     if let resp = try? await Http.shared.request(url), resp.ok {
                         let parsed = resp.jsonObject()
                         let data = parsed["data"] as? [String: Any]
-                        let payload = (data?["payload"] as? String ?? "").trimmed
+                        let encryptedPayload = (data?["payload"] as? String ?? "").trimmed
 
-                        if payload.hasPrefix("OMNIVERSE-SYNC1:") {
+                        if !encryptedPayload.isEmpty && encryptedPayload != "WAITING" {
                             isPairing = false
-                            let ok = await state.applySyncString(payload)
-                            if ok {
-                                await state.refreshTraktPlayback()
+                            if let decrypted = SimpleAES.decrypt(encryptedPayload, key: secretKey) {
+                                let ok = await state.applySyncString(decrypted)
+                                if ok {
+                                    showPairingQR = false
+                                    await state.refreshTraktPlayback()
+                                }
                             }
                         }
                     }
