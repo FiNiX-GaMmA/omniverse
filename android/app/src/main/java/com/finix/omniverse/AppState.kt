@@ -747,33 +747,6 @@ class AppState(context: Context) {
             }
         }
     }
-}
-
-// ==============================================================================
-// Symmetric AES-128-CBC Encryption Engine for Zero-Trust Pairing
-// ==============================================================================
-object SimpleAES {
-    fun encrypt(text: String, keyString: String): String {
-        val keyBytes = keyString.toByteArray(Charsets.UTF_8)
-        val keySpec = SecretKeySpec(keyBytes, "AES")
-        val ivSpec = IvParameterSpec(keyBytes)
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec)
-        val encryptedBytes = cipher.doFinal(text.toByteArray(Charsets.UTF_8))
-        return android.util.Base64.encodeToString(encryptedBytes, android.util.Base64.NO_WRAP)
-    }
-
-    fun decrypt(b64Cipher: String, keyString: String): String {
-        val keyBytes = keyString.toByteArray(Charsets.UTF_8)
-        val keySpec = SecretKeySpec(keyBytes, "AES")
-        val ivSpec = IvParameterSpec(keyBytes)
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec)
-        val decodedBytes = android.util.Base64.decode(b64Cipher, android.util.Base64.DEFAULT)
-        val decryptedBytes = cipher.doFinal(decodedBytes)
-        return String(decryptedBytes, Charsets.UTF_8)
-    }
-}
 
     // MARK: - Live TV sources
 
@@ -1175,5 +1148,31 @@ object SimpleAES {
             "https://iptv-org.github.io/iptv/categories/family.m3u",
             "https://iptv-org.github.io/iptv/categories/sci-fi.m3u",
         )
+    }
+}
+
+// ==============================================================================
+// Symmetric AES-128-CBC Encryption Engine for Zero-Trust Pairing
+// ==============================================================================
+object SimpleAES {
+    fun encrypt(text: String, keyString: String): String {
+        val keyBytes = keyString.toByteArray(Charsets.UTF_8)
+        val keySpec = SecretKeySpec(keyBytes, "AES")
+        val ivSpec = IvParameterSpec(keyBytes)
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec)
+        val encryptedBytes = cipher.doFinal(text.toByteArray(Charsets.UTF_8))
+        return android.util.Base64.encodeToString(encryptedBytes, android.util.Base64.NO_WRAP)
+    }
+
+    fun decrypt(b64Cipher: String, keyString: String): String {
+        val keyBytes = keyString.toByteArray(Charsets.UTF_8)
+        val keySpec = SecretKeySpec(keyBytes, "AES")
+        val ivSpec = IvParameterSpec(keyBytes)
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec)
+        val decodedBytes = android.util.Base64.decode(b64Cipher, android.util.Base64.DEFAULT)
+        val decryptedBytes = cipher.doFinal(decodedBytes)
+        return String(decryptedBytes, Charsets.UTF_8)
     }
 }

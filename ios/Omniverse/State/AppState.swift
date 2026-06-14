@@ -786,6 +786,7 @@ enum SimpleAES {
 
         var encrypted = Data(count: data.count + kCCBlockSizeAES128)
         var numBytesEncrypted: Int = 0
+        let bufferSize = encrypted.count
 
         let status = encrypted.withUnsafeMutableBytes { encryptedBytes in
             data.withUnsafeBytes { dataBytes in
@@ -797,7 +798,7 @@ enum SimpleAES {
                         keyBytes.baseAddress, kCCKeySizeAES128,
                         keyBytes.baseAddress, // use key as IV for single-use pairing
                         dataBytes.baseAddress, data.count,
-                        encryptedBytes.baseAddress, encrypted.count,
+                        encryptedBytes.baseAddress, bufferSize,
                         &numBytesEncrypted
                     )
                 }
@@ -814,6 +815,7 @@ enum SimpleAES {
 
         var decrypted = Data(count: data.count + kCCBlockSizeAES128)
         var numBytesDecrypted: Int = 0
+        let bufferSize = decrypted.count
 
         let status = decrypted.withUnsafeMutableBytes { decryptedBytes in
             data.withUnsafeBytes { dataBytes in
@@ -825,7 +827,7 @@ enum SimpleAES {
                         keyBytes.baseAddress, kCCKeySizeAES128,
                         keyBytes.baseAddress, // use key as IV for single-use pairing
                         dataBytes.baseAddress, data.count,
-                        decryptedBytes.baseAddress, decrypted.count,
+                        decryptedBytes.baseAddress, bufferSize,
                         &numBytesDecrypted
                     )
                 }
