@@ -68,39 +68,32 @@ fun OnboardingScreen() {
     // Start automated low-density QR pairing listener on first install launch
     androidx.compose.runtime.LaunchedEffect(Unit) {
         runCatching {
-            // 1. Register a pairing session object in our free database
-            val bodyJson = JSONObject()
-                .put("name", "Omniverse Pairing")
-                .put("data", JSONObject().put("payload", "WAITING"))
-            val initRes = Http.request(
-                url = "https://api.restful-api.dev/objects",
-                method = "POST",
-                headers = mapOf("Content-Type" to "application/json"),
-                body = bodyJson.toString().toRequestBody(null)
-            )
-            if (initRes.ok) {
-                val sessionObj = JSONObject(initRes.body)
-                val id = sessionObj.getString("id")
-                val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
-                val secretKey = (1..16).map { allowedChars.random() }.joinToString("")
+            val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+            val id = "omni_pair_" + (1..12).map { allowedChars.random() }.joinToString("")
+            val secretKey = (1..16).map { allowedChars.random() }.joinToString("")
 
-                pairingId = id
-                pairingKey = secretKey
-                isPairing = true
+            pairingId = id
+            pairingKey = secretKey
+            isPairing = true
 
-                // 2. Poll the session object for scan confirmation
-                while (isPairing) {
-                    delay(2000)
-                    runCatching {
-                        val res = Http.request("https://api.restful-api.dev/objects/$id")
-                        if (res.ok) {
-                            val obj = JSONObject(res.body)
-                            val data = obj.optJSONObject("data")
-                            val encryptedPayload = data?.optString("payload") ?: ""
-                            if (encryptedPayload.trim().isNotEmpty() && encryptedPayload.trim() != "WAITING") {
-                                isPairing = false
-                                val decrypted = SimpleAES.decrypt(encryptedPayload.trim(), pairingKey)
-                                state.applySyncString(decrypted)
+            // Poll the ntfy.sh topic for remote scan confirmation
+            while (isPairing) {
+                delay(2000)
+                runCatching {
+                    val res = Http.request("https://ntfy.sh/$id/json?poll=1")
+                    if (res.ok && res.body.trim().isNotEmpty()) {
+                        // Parse NDJSON lines from ntfy response
+                        val lines = res.body.split("\n").filter { it.trim().isNotEmpty() }
+                        for (line in lines) {
+                            val obj = JSONObject(line)
+                            if (obj.optString("event") == "message") {
+                                val encryptedPayload = obj.optString("message", "").trim()
+                                if (encryptedPayload.isNotEmpty() && encryptedPayload != "WAITING") {
+                                    isPairing = false
+                                    val decrypted = SimpleAES.decrypt(encryptedPayload, pairingKey)
+                                    state.applySyncString(decrypted)
+                                    break
+                                }
                             }
                         }
                     }

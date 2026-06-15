@@ -24,6 +24,9 @@ struct HomeScreen: View {
                         HeroCarousel(picks: state.heroPicks, wide: wide, portrait: portrait) { path.append($0) }
                             .frame(height: heroHeight(geo))
                         ContinueWatchingRow(filter: nil, onResume: { entry in resumeTarget = ResumeTarget(entry: entry) })
+                        StudiosRow { studioName in
+                            state.message = "Filtering home feed by \(studioName)..."
+                        }
                         ForEach(displayCategories) { cat in
                             CategoryRow(category: cat, wide: wide, onItem: { path.append($0) })
                         }
@@ -503,5 +506,75 @@ private struct ResumeSheet: View {
         let pct = Int((entry.fraction * 100).rounded())
         if pct > 0 { parts.append("\(pct)% watched") }
         return parts.joined(separator: " • ")
+    }
+}
+
+// ==============================================================================
+// SwiftUI Studios Rail (Disney+, Netflix, HBO, Apple, Marvel, Pixar)
+// ==============================================================================
+struct StudioCard: View {
+    let name: String
+    let gradient: LinearGradient
+    let action: () -> Void
+
+    @State private var hovered = false
+
+    var body: some View {
+        Button(action: action) {
+            Text(name)
+                .font(.system(size: 14, weight: .black, design: .serif))
+                .italic()
+                .foregroundStyle(.white)
+                .frame(width: 140, height: 64)
+                .background(gradient)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
+                .shadow(color: .black.opacity(0.3), radius: 6, y: 4)
+                .scaleEffect(hovered ? 1.04 : 1.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovered)
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered in
+            hovered = isHovered
+        }
+    }
+}
+
+struct StudiosRow: View {
+    let onSelected: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("PREMIUM NETWORKS")
+                .font(.system(size: 11, weight: .bold))
+                .kerning(1.2)
+                .foregroundStyle(.white.opacity(0.4))
+                .padding(.horizontal, 28)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    StudioCard(name: "Disney+", gradient: LinearGradient(colors: [Color(hex: 0x0d1b3e), Color(hex: 0x15327a)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Disney+")
+                    }
+                    StudioCard(name: "NETFLIX", gradient: LinearGradient(colors: [Color(hex: 0x1f0808), Color(hex: 0x7c0e0e)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Netflix")
+                    }
+                    StudioCard(name: "HBO MAX", gradient: LinearGradient(colors: [Color(hex: 0x18052b), Color(hex: 0x4c0e82)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("HBO Max")
+                    }
+                    StudioCard(name: " tv+", gradient: LinearGradient(colors: [Color(hex: 0x0e0e0e), Color(hex: 0x2a2a2a)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Apple TV+")
+                    }
+                    StudioCard(name: "MARVEL", gradient: LinearGradient(colors: [Color(hex: 0x2d0406), Color(hex: 0xb81d24)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Marvel")
+                    }
+                    StudioCard(name: "PIXAR", gradient: LinearGradient(colors: [Color(hex: 0x111d2e), Color(hex: 0x30588c)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Pixar")
+                    }
+                }
+                .padding(.horizontal, 28)
+            }
+        }
+        .padding(.vertical, 16)
     }
 }

@@ -159,60 +159,41 @@ struct TraktOnboardingScreen: View {
 
     private func startPairingPoll() {
         Task {
-            do {
-                // 1. Create a dynamic unauthenticated database object for this pairing session
-                let bodyJson: [String: Any] = [
-                    "name": "Omniverse Pairing",
-                    "data": ["payload": "WAITING"]
-                ]
-                let bodyData = try JSONSerialization.data(withJSONObject: bodyJson)
+            let chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+            let id = "omni_pair_" + String((0..<12).map { _ in chars.randomElement()! })
+            let key = String((0..<16).map { _ in chars.randomElement()! })
 
-                guard let initUrl = URL(string: "https://api.restful-api.dev/objects") else { return }
-                let initResp = try await Http.shared.request(
-                    initUrl,
-                    method: "POST",
-                    headers: ["Content-Type": "application/json"],
-                    body: bodyData,
-                    timeout: 14
-                )
+            pairingID = id
+            secretKey = key
+            isPairing = true
 
-                guard initResp.ok else { return }
+            // Poll the ntfy.sh topic for remote scan confirmation
+            while isPairing {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                guard isPairing else { break }
 
-                let dict = initResp.jsonObject()
-                guard let id = dict["id"] as? String else { return }
+                guard let url = URL(string: "https://ntfy.sh/\(id)/json?poll=1") else { continue }
+                if let resp = try? await Http.shared.request(url), resp.ok {
+                    // Parse NDJSON lines from ntfy response
+                    let lines = resp.bodyString.components(separatedBy: "\n").filter { !$0.trimmed.isEmpty }
+                    for line in lines {
+                        guard let data = line.data(using: .utf8),
+                              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                              let event = obj["event"] as? String, event == "message",
+                              let encryptedPayload = (obj["message"] as? String)?.trimmed,
+                              !encryptedPayload.isEmpty && encryptedPayload != "WAITING" else { continue }
 
-                let chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                let key = String((0..<16).map { _ in chars.randomElement()! })
-
-                pairingID = id
-                secretKey = key
-                isPairing = true
-
-                // 2. Poll the session object for scan confirmation
-                while isPairing {
-                    try? await Task.sleep(nanoseconds: 2_000_000_000)
-                    guard isPairing else { break }
-
-                    guard let url = URL(string: "https://api.restful-api.dev/objects/\(id)") else { continue }
-                    if let resp = try? await Http.shared.request(url), resp.ok {
-                        let parsed = resp.jsonObject()
-                        let data = parsed["data"] as? [String: Any]
-                        let encryptedPayload = (data?["payload"] as? String ?? "").trimmed
-
-                        if !encryptedPayload.isEmpty && encryptedPayload != "WAITING" {
-                            isPairing = false
-                            if let decrypted = SimpleAES.decrypt(encryptedPayload, key: secretKey) {
-                                let ok = await state.applySyncString(decrypted)
-                                if ok {
-                                    showPairingQR = false
-                                    await state.refreshTraktPlayback()
-                                }
+                        isPairing = false
+                        if let decrypted = SimpleAES.decrypt(encryptedPayload, key: secretKey) {
+                            let ok = await state.applySyncString(decrypted)
+                            if ok {
+                                showPairingQR = false
+                                await state.refreshTraktPlayback()
                             }
                         }
+                        break
                     }
                 }
-            } catch {
-                print("Pairing initialization error: \(error)")
             }
         }
     }

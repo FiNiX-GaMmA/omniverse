@@ -96,22 +96,16 @@ final class AppState {
         pendingPairingId = nil
         pendingPairingPayload = nil
 
-        let bodyJson: [String: Any] = [
-            "name": "Omniverse Pairing",
-            "data": ["payload": payload]
-        ]
-
-        guard let bodyData = try? JSONSerialization.data(withJSONObject: bodyJson) else {
+        guard let bodyData = payload.data(using: .utf8) else {
             message = "Could not format pairing request."
             return
         }
 
         do {
-            let url = URL(string: "https://api.restful-api.dev/objects/\(id)")!
+            let url = URL(string: "https://ntfy.sh/\(id)")!
             let resp = try await Http.shared.request(
                 url,
-                method: "PUT",
-                headers: ["Content-Type": "application/json"],
+                method: "POST",
                 body: bodyData,
                 timeout: 14
             )

@@ -726,16 +726,12 @@ class AppState(context: Context) {
         pendingPairingPayload = null
         scope.launch {
             try {
-                // Upload to our private, permanent global bucket on restful-api.dev
-                val url = "https://api.restful-api.dev/objects/$id"
-                val bodyJson = JSONObject()
-                    .put("name", "Omniverse Pairing")
-                    .put("data", JSONObject().put("payload", payload))
+                // Upload the raw encrypted ciphertext directly to the ntfy.sh topic
+                val url = "https://ntfy.sh/$id"
                 val response = Http.request(
                     url = url,
-                    method = "PUT",
-                    headers = mapOf("Content-Type" to "application/json"),
-                    body = bodyJson.toString().toRequestBody(null)
+                    method = "POST",
+                    body = payload.toRequestBody(null)
                 )
                 if (response.ok) {
                     message = "Synced successfully with the other device!"

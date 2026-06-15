@@ -1141,22 +1141,11 @@ async function showPairingQr() {
   if (pairBtn) pairBtn.disabled = true;
 
   try {
-    // 1. Create a dynamic unauthenticated database object for this pairing session
-    const initRes = await window.electron.iptvFetch(
-      "https://api.restful-api.dev/objects",
-      "POST",
-      { "Content-Type": "application/json" },
-      JSON.stringify({
-        name: "Omniverse Pairing",
-        data: { payload: "WAITING" },
-      }),
-    );
-
-    if (!initRes.ok)
-      throw new Error("Could not register pairing session: " + initRes.status);
-
-    const sessionObj = JSON.parse(initRes.html);
-    const pairId = sessionObj.id;
+    // Generate a random unique pairing ID (secure 16-character topic)
+    const pairId =
+      "omni_pair_" +
+      Math.random().toString(36).substring(2, 10) +
+      Math.random().toString(36).substring(2, 10);
 
     // Generate a cryptographically secure 16-character AES key locally (never shared online!)
     const secretKey =
@@ -1173,45 +1162,50 @@ async function showPairingQr() {
         encodeURIComponent(dataStr);
     }
 
-    // 2. Poll the session object for remote PUT updates every 2 seconds
+    // Poll the ntfy.sh topic for remote POST updates every 2 seconds
     state.pairingInterval = setInterval(async () => {
       try {
         const res = await window.electron.iptvFetch(
-          `https://api.restful-api.dev/objects/${pairId}`,
+          `https://ntfy.sh/${pairId}/json?poll=1`,
           "GET",
         );
-        if (res.ok && res.html) {
-          const obj = JSON.parse(res.html);
-          if (
-            obj.data &&
-            obj.data.payload &&
-            obj.data.payload.trim() !== "WAITING"
-          ) {
-            const encryptedPayload = obj.data.payload.trim();
+        if (res.ok && res.html && res.html.trim().length > 0) {
+          // Parse NDJSON lines from ntfy response
+          const lines = res.html.split("\n").filter((l) => l.trim().length > 0);
+          for (const line of lines) {
+            const obj = JSON.parse(line);
+            if (
+              obj.event === "message" &&
+              obj.message &&
+              obj.message.trim() !== "WAITING"
+            ) {
+              const encryptedPayload = obj.message.trim();
 
-            // Clear polling timer instantly on handshake success
-            clearInterval(state.pairingInterval);
-            state.pairingInterval = null;
+              // Clear polling timer instantly on handshake success
+              clearInterval(state.pairingInterval);
+              state.pairingInterval = null;
 
-            // Decrypt the payload locally using our secure local key
-            const syncPayload = await decryptAES(
-              encryptedPayload,
-              activePairingKey,
-            );
+              // Decrypt the payload locally using our secure local key
+              const syncPayload = await decryptAES(
+                encryptedPayload,
+                activePairingKey,
+              );
 
-            // Auto-fill input and run decryption
-            const input = document.getElementById("sync-code-input");
-            if (input) input.value = syncPayload;
-            importSyncCode();
+              // Auto-fill input and run decryption
+              const input = document.getElementById("sync-code-input");
+              if (input) input.value = syncPayload;
+              importSyncCode();
 
-            // Hide overlay panel
-            if (panel) panel.classList.add("hidden");
-            if (pairBtn) pairBtn.disabled = false;
+              // Hide overlay panel
+              if (panel) panel.classList.add("hidden");
+              if (pairBtn) pairBtn.disabled = false;
 
-            window.electron.showNotification(
-              "Login Successful",
-              "Paired successfully. All keys and settings restored.",
-            );
+              window.electron.showNotification(
+                "Login Successful",
+                "Paired successfully. All keys and settings restored.",
+              );
+              break;
+            }
           }
         }
       } catch (err) {
