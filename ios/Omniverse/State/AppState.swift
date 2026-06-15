@@ -448,6 +448,14 @@ final class AppState {
 
     // MARK: - Search / details / playback
 
+    func fetchStudioMovies(_ studio: String) async -> [MediaItem] {
+        await repos.tmdb.fetchStudioMovies(studio, credentials: credentials, settings: settings)
+    }
+
+    func fetchStudioTVShows(_ studio: String) async -> [MediaItem] {
+        await repos.tmdb.fetchStudioTVShows(studio, credentials: credentials, settings: settings)
+    }
+
     func searchMedia(_ query: String) async -> [MediaItem] {
         await repos.tmdb.searchMulti(query, credentials: credentials, settings: settings)
     }

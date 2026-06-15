@@ -9,6 +9,8 @@ protocol TmdbRepositoryProtocol {
     func searchMulti(_ query: String, credentials: ApiCredentials, settings: UserSettings) async -> [MediaItem]
     func fetchSeasonEpisodes(_ item: MediaItem, seasonNumber: Int, credentials: ApiCredentials, settings: UserSettings) async -> [MediaEpisode]
     func fetchRecommendations(_ item: MediaItem, credentials: ApiCredentials, settings: UserSettings) async -> [MediaItem]
+    func fetchStudioMovies(_ studio: String, credentials: ApiCredentials, settings: UserSettings) async -> [MediaItem]
+    func fetchStudioTVShows(_ studio: String, credentials: ApiCredentials, settings: UserSettings) async -> [MediaItem]
 }
 
 protocol TvdbRepositoryProtocol {

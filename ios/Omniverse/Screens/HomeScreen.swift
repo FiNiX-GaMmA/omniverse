@@ -9,6 +9,7 @@ struct HomeScreen: View {
     @State private var player: PlayerRoute?
     @State private var web: WebRoute?
     @State private var vidsrc: VidsrcRoute?
+    @State private var selectedStudio: String? = nil
     // Continue Watching: tapping a card opens a glass bottom sheet that surfaces
     // the title/progress and gates resolution behind explicit Resume buttons.
     // Wrapped so the sheet has a stable identity (WatchProgress.id can be nil).
@@ -25,7 +26,7 @@ struct HomeScreen: View {
                             .frame(height: heroHeight(geo))
                         ContinueWatchingRow(filter: nil, onResume: { entry in resumeTarget = ResumeTarget(entry: entry) })
                         StudiosRow { studioName in
-                            state.message = "Filtering home feed by \(studioName)..."
+                            selectedStudio = studioName.lowercased()
                         }
                         ForEach(displayCategories) { cat in
                             CategoryRow(category: cat, wide: wide, onItem: { path.append($0) })
@@ -47,6 +48,21 @@ struct HomeScreen: View {
             }
             .fullScreenCover(item: $vidsrc) { r in
                 VidsrcResolveScreen(item: r.item, title: r.title, embedUrls: r.embedUrls, episode: r.episode)
+            }
+            .fullScreenCover(isPresented: Binding(
+                get: { selectedStudio != nil },
+                set: { if !$0 { selectedStudio = nil } }
+            )) {
+                if let studio = selectedStudio {
+                    StudioDetailsSheet(
+                        studio: studio,
+                        onClose: { selectedStudio = nil },
+                        onItemSelect: { item in
+                            selectedStudio = nil
+                            path.append(item)
+                        }
+                    )
+                }
             }
             .sheet(item: $resumeTarget) { target in
                 let entry = target.entry
@@ -554,16 +570,16 @@ struct StudiosRow: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 14) {
                     StudioCard(name: "Disney+", gradient: LinearGradient(colors: [Color(hex: 0x0d1b3e), Color(hex: 0x15327a)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
-                        onSelected("Disney+")
+                        onSelected("Disney")
                     }
                     StudioCard(name: "NETFLIX", gradient: LinearGradient(colors: [Color(hex: 0x1f0808), Color(hex: 0x7c0e0e)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
                         onSelected("Netflix")
                     }
                     StudioCard(name: "HBO MAX", gradient: LinearGradient(colors: [Color(hex: 0x18052b), Color(hex: 0x4c0e82)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
-                        onSelected("HBO Max")
+                        onSelected("Hbo")
                     }
                     StudioCard(name: " tv+", gradient: LinearGradient(colors: [Color(hex: 0x0e0e0e), Color(hex: 0x2a2a2a)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
-                        onSelected("Apple TV+")
+                        onSelected("Apple")
                     }
                     StudioCard(name: "MARVEL", gradient: LinearGradient(colors: [Color(hex: 0x2d0406), Color(hex: 0xb81d24)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
                         onSelected("Marvel")
@@ -576,5 +592,119 @@ struct StudiosRow: View {
             }
         }
         .padding(.vertical, 16)
+    }
+}
+
+// ==============================================================================
+// SwiftUI Studio Details Page (Vertical category grids, logo headers)
+// ==============================================================================
+struct StudioDetailsSheet: View {
+    let studio: String
+    let onClose: () -> Void
+    let onItemSelect: (MediaItem) -> Void
+
+    @Environment(AppState.self) private var state
+    @State private var movies: [MediaItem] = []
+    @State private var tvShows: [MediaItem] = []
+    @State private var loading = true
+
+    var displayName: String {
+        switch studio.lowercased() {
+        case "disney": return "Disney+"
+        case "netflix": return "Netflix"
+        case "hbo": return "HBO Max"
+        case "prime": return "Prime Video"
+        case "apple": return "Apple TV+"
+        case "marvel": return "Marvel Studios"
+        case "pixar": return "Pixar Animation"
+        default: return studio.capitalized
+        }
+    }
+
+    var logoUrl: String {
+        switch studio.lowercased() {
+        case "netflix": return "https://image.tmdb.org/t/p/w500/wwemzKWzjKYJFfCeiB67v84g67V.png"
+        case "disney": return "https://image.tmdb.org/t/p/w500/uzK9u4w6FQm0zJbi9qRmN0R0ppU.png"
+        case "hbo": return "https://image.tmdb.org/t/p/w500/ctv9Hof6Zbe37pZ89zH0pL8gD6C.png"
+        case "prime": return "https://image.tmdb.org/t/p/w500/ifb4g6g7uYlDdfZbyB76xT6LppU.png"
+        case "apple": return "https://image.tmdb.org/t/p/w500/7Lpx6XfT1B7bWj1p4Zg6S6VppU.png"
+        case "marvel": return "https://image.tmdb.org/t/p/w500/420.png"
+        default: return ""
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            Color(hex: 0x0c0f14).ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Header
+                HStack(spacing: 16) {
+                    Button(action: onClose) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 44, height: 44)
+                            .background(Color.white.opacity(0.08), in: Circle())
+                    }
+                    .buttonStyle(.plain)
+
+                    if !logoUrl.isEmpty {
+                        AsyncImage(url: URL(string: logoUrl)) { phase in
+                            if let img = phase.image {
+                                img.resizable().aspectRatio(contentMode: .fit)
+                            } else {
+                                Text(displayName).font(.system(size: 22, weight: .black)).foregroundStyle(.white)
+                            }
+                        }
+                        .frame(height: 40)
+                    } else {
+                        Text(displayName)
+                            .font(.system(size: 24, weight: .black))
+                            .foregroundStyle(.white)
+                    }
+
+                    Spacer()
+                }
+                .padding(.horizontal, 24).padding(.vertical, 16)
+
+                if loading {
+                    Spacer()
+                    ProgressView().tint(LiquidColors.cyan)
+                    Spacer()
+                } else if movies.isEmpty && tvShows.isEmpty {
+                    Spacer()
+                    Text("No content available for this studio.")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.white.opacity(0.6))
+                    Spacer()
+                } else {
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 20) {
+                            if !movies.isEmpty {
+                                CategoryRow(
+                                    category: MediaCategory(id: "\(studio)_movies", title: "Trending Movies", type: .movie, items: movies),
+                                    wide: false,
+                                    onItem: onItemSelect
+                                )
+                            }
+                            if !tvShows.isEmpty {
+                                CategoryRow(
+                                    category: MediaCategory(id: "\(studio)_tv", title: "Trending Shows", type: .series, items: tvShows),
+                                    wide: false,
+                                    onItem: onItemSelect
+                                )
+                            }
+                        }
+                        .padding(.vertical, 16)
+                    }
+                }
+            }
+        }
+        .task {
+            movies = await state.fetchStudioMovies(studio)
+            tvShows = await state.fetchStudioTVShows(studio)
+            loading = false
+        }
     }
 }
