@@ -161,44 +161,82 @@ target_ios() {
     fi
 }
 
-# Function: Compile and package Electron Desktop app
+# Function: Compile and package Desktop app
 target_desktop() {
-    echo -e "${BLUE}info:${NC} Preparing Electron Desktop Workspace..."
+    echo -e "${BLUE}info:${NC} Preparing Desktop Workspace..."
 
-    # Check Node.js and npm
-    if ! command -v npm &> /dev/null; then
-        echo -e "${RED}error:${NC} Node.js and npm are required to build the Electron desktop app."
-        exit 1
-    fi
-
-    # Go to desktop directory and install dependencies if not installed
-    echo -e "${BLUE}info:${NC} Installing Electron project dependencies via npm..."
-    (cd desktop && npm install)
-
-    echo -e "${BLUE}info:${NC} Bundling and packaging desktop binaries..."
-    # Packaging for host operating system
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        echo -e "${BLUE}info:${NC} Target OS: macOS. Generating Universal App (Intel & Apple Silicon DMG)..."
-        (cd desktop && npm run dist:mac)
-    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        echo -e "${BLUE}info:${NC} Target OS: Linux. Generating AppImage and DEB package..."
-        (cd desktop && npm run dist:linux)
-    else
-        echo -e "${BLUE}info:${NC} Target OS: Windows. Generating Setup EXE installer..."
-        (cd desktop && npm run dist:win)
-    fi
+        echo -e "${BLUE}info:${NC} Target OS: macOS. Compiling 100% Native Mac Catalyst Desktop App..."
+        
+        if ! command -v xcodebuild &> /dev/null; then
+            echo -e "${RED}error:${NC} Xcode Command Line Tools ('xcodebuild') are required."
+            exit 1
+        fi
 
-    # Move outputs to dist/
-    mkdir -p dist/desktop
-    if [ -d "desktop/dist" ]; then
-        cp -r desktop/dist/* dist/desktop/
-        echo -e "${GREEN}${BOLD}======================================================================${NC}"
-        echo -e "${GREEN}success:${NC} Omniverse Electron Desktop App compiled successfully!"
-        echo -e "${BLUE}Output folder:${NC} ${BOLD}dist/desktop/${NC}"
-        echo -e "${GREEN}${BOLD}======================================================================${NC}"
+        # Generate Xcode Project via XcodeGen if project.yml is present
+        if [ -f "ios/project.yml" ] && command -v xcodegen &> /dev/null; then
+            echo -e "${BLUE}info:${NC} Re-generating Xcode project files via XcodeGen..."
+            (cd ios && xcodegen)
+        fi
+
+        echo -e "${BLUE}info:${NC} Compiling Mac Catalyst App via xcodebuild (no codesign)..."
+        (cd ios && xcodebuild -project Omniverse.xcodeproj \
+                              -scheme Omniverse \
+                              -configuration Release \
+                              -destination "generic/platform=macOS,variant=Mac Catalyst" \
+                              -derivedDataPath build_desktop \
+                              CODE_SIGN_IDENTITY="" \
+                              CODE_SIGNING_REQUIRED=NO \
+                              CODE_SIGNING_ALLOWED=NO \
+                              build)
+
+        APP_PATH="ios/build_desktop/Build/Products/Release-maccatalyst/Omniverse.app"
+        if [ -d "$APP_PATH" ]; then
+            mkdir -p dist/desktop
+            rm -rf dist/desktop/Omniverse.app
+            cp -R "$APP_PATH" dist/desktop/
+            echo -e "${GREEN}${BOLD}======================================================================${NC}"
+            echo -e "${GREEN}success:${NC} Dedicated Native Mac Catalyst Desktop App compiled successfully!"
+            echo -e "${BLUE}Output location:${NC} ${BOLD}dist/desktop/Omniverse.app${NC}"
+            echo -e "${GREEN}${BOLD}======================================================================${NC}"
+        else
+            echo -e "${RED}error:${NC} Native Mac Catalyst compilation failed. App package not found."
+            exit 1
+        fi
     else
-        echo -e "${RED}error:${NC} Electron packaging failed."
-        exit 1
+        # Packaging for non-macOS hosts using Electron as fallback
+        echo -e "${YELLOW}warning:${NC} Mac Catalyst is only supported on macOS. Falling back to Electron..."
+        
+        # Check Node.js and npm
+        if ! command -v npm &> /dev/null; then
+            echo -e "${RED}error:${NC} Node.js and npm are required to build the Electron desktop app."
+            exit 1
+        fi
+
+        echo -e "${BLUE}info:${NC} Installing Electron project dependencies via npm..."
+        (cd desktop && npm install)
+
+        echo -e "${BLUE}info:${NC} Bundling and packaging desktop binaries..."
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            echo -e "${BLUE}info:${NC} Target OS: Linux. Generating AppImage and DEB package..."
+            (cd desktop && npm run dist:linux)
+        else
+            echo -e "${BLUE}info:${NC} Target OS: Windows. Generating Setup EXE installer..."
+            (cd desktop && npm run dist:win)
+        fi
+
+        # Move outputs to dist/
+        mkdir -p dist/desktop
+        if [ -d "desktop/dist" ]; then
+            cp -r desktop/dist/* dist/desktop/
+            echo -e "${GREEN}${BOLD}======================================================================${NC}"
+            echo -e "${GREEN}success:${NC} Omniverse Electron Desktop App compiled successfully!"
+            echo -e "${BLUE}Output folder:${NC} ${BOLD}dist/desktop/${NC}"
+            echo -e "${GREEN}${BOLD}======================================================================${NC}"
+        else
+            echo -e "${RED}error:${NC} Electron packaging failed."
+            exit 1
+        fi
     fi
 }
 

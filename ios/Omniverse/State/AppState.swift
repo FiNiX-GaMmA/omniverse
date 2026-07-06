@@ -123,9 +123,10 @@ final class AppState {
 
     func refreshAll(isManual: Bool = true) async {
         if isManual { loading = true; message = nil }
-        await refreshCategories()
-        await refreshAnime()
-        await refreshTraktWatchlist()
+        async let cats: Void = refreshCategories()
+        async let anime: Void = refreshAnime()
+        async let watchlist: Void = refreshTraktWatchlist()
+        _ = await (cats, anime, watchlist)
         settingsStore.setLastRefreshedTime(Int(Date().timeIntervalSince1970 * 1000))
         clearHeroCache()
         if isManual { loading = false }
@@ -134,23 +135,60 @@ final class AppState {
     func refreshCategories() async {
         var next: [MediaCategory] = []
         var notices: [String] = []
-        do {
-            let tmdb = try await repos.tmdb.fetchLandingCategories(credentials: credentials, settings: settings)
-            let loaded = nonEmptyCategories(tmdb)
-            next.append(contentsOf: loaded)
-            if loaded.isEmpty, let e = categoryErrorMessage(tmdb, "TMDB") { notices.append(e) }
-        } catch { notices.append(safeRefreshMessage("TMDB", error)) }
-
-        do {
-            let trakt = try await repos.trakt.fetchDiscoveryCategories(credentials)
-            let enriched = await enrichMetadataCategories(trakt.filter { $0.id.hasPrefix("trakt_") }, maxItems: 12)
-            next.append(contentsOf: nonEmptyCategories(enriched))
-        } catch { notices.append(safeRefreshMessage("Trakt", error)) }
-
-        let vid = await repos.vidsrc.fetchLatestCategories()
-        let enrichedVid = await enrichMetadataCategories(vid, maxItems: 10)
-        if !next.isEmpty || categories.isEmpty { next.append(contentsOf: nonEmptyCategories(enrichedVid)) }
-
+        
+        async let tmdbResult: ([MediaCategory], Error?) = {
+            do {
+                let tmdb = try await repos.tmdb.fetchLandingCategories(credentials: credentials, settings: settings)
+                return (tmdb, nil)
+            } catch {
+                return ([], error)
+            }
+        }()
+        
+        async let traktResult: ([MediaCategory], Error?) = {
+            do {
+                let trakt = try await repos.trakt.fetchDiscoveryCategories(credentials)
+                return (trakt, nil)
+            } catch {
+                return ([], error)
+            }
+        }()
+        
+        async let vidsrcResult: [MediaCategory] = {
+            return await repos.vidsrc.fetchLatestCategories()
+        }()
+        
+        let (tmdbRaw, tmdbEx) = await tmdbResult
+        let (traktRaw, traktEx) = await traktResult
+        let vidsrcRaw = await vidsrcResult
+        
+        // Filter and enrich on the MainActor
+        let tmdbLoaded = nonEmptyCategories(tmdbRaw)
+        if let tmdbEx {
+            notices.append(safeRefreshMessage("TMDB", tmdbEx))
+        } else if tmdbLoaded.isEmpty, let err = categoryErrorMessage(tmdbRaw, "TMDB") {
+            notices.append(err)
+        }
+        
+        var traktLoaded: [MediaCategory] = []
+        if let traktEx {
+            notices.append(safeRefreshMessage("Trakt", traktEx))
+        } else {
+            let filteredTrakt = traktRaw.filter { $0.id.hasPrefix("trakt_") }
+            let enrichedTrakt = await enrichMetadataCategories(filteredTrakt, maxItems: 12)
+            traktLoaded = nonEmptyCategories(enrichedTrakt)
+        }
+        
+        let enrichedVidsrc = await enrichMetadataCategories(vidsrcRaw, maxItems: 10)
+        let vidsrcLoaded = nonEmptyCategories(enrichedVidsrc)
+        
+        next.append(contentsOf: tmdbLoaded)
+        next.append(contentsOf: traktLoaded)
+        
+        if !next.isEmpty || categories.isEmpty {
+            next.append(contentsOf: vidsrcLoaded)
+        }
+        
         if !next.isEmpty {
             categories = next
             settingsStore.saveCachedCategories(categories)
@@ -461,6 +499,7 @@ final class AppState {
     }
 
     func detailsFor(_ item: MediaItem) async -> MediaItem {
+        if item.title == "One Pace" { return item }
         if item.type == .anime || item.isAnime {
             if let hydrated = await repos.anime.findByTitle(item.title) {
                 var h = hydrated
@@ -474,6 +513,7 @@ final class AppState {
         }
         let detailed = await repos.tmdb.fetchDetails(item, credentials: credentials, settings: settings) ?? item
         let enriched = await repos.tvdb.enrichDetails(detailed, credentials: credentials)
+        if enriched.title == "One Pace" { return enriched }
         if enriched.isAnime && enriched.type != .anime, let anilist = await repos.anime.findByTitle(enriched.title) {
             var a = anilist
             a.tmdbId = enriched.tmdbId; a.tvdbId = enriched.tvdbId
@@ -484,6 +524,7 @@ final class AppState {
     }
 
     func seasonEpisodesFor(_ item: MediaItem, seasonNumber: Int) async -> [MediaEpisode] {
+        if item.title == "One Pace" { return [] }
         if item.type == .anime {
             var eps = await repos.anime.fetchEpisodes(item, seasonNumber: seasonNumber)
             if item.tmdbId != nil {

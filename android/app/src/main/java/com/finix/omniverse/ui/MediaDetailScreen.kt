@@ -52,6 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.finix.omniverse.AnimeRepositoryImpl
 import com.finix.omniverse.AppGraph
 import com.finix.omniverse.MediaEpisode
 import com.finix.omniverse.MediaItem
@@ -168,6 +169,10 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                 current.type == MediaType.ANIME && s.size == 1 && s[0].isDirect -> dispatch(s[0], episode)
                 else -> showSheet = true
             }
+        } catch (t: AnimeRepositoryImpl.CaptchaRequiredException) {
+            // AllAnime wants a captcha. Show it; retry this same call once solved.
+            RouteArgs.captcha = CaptchaArgs(t.url) { scope.launch { openSources(episode) } }
+            nav.navigate("captcha")
         } catch (t: Throwable) { state.message = "Could not load sources: $t" } finally { loadingStreams = false }
     }
 

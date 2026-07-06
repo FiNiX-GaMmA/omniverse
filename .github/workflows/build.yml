@@ -125,6 +125,17 @@ jobs:
           cd desktop
           npm install
 
+      # Stamp the exact release version (matches the publish-release tag
+      # v2.1.<run_number>) into package.json so the built app reports its true
+      # version via app.getVersion(). The desktop updater compares that against
+      # the latest GitHub release, so it only prompts when a HIGHER release exists.
+      - name: Stamp release version
+        shell: bash
+        run: |
+          cd desktop
+          node -e "const fs=require('fs');const p=require('./package.json');p.version='2.1.${{ github.run_number }}';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          echo "Stamped desktop version -> 2.1.${{ github.run_number }}"
+
       - name: Package Desktop Binary (Windows)
         if: matrix.os == 'windows-latest'
         run: |

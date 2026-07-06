@@ -130,7 +130,7 @@ class AppState(context: Context) {
 
     // MARK: - Refresh
 
-    suspend fun refreshAll(isManual: Boolean = true) {
+    suspend fun refreshAll(isManual: Boolean = true) = coroutineScope {
         if (isManual) {
             loading = true
             message = null
@@ -138,32 +138,69 @@ class AppState(context: Context) {
             animeCategories.clear()
             clearHeroCache()
         }
-        refreshCategories()
-        refreshAnime()
-        refreshTraktWatchlist()
+        val catsJob = async { refreshCategories() }
+        val animeJob = async { refreshAnime() }
+        val watchlistJob = async { refreshTraktWatchlist() }
+        catsJob.await()
+        animeJob.await()
+        watchlistJob.await()
         settingsStore.setLastRefreshedTime(System.currentTimeMillis())
         if (isManual) loading = false
     }
 
-    suspend fun refreshCategories() {
+    suspend fun refreshCategories() = coroutineScope {
         val next = ArrayList<MediaCategory>()
         val notices = ArrayList<String>()
-        try {
-            val tmdb = repos.tmdb.fetchLandingCategories(credentials, settings)
-            val loaded = nonEmptyCategories(tmdb)
-            next.addAll(loaded)
-            if (loaded.isEmpty()) categoryErrorMessage(tmdb, "TMDB")?.let { notices.add(it) }
-        } catch (t: Throwable) { notices.add(safeRefreshMessage("TMDB", t)) }
 
-        try {
-            val trakt = repos.trakt.fetchDiscoveryCategories(credentials)
-            val enriched = enrichMetadataCategories(trakt.filter { it.id.startsWith("trakt_") }, 12)
-            next.addAll(nonEmptyCategories(enriched))
-        } catch (t: Throwable) { notices.add(safeRefreshMessage("Trakt", t)) }
+        val tmdbDeferred = async {
+            runCatching {
+                val tmdb = repos.tmdb.fetchLandingCategories(credentials, settings)
+                val loaded = nonEmptyCategories(tmdb)
+                val err = if (loaded.isEmpty()) categoryErrorMessage(tmdb, "TMDB") else null
+                Triple(loaded, err, null)
+            }.getOrElse { t ->
+                Triple(emptyList<MediaCategory>(), null, t)
+            }
+        }
 
-        val vid = repos.vidsrc.fetchLatestCategories()
-        val enrichedVid = enrichMetadataCategories(vid, 10)
-        if (next.isNotEmpty() || categories.isEmpty()) next.addAll(nonEmptyCategories(enrichedVid))
+        val traktDeferred = async {
+            runCatching {
+                val trakt = repos.trakt.fetchDiscoveryCategories(credentials)
+                val enriched = enrichMetadataCategories(trakt.filter { it.id.startsWith("trakt_") }, 12)
+                nonEmptyCategories(enriched) to null
+            }.getOrElse { t ->
+                emptyList<MediaCategory>() to t
+            }
+        }
+
+        val vidsrcDeferred = async {
+            runCatching {
+                val vid = repos.vidsrc.fetchLatestCategories()
+                val enrichedVid = enrichMetadataCategories(vid, 10)
+                nonEmptyCategories(enrichedVid)
+            }.getOrElse { emptyList() }
+        }
+
+        val (tmdbCategories, tmdbErr, tmdbException) = tmdbDeferred.await()
+        val (traktCategories, traktException) = traktDeferred.await()
+        val vidsrcCategories = vidsrcDeferred.await()
+
+        if (tmdbException != null) {
+            notices.add(safeRefreshMessage("TMDB", tmdbException))
+        } else if (tmdbCategories.isEmpty() && tmdbErr != null) {
+            notices.add(tmdbErr)
+        }
+
+        if (traktException != null) {
+            notices.add(safeRefreshMessage("Trakt", traktException))
+        }
+
+        next.addAll(tmdbCategories)
+        next.addAll(traktCategories)
+
+        if (next.isNotEmpty() || categories.isEmpty()) {
+            next.addAll(vidsrcCategories)
+        }
 
         if (next.isNotEmpty()) {
             categories.clear(); categories.addAll(next)
@@ -472,6 +509,7 @@ class AppState(context: Context) {
         repos.tmdb.searchMulti(query, credentials, settings)
 
     suspend fun detailsFor(item: MediaItem): MediaItem {
+        if (item.title == "One Pace") return item
         if (item.type == MediaType.ANIME || item.isAnime) {
             repos.anime.findByTitle(item.title)?.let { hydrated ->
                 return hydrated.copy(
@@ -485,6 +523,7 @@ class AppState(context: Context) {
         }
         val detailed = repos.tmdb.fetchDetails(item, credentials, settings) ?: item
         val enriched = repos.tvdb.enrichDetails(detailed, credentials)
+        if (enriched.title == "One Pace") return enriched
         if (enriched.isAnime && enriched.type != MediaType.ANIME) {
             repos.anime.findByTitle(enriched.title)?.let { anilist ->
                 return anilist.copy(
@@ -497,6 +536,7 @@ class AppState(context: Context) {
     }
 
     suspend fun seasonEpisodesFor(item: MediaItem, seasonNumber: Int): List<MediaEpisode> {
+        if (item.title == "One Pace") return emptyList()
         if (item.type == MediaType.ANIME) {
             var eps = repos.anime.fetchEpisodes(item, seasonNumber)
             if (item.tmdbId != null) {

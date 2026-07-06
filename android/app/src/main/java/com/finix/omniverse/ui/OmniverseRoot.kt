@@ -62,6 +62,7 @@ object RouteArgs {
     var player: PlayerArgs? = null
     var web: WebArgs? = null
     var vidsrc: VidsrcArgs? = null
+    var captcha: CaptchaArgs? = null
 }
 
 data class PlayerArgs(
@@ -76,6 +77,10 @@ data class PlayerArgs(
 )
 
 data class WebArgs(val title: String, val url: String, val headers: Map<String, String> = emptyMap())
+
+/// Captcha WebView payload. [onComplete] retries the request that hit
+/// NEED_CAPTCHA, once the user has solved it and cookies are banked.
+data class CaptchaArgs(val url: String, val onComplete: (() -> Unit)? = null)
 
 data class VidsrcArgs(
     val item: MediaItem,
@@ -128,6 +133,9 @@ fun OmniverseRoot() {
                 }
                 composable("web") {
                     RouteArgs.web?.let { WebEmbedScreen(it) { nav.popBackStack() } }
+                }
+                composable("captcha") {
+                    RouteArgs.captcha?.let { CaptchaScreen(it) { nav.popBackStack() } }
                 }
                 composable("vidsrc") {
                     RouteArgs.vidsrc?.let { vargs ->

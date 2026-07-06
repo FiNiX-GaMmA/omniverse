@@ -224,7 +224,7 @@ class TraktRepositoryImpl : TraktRepository {
     override suspend fun deletePlaybackProgress(c: ApiCredentials, playbackId: Int) {
         if (!c.hasTraktUser) return
         val r = Http.request(base + "sync/playback/$playbackId", method = "DELETE",
-            headers = headers(c, includeAuth = true))
+            headers = headers(c, includeAuth = true), timeoutMs = 5000L)
         if (r.status != 204 && r.status != 200) throwForResponse(r, "Trakt playback delete")
     }
 
@@ -300,7 +300,7 @@ class TraktRepositoryImpl : TraktRepository {
         if (existingListId != null) {
             val r = Http.request(base + "users/me/lists/$existingListId", method = "PUT",
                 headers = headers(c, includeAuth = true),
-                body = body.toString().toRequestBody(JSON_MEDIA))
+                body = body.toString().toRequestBody(JSON_MEDIA), timeoutMs = 5000L)
             throwForResponse(r, "Trakt settings update")
         } else {
             val r = post("users/me/lists", c, body)
@@ -393,17 +393,17 @@ class TraktRepositoryImpl : TraktRepository {
     // MARK: - HTTP plumbing
 
     private suspend fun get(path: String, c: ApiCredentials, query: Map<String, String> = emptyMap(), includeAuth: Boolean = true): Http.Response {
-        return Http.request(resolve(path, query), method = "GET", headers = headers(c, includeAuth))
+        return Http.request(resolve(path, query), method = "GET", headers = headers(c, includeAuth), timeoutMs = 5000L)
     }
 
     private suspend fun post(path: String, c: ApiCredentials, body: JSONObject, includeAuth: Boolean = true): Http.Response {
         return Http.request(resolve(path, emptyMap()), method = "POST", headers = headers(c, includeAuth),
-            body = body.toString().toRequestBody(JSON_MEDIA))
+            body = body.toString().toRequestBody(JSON_MEDIA), timeoutMs = 5000L)
     }
 
     private suspend fun postRaw(path: String, body: JSONObject, headers: Map<String, String>): Http.Response {
         return Http.request(resolve(path, emptyMap()), method = "POST", headers = headers,
-            body = body.toString().toRequestBody(JSON_MEDIA))
+            body = body.toString().toRequestBody(JSON_MEDIA), timeoutMs = 5000L)
     }
 
     private fun resolve(path: String, query: Map<String, String>): String {

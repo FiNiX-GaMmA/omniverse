@@ -16,6 +16,13 @@ Thumbs.db
 .history
 .svn/
 .vscode/
+.claude/
+
+# Node.js / Desktop Packager Build Outputs
+node_modules/
+**/node_modules/
+dist/
+**/dist/
 
 # Temporary screenshots and automation testing dumps
 /screen.png

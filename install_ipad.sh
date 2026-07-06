@@ -64,15 +64,39 @@ echo -e "${GREEN}success:${NC} Detected connected target device:"
 echo -e "         - Name:  ${BOLD}${DEVICE_NAME}${NC}"
 echo -e "         - ID:    ${CYAN}${DEVICE_ID}${NC}"
 
-# 3. Compiling the App for iOS/iPadOS Real Hardware
+# 3. Code Signing & Team Configuration
+# Since you have already configured automatically managed signing inside the Xcode GUI (as confirmed),
+# we do NOT need to override the development team or bundle identifier on the command line.
+# This ensures that Xcode uses the local provisioning profile it already generated and trusted for com.finix.omniverse.
+BUNDLE_ID="com.finix.omniverse"
+
+echo -e "${GREEN}success:${NC} Code signing configuration:"
+echo -e "         - Using pre-configured Xcode GUI signing"
+echo -e "         - Bundle ID: ${CYAN}${BUNDLE_ID}${NC}"
+
+# 4. Compiling the App for iOS/iPadOS Real Hardware
 echo -e "${BLUE}info:${NC} Compiling and codesigning Swift app bundle for target device..."
-(cd ios && xcodebuild -project Omniverse.xcodeproj \
-                      -scheme Omniverse \
-                      -configuration Debug \
-                      -sdk iphoneos \
-                      -allowProvisioningUpdates \
-                      -derivedDataPath build_device \
-                      build)
+
+if ! (cd ios && xcodebuild -project Omniverse.xcodeproj \
+                          -scheme Omniverse \
+                          -configuration Debug \
+                          -sdk iphoneos \
+                          -derivedDataPath build_device \
+                          build); then
+    echo -e ""
+    echo -e "${RED}${BOLD}======================================================================${NC}"
+    echo -e "${RED}${BOLD}                       XCODEBUILD COMPILATION FAILED                  ${NC}"
+    echo -e "${RED}${BOLD}======================================================================${NC}"
+    echo -e "The build failed. Please make sure that:"
+    echo -e "  1. You have opened ${BOLD}ios/Omniverse.xcodeproj${NC} in the Xcode app."
+    echo -e "  2. Go to ${BOLD}Signing & Capabilities${NC} tab."
+    echo -e "  3. Select your Personal Team under the ${BOLD}Team${NC} dropdown."
+    echo -e "  4. Ensure Bundle Identifier is set to ${BOLD}com.finix.omniverse${NC}."
+    echo -e "  5. Xcode shows a valid status with no red errors."
+    echo -e "${RED}${BOLD}======================================================================${NC}"
+    echo -e ""
+    exit 1
+fi
 
 APP_PATH="ios/build_device/Build/Products/Debug-iphoneos/Omniverse.app"
 
@@ -81,11 +105,11 @@ if [ ! -d "$APP_PATH" ]; then
     exit 1
 fi
 
-# 4. Installing the App Bundle
+# 5. Installing the App Bundle
 echo -e "${BLUE}info:${NC} Installing app bundle onto ${DEVICE_NAME}..."
 xcrun devicectl device install app --device "$DEVICE_ID" "$APP_PATH"
 
-# 5. Handle Untrusted Developer Verification ("Waittime" + Instructions)
+# 6. Handle Untrusted Developer Verification ("Waittime" + Instructions)
 echo -e ""
 echo -e "${YELLOW}${BOLD}======================================================================${NC}"
 echo -e "${YELLOW}${BOLD}                 DEVELOPER PROFILE TRUST VERIFICATION                 ${NC}"
@@ -103,9 +127,9 @@ echo -e ""
 # Pause and wait for verification
 read -p "Once you have trusted and verified the app on your iPad, press [ENTER] to launch the app: " temp
 
-# 6. Launching the App
+# 7. Launching the App
 echo -e "${BLUE}info:${NC} Launching Omniverse on ${DEVICE_NAME}..."
-xcrun devicectl device process launch --device "$DEVICE_ID" com.finix.omniverse
+xcrun devicectl device process launch --device "$DEVICE_ID" "$BUNDLE_ID"
 
 echo -e "${GREEN}${BOLD}======================================================================${NC}"
 echo -e "${GREEN}success:${NC} Omniverse is now running on your ${DEVICE_NAME}!"

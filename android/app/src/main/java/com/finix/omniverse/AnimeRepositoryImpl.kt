@@ -47,12 +47,24 @@ class AnimeRepositoryImpl(
     private val client: OkHttpClient = OkHttpClient.Builder()
         .followRedirects(false)
         .followSslRedirects(false)
+        // Share cookies with the WebView so a captcha solved in CaptchaScreen
+        // authenticates AllAnime API calls. Mirrors iOS HTTPCookieStorage.shared.
+        .cookieJar(WebViewCookieJar)
         .build(),
     private val hianime: HianimeRepository = HianimeRepository(),
 ) : AnimeRepository {
 
     private val anilist = "https://graphql.anilist.co"
     private val allanime = "https://api.allanime.day/api"
+
+    // Site loaded in the captcha WebView when AllAnime answers NEED_CAPTCHA.
+    // Solving it banks a session cookie the API honours on retry. Tunable if the
+    // solvable host turns out to differ on-device.
+    private val captchaUrl = "https://allmanga.to"
+
+    // Set when the most recent AllAnime episode call returned NEED_CAPTCHA.
+    // resolveSource reads and clears it to decide whether to prompt.
+    private var episodeNeededCaptcha = false
 
     private val searchGql =
         "query(\$search:SearchInput \$limit:Int \$page:Int \$translationType:VaildTranslationTypeEnumType \$countryOrigin:VaildCountryOriginEnumType){shows(search:\$search limit:\$limit page:\$page translationType:\$translationType countryOrigin:\$countryOrigin){edges{_id name availableEpisodes __typename}}}"
@@ -116,6 +128,11 @@ class AnimeRepositoryImpl(
     )
 
     class AnimeException(message: String) : Exception(message)
+
+    /// AllAnime answered NEED_CAPTCHA. The UI presents [url] in a WebView so the
+    /// user can solve it; the resulting cookies authenticate the retry.
+    class CaptchaRequiredException(val url: String) :
+        Exception("AllAnime needs a captcha solved before it will hand over sources.")
 
     // MARK: - fetchAnimeCategories
 
@@ -430,10 +447,7 @@ query (${'$'}id: Int) {
         return try {
             val edges = searchAllmanga(title, "sub")
             if (edges == null || edges.isEmpty()) return null
-            val lower = title.lowercase().trim()
-            val entry = edges.firstOrNull {
-                (it.optString("name").lowercase().trim()) == lower
-            } ?: edges.first()
+            val entry = bestAllmangaMatch(edges, title) ?: return null
             val available = entry.optJSONObject("availableEpisodes") ?: return null
             val sub = available.optInt("sub", 0)
             val dub = available.optInt("dub", 0)
@@ -442,6 +456,47 @@ query (${'$'}id: Int) {
             if (maxVal == 0) null else maxVal
         } catch (_: Throwable) {
             null
+        }
+    }
+
+    /**
+     * Picks the AllAnime show that best matches [query].
+     *
+     * AllAnime lists some popular long-runners under obfuscated names — One Piece
+     * is stored as "1P" with 1000+ episodes — while padding the results with
+     * one-episode specials and spin-offs ("One Piece: Heroines", etc.). The old
+     * logic did an exact name match then fell back to `edges.first()`, which for
+     * One Piece never matched "1P" and grabbed the 1-episode "Heroines" special
+     * instead — so only a single episode was ever listed. Here an exact
+     * (normalised) name match still wins when present; otherwise we drop obvious
+     * fan-cuts ("One Pace" when that isn't what was asked for) and take the entry
+     * with the most available episodes, i.e. the main series rather than a
+     * special. Both the episode-count and playback paths call this, so listing
+     * and playback always resolve to the same show.
+     */
+    private fun bestAllmangaMatch(edges: List<JSONObject>, query: String): JSONObject? {
+        if (edges.isEmpty()) return null
+        val lower = query.lowercase().trim()
+        // One Piece (the anime) and One Pace (the fan recut) are separate entities.
+        // Unless the caller is explicitly after One Pace, drop any "One Pace" entry
+        // so a One Piece lookup can never resolve to it. Match the full phrase, not
+        // a bare "pace" substring, so titles containing "space" etc. are untouched.
+        val queryIsOnePace = lower.contains("one pace")
+        val candidates = edges
+            .filter { edge ->
+                val name = edge.optString("name").lowercase().trim()
+                queryIsOnePace || !name.contains("one pace")
+            }
+            .ifEmpty { edges }
+
+        candidates.firstOrNull { it.optString("name").lowercase().trim() == lower }?.let { return it }
+
+        return candidates.maxByOrNull { edge ->
+            val available = edge.optJSONObject("availableEpisodes")
+            val sub = available?.optInt("sub", 0) ?: 0
+            val dub = available?.optInt("dub", 0) ?: 0
+            val raw = available?.optInt("raw", 0) ?: 0
+            maxOf(sub, dub, raw)
         }
     }
 
@@ -501,6 +556,8 @@ query(${'$'}search: String) {
         val translationType = if (dub) "dub" else "sub"
         val isMovie = item.seasons.firstOrNull()?.episodeCount == 1 && episode.episodeNumber == 1
 
+        episodeNeededCaptcha = false
+
         // AllAnime — primary path. Same path ani-cli uses.
         var result = resolveAllmanga(
             title = item.title,
@@ -518,17 +575,50 @@ query(${'$'}search: String) {
                 translationType = "sub",
             )
         }
-        val resolved = result ?: throw AnimeException("No playable anime source found for ${item.title}.")
-        return PlaybackSource(
-            id = "allmanga:${item.id}:${episode.seasonNumber}:${episode.episodeNumber}",
-            title = "${resolved.sourceName} ${resolved.resolution}".trim(),
-            url = resolved.url,
-            provider = "AllManga",
-            kind = PlaybackSourceKind.DIRECT,
-            quality = resolved.resolution,
-            headers = mapOf("Referer" to resolved.referer),
-            subtitleUrl = settings.subtitleUrl.trim(),
+        if (result != null) {
+            return PlaybackSource(
+                id = "allmanga:${item.id}:${episode.seasonNumber}:${episode.episodeNumber}",
+                title = "${result.sourceName} ${result.resolution}".trim(),
+                url = result.url,
+                provider = "AllManga",
+                kind = PlaybackSourceKind.DIRECT,
+                quality = result.resolution,
+                headers = mapOf("Referer" to result.referer),
+                subtitleUrl = settings.subtitleUrl.trim(),
+            )
+        }
+
+        // AllAnime gated this request behind a captcha. Prompt the user to solve
+        // it (the preferred ani-cli path) rather than silently dropping to the
+        // fallback; once solved, the cached session cookie lets the retry through.
+        if (episodeNeededCaptcha) {
+            throw CaptchaRequiredException(captchaUrl)
+        }
+
+        // HiAnime fallback. AllAnime's episode endpoint increasingly answers
+        // NEED_CAPTCHA (its search endpoint still works, so listing succeeds even
+        // when this fails), leaving the primary path with no source. Fall back to
+        // the hianime/Zoro + Megacloud pipeline, which resolves off different
+        // infrastructure. Episode numbering there is absolute, matching what we
+        // list for single-season shows like One Piece.
+        val hi = hianime.resolve(
+            title = item.title,
+            episodeNumber = episode.episodeNumber,
+            dub = dub,
         )
+        if (hi != null) {
+            return PlaybackSource(
+                id = "hianime:${item.id}:${episode.seasonNumber}:${episode.episodeNumber}",
+                title = hi.serverName.ifBlank { "HiAnime" },
+                url = hi.url,
+                provider = "HiAnime",
+                kind = PlaybackSourceKind.DIRECT,
+                headers = mapOf("Referer" to hi.referer),
+                subtitleUrl = hi.subtitleUrl.ifBlank { settings.subtitleUrl.trim() },
+            )
+        }
+
+        throw AnimeException("No playable anime source found for ${item.title}.")
     }
 
     // MARK: - mediaFromAnilist
@@ -626,10 +716,7 @@ query(${'$'}search: String) {
         val resolvedEdges = edges ?: return null
         if (resolvedEdges.isEmpty()) return null
 
-        val normalized = matchedTitle.lowercase()
-        val anime = resolvedEdges.firstOrNull {
-            (it.optString("name").lowercase()) == normalized
-        } ?: resolvedEdges.first()
+        val anime = bestAllmangaMatch(resolvedEdges, matchedTitle) ?: return null
         val showId = anime.optStringOrNull("_id") ?: return null
         if (showId.isEmpty()) return null
 
@@ -763,10 +850,13 @@ query(${'$'}search:String) {
             if (url != null) {
                 val headers = allanimeHeaders + ("Origin" to "https://youtu-chan.com")
                 val resp = get(url.toString(), headers, 12)
-                if (resp != null && resp.code < 400 && resp.body != null) {
-                    val parsed = parseEpisodeSourceUrls(resp.body)
-                    if (parsed != null && parsed.isNotEmpty()) {
-                        return resp.body
+                if (resp?.body != null) {
+                    if (resp.body.contains("NEED_CAPTCHA")) episodeNeededCaptcha = true
+                    if (resp.code < 400) {
+                        val parsed = parseEpisodeSourceUrls(resp.body)
+                        if (parsed != null && parsed.isNotEmpty()) {
+                            return resp.body
+                        }
                     }
                 }
             }
@@ -774,7 +864,9 @@ query(${'$'}search:String) {
             // Fall back to the normal POST shape below.
         }
         return try {
-            allanimeGql(variables, episodeGql).toString()
+            val body = allanimeGql(variables, episodeGql).toString()
+            if (body.contains("NEED_CAPTCHA")) episodeNeededCaptcha = true
+            body
         } catch (_: Throwable) {
             ""
         }

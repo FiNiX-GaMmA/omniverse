@@ -94,13 +94,27 @@ final class AnimeRepository: AnimeRepositoryProtocol {
     enum AnimeError: Error, CustomStringConvertible {
         case noSource(String)
         case status(String)
+        /// AllAnime answered NEED_CAPTCHA. The UI presents `url` in a WebView so
+        /// the user can solve it; the resulting cookies authenticate the retry.
+        case captchaRequired(url: String)
         var description: String {
             switch self {
             case .noSource(let t): return "No playable anime source found for \(t)."
             case .status(let m): return m
+            case .captchaRequired: return "AllAnime needs a captcha solved before it will hand over sources."
             }
         }
     }
+
+    /// Site loaded in the captcha WebView. AllAnime's source endpoint gates
+    /// flagged/VPN IPs with NEED_CAPTCHA; solving the captcha here banks a
+    /// session cookie (`.allanime.day`) that the API honours on the retry.
+    /// Tunable if the solvable host turns out to differ on-device.
+    static let captchaURL = "https://allmanga.to"
+
+    /// Set when the most recent AllAnime episode call returned NEED_CAPTCHA.
+    /// `resolveSource` reads and clears it to decide whether to prompt.
+    private var episodeNeededCaptcha = false
 
     // MARK: - fetchAnimeCategories
 
@@ -404,8 +418,7 @@ final class AnimeRepository: AnimeRepositoryProtocol {
             guard let edges = try await searchAllmanga(title, translationType: "sub"), !edges.isEmpty else {
                 return nil
             }
-            let lower = title.lowercased().trimmed
-            let entry = edges.first { ($0.str("name")?.lowercased().trimmed ?? "") == lower } ?? edges.first!
+            guard let entry = bestAllmangaMatch(edges, query: title) else { return nil }
             guard let available = entry.obj("availableEpisodes") else { return nil }
             let sub = available.int("sub") ?? 0
             let dub = available.int("dub") ?? 0
@@ -415,6 +428,48 @@ final class AnimeRepository: AnimeRepositoryProtocol {
         } catch {
             return nil
         }
+    }
+
+    /// Picks the AllAnime show that best matches `query`.
+    ///
+    /// AllAnime lists some popular long-runners under obfuscated names — One Piece
+    /// is stored as "1P" with 1000+ episodes — while padding the results with
+    /// one-episode specials and spin-offs ("One Piece: Heroines", etc.). The old
+    /// logic did an exact name match then fell back to `edges.first`, which for
+    /// One Piece never matched "1P" and grabbed the 1-episode "Heroines" special
+    /// instead — so only a single episode was ever listed. Here an exact
+    /// (normalised) name match still wins when present; otherwise we drop obvious
+    /// fan-cuts ("One Pace" when that isn't what was asked for) and take the entry
+    /// with the most available episodes, i.e. the main series rather than a
+    /// special. Both the episode-count and playback paths call this, so listing
+    /// and playback always resolve to the same show.
+    private func bestAllmangaMatch(_ edges: [[String: Any]], query: String) -> [String: Any]? {
+        guard !edges.isEmpty else { return nil }
+        let lower = query.lowercased().trimmed
+        // One Piece (the anime) and One Pace (the fan recut) are separate entities.
+        // Unless the caller is explicitly after One Pace, drop any "One Pace" entry
+        // so a One Piece lookup can never resolve to it. Match the full phrase, not
+        // a bare "pace" substring, so titles containing "space" etc. are untouched.
+        let queryIsOnePace = lower.contains("one pace")
+        var candidates = edges.filter { edge in
+            let name = (edge["name"] as? String)?.lowercased().trimmed ?? ""
+            return queryIsOnePace || !name.contains("one pace")
+        }
+        if candidates.isEmpty { candidates = edges }
+
+        if let exact = candidates.first(where: { ($0.str("name")?.lowercased().trimmed ?? "") == lower }) {
+            return exact
+        }
+
+        func episodeCount(_ edge: [String: Any]) -> Int {
+            guard let available = edge.obj("availableEpisodes") else { return 0 }
+            let sub = available.int("sub") ?? 0
+            let dub = available.int("dub") ?? 0
+            let raw = available.int("raw") ?? 0
+            return max(sub, max(dub, raw))
+        }
+
+        return candidates.max { episodeCount($0) < episodeCount($1) }
     }
 
     func anilistEpisodeMeta(_ title: String) async -> [Int: AnilistEpisodeMeta] {
@@ -471,6 +526,8 @@ final class AnimeRepository: AnimeRepositoryProtocol {
         let translationType = dub ? "dub" : "sub"
         let isMovie = item.seasons.first?.episodeCount == 1 && episode.episodeNumber == 1
 
+        episodeNeededCaptcha = false
+
         // AllAnime — primary path. Same path ani-cli uses.
         var result = await resolveAllmanga(
             title: item.title,
@@ -488,19 +545,45 @@ final class AnimeRepository: AnimeRepositoryProtocol {
                 translationType: "sub"
             )
         }
-        guard let result else {
-            throw AnimeError.noSource(item.title)
+        if let result {
+            return PlaybackSource(
+                id: "allmanga:\(item.id):\(episode.seasonNumber):\(episode.episodeNumber)",
+                title: "\(result.sourceName) \(result.resolution)".trimmed,
+                url: result.url,
+                provider: "AllManga",
+                kind: .direct,
+                quality: result.resolution,
+                headers: ["Referer": result.referer],
+                subtitleUrl: settings.subtitleUrl.trimmed
+            )
         }
-        return PlaybackSource(
-            id: "allmanga:\(item.id):\(episode.seasonNumber):\(episode.episodeNumber)",
-            title: "\(result.sourceName) \(result.resolution)".trimmed,
-            url: result.url,
-            provider: "AllManga",
-            kind: .direct,
-            quality: result.resolution,
-            headers: ["Referer": result.referer],
-            subtitleUrl: settings.subtitleUrl.trimmed
-        )
+
+        // AllAnime gated this request behind a captcha. Prompt the user to solve
+        // it (the preferred ani-cli path) rather than silently dropping to the
+        // fallback; once solved, the cached session cookie lets the retry through.
+        if episodeNeededCaptcha {
+            throw AnimeError.captchaRequired(url: Self.captchaURL)
+        }
+
+        // HiAnime fallback. AllAnime's episode endpoint increasingly answers
+        // NEED_CAPTCHA (its search endpoint still works, so listing succeeds even
+        // when this fails), leaving the primary path with no source. Fall back to
+        // the hianime/Zoro + Megacloud pipeline, which resolves off different
+        // infrastructure. Episode numbering there is absolute, matching what we
+        // list for single-season shows like One Piece.
+        if let hi = await hianime.resolve(title: item.title, episodeNumber: episode.episodeNumber, dub: dub) {
+            return PlaybackSource(
+                id: "hianime:\(item.id):\(episode.seasonNumber):\(episode.episodeNumber)",
+                title: hi.serverName.isEmpty ? "HiAnime" : hi.serverName,
+                url: hi.url,
+                provider: "HiAnime",
+                kind: .direct,
+                headers: ["Referer": hi.referer],
+                subtitleUrl: hi.subtitleUrl.isEmpty ? settings.subtitleUrl.trimmed : hi.subtitleUrl
+            )
+        }
+
+        throw AnimeError.noSource(item.title)
     }
 
     // MARK: - mediaFromAnilist
@@ -584,8 +667,7 @@ final class AnimeRepository: AnimeRepositoryProtocol {
         }
         guard let resolvedEdges = edges, !resolvedEdges.isEmpty else { return nil }
 
-        let normalized = matchedTitle.lowercased()
-        let anime = resolvedEdges.first { ($0.str("name")?.lowercased() ?? "") == normalized } ?? resolvedEdges.first!
+        guard let anime = bestAllmangaMatch(resolvedEdges, query: matchedTitle) else { return nil }
         guard let showId = anime.str("_id") ?? (anime["_id"].map { "\($0)" }), !showId.isEmpty else { return nil }
 
         guard let sourceUrls = await episodeSourceUrls(showId: showId, translationType: dubSub, episodeString: epStr),
@@ -703,6 +785,7 @@ final class AnimeRepository: AnimeRepositoryProtocol {
                 headers["Origin"] = "https://youtu-chan.com"
                 if let resp = try? await Http.shared.request(url, headers: headers, timeout: 12) {
                     let body = resp.bodyString
+                    if body.contains("NEED_CAPTCHA") { episodeNeededCaptcha = true }
                     if let parsed = parseEpisodeSourceUrls(body), !parsed.isEmpty {
                         return body
                     }
@@ -713,6 +796,7 @@ final class AnimeRepository: AnimeRepositoryProtocol {
         if let body = try? await allanimeGql(variables, query: Self.episodeGql),
            let data = try? JSONSerialization.data(withJSONObject: body),
            let str = String(data: data, encoding: .utf8) {
+            if str.contains("NEED_CAPTCHA") { episodeNeededCaptcha = true }
             return str
         }
         return ""

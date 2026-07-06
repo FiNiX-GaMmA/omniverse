@@ -316,7 +316,7 @@ final class TraktRepository: TraktRepositoryProtocol {
     func deletePlaybackProgress(_ c: ApiCredentials, playbackId: Int) async throws {
         if !c.hasTraktUser { return }
         let url = base.appendingPathComponent("sync/playback/\(playbackId)")
-        let r = try await Http.shared.request(url, method: "DELETE", headers: headers(c, includeAuth: true))
+        let r = try await Http.shared.request(url, method: "DELETE", headers: headers(c, includeAuth: true), timeout: 5)
         if r.status != 204 && r.status != 200 {
             try throwForResponse(r, "Trakt playback delete")
         }
@@ -420,7 +420,7 @@ final class TraktRepository: TraktRepositoryProtocol {
             let url = base.appendingPathComponent("users/me/lists/\(existingListId)")
             let data = try JSONSerialization.data(withJSONObject: body)
             let r = try await Http.shared.request(url, method: "PUT",
-                                                  headers: headers(c, includeAuth: true), body: data)
+                                                  headers: headers(c, includeAuth: true), body: data, timeout: 5)
             try throwForResponse(r, "Trakt settings update")
         } else {
             // Create new list.
@@ -524,7 +524,7 @@ final class TraktRepository: TraktRepositoryProtocol {
                      query: [String: String] = [:],
                      includeAuth: Bool = true) async throws -> Http.Response {
         let url = resolve(path, query: query)
-        return try await Http.shared.request(url, method: "GET", headers: headers(c, includeAuth: includeAuth))
+        return try await Http.shared.request(url, method: "GET", headers: headers(c, includeAuth: includeAuth), timeout: 5)
     }
 
     private func post(_ path: String,
@@ -534,7 +534,7 @@ final class TraktRepository: TraktRepositoryProtocol {
         let url = resolve(path, query: [:])
         let data = try JSONSerialization.data(withJSONObject: body)
         return try await Http.shared.request(url, method: "POST",
-                                             headers: headers(c, includeAuth: includeAuth), body: data)
+                                             headers: headers(c, includeAuth: includeAuth), body: data, timeout: 5)
     }
 
     /// POST with an explicit header set (used by token / device endpoints, which
@@ -544,7 +544,7 @@ final class TraktRepository: TraktRepositoryProtocol {
                          headers: [String: String]) async throws -> Http.Response {
         let url = resolve(path, query: [:])
         let data = try JSONSerialization.data(withJSONObject: body)
-        return try await Http.shared.request(url, method: "POST", headers: headers, body: data)
+        return try await Http.shared.request(url, method: "POST", headers: headers, body: data, timeout: 5)
     }
 
     private func resolve(_ path: String, query: [String: String]) -> URL {

@@ -34,6 +34,9 @@ app.commandLine.appendSwitch("renderer-process-limit", "3");
 let mainWindow = null;
 let pipWindow = null;
 let adBlockStats = { adsBlocked: 0 };
+// Hosts of resolved anime direct streams that need a Referer. Scoped so Live TV
+// and other media are untouched. Populated by the renderer before playback.
+const animeRefererHosts = new Set();
 
 // Extended list of ad network, tracker, popunder, and anti-devtool script domains
 const BLOCKED_HOSTS = [
@@ -152,6 +155,22 @@ function createWindow() {
     },
   );
 
+  // Anime direct streams (AllAnime CDNs) require a Referer. Inject it only for
+  // the exact stream host(s) the renderer registers, leaving Live TV/others alone.
+  defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ["*://*/*"] },
+    (details, callback) => {
+      try {
+        const host = new URL(details.url).host;
+        if (animeRefererHosts.has(host)) {
+          details.requestHeaders["Referer"] = "https://allmanga.to";
+          details.requestHeaders["Origin"] = "https://allmanga.to";
+        }
+      } catch (_) {}
+      callback({ requestHeaders: details.requestHeaders });
+    },
+  );
+
   // Configure custom webview permissions and block window redirection popup actions
   mainWindow.webContents.on("did-attach-webview", (_, wc) => {
     const webviewSession = wc.session;
@@ -184,6 +203,10 @@ function createWindow() {
 
 // IPC Handlers
 ipcMain.handle("get-platform", () => process.platform);
+
+// The installed build's version (from package.json, stamped at release time).
+// The updater compares this against the latest GitHub release.
+ipcMain.handle("get-app-version", () => app.getVersion());
 
 ipcMain.handle("download-update-file", async (event, url) => {
   try {
@@ -235,15 +258,29 @@ ipcMain.handle(
   "iptv-fetch",
   async (_, { url, method = "GET", headers = {}, body = null }) => {
     try {
-      const fetchOptions = {
-        method: method.toUpperCase(),
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-          ...headers,
-        },
+      const mergedHeaders = {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        ...headers,
       };
 
+      // Forward the captcha-solved session cookies to AllAnime so a retry after
+      // NEED_CAPTCHA is authenticated. Cookies live in the persist:player
+      // partition (where the captcha WebView solved them).
+      try {
+        const host = new URL(url).host;
+        if (/(?:^|\.)allanime\.day$|(?:^|\.)allmanga\.to$/.test(host)) {
+          const playSession = session.fromPartition("persist:player");
+          const cookies = await playSession.cookies.get({ url });
+          if (cookies && cookies.length) {
+            mergedHeaders["Cookie"] = cookies
+              .map((c) => `${c.name}=${c.value}`)
+              .join("; ");
+          }
+        }
+      } catch (_) {}
+
+      const fetchOptions = { method: method.toUpperCase(), headers: mergedHeaders };
       if (body) {
         fetchOptions.body =
           typeof body === "string" ? body : JSON.stringify(body);
@@ -257,6 +294,25 @@ ipcMain.handle(
     }
   },
 );
+
+// Renderer registers the resolved anime stream host so the Referer injector
+// (default session) targets exactly that host.
+ipcMain.handle("register-anime-host", (_, host) => {
+  if (host) animeRefererHosts.add(host);
+  return true;
+});
+
+// After a captcha is solved, cookies are already in the persist:player
+// partition; iptv-fetch reads them at request time. This is a trigger/no-op.
+ipcMain.handle("sync-player-cookies", () => true);
+
+// Player teardown hook (GC/cache). Safe no-op kept for the renderer's exitPlayer.
+ipcMain.handle("player-stopped", () => {
+  try {
+    if (global.gc) global.gc();
+  } catch (_) {}
+  return true;
+});
 
 ipcMain.handle("get-adblock-stats", () => adBlockStats.adsBlocked);
 

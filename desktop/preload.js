@@ -18,6 +18,7 @@ if (isMainApp) {
   // Expose secure API to the main application
   contextBridge.exposeInMainWorld("electron", {
     getPlatform: () => ipcRenderer.invoke("get-platform"),
+    getAppVersion: () => ipcRenderer.invoke("get-app-version"),
     minimize: () => ipcRenderer.invoke("window-minimize"),
     maximize: () => ipcRenderer.invoke("window-maximize"),
     close: () => ipcRenderer.invoke("window-close"),
@@ -27,6 +28,10 @@ if (isMainApp) {
     closePipWindow: () => ipcRenderer.invoke("close-pip-window"),
     iptvFetch: (url, method = "GET", headers = {}, body = null) =>
       ipcRenderer.invoke("iptv-fetch", { url, method, headers, body }),
+    registerAnimeHost: (host) =>
+      ipcRenderer.invoke("register-anime-host", host),
+    syncPlayerCookies: () => ipcRenderer.invoke("sync-player-cookies"),
+    playerStopped: () => ipcRenderer.invoke("player-stopped"),
     downloadUpdate: (url) => ipcRenderer.invoke("download-update-file", url),
     onUpdateProgress: (cb) => {
       const handler = (_, pct) => cb(pct);

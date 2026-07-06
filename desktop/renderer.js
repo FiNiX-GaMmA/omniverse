@@ -249,7 +249,33 @@ function renderCatalogFeeds() {
   renderGrid("grid-trending-tv", FALLBACK_DB.tv);
   renderGrid("grid-all-movies", FALLBACK_DB.movies);
   renderGrid("grid-all-tv", FALLBACK_DB.tv);
-  renderGrid("grid-all-anime", FALLBACK_DB.anime);
+  renderGrid("grid-all-anime", FALLBACK_DB.anime); // instant placeholder
+  loadAnimeCatalog(); // replace with real AniList data (async)
+}
+
+// Populate the anime grid from AniList — parity with the mobile anime discovery.
+async function loadAnimeCatalog() {
+  if (!window.OmniAnime) return;
+  try {
+    const cats = await window.OmniAnime.fetchAnimeCategories();
+    // Merge de-duplicated items across categories into the anime grid.
+    const seen = new Set();
+    const items = [];
+    for (const c of cats) {
+      for (const it of c.items || []) {
+        if (it.poster && !seen.has(it.id)) {
+          seen.add(it.id);
+          items.push(it);
+        }
+      }
+    }
+    if (items.length) {
+      state.animeCatalog = items;
+      renderGrid("grid-all-anime", items);
+    }
+  } catch (e) {
+    console.warn("[Omniverse] AniList anime catalog failed, using fallback:", e);
+  }
 }
 
 function renderGrid(containerId, items) {
@@ -386,41 +412,83 @@ function closeDetailModal() {
   document.getElementById("detail-modal").classList.add("hidden");
 }
 
-function loadSeasonEpisodes() {
+function escapeHtml(s) {
+  return (s || "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+  );
+}
+
+function appendEpisodeRow(grid, media, seasonVal, ep, title) {
+  const epRow = document.createElement("button");
+  epRow.className =
+    "w-full text-left p-3 rounded-lg bg-brandTert hover:bg-brandCyan/10 border border-white/[0.04] text-xs font-semibold flex items-center justify-between group transition duration-200";
+  epRow.onclick = () => playStream(media, seasonVal, ep);
+  epRow.innerHTML = `
+    <div class="flex items-center gap-3">
+      <span class="text-brandCyan bg-cyan-950/40 px-2 py-1 rounded">EP ${ep}</span>
+      <span class="text-gray-300 group-hover:text-white transition">${escapeHtml(title)}</span>
+    </div>
+    <i data-lucide="play" class="w-3.5 h-3.5 text-gray-500 group-hover:text-brandCyan fill-transparent group-hover:fill-brandCyan transition duration-300"></i>
+  `;
+  grid.appendChild(epRow);
+}
+
+async function loadSeasonEpisodes() {
   const media = state.selectedMedia;
   const seasonSelect = document.getElementById("season-selector");
   const seasonVal = parseInt(seasonSelect.value) || 1;
   const grid = document.getElementById("episodes-grid");
   grid.innerHTML = "";
 
-  // Work out episode count
+  // Anime: pull the real episode count + titles from AllAnime/AniList.
+  if (media.type === "anime" && window.OmniAnime) {
+    grid.innerHTML =
+      '<div class="text-xs text-gray-500 p-3">Loading episodes…</div>';
+    let count = media.episodesTotal || 0;
+    let meta = {};
+    try {
+      const res = await window.OmniAnime.fetchEpisodes(media, seasonVal);
+      count = res.count || count;
+      meta = res.meta || {};
+    } catch (e) {
+      console.warn("[Omniverse] fetchEpisodes failed:", e);
+    }
+    grid.innerHTML = "";
+    if (count <= 0) {
+      grid.innerHTML =
+        '<div class="text-xs text-gray-500 p-3">No episodes found for this season.</div>';
+      return;
+    }
+    for (let ep = 1; ep <= count; ep++) {
+      const title = (meta[ep] && meta[ep].title) || `Episode ${ep}`;
+      appendEpisodeRow(grid, media, seasonVal, ep, title);
+    }
+    lucide.createIcons();
+    return;
+  }
+
+  // Movies / TV (vidsrc-embed path) — unchanged.
   let epCount = 10;
   if (media.episodesPerSeason && media.episodesPerSeason[seasonVal - 1]) {
     epCount = media.episodesPerSeason[seasonVal - 1];
   } else if (media.id === "a1") {
     epCount = 12; // Cap One Piece demo display list
   }
-
   for (let ep = 1; ep <= epCount; ep++) {
-    const epRow = document.createElement("button");
-    epRow.className =
-      "w-full text-left p-3 rounded-lg bg-brandTert hover:bg-brandCyan/10 border border-white/[0.04] text-xs font-semibold flex items-center justify-between group transition duration-200";
-    epRow.onclick = () => playStream(media, seasonVal, ep);
-
-    epRow.innerHTML = `
-      <div class="flex items-center gap-3">
-        <span class="text-brandCyan bg-cyan-950/40 px-2 py-1 rounded">EP ${ep}</span>
-        <span class="text-gray-300 group-hover:text-white transition">Episode ${ep}</span>
-      </div>
-      <i data-lucide="play" class="w-3.5 h-3.5 text-gray-500 group-hover:text-brandCyan fill-transparent group-hover:fill-brandCyan transition duration-300"></i>
-    `;
-    grid.appendChild(epRow);
+    appendEpisodeRow(grid, media, seasonVal, ep, `Episode ${ep}`);
   }
   lucide.createIcons();
 }
 
 // Integrated Secure Webview Playback Launcher
 function playStream(media, season = null, episode = null) {
+  // Anime resolves a DIRECT stream (AllAnime), like the mobile apps — not a
+  // vidsrc embed. Route it to the direct-video player.
+  if (media.type === "anime" && window.OmniAnime) {
+    playAnimeStream(media, episode || 1);
+    return;
+  }
+
   closeDetailModal();
 
   const titleEl = document.getElementById("player-stream-title");
@@ -456,7 +524,114 @@ function playStream(media, season = null, episode = null) {
   );
 }
 
+// Anime direct-stream playback (parity with mobile: AllAnime -> direct URL).
+async function playAnimeStream(media, episode) {
+  closeDetailModal();
+  const titleEl = document.getElementById("player-stream-title");
+  titleEl.textContent = `${media.title} — E${episode}`;
+  const container = document.getElementById("webview-container");
+  container.innerHTML =
+    '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#fff;font-weight:600">Resolving stream…</div>';
+  document.getElementById("player-overlay").classList.remove("hidden");
+
+  try {
+    const src = await window.OmniAnime.resolveSource(media, episode, {
+      dub: state.preferDub || false,
+    });
+    state.animeResume = { media, episode };
+    playDirectVideo(container, src.url, src.referer);
+  } catch (e) {
+    if (e && e.name === "CaptchaRequiredError") {
+      showAnimeCaptcha(e.url, () => playAnimeStream(media, episode));
+      return;
+    }
+    console.warn("[Omniverse] anime resolve failed:", e);
+    container.innerHTML =
+      '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#fff;font-weight:600">No playable source found.</div>';
+    window.electron.showNotification("Playback", "No playable anime source found.");
+  }
+}
+
+// Plays a direct mp4/m3u8 URL in a <video> (hls.js for HLS). The stream host's
+// Referer is applied to HLS segment requests; for progressive mp4 the main
+// process injects it (see main.js onBeforeSendHeaders).
+function playDirectVideo(container, url, referer) {
+  // Register the stream host so the main process injects the Referer for it.
+  try {
+    window.electron.registerAnimeHost(new URL(url).host);
+  } catch (_) {}
+  container.innerHTML = "";
+  const video = document.createElement("video");
+  video.className = "webview-player";
+  video.controls = true;
+  video.autoplay = true;
+  video.style.width = "100%";
+  video.style.height = "100%";
+  video.style.background = "#000";
+  container.appendChild(video);
+  state.activeWebview = null;
+
+  const isHls = /\.m3u8(\?|$)/i.test(url);
+  if (isHls && window.Hls && window.Hls.isSupported()) {
+    const hls = new window.Hls({
+      xhrSetup: (xhr) => {
+        try {
+          xhr.setRequestHeader("Referer", referer || "https://allmanga.to");
+        } catch (_) {}
+      },
+    });
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    state.activeHls = hls;
+  } else {
+    video.src = url;
+  }
+  video.play().catch(() => {});
+}
+
+// Captcha WebView: AllAnime gated the request. Let the user solve it, then retry.
+// The webview shares the persist:player partition; main.js forwards that
+// partition's cookies to OmniAnime's fetches so the retry is authenticated.
+function showAnimeCaptcha(url, onSolved) {
+  const container = document.getElementById("webview-container");
+  container.innerHTML = "";
+  document.getElementById("player-overlay").classList.remove("hidden");
+  document.getElementById("player-stream-title").textContent =
+    "Verify to continue — solve the check, then press Done";
+
+  const webview = document.createElement("webview");
+  webview.className = "webview-player";
+  webview.setAttribute("partition", "persist:player");
+  webview.setAttribute("src", url);
+  webview.style.width = "100%";
+  webview.style.height = "calc(100% - 52px)";
+  container.appendChild(webview);
+
+  const bar = document.createElement("div");
+  bar.style.cssText =
+    "display:flex;justify-content:flex-end;gap:8px;padding:10px;background:#000";
+  const done = document.createElement("button");
+  done.textContent = "Done";
+  done.style.cssText =
+    "background:#fff;color:#000;font-weight:700;border:none;border-radius:999px;padding:8px 22px;cursor:pointer";
+  done.onclick = async () => {
+    try {
+      await window.electron.syncPlayerCookies();
+    } catch (_) {}
+    container.innerHTML = "";
+    if (typeof onSolved === "function") onSolved();
+  };
+  bar.appendChild(done);
+  container.appendChild(bar);
+}
+
 function exitPlayer() {
+  if (state.activeHls) {
+    try {
+      state.activeHls.destroy();
+    } catch (_) {}
+    state.activeHls = null;
+  }
   document.getElementById("player-overlay").classList.add("hidden");
 
   // Safely destroy player WebContents instantly to freeze sound, clear caches, and stop video streams
@@ -929,7 +1104,9 @@ function importSyncCode() {
 // ==============================================================================
 // In-App Update Engine (Over-The-Air Sideloading)
 // ==============================================================================
-const APP_VERSION = "2.1.0"; // Matches packaging release
+// Fallback only. The real installed version comes from app.getVersion()
+// (package.json, stamped at release time) via window.electron.getAppVersion().
+let APP_VERSION = "2.1.0";
 let activeUpdateAssetUrl = "";
 
 function isNewerVersion(current, remote) {
@@ -958,6 +1135,13 @@ async function checkAppUpdates(silent = false) {
   }
 
   try {
+    // Resolve the true installed version (stamped into package.json at release).
+    try {
+      if (window.electron.getAppVersion) {
+        APP_VERSION = (await window.electron.getAppVersion()) || APP_VERSION;
+      }
+    } catch (_) {}
+
     const res = await window.electron.iptvFetch(
       "https://api.github.com/repos/FiNiX-GaMmA/omniverse/releases/latest",
     );
@@ -967,6 +1151,7 @@ async function checkAppUpdates(silent = false) {
     const remoteVersion = release.tag_name || "";
     const releaseNotes = release.body || "No release notes available.";
 
+    // Only prompt when the latest release is strictly newer than what's installed.
     if (isNewerVersion(APP_VERSION, remoteVersion)) {
       const platform = await window.electron.getPlatform();
       let targetAsset = null;
@@ -1132,6 +1317,43 @@ async function decryptAES(b64Cipher, keyString) {
   return dec.decode(decrypted);
 }
 
+// Renders the pairing QR locally (offline) into the given <img> element via the
+// bundled qrcode.min.js. Falls back to an online generator only if the local
+// library is unavailable, so pairing works on every desktop client without a
+// network dependency.
+function renderPairingQr(qrImg, dataStr) {
+  try {
+    if (typeof QRCode !== "undefined") {
+      const holder = document.createElement("div");
+      // eslint-disable-next-line no-new
+      new QRCode(holder, {
+        text: dataStr,
+        width: 250,
+        height: 250,
+        colorDark: "#0a0b0d",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M,
+      });
+      const canvas = holder.querySelector("canvas");
+      if (canvas) {
+        qrImg.src = canvas.toDataURL("image/png");
+        return;
+      }
+      const innerImg = holder.querySelector("img");
+      if (innerImg && innerImg.src) {
+        qrImg.src = innerImg.src;
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn("[Omniverse] local QR generation failed, using fallback:", e);
+  }
+  // Fallback: online generator (only if the local library didn't produce output).
+  qrImg.src =
+    "https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=0a0b0d&data=" +
+    encodeURIComponent(dataStr);
+}
+
 async function showPairingQr() {
   const qrImg = document.getElementById("pairing-qr-img");
   const panel = document.getElementById("pairing-qr-panel");
@@ -1156,11 +1378,7 @@ async function showPairingQr() {
     // QR contains pairing ID + local encryption key
     const dataStr = "OMNIVERSE-PAIR1:" + pairId + ":" + secretKey;
 
-    if (qrImg) {
-      qrImg.src =
-        "https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=0a0b0d&data=" +
-        encodeURIComponent(dataStr);
-    }
+    if (qrImg) renderPairingQr(qrImg, dataStr);
 
     // Poll the ntfy.sh topic for remote POST updates every 2 seconds
     state.pairingInterval = setInterval(async () => {
