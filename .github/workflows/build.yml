@@ -260,7 +260,7 @@ jobs:
             *   🤖 **Android Devices**: Download **`Omniverse.apk`** to install directly on any Android Mobile, Tablet, or Android TV / Fire TV.
             *   🍎 **iOS/iPadOS/macOS (Native App)**: Download **`Omniverse-Unsigned.ipa`** to sideload or deploy on your Apple hardware.
             *   💻 **Windows Devices (Desktop App)**: Download the **`.exe`** NSIS setup installer (or portable build) to install on Windows PCs.
-            *   🍏 **macOS Devices (Intel & Silicon Desktop App)**: Download the **`.dmg`** to run natively on any Mac.
+            *   🍏 **macOS Devices (Desktop App)**: Apple Silicon (M1–M4) → **`-arm64.dmg`**; Intel Macs → the plain **`.dmg`**. These builds are ad-hoc signed (not notarized), so on **first launch** right-click the app → **Open** (or run `xattr -dr com.apple.quarantine /Applications/Omniverse.app`) to get past Gatekeeper.
             *   🐧 **Linux Devices (Desktop App)**: Download the **`.AppImage`** or **`.deb`** to install on Linux distributions.
 
             ### ⚡ Features Highlight:

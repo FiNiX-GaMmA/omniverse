@@ -25,6 +25,7 @@
     "appId": "com.finix.omniverse.desktop",
     "productName": "Omniverse",
     "publish": null,
+    "afterPack": "build/afterPack.js",
     "directories": {
       "output": "dist"
     },
@@ -40,12 +41,15 @@
     ],
     "mac": {
       "category": "public.app-category.entertainment",
-      "target": {
-        "target": "dmg",
-        "arch": [
-          "universal"
-        ]
-      },
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
       "icon": "logo.png"
     },
     "win": {
