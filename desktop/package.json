@@ -25,7 +25,7 @@
     "appId": "com.finix.omniverse.desktop",
     "productName": "Omniverse",
     "publish": null,
-    "afterPack": "build/afterPack.js",
+    "afterPack": "scripts/afterPack.js",
     "directories": {
       "output": "dist"
     },
