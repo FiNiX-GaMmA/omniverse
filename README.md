@@ -114,6 +114,19 @@ Omniverse includes a premium, ultra-fast Electron-based desktop app supporting z
     *   **Linux**: Packages both safe containerized `.AppImage` and Debian `.deb` installers.
 3.  Your compiled installers will reside in `dist/desktop/`.
 
+> [!IMPORTANT]
+> ** macOS Gatekeeper & "App is Damaged" Quarantine Fix:**
+> When opening packaged apps on macOS without an active paid Apple Developer certificate, macOS will block execution or falsely report that the app is "damaged" or from an "unidentified developer".
+> 
+> To bypass this restriction instantly, open your terminal and run this **one-liner command** to clear the macOS quarantine attribute:
+> ```bash
+> xattr -cr /Applications/Omniverse.app
+> ```
+> *If you are running the packaged Electron build directly from the `dist/` folder, run:*
+> ```bash
+> xattr -cr dist/desktop/mac-universal/Omniverse.app
+> ```
+
 ---
 
 ## 🔑 Required API Keys & Sync Configuration

@@ -78,7 +78,7 @@
         >
             <!-- SIDEBAR NAVIGATION PANEL -->
             <aside
-                class="w-64 bg-brandSec border-r border-white/[0.04] flex flex-col justify-between flex-shrink-0"
+                class="w-64 glass-sidebar flex flex-col justify-between flex-shrink-0"
             >
                 <div class="flex flex-col flex-1 p-4 overflow-y-auto">
                     <!-- GLOBAL SEARCH BAR -->
@@ -87,7 +87,7 @@
                             type="text"
                             id="search-input"
                             placeholder="Search movies, TV, anime..."
-                            class="w-full bg-brandTert border border-white/[0.06] rounded-lg py-2 pl-9 pr-4 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brandCyan focus:ring-1 focus:ring-brandCyan transition duration-300"
+                            class="w-full input-glass rounded-lg py-2 pl-9 pr-4 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brandCyan transition duration-300"
                         />
                         <i
                             data-lucide="search"
@@ -152,6 +152,17 @@
                             <i data-lucide="settings" class="w-4 h-4"></i> Sync
                             & Settings
                         </button>
+
+                        <!-- Force Sync Action Button -->
+                        <div class="pt-4 border-t border-white/[0.04] mt-4">
+                            <button
+                                onclick="forceSyncNow()"
+                                id="btn-force-sync"
+                                class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-md hover:shadow-cyan-500/10 active:scale-[0.98] transition duration-200"
+                            >
+                                <i data-lucide="refresh-cw" id="icon-force-sync" class="w-3.5 h-3.5"></i> Force Sync Now
+                            </button>
+                        </div>
                     </nav>
                 </div>
 
@@ -229,7 +240,7 @@
                             <div class="flex items-center gap-3 pt-2">
                                 <button
                                     id="hero-play-btn"
-                                    class="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-brandDark font-extrabold px-5 py-2 rounded-lg text-xs tracking-wider transition duration-300"
+                                    class="flex items-center gap-2 btn-action-glow text-brandDark font-extrabold px-5 py-2.5 rounded-lg text-xs tracking-wider transition duration-300"
                                 >
                                     <i
                                         data-lucide="play-circle"
@@ -239,7 +250,7 @@
                                 </button>
                                 <button
                                     id="hero-detail-btn"
-                                    class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-extrabold px-5 py-2 rounded-lg text-xs tracking-wider transition duration-300"
+                                    class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-extrabold px-5 py-2.5 rounded-lg text-xs tracking-wider transition duration-300"
                                 >
                                     <i data-lucide="info" class="w-4 h-4"></i>
                                     GET INFO
@@ -287,7 +298,7 @@
                             <!-- Disney+ -->
                             <button
                                 onclick="filterByStudio('disney')"
-                                class="studio-disney h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                                class="studio-card studio-disney h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
                             >
                                 <span
                                     class="text-sm font-black italic tracking-tighter text-white"
@@ -297,7 +308,7 @@
                             <!-- Netflix -->
                             <button
                                 onclick="filterByStudio('netflix')"
-                                class="studio-netflix h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                                class="studio-card studio-netflix h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
                             >
                                 <span
                                     class="text-sm font-black tracking-widest text-red-600 uppercase"
@@ -307,7 +318,7 @@
                             <!-- HBO Max -->
                             <button
                                 onclick="filterByStudio('hbo')"
-                                class="studio-hbo h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                                class="studio-card studio-hbo h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
                             >
                                 <span
                                     class="text-sm font-black tracking-normal text-purple-200 font-serif"
@@ -317,7 +328,7 @@
                             <!-- Apple TV+ -->
                             <button
                                 onclick="filterByStudio('apple')"
-                                class="studio-apple h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                                class="studio-card studio-apple h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
                             >
                                 <span
                                     class="text-sm font-bold text-gray-300 tracking-tight"
@@ -327,7 +338,7 @@
                             <!-- Marvel -->
                             <button
                                 onclick="filterByStudio('marvel')"
-                                class="studio-marvel h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                                class="studio-card studio-marvel h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
                             >
                                 <span
                                     class="text-xs font-black bg-red-600 px-2 py-0.5 text-white tracking-tighter uppercase"
@@ -337,7 +348,7 @@
                             <!-- Pixar -->
                             <button
                                 onclick="filterByStudio('pixar')"
-                                class="studio-pixar h-16 rounded-xl flex items-center justify-center p-3 border border-white/5 transition duration-300 transform hover:scale-[1.04]"
+                                class="studio-card studio-pixar h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
                             >
                                 <span
                                     class="text-sm font-semibold tracking-widest text-blue-100 uppercase"
@@ -744,6 +755,23 @@
                         </p>
                     </div>
 
+                    <!-- macOS Gatekeeper Notice -->
+                    <div class="bg-cyan-950/20 border border-brandCyan/10 p-5 rounded-xl space-y-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-brandCyan"></i>
+                            <h3 class="font-extrabold text-xs uppercase tracking-wider text-white">
+                                 macOS "App Damaged" or "Unidentified Developer" Gatekeeper Resolution
+                            </h3>
+                        </div>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            Because this app is signed using personal/developer identities, macOS Gatekeeper may block launch or falsely claim the app is damaged. To solve this instantly, copy and paste this command into your macOS Terminal and press Enter:
+                        </p>
+                        <div class="flex items-center gap-2 bg-brandDark p-3 rounded-lg border border-white/[0.04]">
+                            <code class="text-[11px] text-brandCyan font-mono flex-1 select-text">xattr -cr /Applications/Omniverse.app</code>
+                            <button onclick="navigator.clipboard.writeText('xattr -cr /Applications/Omniverse.app'); window.electron.showNotification('Copied', 'Command copied to clipboard!')" class="text-xs text-gray-400 hover:text-white px-2 py-1 bg-white/5 rounded transition">Copy</button>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Setup Keys & Sync -->
                         <div class="space-y-6">
@@ -776,7 +804,7 @@
                                         id="tmdb-token-input"
                                         rows="3"
                                         placeholder="Paste your long TMDB Read Access Token (starts with ey...)"
-                                        class="w-full bg-brandTert border border-white/[0.06] rounded-lg p-3 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition duration-300 font-mono"
+                                        class="w-full input-glass rounded-lg p-3 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition duration-300 font-mono"
                                     ></textarea>
                                     <div class="flex justify-end gap-2">
                                         <button
@@ -819,7 +847,7 @@
                                         type="text"
                                         id="sync-code-input"
                                         placeholder="Paste OMNIVERSE-SYNC1:base64 code..."
-                                        class="w-full bg-brandTert border border-white/[0.06] rounded-lg px-3 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition duration-300 font-mono"
+                                        class="w-full input-glass rounded-lg px-3 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition duration-300 font-mono"
                                     />
                                     <div class="flex justify-end gap-2">
                                         <button
@@ -998,6 +1026,114 @@
 
                         <!-- Options & Stats -->
                         <div class="space-y-6">
+                            <!-- Advanced Mobile Integrations Panel -->
+                            <div
+                                class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <i
+                                        data-lucide="settings-2"
+                                        class="w-5 h-5 text-brandCyan"
+                                    ></i>
+                                    <h3
+                                        class="font-extrabold text-sm uppercase tracking-wider text-white"
+                                    >
+                                        Mobile Cloud Credentials
+                                    </h3>
+                                </div>
+                                <p
+                                    class="text-xs text-gray-500 leading-relaxed"
+                                >
+                                    Review, enter, or manually override the credentials transferred from your mobile devices. Any modifications will instantly update synced sessions.
+                                </p>
+                                
+                                <div class="space-y-3.5">
+                                    <!-- Trakt Client Credentials -->
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Trakt Account User Token</label>
+                                        <input
+                                            type="password"
+                                            id="trakt-token-input"
+                                            placeholder="Not configured"
+                                            class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
+                                        />
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Trakt Client ID</label>
+                                            <input
+                                                type="password"
+                                                id="trakt-client-id-input"
+                                                placeholder="Not configured"
+                                                class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
+                                            />
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Trakt Client Secret</label>
+                                            <input
+                                                type="password"
+                                                id="trakt-client-secret-input"
+                                                placeholder="Not configured"
+                                                class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <!-- Pixeldrain & AniList Keys -->
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Pixeldrain API Key</label>
+                                            <input
+                                                type="password"
+                                                id="pixeldrain-key-input"
+                                                placeholder="Not configured"
+                                                class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
+                                            />
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">AniList Access Token</label>
+                                            <input
+                                                type="password"
+                                                id="anilist-token-input"
+                                                placeholder="Not configured"
+                                                class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <!-- TVDB API Key & PIN -->
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">TVDB API Key</label>
+                                            <input
+                                                type="password"
+                                                id="tvdb-key-input"
+                                                placeholder="Not configured"
+                                                class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
+                                            />
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">TVDB PIN</label>
+                                            <input
+                                                type="password"
+                                                id="tvdb-pin-input"
+                                                placeholder="Not configured"
+                                                class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div class="flex justify-end pt-2">
+                                        <button
+                                            onclick="saveAllApiKeys()"
+                                            class="bg-brandCyan hover:bg-cyan-500 text-brandDark text-xs font-extrabold px-5 py-2 rounded-lg transition duration-200 shadow-md hover:shadow-cyan-500/10"
+                                        >
+                                            Save Credentials
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Playback Options -->
                             <div
                                 class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
@@ -1103,10 +1239,10 @@
         <!-- DETAILS OVERLAY MODAL -->
         <div
             id="detail-modal"
-            class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+            class="hidden fixed inset-0 z-50 detail-modal-overlay flex items-center justify-center p-6"
         >
             <div
-                class="bg-brandSec border border-white/[0.06] w-full max-w-4xl h-[580px] rounded-2xl overflow-hidden flex flex-col relative animate-fade-in shadow-2xl"
+                class="detail-modal-card w-full max-w-4xl h-[580px] rounded-2xl overflow-hidden flex flex-col relative animate-fade-in"
             >
                 <!-- Close button -->
                 <button
@@ -1128,7 +1264,7 @@
                             class="w-full h-full object-cover"
                         />
                         <div
-                            class="absolute inset-0 bg-gradient-to-t from-brandSec via-transparent to-transparent"
+                            class="absolute inset-0 bg-gradient-to-t from-brandDark via-transparent to-transparent"
                         ></div>
                     </div>
 
@@ -1177,7 +1313,7 @@
                         <div class="flex gap-2">
                             <button
                                 id="modal-play-btn"
-                                class="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-brandDark font-extrabold px-6 py-2.5 rounded-xl text-xs tracking-wider transition duration-300"
+                                class="flex items-center gap-2 btn-action-glow text-brandDark font-extrabold px-6 py-2.5 rounded-xl text-xs tracking-wider transition duration-300"
                             >
                                 <i
                                     data-lucide="play-circle"
@@ -1201,7 +1337,7 @@
                                 <select
                                     id="season-selector"
                                     onchange="loadSeasonEpisodes()"
-                                    class="bg-brandTert border border-white/[0.06] rounded-lg p-1.5 text-xs text-gray-200 focus:outline-none focus:border-brandCyan"
+                                    class="input-glass rounded-lg p-1.5 text-xs text-gray-200 focus:outline-none focus:border-brandCyan"
                                 >
                                     <!-- Dropdown options -->
                                 </select>

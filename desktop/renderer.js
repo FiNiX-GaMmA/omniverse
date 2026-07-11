@@ -20,6 +20,12 @@ let state = {
   traktClientId: localStorage.getItem("omni_trakt_client_id") || "",
   traktClientSecret: localStorage.getItem("omni_trakt_client_secret") || "",
   pixeldrainApiKey: localStorage.getItem("omni_pixeldrain_key") || "",
+  
+  // TVDB & AniList credentials
+  tvdbApiKey: localStorage.getItem("omni_tvdb_key") || "",
+  tvdbPin: localStorage.getItem("omni_tvdb_pin") || "",
+  anilistAccessToken: localStorage.getItem("omni_anilist_token") || "",
+  
   watchHistory: JSON.parse(localStorage.getItem("omni_watch_history") || "[]"),
 };
 
@@ -241,16 +247,154 @@ async function setupPlatformWindowDecorations() {
 function loadSavedPreferences() {
   document.getElementById("tmdb-token-input").value = state.tmdbToken;
   document.getElementById("vidsrc-domain-select").value = state.vidsrcDomain;
+  
+  if (document.getElementById("trakt-token-input")) document.getElementById("trakt-token-input").value = state.traktToken;
+  if (document.getElementById("trakt-client-id-input")) document.getElementById("trakt-client-id-input").value = state.traktClientId;
+  if (document.getElementById("trakt-client-secret-input")) document.getElementById("trakt-client-secret-input").value = state.traktClientSecret;
+  if (document.getElementById("pixeldrain-key-input")) document.getElementById("pixeldrain-key-input").value = state.pixeldrainApiKey;
+  if (document.getElementById("tvdb-key-input")) document.getElementById("tvdb-key-input").value = state.tvdbApiKey;
+  if (document.getElementById("tvdb-pin-input")) document.getElementById("tvdb-pin-input").value = state.tvdbPin;
+  if (document.getElementById("anilist-token-input")) document.getElementById("anilist-token-input").value = state.anilistAccessToken;
+}
+
+// TMDB API Client Helpers
+async function fetchTmdb(path, params = {}) {
+  const token = state.tmdbToken.trim();
+  if (!token) return null;
+
+  const urlParams = new URLSearchParams({
+    language: "en-US",
+    include_adult: "false",
+    ...params
+  });
+
+  if (!token.startsWith("ey")) {
+    urlParams.set("api_key", token);
+  }
+
+  const url = `https://api.themoviedb.org/3/${path}?${urlParams.toString()}`;
+  const headers = { "Accept": "application/json" };
+  if (token.startsWith("ey")) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  try {
+    const res = await window.electron.iptvFetch(url, "GET", headers);
+    if (!res.ok) throw new Error(res.error || `HTTP ${res.status}`);
+    return JSON.parse(res.html);
+  } catch (e) {
+    console.warn(`[TMDB API Error] Path: ${path}`, e);
+    return null;
+  }
+}
+
+function mapTmdbItem(item, type) {
+  const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://onepace.net/images/og-backdrop.jpg";
+  const backdropPath = item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : "https://onepace.net/images/og-backdrop.jpg";
+  const releaseDate = item.release_date || item.first_air_date || "";
+  const year = releaseDate ? new Date(releaseDate).getFullYear() : "—";
+  return {
+    id: `tmdb:${type}:${item.id}`,
+    title: item.title || item.name || "Untitled",
+    type: type,
+    year: year,
+    rating: item.vote_average ? item.vote_average.toFixed(1) : "—",
+    tmdbId: item.id,
+    poster: posterPath,
+    backdrop: backdropPath,
+    overview: item.overview || "No description available.",
+  };
+}
+
+function showGridLoading(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = `
+    <div class="col-span-full flex flex-col items-center justify-center py-8 gap-2 text-gray-500">
+      <div class="w-5 h-5 rounded-full border-2 border-brandCyan border-t-transparent animate-spin"></div>
+      <span class="text-[10px] font-bold uppercase tracking-wider text-brandCyan">Loading...</span>
+    </div>
+  `;
+}
+
+function updateHeroBanner(media) {
+  const heroBanner = document.getElementById("hero-banner");
+  const heroTitle = document.getElementById("hero-title");
+  const heroOverview = document.getElementById("hero-overview");
+  const heroPlayBtn = document.getElementById("hero-play-btn");
+  const heroDetailBtn = document.getElementById("hero-detail-btn");
+
+  if (!heroBanner || !media) return;
+
+  heroBanner.style.opacity = "0.3";
+  setTimeout(() => {
+    heroBanner.style.backgroundImage = `url('${media.backdrop || media.poster}')`;
+    if (heroTitle) heroTitle.textContent = media.title;
+    if (heroOverview) heroOverview.textContent = media.overview;
+    heroBanner.style.opacity = "1";
+  }, 150);
+
+  if (heroPlayBtn) {
+    heroPlayBtn.onclick = () => {
+      if (media.type === "movie") {
+        playStream(media);
+      } else {
+        openDetailModal(media);
+      }
+    };
+  }
+
+  if (heroDetailBtn) {
+    heroDetailBtn.onclick = () => openDetailModal(media);
+  }
 }
 
 // Render dynamic elements
-function renderCatalogFeeds() {
-  renderGrid("grid-trending-movies", FALLBACK_DB.movies);
-  renderGrid("grid-trending-tv", FALLBACK_DB.tv);
-  renderGrid("grid-all-movies", FALLBACK_DB.movies);
-  renderGrid("grid-all-tv", FALLBACK_DB.tv);
-  renderGrid("grid-all-anime", FALLBACK_DB.anime); // instant placeholder
-  loadAnimeCatalog(); // replace with real AniList data (async)
+async function renderCatalogFeeds() {
+  if (state.tmdbToken) {
+    showGridLoading("grid-trending-movies");
+    showGridLoading("grid-trending-tv");
+    showGridLoading("grid-all-movies");
+    showGridLoading("grid-all-tv");
+
+    const trendingMoviesData = await fetchTmdb("trending/movie/week");
+    const trendingMovies = trendingMoviesData && trendingMoviesData.results
+      ? trendingMoviesData.results.map(item => mapTmdbItem(item, "movie"))
+      : FALLBACK_DB.movies;
+
+    const trendingTvData = await fetchTmdb("trending/tv/week");
+    const trendingTv = trendingTvData && trendingTvData.results
+      ? trendingTvData.results.map(item => mapTmdbItem(item, "tv"))
+      : FALLBACK_DB.tv;
+
+    const popularMoviesData = await fetchTmdb("movie/now_playing");
+    const popularMovies = popularMoviesData && popularMoviesData.results
+      ? popularMoviesData.results.map(item => mapTmdbItem(item, "movie"))
+      : FALLBACK_DB.movies;
+
+    const topRatedTvData = await fetchTmdb("tv/top_rated");
+    const topRatedTv = topRatedTvData && topRatedTvData.results
+      ? topRatedTvData.results.map(item => mapTmdbItem(item, "tv"))
+      : FALLBACK_DB.tv;
+
+    renderGrid("grid-trending-movies", trendingMovies.slice(0, 12));
+    renderGrid("grid-trending-tv", trendingTv.slice(0, 12));
+    renderGrid("grid-all-movies", popularMovies.slice(0, 18));
+    renderGrid("grid-all-tv", topRatedTv.slice(0, 18));
+
+    const heroMedia = trendingMovies[0] || trendingTv[0] || FALLBACK_DB.movies[0];
+    updateHeroBanner(heroMedia);
+  } else {
+    renderGrid("grid-trending-movies", FALLBACK_DB.movies);
+    renderGrid("grid-trending-tv", FALLBACK_DB.tv);
+    renderGrid("grid-all-movies", FALLBACK_DB.movies);
+    renderGrid("grid-all-tv", FALLBACK_DB.tv);
+    updateHeroBanner(FALLBACK_DB.movies[0]);
+  }
+
+  renderGrid("grid-all-anime", FALLBACK_DB.anime);
+  loadAnimeCatalog();
+  lucide.createIcons();
 }
 
 // Populate the anime grid from AniList — parity with the mobile anime discovery.
@@ -351,50 +495,137 @@ function switchScreen(screenName) {
 }
 
 // Studio Filtering logic
-function filterByStudio(studio) {
+async function filterByStudio(studio) {
   state.activeStudio = studio;
   switchScreen("movies");
 
-  // Re-filter movies screen grid (mock filter)
   const headline = document.querySelector("#screen-movies h1");
   headline.textContent = `${studio.toUpperCase()} NETWORKS`;
 
-  // Real world query would pass with_companies parameter to TMDB
-  // For demo, we highlight the custom filtering state
+  showGridLoading("grid-all-movies");
+
   window.electron.showNotification(
     "Network Filtering",
-    `Filtering Movies catalog by: ${studio.toUpperCase()}`,
+    `Fetching ${studio.toUpperCase()} films from TMDB...`,
   );
+
+  let companyId = null;
+  let networkId = null;
+  switch (studio.toLowerCase()) {
+    case "disney": companyId = "2"; networkId = "2739"; break;
+    case "netflix": companyId = "178464"; networkId = "213"; break;
+    case "hbo": companyId = "174"; networkId = "3186"; break;
+    case "prime": companyId = "20580"; networkId = "1024"; break;
+    case "apple": companyId = "194303"; networkId = "2552"; break;
+    case "paramount": companyId = "4"; networkId = "359"; break;
+    case "marvel": companyId = "420"; break;
+    case "pixar": companyId = "3"; break;
+  }
+
+  if (state.tmdbToken && (companyId || networkId)) {
+    const params = companyId ? { with_companies: companyId } : { with_networks: networkId };
+    const movieData = await fetchTmdb("discover/movie", params);
+    
+    if (movieData && movieData.results && movieData.results.length > 0) {
+      const items = movieData.results.map(item => mapTmdbItem(item, "movie"));
+      renderGrid("grid-all-movies", items);
+      lucide.createIcons();
+      return;
+    }
+  }
+
+  // Fallback if TMDB not configured or fetch failed
+  const filteredMovies = FALLBACK_DB.movies.filter(m => m.overview.toLowerCase().includes(studio.toLowerCase()) || studio === "disney");
+  renderGrid("grid-all-movies", filteredMovies.length > 0 ? filteredMovies : FALLBACK_DB.movies);
+  lucide.createIcons();
 }
 
 // Detail Sheet Overlay Manager
-function openDetailModal(media) {
+async function openDetailModal(media) {
   state.selectedMedia = media;
 
-  document.getElementById("modal-poster").src = media.poster;
-  document.getElementById("modal-title").textContent = media.title;
-  document.getElementById("modal-overview").textContent = media.overview;
-  document.getElementById("modal-year-chip").textContent = media.year;
-  document.getElementById("modal-rating-chip").innerHTML =
-    `<i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i> ${media.rating}`;
-
+  const modalPoster = document.getElementById("modal-poster");
+  const modalTitle = document.getElementById("modal-title");
+  const modalOverview = document.getElementById("modal-overview");
+  const modalYearChip = document.getElementById("modal-year-chip");
+  const modalRatingChip = document.getElementById("modal-rating-chip");
   const typeChip = document.getElementById("modal-type-chip");
-  typeChip.textContent = media.type.toUpperCase();
-
   const episodeSection = document.getElementById("modal-episodes-section");
   const playBtn = document.getElementById("modal-play-btn");
+
+  // Load initial fallback/passed data
+  modalPoster.src = media.poster;
+  modalTitle.textContent = media.title;
+  modalOverview.textContent = media.overview;
+  modalYearChip.textContent = media.year;
+  modalRatingChip.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i> ${media.rating}`;
+  typeChip.textContent = media.type.toUpperCase();
+
+  // If TMDB is active, let's fetch deeper details dynamically to replace the fallbacks!
+  if (state.tmdbToken && media.tmdbId && media.type !== "anime" && media.title !== "One Pace") {
+    modalOverview.innerHTML = `
+      <div class="flex items-center gap-2 text-brandCyan text-xs">
+        <div class="w-3.5 h-3.5 rounded-full border border-current border-t-transparent animate-spin"></div>
+        Fetching extended metadata from TMDB...
+      </div>
+    `;
+
+    const details = await fetchTmdb(`${media.type}/${media.tmdbId}`, {
+      append_to_response: "external_ids,credits,images"
+    });
+
+    if (details) {
+      const posterUrl = details.poster_path ? `https://image.tmdb.org/t/p/w500${details.poster_path}` : media.poster;
+      const backdropUrl = details.backdrop_path ? `https://image.tmdb.org/t/p/original${details.backdrop_path}` : media.backdrop;
+      
+      modalPoster.src = posterUrl;
+      state.selectedMedia.poster = posterUrl;
+      state.selectedMedia.backdrop = backdropUrl;
+      
+      modalTitle.textContent = details.title || details.name || media.title;
+      modalOverview.textContent = details.overview || "No description available.";
+      
+      const releaseDate = details.release_date || details.first_air_date || "";
+      const year = releaseDate ? new Date(releaseDate).getFullYear() : media.year;
+      modalYearChip.textContent = year;
+      state.selectedMedia.year = year;
+      
+      const rating = details.vote_average ? details.vote_average.toFixed(1) : media.rating;
+      modalRatingChip.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i> ${rating}`;
+      state.selectedMedia.rating = rating;
+
+      // Update seasons list if TV
+      if (media.type === "tv") {
+        const seasons = details.seasons || [];
+        const selector = document.getElementById("season-selector");
+        selector.innerHTML = "";
+        
+        const validSeasons = seasons.filter(s => s.season_number > 0 && s.episode_count > 0);
+        const seasonsToUse = validSeasons.length > 0 ? validSeasons : seasons;
+        
+        seasonsToUse.forEach(s => {
+          selector.innerHTML += `<option value="${s.season_number}">Season ${s.season_number} (${s.episode_count} Episodes)</option>`;
+        });
+        
+        state.selectedMedia.seasons = seasonsToUse.length;
+        state.selectedMedia.seasonsData = seasonsToUse;
+      }
+    } else {
+      modalOverview.textContent = media.overview; // Restore on error
+    }
+  }
 
   if (media.type === "tv" || media.type === "anime") {
     episodeSection.classList.remove("hidden");
     playBtn.classList.add("hidden"); // Use episode cards to trigger streams
 
-    // Set seasons dropdown
-    const selector = document.getElementById("season-selector");
-    selector.innerHTML = "";
-
-    const seasonCount = media.seasons || 1;
-    for (let s = 1; s <= seasonCount; s++) {
-      selector.innerHTML += `<option value="${s}">Season ${s}</option>`;
+    if (media.type === "anime") {
+      const selector = document.getElementById("season-selector");
+      selector.innerHTML = "";
+      const seasonCount = media.seasons || 1;
+      for (let s = 1; s <= seasonCount; s++) {
+        selector.innerHTML += `<option value="${s}">Season ${s}</option>`;
+      }
     }
 
     loadSeasonEpisodes();
@@ -443,7 +674,7 @@ async function loadSeasonEpisodes() {
   // Anime: pull the real episode count + titles from AllAnime/AniList.
   if (media.type === "anime" && window.OmniAnime) {
     grid.innerHTML =
-      '<div class="text-xs text-gray-500 p-3">Loading episodes…</div>';
+      '<div class="text-xs text-gray-500 p-3 flex items-center gap-2"><div class="w-4 h-4 border-2 border-brandCyan border-t-transparent rounded-full animate-spin"></div> Loading episodes…</div>';
     let count = media.episodesTotal || 0;
     let meta = {};
     try {
@@ -467,7 +698,24 @@ async function loadSeasonEpisodes() {
     return;
   }
 
-  // Movies / TV (vidsrc-embed path) — unchanged.
+  // Dynamic TMDB TV Series Episode Loading!
+  if (state.tmdbToken && media.tmdbId && media.type === "tv") {
+    grid.innerHTML =
+      '<div class="text-xs text-gray-500 p-3 flex items-center gap-2"><div class="w-4 h-4 border-2 border-brandCyan border-t-transparent rounded-full animate-spin"></div> Loading season episodes from TMDB…</div>';
+    
+    const seasonData = await fetchTmdb(`tv/${media.tmdbId}/season/${seasonVal}`);
+    grid.innerHTML = "";
+    
+    if (seasonData && seasonData.episodes && seasonData.episodes.length > 0) {
+      seasonData.episodes.forEach(ep => {
+        appendEpisodeRow(grid, media, seasonVal, ep.episode_number, ep.name || `Episode ${ep.episode_number}`);
+      });
+      lucide.createIcons();
+      return;
+    }
+  }
+
+  // Fallback Movies / TV (vidsrc-embed path) — unchanged.
   let epCount = 10;
   if (media.episodesPerSeason && media.episodesPerSeason[seasonVal - 1]) {
     epCount = media.episodesPerSeason[seasonVal - 1];
@@ -956,26 +1204,69 @@ async function resolveIptvStream(channelUrl) {
 // Global Search Filtering Handler
 function setupSearchInput() {
   const input = document.getElementById("search-input");
+  let searchTimeout = null;
+
   input.addEventListener("input", (e) => {
     const val = e.target.value.toLowerCase().trim();
+    if (searchTimeout) clearTimeout(searchTimeout);
+
     if (!val) {
       renderCatalogFeeds();
       return;
     }
 
-    // Filter combined media listings
-    const filteredMovies = FALLBACK_DB.movies.filter((m) =>
-      m.title.toLowerCase().includes(val),
-    );
-    const filteredTv = FALLBACK_DB.tv.filter((t) =>
-      t.title.toLowerCase().includes(val),
-    );
+    searchTimeout = setTimeout(async () => {
+      if (state.tmdbToken) {
+        showGridLoading("grid-trending-movies");
+        showGridLoading("grid-trending-tv");
+        showGridLoading("grid-all-movies");
+        showGridLoading("grid-all-tv");
 
-    // Direct view updates
-    renderGrid("grid-trending-movies", filteredMovies);
-    renderGrid("grid-trending-tv", filteredTv);
-    renderGrid("grid-all-movies", filteredMovies);
-    renderGrid("grid-all-tv", filteredTv);
+        const searchData = await fetchTmdb("search/multi", { query: val });
+        
+        if (searchData && searchData.results && searchData.results.length > 0) {
+          const movies = searchData.results
+            .filter(item => item.media_type === "movie" && (item.poster_path || item.backdrop_path))
+            .map(item => mapTmdbItem(item, "movie"));
+            
+          const tv = searchData.results
+            .filter(item => item.media_type === "tv" && (item.poster_path || item.backdrop_path))
+            .map(item => mapTmdbItem(item, "tv"));
+
+          renderGrid("grid-trending-movies", movies.slice(0, 12));
+          renderGrid("grid-trending-tv", tv.slice(0, 12));
+          renderGrid("grid-all-movies", movies.slice(0, 12));
+          renderGrid("grid-all-tv", tv.slice(0, 12));
+          
+          if (movies.length > 0) {
+            updateHeroBanner(movies[0]);
+          } else if (tv.length > 0) {
+            updateHeroBanner(tv[0]);
+          }
+          
+          lucide.createIcons();
+          return;
+        }
+      }
+
+      // Fallback local filtering
+      const filteredMovies = FALLBACK_DB.movies.filter((m) =>
+        m.title.toLowerCase().includes(val) || m.overview.toLowerCase().includes(val)
+      );
+      const filteredTv = FALLBACK_DB.tv.filter((t) =>
+        t.title.toLowerCase().includes(val) || t.overview.toLowerCase().includes(val)
+      );
+
+      renderGrid("grid-trending-movies", filteredMovies);
+      renderGrid("grid-trending-tv", filteredTv);
+      renderGrid("grid-all-movies", filteredMovies);
+      renderGrid("grid-all-tv", filteredTv);
+      
+      if (filteredMovies.length > 0) {
+        updateHeroBanner(filteredMovies[0]);
+      }
+      lucide.createIcons();
+    }, 400);
 
     // Switch to home screen for general visibility
     if (
@@ -1026,6 +1317,37 @@ function saveTmdbToken() {
       "Read Access Token cleared. Reverting to offline catalog feeds.",
     );
   }
+  // Reload feeds on TMDB token change
+  renderCatalogFeeds();
+}
+
+// Save All Advanced API Keys
+function saveAllApiKeys() {
+  state.traktToken = document.getElementById("trakt-token-input").value.trim();
+  state.traktClientId = document.getElementById("trakt-client-id-input").value.trim();
+  state.traktClientSecret = document.getElementById("trakt-client-secret-input").value.trim();
+  state.pixeldrainApiKey = document.getElementById("pixeldrain-key-input").value.trim();
+  state.tvdbApiKey = document.getElementById("tvdb-key-input").value.trim();
+  state.tvdbPin = document.getElementById("tvdb-pin-input").value.trim();
+  state.anilistAccessToken = document.getElementById("anilist-token-input").value.trim();
+
+  localStorage.setItem("omni_trakt_token", state.traktToken);
+  localStorage.setItem("omni_trakt_client_id", state.traktClientId);
+  localStorage.setItem("omni_trakt_client_secret", state.traktClientSecret);
+  localStorage.setItem("omni_pixeldrain_key", state.pixeldrainApiKey);
+  localStorage.setItem("omni_tvdb_key", state.tvdbApiKey);
+  localStorage.setItem("omni_tvdb_pin", state.tvdbPin);
+  localStorage.setItem("omni_anilist_token", state.anilistAccessToken);
+
+  window.electron.showNotification(
+    "Credentials Saved",
+    "All updated API keys and system credentials have been safely stored locally."
+  );
+
+  // Sync back to Trakt if connected
+  if (state.traktToken) {
+    pushToTrakt();
+  }
 }
 
 // Decode Base64 Sync codes generated by iOS / Android (Zero-Config Cloud Sync)
@@ -1049,14 +1371,11 @@ function importSyncCode() {
     if (config.tmdb_token) {
       state.tmdbToken = config.tmdb_token;
       localStorage.setItem("omni_tmdb_token", config.tmdb_token);
-      document.getElementById("tmdb-token-input").value = config.tmdb_token;
     }
 
     if (config.settings && config.settings.vidsrcDomain) {
       state.vidsrcDomain = config.settings.vidsrcDomain;
       localStorage.setItem("omni_vidsrc_domain", config.settings.vidsrcDomain);
-      document.getElementById("vidsrc-domain-select").value =
-        config.settings.vidsrcDomain;
     }
 
     // Parse Trakt Sync credentials
@@ -1079,6 +1398,23 @@ function importSyncCode() {
       state.pixeldrainApiKey = config.pixeldrain_api_key;
       localStorage.setItem("omni_pixeldrain_key", config.pixeldrain_api_key);
     }
+
+    // Parse TVDB & AniList credentials
+    if (config.tvdb_api_key) {
+      state.tvdbApiKey = config.tvdb_api_key;
+      localStorage.setItem("omni_tvdb_key", config.tvdb_api_key);
+    }
+    if (config.tvdb_pin) {
+      state.tvdbPin = config.tvdb_pin;
+      localStorage.setItem("omni_tvdb_pin", config.tvdb_pin);
+    }
+    if (config.anilist_access_token) {
+      state.anilistAccessToken = config.anilist_access_token;
+      localStorage.setItem("omni_anilist_token", config.anilist_access_token);
+    }
+
+    // Update all inputs on screen
+    loadSavedPreferences();
 
     input.value = "";
     window.electron.showNotification(
@@ -1805,6 +2141,35 @@ function extractBalancedJson(text, startIdx) {
 // ==============================================================================
 // Trakt Bidirectional Sync Engine & Continue Watching Shelf
 // ==============================================================================
+function normalizeWatchProgress(rawItem) {
+  const poster = rawItem.posterPath 
+    ? (rawItem.posterPath.startsWith("http") ? rawItem.posterPath : `https://image.tmdb.org/t/p/w500${rawItem.posterPath}`)
+    : (rawItem.poster || "https://onepace.net/images/og-backdrop.jpg");
+    
+  const backdrop = rawItem.backdropPath 
+    ? (rawItem.backdropPath.startsWith("http") ? rawItem.backdropPath : `https://image.tmdb.org/t/p/original${rawItem.backdropPath}`)
+    : (rawItem.backdrop || "https://onepace.net/images/og-backdrop.jpg");
+
+  let progress = 0;
+  if (rawItem.positionMs && rawItem.durationMs && rawItem.durationMs > 0) {
+    progress = rawItem.positionMs / rawItem.durationMs;
+  } else if (rawItem.progress !== undefined) {
+    progress = rawItem.progress;
+  }
+
+  const season = rawItem.seasonNumber !== undefined ? rawItem.seasonNumber : (rawItem.season !== undefined ? rawItem.season : 1);
+  const episode = rawItem.episodeNumber !== undefined ? rawItem.episodeNumber : (rawItem.episode !== undefined ? rawItem.episode : 1);
+
+  return {
+    ...rawItem,
+    poster,
+    backdrop,
+    progress,
+    season,
+    episode
+  };
+}
+
 function renderContinueWatching() {
   const container = document.getElementById("grid-continue-watching");
   const section = document.getElementById("continue-watching-section");
@@ -1822,9 +2187,9 @@ function renderContinueWatching() {
   const grouped = [];
   const seenShows = new Set();
 
-  const sortedHistory = [...state.watchHistory].sort(
-    (a, b) => b.lastWatchedAt - a.lastWatchedAt,
-  );
+  const sortedHistory = [...state.watchHistory]
+    .map(normalizeWatchProgress)
+    .sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
 
   sortedHistory.forEach((item) => {
     if (item.type === "movie") {
@@ -1910,15 +2275,16 @@ function clearWatchHistory() {
   );
 }
 
-async function resumeWatchProgress(item) {
+async function resumeWatchProgress(rawItem) {
+  const item = normalizeWatchProgress(rawItem);
   if (item.itemId === "onepace:anime:21" || item.title === "One Pace") {
     switchScreen("onepace");
-    const arcIndex = (item.seasonNumber || 1) - 1; // seasonNumber is 1-based arc index!
+    const arcIndex = (item.season || 1) - 1; // seasonNumber is 1-based arc index!
     if (arcIndex >= 0 && arcIndex < activeOnePaceArcs.length) {
       document.getElementById("onepace-arc-select").value = arcIndex;
       await onOnePaceArcChanged();
       const ep = activeOnePaceEpisodes.find(
-        (e) => e.episodeNumber === item.episodeNumber,
+        (e) => e.episodeNumber === item.episode,
       );
       if (ep) {
         playOnePaceEpisode(ep);
@@ -1930,14 +2296,14 @@ async function resumeWatchProgress(item) {
       id: item.itemId,
       title: item.title,
       type: item.type,
-      poster: item.posterPath,
-      backdrop: item.backdropPath,
+      poster: item.poster,
+      backdrop: item.backdrop,
       year: new Date(item.lastWatchedAt).getFullYear(),
       rating: "—",
       overview: item.episodeTitle
         ? `Resume watching: ${item.episodeTitle}`
         : "Continue watching from history.",
-      seasons: item.seasonNumber ? item.seasonNumber : 1,
+      seasons: item.season ? item.season : 1,
       tmdbId: parseInt(item.itemId.split(":").pop()) || null,
     };
     openDetailModal(mediaItem);
@@ -1974,6 +2340,23 @@ async function pullFromTrakt() {
         state.pixeldrainApiKey = backup.pixeldrain_api_key;
         localStorage.setItem("omni_pixeldrain_key", backup.pixeldrain_api_key);
       }
+      if (backup.tmdb_token && !state.tmdbToken) {
+        state.tmdbToken = backup.tmdb_token;
+        localStorage.setItem("omni_tmdb_token", backup.tmdb_token);
+      }
+      if (backup.tvdb_api_key && !state.tvdbApiKey) {
+        state.tvdbApiKey = backup.tvdb_api_key;
+        localStorage.setItem("omni_tvdb_key", backup.tvdb_api_key);
+      }
+      if (backup.tvdb_pin && !state.tvdbPin) {
+        state.tvdbPin = backup.tvdb_pin;
+        localStorage.setItem("omni_tvdb_pin", backup.tvdb_pin);
+      }
+      if (backup.anilist_access_token && !state.anilistAccessToken) {
+        state.anilistAccessToken = backup.anilist_access_token;
+        localStorage.setItem("omni_anilist_token", backup.anilist_access_token);
+      }
+      loadSavedPreferences();
     }
   } catch (err) {
     console.error("Trakt pull error: ", err);
@@ -2023,6 +2406,10 @@ async function pushToTrakt() {
       pixeldrain_api_key: state.pixeldrainApiKey,
       trakt_client_id: state.traktClientId,
       trakt_client_secret: state.traktClientSecret,
+      tmdb_token: state.tmdbToken,
+      tvdb_api_key: state.tvdbApiKey,
+      tvdb_pin: state.tvdbPin,
+      anilist_access_token: state.anilistAccessToken,
       watch_history: state.watchHistory,
     };
 
@@ -2057,5 +2444,49 @@ async function pushToTrakt() {
     console.error("Trakt push error: ", err);
   } finally {
     isPushing = false;
+  }
+}
+
+// Force Sync Action trigger (Unified Cloud Sync)
+async function forceSyncNow() {
+  const icon = document.getElementById("icon-force-sync");
+  const btn = document.getElementById("btn-force-sync");
+  if (icon) icon.classList.add("animate-spin");
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add("opacity-70");
+    btn.innerHTML = `<i data-lucide="refresh-cw" id="icon-force-sync" class="w-3.5 h-3.5 animate-spin"></i> Syncing...`;
+  }
+
+  window.electron.showNotification(
+    "Cloud Sync Initiated",
+    "Pulling latest watch progress and profiles from Trakt..."
+  );
+
+  try {
+    if (state.traktToken) {
+      await pullFromTrakt();
+    }
+    await renderCatalogFeeds();
+    renderContinueWatching();
+
+    window.electron.showNotification(
+      "Sync Completed",
+      "Dynamic catalogs and continue-watching watch history have been successfully synchronized!"
+    );
+  } catch (err) {
+    console.error("Force sync failed:", err);
+    window.electron.showNotification(
+      "Sync Warning",
+      "Sync finished with some network warnings."
+    );
+  } finally {
+    if (icon) icon.classList.remove("animate-spin");
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove("opacity-70");
+      btn.innerHTML = `<i data-lucide="refresh-cw" id="icon-force-sync" class="w-3.5 h-3.5"></i> Force Sync Now`;
+    }
+    lucide.createIcons();
   }
 }
