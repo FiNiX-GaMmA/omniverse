@@ -80,6 +80,17 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
     var loadingStreams by remember { mutableStateOf(false) }
     var seasonMenu by remember { mutableStateOf(false) }
 
+    var episodeQuery by remember { mutableStateOf("") }
+    val filteredEpisodes = remember(episodes.toList(), episodeQuery) {
+        val trimmed = episodeQuery.trim().lowercase()
+        if (trimmed.isEmpty()) episodes.toList()
+        else episodes.filter { ep ->
+            ep.episodeNumber.toString() == trimmed ||
+            ep.title.lowercase().contains(trimmed) ||
+            ep.overview.lowercase().contains(trimmed)
+        }
+    }
+
     // Source sheet state
     var sheetSources by remember { mutableStateOf<List<PlaybackSource>>(emptyList()) }
     var sheetTitle by remember { mutableStateOf("") }
@@ -218,17 +229,6 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                 }
             }
             if (isSeries) {
-                var episodeQuery by remember { mutableStateOf("") }
-                val filteredEpisodes = remember(episodes.toList(), episodeQuery) {
-                    val trimmed = episodeQuery.trim().lowercase()
-                    if (trimmed.isEmpty()) episodes.toList()
-                    else episodes.filter { ep ->
-                        ep.episodeNumber.toString() == trimmed ||
-                        ep.title.lowercase().contains(trimmed) ||
-                        ep.overview.lowercase().contains(trimmed)
-                    }
-                }
-
                 item {
                     val seasons = expandedSeasons(current)
                     Row(
