@@ -17,6 +17,9 @@ let state = {
 
   // Trakt Sync credentials
   traktToken: localStorage.getItem("omni_trakt_token") || "",
+  traktRefreshToken: localStorage.getItem("omni_trakt_refresh_token") || "",
+  traktTokenExpiresAt: parseInt(localStorage.getItem("omni_trakt_expires_at") || "0") || 0,
+  traktUsername: localStorage.getItem("omni_trakt_username") || "",
   traktClientId: localStorage.getItem("omni_trakt_client_id") || "",
   traktClientSecret: localStorage.getItem("omni_trakt_client_secret") || "",
   pixeldrainApiKey: localStorage.getItem("omni_pixeldrain_key") || "",
@@ -1414,6 +1417,9 @@ function saveTmdbToken() {
 
 // Save All Advanced API Keys
 function saveAllApiKeys() {
+  const oldClientId = state.traktClientId;
+  const oldClientSecret = state.traktClientSecret;
+
   state.traktToken = document.getElementById("trakt-token-input").value.trim();
   state.traktClientId = document.getElementById("trakt-client-id-input").value.trim();
   state.traktClientSecret = document.getElementById("trakt-client-secret-input").value.trim();
@@ -1421,6 +1427,15 @@ function saveAllApiKeys() {
   state.tvdbApiKey = document.getElementById("tvdb-key-input").value.trim();
   state.tvdbPin = document.getElementById("tvdb-pin-input").value.trim();
   state.anilistAccessToken = document.getElementById("anilist-token-input").value.trim();
+
+  if (state.traktClientId !== oldClientId || state.traktClientSecret !== oldClientSecret) {
+    state.traktRefreshToken = "";
+    state.traktTokenExpiresAt = 0;
+    state.traktUsername = "";
+    localStorage.removeItem("omni_trakt_refresh_token");
+    localStorage.removeItem("omni_trakt_expires_at");
+    localStorage.removeItem("omni_trakt_username");
+  }
 
   localStorage.setItem("omni_trakt_token", state.traktToken);
   localStorage.setItem("omni_trakt_client_id", state.traktClientId);
@@ -1473,6 +1488,18 @@ function importSyncCode() {
     if (config.trakt_access_token) {
       state.traktToken = config.trakt_access_token;
       localStorage.setItem("omni_trakt_token", config.trakt_access_token);
+    }
+    if (config.trakt_refresh_token) {
+      state.traktRefreshToken = config.trakt_refresh_token;
+      localStorage.setItem("omni_trakt_refresh_token", config.trakt_refresh_token);
+    }
+    if (config.trakt_token_expires_at) {
+      state.traktTokenExpiresAt = parseInt(config.trakt_token_expires_at) || 0;
+      localStorage.setItem("omni_trakt_expires_at", state.traktTokenExpiresAt);
+    }
+    if (config.trakt_username) {
+      state.traktUsername = config.trakt_username;
+      localStorage.setItem("omni_trakt_username", config.trakt_username);
     }
     if (config.trakt_client_id) {
       state.traktClientId = config.trakt_client_id;
@@ -1528,6 +1555,62 @@ function importSyncCode() {
   }
 }
 
+const TOKEN_REFRESH_SKEW_MS = 5 * 60 * 1000;
+
+async function ensureFreshTraktToken() {
+  if (!state.traktToken || !state.traktTokenExpiresAt) return;
+
+  const now = Date.now();
+  const refreshAt = now + TOKEN_REFRESH_SKEW_MS;
+
+  // If token is still fresh, do nothing
+  if (state.traktTokenExpiresAt > refreshAt) return;
+
+  if (!state.traktRefreshToken || !state.traktClientSecret) {
+    console.warn("Trakt token expired but cannot refresh (missing refresh token or client secret).");
+    return;
+  }
+
+  console.log("Trakt token is expired or close to expiring, refreshing...");
+
+  try {
+    const url = "https://api.trakt.tv/oauth/token";
+    const body = {
+      refresh_token: state.traktRefreshToken.trim(),
+      client_id: state.traktClientId.trim(),
+      client_secret: state.traktClientSecret.trim(),
+      redirect_uri: "omniplay://trakt/oauth",
+      grant_type: "refresh_token",
+    };
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    const res = await window.electron.iptvFetch(url, "POST", headers, body);
+    if (!res.ok) {
+      throw new Error(`Trakt token refresh failed with status ${res.status}: ${res.error || ""}`);
+    }
+
+    const data = JSON.parse(res.html);
+    const createdAtSeconds = data.created_at || Math.floor(Date.now() / 1000);
+    const expiresIn = data.expires_in || 0;
+    const expiresAt = expiresIn <= 0 ? 0 : (createdAtSeconds + expiresIn) * 1000;
+
+    state.traktToken = data.access_token || "";
+    state.traktRefreshToken = data.refresh_token || "";
+    state.traktTokenExpiresAt = expiresAt;
+
+    localStorage.setItem("omni_trakt_token", state.traktToken);
+    localStorage.setItem("omni_trakt_refresh_token", state.traktRefreshToken);
+    localStorage.setItem("omni_trakt_expires_at", expiresAt);
+
+    loadSavedPreferences();
+    console.log("Trakt token refreshed successfully.");
+  } catch (err) {
+    console.error("Failed to refresh Trakt access token:", err);
+  }
+}
+
 // Interactively refresh and verify Trakt authentication state
 async function refreshTraktLoginState() {
   const btn = document.getElementById("btn-refresh-login");
@@ -1536,6 +1619,9 @@ async function refreshTraktLoginState() {
     btn.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline mr-1 animate-spin"></i> Verifying...`;
     lucide.createIcons();
   }
+
+  // Attempt to refresh the token if we have a refresh token
+  await ensureFreshTraktToken();
 
   const token = (document.getElementById("trakt-token-input").value || state.traktToken || "").trim();
   const clientId = (document.getElementById("trakt-client-id-input").value || state.traktClientId || "").trim();
@@ -1570,8 +1656,10 @@ async function refreshTraktLoginState() {
       // Persist verified state
       state.traktToken = token;
       state.traktClientId = clientId;
+      state.traktUsername = username;
       localStorage.setItem("omni_trakt_token", token);
       localStorage.setItem("omni_trakt_client_id", clientId);
+      localStorage.setItem("omni_trakt_username", username);
       loadSavedPreferences();
 
       window.electron.showNotification(
@@ -2375,6 +2463,9 @@ async function resumeWatchProgress(rawItem) {
 async function pullFromTrakt() {
   if (!state.traktToken) return;
 
+  await ensureFreshTraktToken();
+  if (!state.traktToken) return;
+
   try {
     const listsUrl = "https://api.trakt.tv/users/me/lists";
     const headers = {
@@ -2445,6 +2536,9 @@ function mergeWatchHistory(remoteHistory) {
 
 let isPushing = false;
 async function pushToTrakt() {
+  if (!state.traktToken || isPushing) return;
+
+  await ensureFreshTraktToken();
   if (!state.traktToken || isPushing) return;
   isPushing = true;
 
@@ -2574,10 +2668,14 @@ async function forceSyncNow() {
   updateSyncProgress(10, "Establishing connection to Trakt...");
   await new Promise(resolve => setTimeout(resolve, 600));
 
-  window.electron.showNotification(
-    "Cloud Sync Initiated",
-    "Pulling latest watch progress and profiles from Trakt..."
-  );
+  try {
+    window.electron.showNotification(
+      "Cloud Sync Initiated",
+      "Pulling latest watch progress and profiles from Trakt..."
+    );
+  } catch (err) {
+    console.warn("Failed to show cloud sync notification:", err);
+  }
 
   try {
     if (state.traktToken) {
@@ -2600,10 +2698,14 @@ async function forceSyncNow() {
     updateSyncProgress(100, "Synchronized!");
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    window.electron.showNotification(
-      "Sync Completed",
-      "Dynamic catalogs and continue-watching watch history have been successfully synchronized!"
-    );
+    try {
+      window.electron.showNotification(
+        "Sync Completed",
+        "Dynamic catalogs and continue-watching watch history have been successfully synchronized!"
+      );
+    } catch (err) {
+      console.warn("Failed to show sync completed notification:", err);
+    }
   } catch (err) {
     console.error("Force sync failed:", err);
     window.electron.showNotification(

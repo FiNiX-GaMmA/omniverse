@@ -392,14 +392,19 @@ ipcMain.handle("close-pip-window", () => {
 
 // Native Push Notifications
 ipcMain.handle("show-notification", (_, { title, body }) => {
-  if (Notification.isSupported()) {
-    const notification = new Notification({
-      title: title,
-      body: body,
-      icon: path.join(__dirname, "logo.png"),
-    });
-    notification.show();
+  try {
+    if (Notification.isSupported()) {
+      const notification = new Notification({
+        title: title,
+        body: body,
+        icon: path.join(__dirname, "logo.png"),
+      });
+      notification.show();
+    }
+  } catch (err) {
+    console.error("Failed to show native notification:", err);
   }
+  return { ok: true };
 });
 
 // Single-instance lock to prevent double-booting
