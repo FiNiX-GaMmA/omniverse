@@ -18,17 +18,18 @@ let state = {
   // Trakt Sync credentials
   traktToken: localStorage.getItem("omni_trakt_token") || "",
   traktRefreshToken: localStorage.getItem("omni_trakt_refresh_token") || "",
-  traktTokenExpiresAt: parseInt(localStorage.getItem("omni_trakt_expires_at") || "0") || 0,
+  traktTokenExpiresAt:
+    parseInt(localStorage.getItem("omni_trakt_expires_at") || "0") || 0,
   traktUsername: localStorage.getItem("omni_trakt_username") || "",
   traktClientId: localStorage.getItem("omni_trakt_client_id") || "",
   traktClientSecret: localStorage.getItem("omni_trakt_client_secret") || "",
   pixeldrainApiKey: localStorage.getItem("omni_pixeldrain_key") || "",
-  
+
   // TVDB & AniList credentials
   tvdbApiKey: localStorage.getItem("omni_tvdb_key") || "",
   tvdbPin: localStorage.getItem("omni_tvdb_pin") || "",
   anilistAccessToken: localStorage.getItem("omni_anilist_token") || "",
-  
+
   watchHistory: JSON.parse(localStorage.getItem("omni_watch_history") || "[]"),
 };
 
@@ -220,14 +221,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderCatalogFeeds();
   setupSearchInput();
   setupLiveTvCenter();
-  checkOnePaceMigration();
   renderContinueWatching(); // Initial local history render
   setupAdblockObserver();
   lucide.createIcons();
 
   // Dynamically resolve and display installed version in settings
   try {
-    if (window.electron && typeof window.electron.getAppVersion === "function") {
+    if (
+      window.electron &&
+      typeof window.electron.getAppVersion === "function"
+    ) {
       const actualVer = await window.electron.getAppVersion();
       if (actualVer) {
         APP_VERSION = actualVer;
@@ -266,7 +269,10 @@ async function setupPlatformWindowDecorations() {
       if (controls) controls.classList.remove("hidden");
     }
   } catch (err) {
-    console.warn("[Omniverse] Failed to detect platform window decorations:", err);
+    console.warn(
+      "[Omniverse] Failed to detect platform window decorations:",
+      err,
+    );
     // Show them anyway as a safe fallback unless we are on Mac
     const isMac = /Mac|iPad|iPhone|iPod/.test(navigator.platform);
     if (!isMac) {
@@ -280,14 +286,43 @@ async function setupPlatformWindowDecorations() {
 function loadSavedPreferences() {
   document.getElementById("tmdb-token-input").value = state.tmdbToken;
   document.getElementById("vidsrc-domain-select").value = state.vidsrcDomain;
-  
-  if (document.getElementById("trakt-token-input")) document.getElementById("trakt-token-input").value = state.traktToken;
-  if (document.getElementById("trakt-client-id-input")) document.getElementById("trakt-client-id-input").value = state.traktClientId;
-  if (document.getElementById("trakt-client-secret-input")) document.getElementById("trakt-client-secret-input").value = state.traktClientSecret;
-  if (document.getElementById("pixeldrain-key-input")) document.getElementById("pixeldrain-key-input").value = state.pixeldrainApiKey;
-  if (document.getElementById("tvdb-key-input")) document.getElementById("tvdb-key-input").value = state.tvdbApiKey;
-  if (document.getElementById("tvdb-pin-input")) document.getElementById("tvdb-pin-input").value = state.tvdbPin;
-  if (document.getElementById("anilist-token-input")) document.getElementById("anilist-token-input").value = state.anilistAccessToken;
+
+  if (document.getElementById("trakt-token-input"))
+    document.getElementById("trakt-token-input").value = state.traktToken;
+  if (document.getElementById("trakt-client-id-input"))
+    document.getElementById("trakt-client-id-input").value =
+      state.traktClientId;
+  if (document.getElementById("trakt-client-secret-input"))
+    document.getElementById("trakt-client-secret-input").value =
+      state.traktClientSecret;
+  if (document.getElementById("pixeldrain-key-input"))
+    document.getElementById("pixeldrain-key-input").value =
+      state.pixeldrainApiKey;
+  if (document.getElementById("tvdb-key-input"))
+    document.getElementById("tvdb-key-input").value = state.tvdbApiKey;
+  if (document.getElementById("tvdb-pin-input"))
+    document.getElementById("tvdb-pin-input").value = state.tvdbPin;
+  if (document.getElementById("anilist-token-input"))
+    document.getElementById("anilist-token-input").value =
+      state.anilistAccessToken;
+}
+
+// Cross-platform fetch helper (Electron IPC -> fallback to native fetch)
+async function appFetch(url, method = "GET", headers = {}, body = null) {
+  if (window.electron && window.electron.iptvFetch) {
+    return await window.electron.iptvFetch(url, method, headers, body);
+  } else {
+    try {
+      const options = { method, headers };
+      if (body)
+        options.body = typeof body === "string" ? body : JSON.stringify(body);
+      const response = await fetch(url, options);
+      const html = await response.text();
+      return { ok: response.ok, status: response.status, html };
+    } catch (err) {
+      return { ok: false, status: 0, error: err.message, html: "" };
+    }
+  }
 }
 
 // TMDB API Client Helpers
@@ -298,7 +333,7 @@ async function fetchTmdb(path, params = {}) {
   const urlParams = new URLSearchParams({
     language: "en-US",
     include_adult: "false",
-    ...params
+    ...params,
   });
 
   if (!token.startsWith("ey")) {
@@ -306,13 +341,13 @@ async function fetchTmdb(path, params = {}) {
   }
 
   const url = `https://api.themoviedb.org/3/${path}?${urlParams.toString()}`;
-  const headers = { "Accept": "application/json" };
+  const headers = { Accept: "application/json" };
   if (token.startsWith("ey")) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
   try {
-    const res = await window.electron.iptvFetch(url, "GET", headers);
+    const res = await appFetch(url, "GET", headers);
     if (!res.ok) throw new Error(res.error || `HTTP ${res.status}`);
     return JSON.parse(res.html);
   } catch (e) {
@@ -322,21 +357,49 @@ async function fetchTmdb(path, params = {}) {
 }
 
 const TMDB_GENRES = {
-  28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
-  99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
-  27: "Horror", 10402: "Music", 9648: "Mystery", 10749: "Romance", 878: "Science Fiction",
-  10770: "TV Movie", 53: "Thriller", 10752: "War", 37: "Western",
-  10759: "Action", 10762: "Kids", 10763: "News", 10764: "Reality", 10765: "Sci-Fi & Fantasy",
-  10766: "Soap", 10767: "Talk", 10768: "War"
+  28: "Action",
+  12: "Adventure",
+  16: "Animation",
+  35: "Comedy",
+  80: "Crime",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  14: "Fantasy",
+  36: "History",
+  27: "Horror",
+  10402: "Music",
+  9648: "Mystery",
+  10749: "Romance",
+  878: "Science Fiction",
+  10770: "TV Movie",
+  53: "Thriller",
+  10752: "War",
+  37: "Western",
+  10759: "Action",
+  10762: "Kids",
+  10763: "News",
+  10764: "Reality",
+  10765: "Sci-Fi & Fantasy",
+  10766: "Soap",
+  10767: "Talk",
+  10768: "War",
 };
 
 function mapTmdbItem(item, type) {
-  const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://onepace.net/images/og-backdrop.jpg";
-  const backdropPath = item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : "https://onepace.net/images/og-backdrop.jpg";
+  const fallbackImg =
+    "https://ui-avatars.com/api/?background=111&color=fff&size=500&name=" +
+    encodeURIComponent(item.title || item.name || "Unknown");
+  const posterPath = item.poster_path
+    ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+    : fallbackImg;
+  const backdropPath = item.backdrop_path
+    ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
+    : fallbackImg;
   const releaseDate = item.release_date || item.first_air_date || "";
   const year = releaseDate ? new Date(releaseDate).getFullYear() : "—";
   const genreIds = item.genre_ids || [];
-  const genres = genreIds.map(id => TMDB_GENRES[id]).filter(Boolean);
+  const genres = genreIds.map((id) => TMDB_GENRES[id]).filter(Boolean);
   return {
     id: `tmdb:${type}:${item.id}`,
     title: item.title || item.name || "Untitled",
@@ -347,7 +410,7 @@ function mapTmdbItem(item, type) {
     poster: posterPath,
     backdrop: backdropPath,
     overview: item.overview || "No description available.",
-    genres: genres
+    genres: genres,
   };
 }
 
@@ -404,29 +467,34 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
     showGridLoading("grid-all-tv");
 
     const trendingMoviesData = await fetchTmdb("trending/movie/week");
-    trendingMovies = trendingMoviesData && trendingMoviesData.results
-      ? trendingMoviesData.results.map(item => mapTmdbItem(item, "movie"))
-      : FALLBACK_DB.movies;
+    trendingMovies =
+      trendingMoviesData && trendingMoviesData.results
+        ? trendingMoviesData.results.map((item) => mapTmdbItem(item, "movie"))
+        : FALLBACK_DB.movies;
 
     const trendingTvData = await fetchTmdb("trending/tv/week");
-    trendingTv = trendingTvData && trendingTvData.results
-      ? trendingTvData.results.map(item => mapTmdbItem(item, "tv"))
-      : FALLBACK_DB.tv;
+    trendingTv =
+      trendingTvData && trendingTvData.results
+        ? trendingTvData.results.map((item) => mapTmdbItem(item, "tv"))
+        : FALLBACK_DB.tv;
 
     const popularMoviesData = await fetchTmdb("movie/now_playing");
-    const popularMovies = popularMoviesData && popularMoviesData.results
-      ? popularMoviesData.results.map(item => mapTmdbItem(item, "movie"))
-      : FALLBACK_DB.movies;
+    const popularMovies =
+      popularMoviesData && popularMoviesData.results
+        ? popularMoviesData.results.map((item) => mapTmdbItem(item, "movie"))
+        : FALLBACK_DB.movies;
 
     const topRatedTvData = await fetchTmdb("tv/top_rated");
-    const topRatedTv = topRatedTvData && topRatedTvData.results
-      ? topRatedTvData.results.map(item => mapTmdbItem(item, "tv"))
-      : FALLBACK_DB.tv;
+    const topRatedTv =
+      topRatedTvData && topRatedTvData.results
+        ? topRatedTvData.results.map((item) => mapTmdbItem(item, "tv"))
+        : FALLBACK_DB.tv;
 
     renderGrid("grid-all-movies", popularMovies.slice(0, 18));
     renderGrid("grid-all-tv", topRatedTv.slice(0, 18));
 
-    const heroMedia = trendingMovies[0] || trendingTv[0] || FALLBACK_DB.movies[0];
+    const heroMedia =
+      trendingMovies[0] || trendingTv[0] || FALLBACK_DB.movies[0];
     updateHeroBanner(heroMedia);
   } else {
     trendingMovies = FALLBACK_DB.movies;
@@ -442,11 +510,21 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
 
   // Blend movies, tv, and anime for top 10 trending
   const blendTop10 = [];
-  let mi = 0, si = 0, ai = 0;
+  let mi = 0,
+    si = 0,
+    ai = 0;
   const maxLimit = 10;
-  const dynamicAnimeList = state.animeCatalog && state.animeCatalog.length ? state.animeCatalog : FALLBACK_DB.anime;
+  const dynamicAnimeList =
+    state.animeCatalog && state.animeCatalog.length
+      ? state.animeCatalog
+      : FALLBACK_DB.anime;
 
-  while (blendTop10.length < maxLimit && (mi < trendingMovies.length || si < trendingTv.length || ai < dynamicAnimeList.length)) {
+  while (
+    blendTop10.length < maxLimit &&
+    (mi < trendingMovies.length ||
+      si < trendingTv.length ||
+      ai < dynamicAnimeList.length)
+  ) {
     if (mi < trendingMovies.length) {
       blendTop10.push(trendingMovies[mi++]);
       if (blendTop10.length >= maxLimit) break;
@@ -467,7 +545,7 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
       title: "Top 10 Trending",
       description: "The most watched movies, TV shows, and anime this week",
       items: blendTop10,
-      isTop10: true
+      isTop10: true,
     });
   }
 
@@ -477,7 +555,7 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
       title: "Top 10 Trending Movies",
       description: "Popular theatrical and digital releases",
       items: trendingMovies.slice(0, 10),
-      isTop10: true
+      isTop10: true,
     });
   }
 
@@ -487,7 +565,7 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
       title: "Top 10 Trending TV Shows",
       description: "Series gaining the most momentum this week",
       items: trendingTv.slice(0, 10),
-      isTop10: true
+      isTop10: true,
     });
   }
 
@@ -497,14 +575,22 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
       title: "Top 10 Trending Anime",
       description: "What everyone is watching right now",
       items: dynamicAnimeList.slice(0, 10),
-      isTop10: true
+      isTop10: true,
     });
   }
 
   // Genre Categories
   const allItems = [...trendingMovies, ...trendingTv, ...dynamicAnimeList];
-  const genresToRender = ["Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery"];
-  genresToRender.forEach(genre => {
+  const genresToRender = [
+    "Action",
+    "Comedy",
+    "Drama",
+    "Science Fiction",
+    "Animation",
+    "Horror",
+    "Mystery",
+  ];
+  genresToRender.forEach((genre) => {
     const seen = new Set();
     const picks = [];
     for (const item of allItems) {
@@ -512,7 +598,11 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
       if (item.type === "anime" && !itemGenres.includes("Animation")) {
         itemGenres.push("Animation");
       }
-      const matchesGenre = itemGenres.some(g => g.toLowerCase().includes(genre.toLowerCase()) || (genre === "Science Fiction" && g.toLowerCase().includes("sci")));
+      const matchesGenre = itemGenres.some(
+        (g) =>
+          g.toLowerCase().includes(genre.toLowerCase()) ||
+          (genre === "Science Fiction" && g.toLowerCase().includes("sci")),
+      );
       if (matchesGenre && !seen.has(item.id)) {
         seen.add(item.id);
         picks.push(item);
@@ -524,7 +614,7 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
         title: `Trending ${genre}`,
         description: `Popular ${genre} titles to watch this week`,
         items: picks.slice(0, 15),
-        isTop10: false
+        isTop10: false,
       });
     }
   });
@@ -532,7 +622,7 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
   const homeCatalogs = document.getElementById("home-catalogs");
   if (homeCatalogs) {
     homeCatalogs.innerHTML = "";
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
       const catSection = document.createElement("div");
       catSection.className = "space-y-3";
 
@@ -546,30 +636,35 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
       `;
 
       const rail = document.createElement("div");
-      rail.className = "horizontal-rail flex overflow-x-auto gap-4 pb-4 scrollbar-none no-drag";
+      rail.className =
+        "horizontal-rail flex overflow-x-auto gap-4 pb-4 scrollbar-none no-drag";
 
       cat.items.forEach((item, index) => {
         if (cat.isTop10) {
           const card = document.createElement("div");
-          card.className = "relative flex items-end h-[220px] min-w-[180px] select-none shrink-0";
+          card.className =
+            "relative flex items-end h-[220px] min-w-[180px] select-none shrink-0";
           card.onclick = () => openDetailModal(item);
           const rank = index + 1;
           card.innerHTML = `
             <span class="absolute bottom-[-10px] left-0 text-[130px] font-black leading-none text-white/[0.08] select-none pointer-events-none font-sans z-0">
               ${rank}
             </span>
-            <div class="media-card ml-auto w-[130px] h-[195px] rounded-xl border border-white/[0.04] p-1.5 hover:border-brandCyan/20 cursor-pointer text-left bg-brandSec relative z-10">
-              <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-1.5">
-                <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://onepace.net/images/og-backdrop.jpg'">
-                <span class="absolute top-1 right-1 bg-brandDark/85 border border-white/[0.06] text-amber-400 font-extrabold text-[8px] px-1.5 py-0.5 rounded flex items-center gap-0.5 z-20">
+            <div class="media-card ml-auto w-[130px] h-[195px] rounded-lg p-0 cursor-pointer text-left bg-transparent relative z-10">
+              <div class="group relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-1.5 shadow-lg">
+                <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-50" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+                  <i data-lucide="play-circle" class="w-10 h-10 text-white drop-shadow-lg"></i>
+                </div>
+                <span class="absolute top-1 right-1 bg-black/80 text-white font-bold text-[9px] px-1.5 py-0.5 rounded flex items-center gap-0.5 z-20">
                   ★ ${item.rating || "—"}
                 </span>
               </div>
               <div class="px-0.5 space-y-0.5">
-                <h4 class="text-[11px] font-bold text-gray-200 truncate leading-snug">${item.title}</h4>
+                <h4 class="text-[11px] font-semibold text-gray-200 truncate leading-snug">${item.title}</h4>
                 <div class="flex items-center justify-between text-[9px] text-gray-500 font-medium">
                   <span>${item.year || "—"}</span>
-                  <span class="uppercase text-[8px] tracking-wider text-brandCyan bg-cyan-950/20 border border-brandCyan/10 px-1 rounded">${item.type}</span>
+                  <span class="uppercase text-[8px] tracking-wider text-brandCyan">${item.type}</span>
                 </div>
               </div>
             </div>
@@ -577,20 +672,19 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
           rail.appendChild(card);
         } else {
           const card = document.createElement("div");
-          card.className = "media-card bg-brandSec rounded-xl border border-white/[0.04] p-2 hover:border-brandCyan/20 cursor-pointer text-left w-[130px] shrink-0";
           card.onclick = () => openDetailModal(item);
+          card.className =
+            "media-poster-card cursor-pointer group w-[180px] shrink-0";
           card.innerHTML = `
-            <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-2">
-              <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://onepace.net/images/og-backdrop.jpg'">
-              <span class="absolute top-1.5 right-1.5 bg-brandDark/80 border border-white/[0.06] text-amber-400 font-extrabold text-[9px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                ★ ${item.rating || "—"}
-              </span>
-            </div>
-            <div class="px-1 space-y-0.5">
-              <h4 class="text-xs font-bold text-gray-200 truncate leading-snug">${item.title}</h4>
-              <div class="flex items-center justify-between text-[10px] text-gray-500 font-medium">
-                <span>${item.year || "—"}</span>
-                <span class="uppercase text-[9px] tracking-wider text-brandCyan bg-cyan-950/20 border border-brandCyan/10 px-1 rounded">${item.type}</span>
+            <div class="relative aspect-[2/3] w-full">
+              <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
+              <div class="play-fab"><i data-lucide="play" class="w-8 h-8 fill-current"></i></div>
+              <div class="media-overlay-glass">
+                <h4 class="text-white font-bold text-sm leading-tight drop-shadow-md mb-1 line-clamp-2">${item.title}</h4>
+                <div class="flex items-center justify-between text-gray-300 text-[10px] font-semibold tracking-wide">
+                  <span>${item.year || "—"}</span>
+                  <span class="flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i> ${item.rating || "—"}</span>
+                </div>
               </div>
             </div>
           `;
@@ -634,36 +728,60 @@ async function loadAnimeCatalog() {
       renderCatalogFeeds(true);
     }
   } catch (e) {
-    console.warn("[Omniverse] AniList anime catalog failed, using fallback:", e);
+    console.warn(
+      "[Omniverse] AniList anime catalog failed, using fallback:",
+      e,
+    );
   }
 }
 
-function renderGrid(containerId, items) {
+function renderGrid(containerId, items, isLordflix = false) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = "";
 
   items.forEach((item) => {
     const card = document.createElement("div");
-    card.className =
-      "media-card bg-brandSec rounded-xl border border-white/[0.04] p-2 hover:border-brandCyan/20 cursor-pointer text-left";
     card.onclick = () => openDetailModal(item);
 
-    card.innerHTML = `
-      <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-2">
-        <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy">
-        <span class="absolute top-1.5 right-1.5 bg-brandDark/80 border border-white/[0.06] text-amber-400 font-extrabold text-[9px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
-          ★ ${item.rating}
-        </span>
-      </div>
-      <div class="px-1 space-y-0.5">
-        <h4 class="text-xs font-bold text-gray-200 truncate leading-snug">${item.title}</h4>
-        <div class="flex items-center justify-between text-[10px] text-gray-500 font-medium">
-          <span>${item.year}</span>
-          <span class="uppercase text-[9px] tracking-wider text-brandCyan bg-cyan-950/20 border border-brandCyan/10 px-1 rounded">${item.type}</span>
+    if (isLordflix) {
+      card.className = "media-poster-card cursor-pointer group";
+      card.innerHTML = `
+        <div class="relative aspect-[2/3] w-full">
+          <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
+          <div class="play-fab"><i data-lucide="play" class="w-8 h-8 fill-current"></i></div>
+          <div class="media-overlay-glass">
+            <h4 class="text-white font-bold text-sm leading-tight drop-shadow-md mb-1">${item.title}</h4>
+            <div class="flex items-center justify-between text-gray-300 text-[10px] font-semibold tracking-wide">
+              <span>${item.year}</span>
+              <span class="flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i> ${item.rating}</span>
+            </div>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    } else {
+      card.className =
+        "media-card bg-transparent rounded-lg p-0 cursor-pointer text-left";
+      card.innerHTML = `
+        <div class="group relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-2 shadow-lg">
+          <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-50" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
+          <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+            <i data-lucide="play-circle" class="w-10 h-10 text-white drop-shadow-lg"></i>
+          </div>
+          <span class="absolute top-1.5 right-1.5 bg-black/80 text-white font-bold text-[9px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
+            ★ ${item.rating}
+          </span>
+        </div>
+        <div class="px-1 space-y-0.5">
+          <h4 class="text-xs font-semibold text-gray-200 truncate leading-snug">${item.title}</h4>
+          <div class="flex items-center justify-between text-[10px] text-gray-500 font-medium">
+            <span>${item.year}</span>
+            <span class="uppercase text-[9px] tracking-wider text-brandCyan">${item.type}</span>
+          </div>
+        </div>
+      `;
+    }
+
     container.appendChild(card);
   });
 }
@@ -682,6 +800,7 @@ function switchScreen(screenName) {
     "onepace",
     "livetv",
     "settings",
+    "search",
   ];
   screens.forEach((s) => {
     const el = document.getElementById(`screen-${s}`);
@@ -728,22 +847,61 @@ async function filterByStudio(studio) {
   let companyId = null;
   let networkId = null;
   switch (studio.toLowerCase()) {
-    case "disney": companyId = "2"; networkId = "2739"; break;
-    case "netflix": companyId = "178464"; networkId = "213"; break;
-    case "hbo": companyId = "174"; networkId = "3186"; break;
-    case "prime": companyId = "20580"; networkId = "1024"; break;
-    case "apple": companyId = "194303"; networkId = "2552"; break;
-    case "paramount": companyId = "4"; networkId = "359"; break;
-    case "marvel": companyId = "420"; break;
-    case "pixar": companyId = "3"; break;
+    case "disney":
+      companyId = "2";
+      networkId = "2739";
+      break;
+    case "netflix":
+      companyId = "178464";
+      networkId = "213";
+      break;
+    case "hbo":
+      companyId = "174";
+      networkId = "3186";
+      break;
+    case "prime":
+      companyId = "20580";
+      networkId = "1024";
+      break;
+    case "apple":
+      companyId = "194303";
+      networkId = "2552";
+      break;
+    case "paramount":
+      companyId = "4";
+      networkId = "359";
+      break;
+    case "marvel":
+      companyId = "420";
+      break;
+    case "pixar":
+      companyId = "3";
+      break;
+    case "warner":
+      companyId = "174"; // WB
+      break;
+    case "universal":
+      companyId = "33"; // Universal
+      break;
+    case "paramount":
+      companyId = "4"; // Paramount
+      break;
+    case "sony":
+      companyId = "5"; // Sony/Columbia is usually 5
+      break;
+    case "a24":
+      companyId = "41077"; // A24 company ID is 41077
+      break;
   }
 
   if (state.tmdbToken && (companyId || networkId)) {
-    const params = companyId ? { with_companies: companyId } : { with_networks: networkId };
+    const params = companyId
+      ? { with_companies: companyId }
+      : { with_networks: networkId };
     const movieData = await fetchTmdb("discover/movie", params);
-    
+
     if (movieData && movieData.results && movieData.results.length > 0) {
-      const items = movieData.results.map(item => mapTmdbItem(item, "movie"));
+      const items = movieData.results.map((item) => mapTmdbItem(item, "movie"));
       renderGrid("grid-all-movies", items);
       lucide.createIcons();
       return;
@@ -751,8 +909,15 @@ async function filterByStudio(studio) {
   }
 
   // Fallback if TMDB not configured or fetch failed
-  const filteredMovies = FALLBACK_DB.movies.filter(m => m.overview.toLowerCase().includes(studio.toLowerCase()) || studio === "disney");
-  renderGrid("grid-all-movies", filteredMovies.length > 0 ? filteredMovies : FALLBACK_DB.movies);
+  const filteredMovies = FALLBACK_DB.movies.filter(
+    (m) =>
+      m.overview.toLowerCase().includes(studio.toLowerCase()) ||
+      studio === "disney",
+  );
+  renderGrid(
+    "grid-all-movies",
+    filteredMovies.length > 0 ? filteredMovies : FALLBACK_DB.movies,
+  );
   lucide.createIcons();
 }
 
@@ -761,6 +926,7 @@ async function openDetailModal(media) {
   state.selectedMedia = media;
 
   const modalPoster = document.getElementById("modal-poster");
+  const modalBackdrop = document.getElementById("modal-backdrop-bg");
   const modalTitle = document.getElementById("modal-title");
   const modalOverview = document.getElementById("modal-overview");
   const modalYearChip = document.getElementById("modal-year-chip");
@@ -771,6 +937,8 @@ async function openDetailModal(media) {
 
   // Load initial fallback/passed data
   modalPoster.src = media.poster;
+  if (modalBackdrop)
+    modalBackdrop.style.backgroundImage = `url('${media.backdrop || media.poster}')`;
   modalTitle.textContent = media.title;
   modalOverview.textContent = media.overview;
   modalYearChip.textContent = media.year;
@@ -778,7 +946,10 @@ async function openDetailModal(media) {
   typeChip.textContent = media.type.toUpperCase();
 
   // If TMDB is active, let's fetch deeper details dynamically to replace the fallbacks!
-  if (state.tmdbToken && media.tmdbId && media.type !== "anime" && media.title !== "One Pace") {
+  // Anime can use TMDB details too if it has a tmdbId (which mapped items like One Piece do).
+  if (state.tmdbToken && media.tmdbId && media.title !== "One Pace") {
+    const tmdbEndpoint = media.type === "movie" ? "movie" : "tv";
+
     modalOverview.innerHTML = `
       <div class="flex items-center gap-2 text-brandCyan text-xs">
         <div class="w-3.5 h-3.5 rounded-full border border-current border-t-transparent animate-spin"></div>
@@ -786,43 +957,160 @@ async function openDetailModal(media) {
       </div>
     `;
 
-    const details = await fetchTmdb(`${media.type}/${media.tmdbId}`, {
-      append_to_response: "external_ids,credits,images"
+    const details = await fetchTmdb(`${tmdbEndpoint}/${media.tmdbId}`, {
+      append_to_response:
+        "external_ids,credits,images,release_dates,content_ratings",
     });
 
     if (details) {
-      const posterUrl = details.poster_path ? `https://image.tmdb.org/t/p/w500${details.poster_path}` : media.poster;
-      const backdropUrl = details.backdrop_path ? `https://image.tmdb.org/t/p/original${details.backdrop_path}` : media.backdrop;
-      
+      const posterUrl = details.poster_path
+        ? `https://image.tmdb.org/t/p/w500${details.poster_path}`
+        : media.poster;
+      const backdropUrl = details.backdrop_path
+        ? `https://image.tmdb.org/t/p/original${details.backdrop_path}`
+        : media.backdrop;
+
       modalPoster.src = posterUrl;
+      if (modalBackdrop)
+        modalBackdrop.style.backgroundImage = `url('${backdropUrl}')`;
       state.selectedMedia.poster = posterUrl;
       state.selectedMedia.backdrop = backdropUrl;
-      
+
       modalTitle.textContent = details.title || details.name || media.title;
-      modalOverview.textContent = details.overview || "No description available.";
-      
+      modalOverview.textContent =
+        details.overview || "No description available.";
+
       const releaseDate = details.release_date || details.first_air_date || "";
-      const year = releaseDate ? new Date(releaseDate).getFullYear() : media.year;
+      const year = releaseDate
+        ? new Date(releaseDate).getFullYear()
+        : media.year;
       modalYearChip.textContent = year;
       state.selectedMedia.year = year;
-      
-      const rating = details.vote_average ? details.vote_average.toFixed(1) : media.rating;
-      modalRatingChip.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i> ${rating}`;
-      state.selectedMedia.rating = rating;
 
-      // Update seasons list if TV
-      if (media.type === "tv") {
+      const runtime =
+        details.runtime ||
+        (details.episode_run_time && details.episode_run_time[0]) ||
+        0;
+      const h = Math.floor(runtime / 60);
+      const m = runtime % 60;
+      document.getElementById("modal-runtime-chip").textContent =
+        runtime > 0 ? (h > 0 ? `${h}h ${m}m` : `${m}m`) : "";
+      document.getElementById("info-runtime").textContent =
+        runtime > 0 ? (h > 0 ? `${h}h ${m}m` : `${m}m`) : "Unknown";
+
+      document.getElementById("info-language").textContent =
+        details.original_language || "EN";
+      document.getElementById("info-release").textContent =
+        releaseDate || "Unknown";
+
+      const formatMoney = (amount) => {
+        if (!amount) return "Unknown";
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(amount);
+      };
+      document.getElementById("info-budget").textContent = formatMoney(
+        details.budget,
+      );
+      document.getElementById("info-revenue").textContent = formatMoney(
+        details.revenue,
+      );
+
+      // Parse Director
+      let director = "Unknown";
+      if (details.credits && details.credits.crew) {
+        const d = details.credits.crew.find((c) => c.job === "Director");
+        if (d) director = d.name;
+      }
+      document.getElementById("modal-director").textContent = director;
+
+      // Extract Content Rating
+      let ageRating = "NR";
+      if (details.release_dates && details.release_dates.results) {
+        const us = details.release_dates.results.find(
+          (r) => r.iso_3166_1 === "US",
+        );
+        if (us && us.release_dates && us.release_dates.length) {
+          ageRating = us.release_dates[0].certification || "NR";
+        }
+      } else if (details.content_ratings && details.content_ratings.results) {
+        const us = details.content_ratings.results.find(
+          (r) => r.iso_3166_1 === "US",
+        );
+        if (us) ageRating = us.rating || "NR";
+      }
+      document.getElementById("modal-content-rating-chip").textContent =
+        ageRating;
+
+      // Setup Logo
+      const modalLogo = document.getElementById("modal-logo");
+      const modalTitleText = document.getElementById("modal-title");
+      if (
+        details.images &&
+        details.images.logos &&
+        details.images.logos.length > 0
+      ) {
+        const engLogo =
+          details.images.logos.find((l) => l.iso_639_1 === "en") ||
+          details.images.logos[0];
+        modalLogo.src = `https://image.tmdb.org/t/p/w500${engLogo.file_path}`;
+        modalLogo.classList.remove("hidden");
+        modalTitleText.classList.add("hidden");
+      } else {
+        modalLogo.classList.add("hidden");
+        modalTitleText.classList.remove("hidden");
+        modalTitleText.textContent =
+          details.title || details.name || media.title;
+      }
+
+      // Populate Genres
+      const genresList = details.genres
+        ? details.genres.map((g) => g.name).join(" • ")
+        : media.genres.join(" • ");
+      document.getElementById("modal-genres").textContent = genresList;
+
+      // Cast rail population
+      const castRail = document.getElementById("modal-cast-rail");
+      castRail.innerHTML = "";
+      if (details.credits && details.credits.cast) {
+        details.credits.cast.slice(0, 15).forEach((actor) => {
+          const prof = actor.profile_path
+            ? `https://image.tmdb.org/t/p/w185${actor.profile_path}`
+            : "https://ui-avatars.com/api/?background=333&color=fff&name=" +
+              encodeURIComponent(actor.name);
+          castRail.innerHTML += `
+            <div class="flex flex-col items-center gap-2 w-20 shrink-0 group">
+              <img src="${prof}" class="w-16 h-16 rounded-full object-cover border-2 border-transparent group-hover:border-white/50 transition-all duration-300 shadow-lg">
+              <div class="text-center">
+                <p class="text-[10px] text-white font-bold leading-tight line-clamp-1">${actor.name}</p>
+                <p class="text-[9px] text-gray-500 font-semibold line-clamp-1">${actor.character}</p>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      const rating = details.vote_average
+        ? details.vote_average.toFixed(1)
+        : media.rating;
+      document.getElementById("modal-rating-text").textContent = rating;
+
+      // Update seasons list if TV or Anime with seasons
+      if (media.type === "tv" || (media.type === "anime" && details.seasons)) {
         const seasons = details.seasons || [];
         const selector = document.getElementById("season-selector");
         selector.innerHTML = "";
-        
-        const validSeasons = seasons.filter(s => s.season_number > 0 && s.episode_count > 0);
+
+        const validSeasons = seasons.filter(
+          (s) => s.season_number > 0 && s.episode_count > 0,
+        );
         const seasonsToUse = validSeasons.length > 0 ? validSeasons : seasons;
-        
-        seasonsToUse.forEach(s => {
+
+        seasonsToUse.forEach((s) => {
           selector.innerHTML += `<option value="${s.season_number}">Season ${s.season_number} (${s.episode_count} Episodes)</option>`;
         });
-        
+
         state.selectedMedia.seasons = seasonsToUse.length;
         state.selectedMedia.seasonsData = seasonsToUse;
       }
@@ -860,8 +1148,12 @@ function closeDetailModal() {
 }
 
 function escapeHtml(s) {
-  return (s || "").replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+  return (s || "").replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
   );
 }
 
@@ -918,13 +1210,21 @@ async function loadSeasonEpisodes() {
   if (state.tmdbToken && media.tmdbId && media.type === "tv") {
     grid.innerHTML =
       '<div class="text-xs text-gray-500 p-3 flex items-center gap-2"><div class="w-4 h-4 border-2 border-brandCyan border-t-transparent rounded-full animate-spin"></div> Loading season episodes from TMDB…</div>';
-    
-    const seasonData = await fetchTmdb(`tv/${media.tmdbId}/season/${seasonVal}`);
+
+    const seasonData = await fetchTmdb(
+      `tv/${media.tmdbId}/season/${seasonVal}`,
+    );
     grid.innerHTML = "";
-    
+
     if (seasonData && seasonData.episodes && seasonData.episodes.length > 0) {
-      seasonData.episodes.forEach(ep => {
-        appendEpisodeRow(grid, media, seasonVal, ep.episode_number, ep.name || `Episode ${ep.episode_number}`);
+      seasonData.episodes.forEach((ep) => {
+        appendEpisodeRow(
+          grid,
+          media,
+          seasonVal,
+          ep.episode_number,
+          ep.name || `Episode ${ep.episode_number}`,
+        );
       });
       lucide.createIcons();
       return;
@@ -945,7 +1245,7 @@ async function loadSeasonEpisodes() {
 }
 
 // Integrated Secure Webview Playback Launcher
-function playStream(media, season = null, episode = null) {
+function playStream(media, season = null, episode = null, forceDomain = null) {
   // Anime resolves a DIRECT stream (AllAnime), like the mobile apps — not a
   // vidsrc embed. Route it to the direct-video player.
   if (media.type === "anime" && window.OmniAnime) {
@@ -956,15 +1256,46 @@ function playStream(media, season = null, episode = null) {
   closeDetailModal();
 
   const titleEl = document.getElementById("player-stream-title");
+
+  // Use passed domain or fallback to state
+  const targetDomain = forceDomain || state.vidsrcDomain || "vidsrc.me";
   let embedUrl = "";
 
   if (media.type === "movie") {
     titleEl.textContent = `${media.title} (Movie)`;
-    embedUrl = `https://${state.vidsrcDomain}/embed/movie?tmdb=${media.tmdbId}`;
   } else {
     titleEl.textContent = `${media.title} — S${season} E${episode}`;
-    embedUrl = `https://${state.vidsrcDomain}/embed/tv?tmdb=${media.tmdbId}&season=${season}&episode=${episode}`;
   }
+
+  if (targetDomain.includes("multiembed")) {
+    embedUrl =
+      media.type === "movie"
+        ? `https://multiembed.mov/?video_id=${media.tmdbId}&tmdb=1`
+        : `https://multiembed.mov/?video_id=${media.tmdbId}&tmdb=1&s=${season}&e=${episode}`;
+  } else if (targetDomain.includes("autoembed")) {
+    embedUrl =
+      media.type === "movie"
+        ? `https://autoembed.cc/embed/player.php?id=${media.tmdbId}`
+        : `https://autoembed.cc/embed/player.php?id=${media.tmdbId}&s=${season}&e=${episode}`;
+  } else if (targetDomain.includes("2embed")) {
+    embedUrl =
+      media.type === "movie"
+        ? `https://www.2embed.cc/embed/${media.tmdbId}`
+        : `https://www.2embed.cc/embedtv/${media.tmdbId}&s=${season}&e=${episode}`;
+  } else if (targetDomain.includes("smashy")) {
+    embedUrl =
+      media.type === "movie"
+        ? `https://embed.smashystream.com/playere.php?tmdb=${media.tmdbId}`
+        : `https://embed.smashystream.com/playere.php?tmdb=${media.tmdbId}&season=${season}&ep=${episode}`;
+  } else {
+    embedUrl =
+      media.type === "movie"
+        ? `https://${targetDomain}/embed/movie?tmdb=${media.tmdbId}`
+        : `https://${targetDomain}/embed/tv?tmdb=${media.tmdbId}&season=${season}&episode=${episode}`;
+  }
+
+  // Populate Server Dropdown dynamically
+  populateServerDropdown(media, season, episode);
 
   // Create isolated WebView element
   const container = document.getElementById("webview-container");
@@ -984,8 +1315,47 @@ function playStream(media, season = null, episode = null) {
   document.getElementById("player-overlay").classList.remove("hidden");
   window.electron.showNotification(
     "Streaming Live",
-    `Initializing isolated bypass stream for ${media.title}`,
+    `Initializing isolated bypass stream from ${targetDomain}`,
   );
+}
+
+// Populate the custom dropdown servers list
+function populateServerDropdown(media, season, episode) {
+  const list = document.getElementById("server-dropdown-list");
+  if (!list) return;
+
+  const servers = [
+    { name: "VidSrc ME", domain: "vidsrc.me", icon: "🔴" },
+    { name: "VidSrc TO", domain: "vidsrc.to", icon: "🟢" },
+    { name: "VidSrc PRO", domain: "vidsrc.pro", icon: "🟡" },
+    { name: "VidSrc VIP", domain: "vidsrc.vip", icon: "🟣" },
+    { name: "VidSrc CC", domain: "vidsrc.cc", icon: "🔵" },
+    { name: "SuperEmbed", domain: "multiembed.mov", icon: "⚡" },
+    { name: "AutoEmbed", domain: "autoembed.cc", icon: "🔥" },
+    { name: "2Embed", domain: "2embed.cc", icon: "🎥" },
+    { name: "SmashyStream", domain: "embed.smashystream.com", icon: "💥" }
+  ];
+
+  list.innerHTML = "";
+
+  servers.forEach((srv) => {
+    const btn = document.createElement("button");
+    btn.className =
+      "w-full text-left px-4 py-3 hover:bg-white/10 rounded-lg text-sm text-white font-medium flex items-center gap-3 transition cursor-pointer";
+    btn.innerHTML = `<span>${srv.icon}</span> ${srv.name} <span class="text-[10px] text-gray-500 ml-auto">${srv.domain}</span>`;
+    btn.onclick = () => {
+      playStream(media, season, episode, srv.domain);
+    };
+    list.appendChild(btn);
+  });
+      "w-full text-left px-4 py-2 hover:bg-white/10 rounded-lg text-sm text-white font-medium flex items-center gap-3 transition";
+    btn.innerHTML = `<span>${srv.icon}</span> ${srv.name} <span class="text-[10px] text-gray-500 ml-auto">${srv.domain}</span>`;
+    btn.onclick = () => {
+      // Re-trigger playback but force the new domain immediately
+      playStream(media, season, episode, srv.domain);
+    };
+    list.appendChild(btn);
+  });
 }
 
 // Anime direct-stream playback (parity with mobile: AllAnime -> direct URL).
@@ -994,8 +1364,17 @@ async function playAnimeStream(media, episode) {
   const titleEl = document.getElementById("player-stream-title");
   titleEl.textContent = `${media.title} — E${episode}`;
   const container = document.getElementById("webview-container");
-  container.innerHTML =
-    '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#fff;font-weight:600">Resolving stream…</div>';
+
+  // Immersive Loader (Lordflix anime loading style)
+  container.innerHTML = `
+    <div class="absolute inset-0 z-0 opacity-20 bg-cover bg-center" style="background-image: url('${media.backdrop || media.poster}')"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-[#050505]/40 z-10"></div>
+    <div class="relative z-20 flex flex-col items-center justify-center h-full gap-4 animate-pulse">
+        <img src="https://media.tenor.com/e2qU2h4aEVEAAAAC/anime-cooking.gif" class="w-32 h-32 rounded-xl border-4 border-white/10 shadow-2xl">
+        <h2 class="text-white text-2xl font-black tracking-widest drop-shadow-lg">Brewing Sources...</h2>
+        <p class="text-gray-400 font-semibold tracking-wide text-sm drop-shadow-md">${media.title} • Episode ${episode}</p>
+    </div>
+  `;
   document.getElementById("player-overlay").classList.remove("hidden");
 
   try {
@@ -1012,14 +1391,23 @@ async function playAnimeStream(media, episode) {
     console.warn("[Omniverse] anime resolve failed:", e);
     container.innerHTML =
       '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#fff;font-weight:600">No playable source found.</div>';
-    window.electron.showNotification("Playback", "No playable anime source found.");
+    window.electron.showNotification(
+      "Playback",
+      "No playable anime source found.",
+    );
   }
 }
 
 // Plays a direct mp4/m3u8 URL in a <video> (hls.js for HLS). The stream host's
 // Referer is applied to HLS segment requests; for progressive mp4 the main
 // process injects it (see main.js onBeforeSendHeaders).
-function playDirectVideo(container, url, referer, media = null, episode = null) {
+function playDirectVideo(
+  container,
+  url,
+  referer,
+  media = null,
+  episode = null,
+) {
   // Register the stream host so the main process injects the Referer for it.
   try {
     window.electron.registerAnimeHost(new URL(url).host);
@@ -1041,7 +1429,11 @@ function playDirectVideo(container, url, referer, media = null, episode = null) 
   video.addEventListener("loadedmetadata", async () => {
     if (media && media.anilistId && episode) {
       const duration = Math.round(video.duration) || 1440;
-      skipIntervals = await fetchDesktopAniSkip(media.anilistId, episode, duration);
+      skipIntervals = await fetchDesktopAniSkip(
+        media.anilistId,
+        episode,
+        duration,
+      );
     }
   });
 
@@ -1053,7 +1445,14 @@ function playDirectVideo(container, url, referer, media = null, episode = null) 
         if (current >= interval.start && current < interval.end - 1) {
           skippedTypes.add(interval.type);
           video.currentTime = interval.end;
-          showPlayerToast("Auto Skipped", interval.type === "op" ? "Opening Intro" : (interval.type === "recap" ? "Recap" : "Ending Outro"));
+          showPlayerToast(
+            "Auto Skipped",
+            interval.type === "op"
+              ? "Opening Intro"
+              : interval.type === "recap"
+                ? "Recap"
+                : "Ending Outro",
+          );
           break;
         }
       }
@@ -1081,14 +1480,16 @@ function playDirectVideo(container, url, referer, media = null, episode = null) 
 async function fetchDesktopAniSkip(anilistId, episode, durationSec) {
   const url = `https://api.aniskip.com/v2/skip-times/${anilistId}/${episode}?types[]=op&types[]=ed&types[]=recap&episodeLength=${durationSec}`;
   try {
-    const res = await window.electron.iptvFetch(url, "GET", { "Accept": "application/json" });
+    const res = await appFetch(url, "GET", {
+      Accept: "application/json",
+    });
     if (res.ok && res.html) {
       const data = JSON.parse(res.html);
       if (data.found && Array.isArray(data.results)) {
-        return data.results.map(r => ({
+        return data.results.map((r) => ({
           type: r.skipType || r.skip_type,
           start: r.interval.startTime,
-          end: r.interval.endTime
+          end: r.interval.endTime,
         }));
       }
     }
@@ -1107,7 +1508,7 @@ function showPlayerToast(title, body) {
   titleEl.textContent = title;
   bodyEl.textContent = body;
   toast.classList.remove("hidden");
-  
+
   if (state.toastTimeout) clearTimeout(state.toastTimeout);
   state.toastTimeout = setTimeout(() => {
     toast.classList.add("hidden");
@@ -1195,7 +1596,7 @@ async function setupLiveTvCenter() {
     if (cachedCountries) {
       countries = JSON.parse(cachedCountries);
     } else {
-      const res = await window.electron.iptvFetch("https://iptv-web.app/");
+      const res = await appFetch("https://iptv-web.app/");
       if (!res.ok)
         throw new Error(res.error || "Could not retrieve root catalog.");
 
@@ -1272,9 +1673,7 @@ async function loadIptvChannels(countryCode) {
   if (searchInput) searchInput.value = "";
 
   try {
-    const res = await window.electron.iptvFetch(
-      `https://iptv-web.app/${countryCode}/`,
-    );
+    const res = await appFetch(`https://iptv-web.app/${countryCode}/`);
     if (!res.ok) throw new Error(res.error || "Channel request failed");
 
     const parser = new DOMParser();
@@ -1458,7 +1857,7 @@ async function playLiveChannel(channel, buttonEl) {
 
 async function resolveIptvStream(channelUrl) {
   const fullUrl = `https://iptv-web.app${channelUrl}`;
-  const res = await window.electron.iptvFetch(fullUrl);
+  const res = await appFetch(fullUrl);
   if (!res.ok) throw new Error(res.error || "Channel request failed");
 
   // Extract using meta tag regex (og:video)
@@ -1488,71 +1887,47 @@ function setupSearchInput() {
     if (searchTimeout) clearTimeout(searchTimeout);
 
     if (!val) {
-      renderCatalogFeeds();
+      document.getElementById("grid-search-results").innerHTML = "";
       return;
     }
 
     searchTimeout = setTimeout(async () => {
       if (state.tmdbToken) {
-        showGridLoading("grid-trending-movies");
-        showGridLoading("grid-trending-tv");
-        showGridLoading("grid-all-movies");
-        showGridLoading("grid-all-tv");
+        showGridLoading("grid-search-results");
 
         const searchData = await fetchTmdb("search/multi", { query: val });
-        
-        if (searchData && searchData.results && searchData.results.length > 0) {
-          const movies = searchData.results
-            .filter(item => item.media_type === "movie" && (item.poster_path || item.backdrop_path))
-            .map(item => mapTmdbItem(item, "movie"));
-            
-          const tv = searchData.results
-            .filter(item => item.media_type === "tv" && (item.poster_path || item.backdrop_path))
-            .map(item => mapTmdbItem(item, "tv"));
 
-          renderGrid("grid-trending-movies", movies.slice(0, 12));
-          renderGrid("grid-trending-tv", tv.slice(0, 12));
-          renderGrid("grid-all-movies", movies.slice(0, 12));
-          renderGrid("grid-all-tv", tv.slice(0, 12));
-          
-          if (movies.length > 0) {
-            updateHeroBanner(movies[0]);
-          } else if (tv.length > 0) {
-            updateHeroBanner(tv[0]);
-          }
-          
+        if (searchData && searchData.results && searchData.results.length > 0) {
+          const items = searchData.results
+            .filter(
+              (item) =>
+                (item.media_type === "movie" || item.media_type === "tv") &&
+                (item.poster_path || item.backdrop_path),
+            )
+            .map((item) => mapTmdbItem(item, item.media_type));
+
+          renderGrid("grid-search-results", items.slice(0, 24), true); // true = lordflix poster style
           lucide.createIcons();
           return;
         }
       }
 
       // Fallback local filtering
-      const filteredMovies = FALLBACK_DB.movies.filter((m) =>
-        m.title.toLowerCase().includes(val) || m.overview.toLowerCase().includes(val)
+      const filteredMovies = FALLBACK_DB.movies.filter(
+        (m) =>
+          m.title.toLowerCase().includes(val) ||
+          m.overview.toLowerCase().includes(val),
       );
-      const filteredTv = FALLBACK_DB.tv.filter((t) =>
-        t.title.toLowerCase().includes(val) || t.overview.toLowerCase().includes(val)
+      const filteredTv = FALLBACK_DB.tv.filter(
+        (t) =>
+          t.title.toLowerCase().includes(val) ||
+          t.overview.toLowerCase().includes(val),
       );
 
-      renderGrid("grid-trending-movies", filteredMovies);
-      renderGrid("grid-trending-tv", filteredTv);
-      renderGrid("grid-all-movies", filteredMovies);
-      renderGrid("grid-all-tv", filteredTv);
-      
-      if (filteredMovies.length > 0) {
-        updateHeroBanner(filteredMovies[0]);
-      }
+      const items = [...filteredMovies, ...filteredTv];
+      renderGrid("grid-search-results", items, true);
       lucide.createIcons();
     }, 400);
-
-    // Switch to home screen for general visibility
-    if (
-      state.currentScreen !== "home" &&
-      state.currentScreen !== "movies" &&
-      state.currentScreen !== "tv"
-    ) {
-      switchScreen("home");
-    }
   });
 }
 
@@ -1604,14 +1979,25 @@ function saveAllApiKeys() {
   const oldClientSecret = state.traktClientSecret;
 
   state.traktToken = document.getElementById("trakt-token-input").value.trim();
-  state.traktClientId = document.getElementById("trakt-client-id-input").value.trim();
-  state.traktClientSecret = document.getElementById("trakt-client-secret-input").value.trim();
-  state.pixeldrainApiKey = document.getElementById("pixeldrain-key-input").value.trim();
+  state.traktClientId = document
+    .getElementById("trakt-client-id-input")
+    .value.trim();
+  state.traktClientSecret = document
+    .getElementById("trakt-client-secret-input")
+    .value.trim();
+  state.pixeldrainApiKey = document
+    .getElementById("pixeldrain-key-input")
+    .value.trim();
   state.tvdbApiKey = document.getElementById("tvdb-key-input").value.trim();
   state.tvdbPin = document.getElementById("tvdb-pin-input").value.trim();
-  state.anilistAccessToken = document.getElementById("anilist-token-input").value.trim();
+  state.anilistAccessToken = document
+    .getElementById("anilist-token-input")
+    .value.trim();
 
-  if (state.traktClientId !== oldClientId || state.traktClientSecret !== oldClientSecret) {
+  if (
+    state.traktClientId !== oldClientId ||
+    state.traktClientSecret !== oldClientSecret
+  ) {
     state.traktRefreshToken = "";
     state.traktTokenExpiresAt = 0;
     state.traktUsername = "";
@@ -1630,7 +2016,7 @@ function saveAllApiKeys() {
 
   window.electron.showNotification(
     "Credentials Saved",
-    "All updated API keys and system credentials have been safely stored locally."
+    "All updated API keys and system credentials have been safely stored locally.",
   );
 
   // Sync back to Trakt if connected
@@ -1674,7 +2060,10 @@ function importSyncCode() {
     }
     if (config.trakt_refresh_token) {
       state.traktRefreshToken = config.trakt_refresh_token;
-      localStorage.setItem("omni_trakt_refresh_token", config.trakt_refresh_token);
+      localStorage.setItem(
+        "omni_trakt_refresh_token",
+        config.trakt_refresh_token,
+      );
     }
     if (config.trakt_token_expires_at) {
       state.traktTokenExpiresAt = parseInt(config.trakt_token_expires_at) || 0;
@@ -1750,7 +2139,9 @@ async function ensureFreshTraktToken() {
   if (state.traktTokenExpiresAt > refreshAt) return;
 
   if (!state.traktRefreshToken || !state.traktClientSecret) {
-    console.warn("Trakt token expired but cannot refresh (missing refresh token or client secret).");
+    console.warn(
+      "Trakt token expired but cannot refresh (missing refresh token or client secret).",
+    );
     return;
   }
 
@@ -1769,15 +2160,18 @@ async function ensureFreshTraktToken() {
       "Content-Type": "application/json",
     };
 
-    const res = await window.electron.iptvFetch(url, "POST", headers, body);
+    const res = await appFetch(url, "POST", headers, body);
     if (!res.ok) {
-      throw new Error(`Trakt token refresh failed with status ${res.status}: ${res.error || ""}`);
+      throw new Error(
+        `Trakt token refresh failed with status ${res.status}: ${res.error || ""}`,
+      );
     }
 
     const data = JSON.parse(res.html);
     const createdAtSeconds = data.created_at || Math.floor(Date.now() / 1000);
     const expiresIn = data.expires_in || 0;
-    const expiresAt = expiresIn <= 0 ? 0 : (createdAtSeconds + expiresIn) * 1000;
+    const expiresAt =
+      expiresIn <= 0 ? 0 : (createdAtSeconds + expiresIn) * 1000;
 
     state.traktToken = data.access_token || "";
     state.traktRefreshToken = data.refresh_token || "";
@@ -1806,13 +2200,21 @@ async function refreshTraktLoginState() {
   // Attempt to refresh the token if we have a refresh token
   await ensureFreshTraktToken();
 
-  const token = (document.getElementById("trakt-token-input").value || state.traktToken || "").trim();
-  const clientId = (document.getElementById("trakt-client-id-input").value || state.traktClientId || "").trim();
+  const token = (
+    document.getElementById("trakt-token-input").value ||
+    state.traktToken ||
+    ""
+  ).trim();
+  const clientId = (
+    document.getElementById("trakt-client-id-input").value ||
+    state.traktClientId ||
+    ""
+  ).trim();
 
   if (!token || !clientId) {
     window.electron.showNotification(
       "Login Status",
-      "Please enter your Trakt Account Token and Client ID first to verify authentication."
+      "Please enter your Trakt Account Token and Client ID first to verify authentication.",
     );
     if (btn) {
       btn.disabled = false;
@@ -1826,16 +2228,17 @@ async function refreshTraktLoginState() {
     const url = "https://api.trakt.tv/users/settings";
     const headers = {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "trakt-api-version": "2",
       "trakt-api-key": clientId,
     };
 
-    const res = await window.electron.iptvFetch(url, "GET", headers);
+    const res = await appFetch(url, "GET", headers);
     if (res.ok && res.html) {
       const data = JSON.parse(res.html);
-      const username = data.user && data.user.username ? data.user.username : "";
-      
+      const username =
+        data.user && data.user.username ? data.user.username : "";
+
       // Persist verified state
       state.traktToken = token;
       state.traktClientId = clientId;
@@ -1847,19 +2250,21 @@ async function refreshTraktLoginState() {
 
       window.electron.showNotification(
         "Sync Authenticated",
-        username ? `Welcome back, ${username}! Sync channels are active.` : "Trakt session verified successfully."
+        username
+          ? `Welcome back, ${username}! Sync channels are active.`
+          : "Trakt session verified successfully.",
       );
     } else {
       window.electron.showNotification(
         "Authentication Refused",
-        "Trakt rejected this Token. Please verify credentials."
+        "Trakt rejected this Token. Please verify credentials.",
       );
     }
   } catch (err) {
     console.error("Trakt refresh settings error:", err);
     window.electron.showNotification(
       "Sync Network Warning",
-      "Could not complete verification. Server connection timed out."
+      "Could not complete verification. Server connection timed out.",
     );
   } finally {
     if (btn) {
@@ -1911,7 +2316,7 @@ async function checkAppUpdates(silent = false) {
       }
     } catch (_) {}
 
-    const res = await window.electron.iptvFetch(
+    const res = await appFetch(
       "https://api.github.com/repos/FiNiX-GaMmA/omniverse/releases/latest",
     );
     if (!res.ok) throw new Error(res.error || "GitHub request failed");
@@ -1936,16 +2341,40 @@ async function checkAppUpdates(silent = false) {
         // Try to find an exact match for architecture first
         release.assets.forEach((asset) => {
           const name = asset.name.toLowerCase();
-          if (platform === "win32" && name.endsWith(".exe") && !name.includes("unsigned") && !name.includes("apk")) {
-            if (name.includes(arch) || (arch === "x64" && !name.includes("arm64") && !name.includes("arm32"))) {
+          if (
+            platform === "win32" &&
+            name.endsWith(".exe") &&
+            !name.includes("unsigned") &&
+            !name.includes("apk")
+          ) {
+            if (
+              name.includes(arch) ||
+              (arch === "x64" &&
+                !name.includes("arm64") &&
+                !name.includes("arm32"))
+            ) {
               targetAsset = asset;
             }
           } else if (platform === "darwin" && name.endsWith(".dmg")) {
-            if (name.includes(arch) || (arch === "arm64" && name.includes("arm")) || (arch === "x64" && (name.includes("x64") || name.includes("intel") || name.includes("universal")))) {
+            if (
+              name.includes(arch) ||
+              (arch === "arm64" && name.includes("arm")) ||
+              (arch === "x64" &&
+                (name.includes("x64") ||
+                  name.includes("intel") ||
+                  name.includes("universal")))
+            ) {
               targetAsset = asset;
             }
-          } else if (platform === "linux" && (name.endsWith(".appimage") || name.endsWith(".deb"))) {
-            if (name.includes(arch) || (arch === "x64" && (name.includes("amd64") || name.includes("x86_64")))) {
+          } else if (
+            platform === "linux" &&
+            (name.endsWith(".appimage") || name.endsWith(".deb"))
+          ) {
+            if (
+              name.includes(arch) ||
+              (arch === "x64" &&
+                (name.includes("amd64") || name.includes("x86_64")))
+            ) {
               if (!targetAsset || name.endsWith(".appimage")) {
                 targetAsset = asset;
               }
@@ -1956,11 +2385,19 @@ async function checkAppUpdates(silent = false) {
         if (!targetAsset) {
           release.assets.forEach((asset) => {
             const name = asset.name.toLowerCase();
-            if (platform === "win32" && name.endsWith(".exe") && !name.includes("unsigned") && !name.includes("apk")) {
+            if (
+              platform === "win32" &&
+              name.endsWith(".exe") &&
+              !name.includes("unsigned") &&
+              !name.includes("apk")
+            ) {
               if (!targetAsset) targetAsset = asset;
             } else if (platform === "darwin" && name.endsWith(".dmg")) {
               if (!targetAsset) targetAsset = asset;
-            } else if (platform === "linux" && (name.endsWith(".appimage") || name.endsWith(".deb"))) {
+            } else if (
+              platform === "linux" &&
+              (name.endsWith(".appimage") || name.endsWith(".deb"))
+            ) {
               if (!targetAsset || name.endsWith(".appimage")) {
                 targetAsset = asset;
               }
@@ -2171,7 +2608,7 @@ async function showPairingQr() {
     // Poll the ntfy.sh topic for remote POST updates every 2 seconds
     state.pairingInterval = setInterval(async () => {
       try {
-        const res = await window.electron.iptvFetch(
+        const res = await appFetch(
           `https://ntfy.sh/${pairId}/json?poll=1`,
           "GET",
         );
@@ -2244,46 +2681,75 @@ function cancelPairing() {
 // ==============================================================================
 function mapOnePaceToOnePiece(seasonNumber, episodeNumber) {
   const arcEpisodes = {
-    1: "1-3",          // Romance Dawn
-    2: "4-8",          // Orange Town
-    3: "9-17",         // Syrup Village
-    4: "18",           // Gaimon
-    5: "19-30",        // Baratie
-    6: "31-44",        // Arlong Park
-    7: "45,48-53",     // Loguetown
-    8: "62-63",        // Reverse Mountain
-    9: "64-67",        // Whisky Peak
-    10: "70-77",       // Little Garden
-    11: "78-91",       // Drum Island
-    12: "92-130",      // Alabasta
-    13: "144-152",     // Jaya
-    14: "153-195",     // Skypiea
-    15: "207-219",     // Long Ring Long Land
-    16: "229-263",     // Water Seven
-    17: "263-312",     // Enies Lobby
-    18: "313-325",     // Post-Enies Lobby
-    19: "337-381",     // Thriller Bark
-    20: "385-405",     // Sabaody Archipelago
-    21: "408-417",     // Amazon Lily
-    22: "422-452",     // Impel Down
-    23: "457-489",     // Marineford
-    24: "490-516",     // Post-War
-    25: "517-522",     // Return to Sabaody
-    26: "523-574",     // Fishman Island
-    27: "579-625",     // Punk Hazard
-    28: "629-746",     // Dressrosa
-    29: "751-779",     // Zou
-    30: "777-877",     // Whole Cake Island
-    31: "878-889",     // Reverie
-    32: "890-1085",    // Wano
-    33: "1086-1155"    // Egghead
+    1: "1-3", // Romance Dawn
+    2: "4-8", // Orange Town
+    3: "9-17", // Syrup Village
+    4: "18", // Gaimon
+    5: "19-30", // Baratie
+    6: "31-44", // Arlong Park
+    7: "45,48-53", // Loguetown
+    8: "62-63", // Reverse Mountain
+    9: "64-67", // Whisky Peak
+    10: "70-77", // Little Garden
+    11: "78-91", // Drum Island
+    12: "92-130", // Alabasta
+    13: "144-152", // Jaya
+    14: "153-195", // Skypiea
+    15: "207-219", // Long Ring Long Land
+    16: "229-263", // Water Seven
+    17: "263-312", // Enies Lobby
+    18: "313-325", // Post-Enies Lobby
+    19: "337-381", // Thriller Bark
+    20: "385-405", // Sabaody Archipelago
+    21: "408-417", // Amazon Lily
+    22: "422-452", // Impel Down
+    23: "457-489", // Marineford
+    24: "490-516", // Post-War
+    25: "517-522", // Return to Sabaody
+    26: "523-574", // Fishman Island
+    27: "579-625", // Punk Hazard
+    28: "629-746", // Dressrosa
+    29: "751-779", // Zou
+    30: "777-877", // Whole Cake Island
+    31: "878-889", // Reverie
+    32: "890-1085", // Wano
+    33: "1086-1155", // Egghead
   };
-  
+
   const arcTotalEpisodes = {
-    1: 2, 2: 3, 3: 7, 4: 1, 5: 10, 6: 10, 7: 5, 8: 1, 9: 2, 10: 5,
-    11: 6, 12: 21, 13: 5, 14: 24, 15: 3, 16: 20, 17: 25, 18: 5, 19: 22,
-    20: 11, 21: 4, 22: 14, 23: 17, 24: 8, 25: 2, 26: 22, 27: 20, 28: 48,
-    29: 10, 30: 39, 31: 4, 32: 60, 33: 21
+    1: 2,
+    2: 3,
+    3: 7,
+    4: 1,
+    5: 10,
+    6: 10,
+    7: 5,
+    8: 1,
+    9: 2,
+    10: 5,
+    11: 6,
+    12: 21,
+    13: 5,
+    14: 24,
+    15: 3,
+    16: 20,
+    17: 25,
+    18: 5,
+    19: 22,
+    20: 11,
+    21: 4,
+    22: 14,
+    23: 17,
+    24: 8,
+    25: 2,
+    26: 22,
+    27: 20,
+    28: 48,
+    29: 10,
+    30: 39,
+    31: 4,
+    32: 60,
+    33: 21,
   };
 
   const episodesStr = arcEpisodes[seasonNumber] || "1";
@@ -2309,11 +2775,11 @@ function mapOnePaceToOnePiece(seasonNumber, episodeNumber) {
   if (epNumbers.length === 0) return 1;
   const totalEpisodes = arcTotalEpisodes[seasonNumber] || 1;
   if (totalEpisodes <= 1) return epNumbers[0];
-  
+
   const ratio = (episodeNumber - 1) / (totalEpisodes - 1);
   const targetIndex = Math.min(
     epNumbers.length - 1,
-    Math.max(0, Math.floor(ratio * (epNumbers.length - 1)))
+    Math.max(0, Math.floor(ratio * (epNumbers.length - 1))),
   );
   return epNumbers[targetIndex];
 }
@@ -2356,61 +2822,102 @@ function getRealOnePaceSeason(season) {
     "whole-cake-island", // 33
     "reverie", // 34
     "wano", // 35
-    "egghead" // 36
+    "egghead", // 36
   ];
   const slug = websiteSlugs[season - 1];
   if (!slug) return season;
   switch (slug) {
-    case "romance-dawn": return 1;
-    case "orange-town": return 2;
-    case "syrup-village": return 3;
-    case "gaimon": return 4;
-    case "baratie": return 5;
-    case "arlong-park": return 6;
-    case "the-adventures-of-buggys-crew": return 0; // special
-    case "loguetown": return 7;
-    case "reverse-mountain": return 8;
-    case "whisky-peak": return 9;
-    case "the-trials-of-koby-meppo": return 0; // special
-    case "little-garden": return 10;
-    case "drum-island": return 11;
-    case "alabasta": return 12;
-    case "jaya": return 13;
-    case "skypiea": return 14;
-    case "long-ring-long-land": return 15;
-    case "water-seven": return 16;
-    case "enies-lobby": return 17;
-    case "post-enies-lobby": return 18;
-    case "thriller-bark": return 19;
-    case "sabaody-archipelago": return 20;
-    case "amazon-lily": return 21;
-    case "impel-down": return 22;
-    case "if-you-could-go-anywhere-the-adventures-of-the-straw-hats": return 0; // special
-    case "marineford": return 23;
-    case "post-war": return 24;
-    case "return-to-sabaody": return 25;
-    case "fishman-island": return 26;
-    case "punk-hazard": return 27;
-    case "dressrosa": return 28;
-    case "zou": return 29;
-    case "whole-cake-island": return 30;
-    case "reverie": return 31;
-    case "wano": return 32;
-    case "egghead": return 33;
-    default: return season;
+    case "romance-dawn":
+      return 1;
+    case "orange-town":
+      return 2;
+    case "syrup-village":
+      return 3;
+    case "gaimon":
+      return 4;
+    case "baratie":
+      return 5;
+    case "arlong-park":
+      return 6;
+    case "the-adventures-of-buggys-crew":
+      return 0; // special
+    case "loguetown":
+      return 7;
+    case "reverse-mountain":
+      return 8;
+    case "whisky-peak":
+      return 9;
+    case "the-trials-of-koby-meppo":
+      return 0; // special
+    case "little-garden":
+      return 10;
+    case "drum-island":
+      return 11;
+    case "alabasta":
+      return 12;
+    case "jaya":
+      return 13;
+    case "skypiea":
+      return 14;
+    case "long-ring-long-land":
+      return 15;
+    case "water-seven":
+      return 16;
+    case "enies-lobby":
+      return 17;
+    case "post-enies-lobby":
+      return 18;
+    case "thriller-bark":
+      return 19;
+    case "sabaody-archipelago":
+      return 20;
+    case "amazon-lily":
+      return 21;
+    case "impel-down":
+      return 22;
+    case "if-you-could-go-anywhere-the-adventures-of-the-straw-hats":
+      return 0; // special
+    case "marineford":
+      return 23;
+    case "post-war":
+      return 24;
+    case "return-to-sabaody":
+      return 25;
+    case "fishman-island":
+      return 26;
+    case "punk-hazard":
+      return 27;
+    case "dressrosa":
+      return 28;
+    case "zou":
+      return 29;
+    case "whole-cake-island":
+      return 30;
+    case "reverie":
+      return 31;
+    case "wano":
+      return 32;
+    case "egghead":
+      return 33;
+    default:
+      return season;
   }
 }
 
 function checkOnePaceMigration() {
   const history = state.watchHistory || [];
   const paceEntry = history.find(
-    (h) => h.itemId === "onepace:anime:21" || h.title === "One Pace" || (h.itemId && h.itemId.startsWith("onepace:"))
+    (h) =>
+      h.itemId === "onepace:anime:21" ||
+      h.title === "One Pace" ||
+      (h.itemId && h.itemId.startsWith("onepace:")),
   );
   if (!paceEntry) return;
 
   const modal = document.createElement("div");
   modal.id = "onepace-migration-modal";
-  modal.className = "fixed inset-0 z-[10000] detail-modal-overlay flex items-center justify-center p-6";
+  modal.className =
+    "fixed inset-0 z-[10000] detail-modal-overlay flex items-center justify-center p-6";
   modal.innerHTML = `
     <div class="detail-modal-card w-full max-w-md p-6 rounded-2xl space-y-6 text-center animate-fade-in bg-brandSec border border-white/[0.04]">
       <div class="flex flex-col items-center gap-3">
@@ -2440,9 +2947,15 @@ function checkOnePaceMigration() {
 
   document.getElementById("btn-migrate-dismiss").onclick = () => {
     state.watchHistory = history.filter(
-      (h) => h.itemId !== "onepace:anime:21" && h.title !== "One Pace" && !(h.itemId && h.itemId.startsWith("onepace:"))
+      (h) =>
+        h.itemId !== "onepace:anime:21" &&
+        h.title !== "One Pace" &&
+        !(h.itemId && h.itemId.startsWith("onepace:")),
     );
-    localStorage.setItem("omni_watch_history", JSON.stringify(state.watchHistory));
+    localStorage.setItem(
+      "omni_watch_history",
+      JSON.stringify(state.watchHistory),
+    );
     modal.remove();
     renderContinueWatching();
   };
@@ -2451,8 +2964,9 @@ function checkOnePaceMigration() {
     const season = paceEntry.season || paceEntry.seasonNumber || 1;
     const epNum = paceEntry.episode || paceEntry.episodeNumber || 1;
     const realSeason = getRealOnePaceSeason(season);
-    const originalEpisode = realSeason === 0 ? 1 : mapOnePaceToOnePiece(realSeason, epNum);
-    
+    const originalEpisode =
+      realSeason === 0 ? 1 : mapOnePaceToOnePiece(realSeason, epNum);
+
     const pieceEntry = {
       itemId: "anilist:anime:21",
       title: "One Piece",
@@ -2463,18 +2977,25 @@ function checkOnePaceMigration() {
       durationMs: paceEntry.durationMs || 1500000,
       lastWatchedAt: Date.now(),
       poster: "https://image.tmdb.org/t/p/w500/or06gK6hxJN98Es842gZgYI7CIE.jpg",
-      backdrop: "https://image.tmdb.org/t/p/original/bMv9mO_b2qf8U4VwYAtW3Zc40S9.jpg"
+      backdrop:
+        "https://image.tmdb.org/t/p/original/bMv9mO_b2qf8U4VwYAtW3Zc40S9.jpg",
     };
 
     state.watchHistory = history.filter(
-      (h) => h.itemId !== "onepace:anime:21" && h.title !== "One Pace" && !(h.itemId && h.itemId.startsWith("onepace:"))
+      (h) =>
+        h.itemId !== "onepace:anime:21" &&
+        h.title !== "One Pace" &&
+        !(h.itemId && h.itemId.startsWith("onepace:")),
     );
     state.watchHistory.push(pieceEntry);
-    localStorage.setItem("omni_watch_history", JSON.stringify(state.watchHistory));
+    localStorage.setItem(
+      "omni_watch_history",
+      JSON.stringify(state.watchHistory),
+    );
 
     window.electron.showNotification(
       "Migration Successful",
-      `Your progress has been migrated to One Piece Episode ${originalEpisode}!`
+      `Your progress has been migrated to One Piece Episode ${originalEpisode}!`,
     );
 
     if (state.traktToken) {
@@ -2490,13 +3011,19 @@ function checkOnePaceMigration() {
 // Trakt Bidirectional Sync Engine & Continue Watching Shelf
 // ==============================================================================
 function normalizeWatchProgress(rawItem) {
-  const poster = rawItem.posterPath 
-    ? (rawItem.posterPath.startsWith("http") ? rawItem.posterPath : `https://image.tmdb.org/t/p/w500${rawItem.posterPath}`)
-    : (rawItem.poster || "https://onepace.net/images/og-backdrop.jpg");
-    
-  const backdrop = rawItem.backdropPath 
-    ? (rawItem.backdropPath.startsWith("http") ? rawItem.backdropPath : `https://image.tmdb.org/t/p/original${rawItem.backdropPath}`)
-    : (rawItem.backdrop || "https://onepace.net/images/og-backdrop.jpg");
+  const poster = rawItem.posterPath
+    ? rawItem.posterPath.startsWith("http")
+      ? rawItem.posterPath
+      : `https://image.tmdb.org/t/p/w500${rawItem.posterPath}`
+    : rawItem.poster ||
+      "https://ui-avatars.com/api/?background=111&color=fff&name=Media";
+
+  const backdrop = rawItem.backdropPath
+    ? rawItem.backdropPath.startsWith("http")
+      ? rawItem.backdropPath
+      : `https://image.tmdb.org/t/p/original${rawItem.backdropPath}`
+    : rawItem.backdrop ||
+      "https://ui-avatars.com/api/?background=111&color=fff&name=Media";
 
   let progress = 0;
   if (rawItem.positionMs && rawItem.durationMs && rawItem.durationMs > 0) {
@@ -2505,8 +3032,18 @@ function normalizeWatchProgress(rawItem) {
     progress = rawItem.progress;
   }
 
-  const season = rawItem.seasonNumber !== undefined ? rawItem.seasonNumber : (rawItem.season !== undefined ? rawItem.season : 1);
-  const episode = rawItem.episodeNumber !== undefined ? rawItem.episodeNumber : (rawItem.episode !== undefined ? rawItem.episode : 1);
+  const season =
+    rawItem.seasonNumber !== undefined
+      ? rawItem.seasonNumber
+      : rawItem.season !== undefined
+        ? rawItem.season
+        : 1;
+  const episode =
+    rawItem.episodeNumber !== undefined
+      ? rawItem.episodeNumber
+      : rawItem.episode !== undefined
+        ? rawItem.episode
+        : 1;
 
   return {
     ...rawItem,
@@ -2514,7 +3051,7 @@ function normalizeWatchProgress(rawItem) {
     backdrop,
     progress,
     season,
-    episode
+    episode,
   };
 }
 
@@ -2569,7 +3106,7 @@ function renderContinueWatching() {
 
     card.innerHTML = `
       <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-2">
-        <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://onepace.net/images/og-backdrop.jpg'">
+        <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
         <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60">
           <div class="bg-brandCyan h-full" style="width: ${progressPercent}%"></div>
         </div>
@@ -2658,7 +3195,7 @@ async function pullFromTrakt() {
       "trakt-api-key": state.traktClientId,
     };
 
-    const res = await window.electron.iptvFetch(listsUrl, "GET", headers);
+    const res = await appFetch(listsUrl, "GET", headers);
     if (!res.ok) throw new Error("Could not fetch Trakt lists");
 
     const lists = JSON.parse(res.html);
@@ -2734,7 +3271,7 @@ async function pushToTrakt() {
       "trakt-api-key": state.traktClientId,
     };
 
-    const res = await window.electron.iptvFetch(listsUrl, "GET", headers);
+    const res = await appFetch(listsUrl, "GET", headers);
     if (!res.ok) throw new Error("Could not check lists");
 
     const lists = JSON.parse(res.html);
@@ -2764,7 +3301,7 @@ async function pushToTrakt() {
 
     if (syncList) {
       // PUT request to update list
-      await window.electron.iptvFetch(
+      await appFetch(
         `https://api.trakt.tv/users/me/lists/${syncList.ids.trakt}`,
         "PUT",
         headers,
@@ -2772,7 +3309,7 @@ async function pushToTrakt() {
       );
     } else {
       // POST request to create list
-      await window.electron.iptvFetch(
+      await appFetch(
         "https://api.trakt.tv/users/me/lists",
         "POST",
         headers,
@@ -2792,7 +3329,8 @@ function showSyncProgressModal() {
 
   const modal = document.createElement("div");
   modal.id = "sync-progress-modal";
-  modal.className = "fixed inset-0 z-[10000] detail-modal-overlay flex items-center justify-center p-6";
+  modal.className =
+    "fixed inset-0 z-[10000] detail-modal-overlay flex items-center justify-center p-6";
   modal.innerHTML = `
     <div class="detail-modal-card w-full max-w-sm p-6 rounded-2xl space-y-6 text-center bg-brandSec border border-white/[0.04] animate-fade-in shadow-2xl">
       <div class="flex flex-col items-center gap-3">
@@ -2802,7 +3340,7 @@ function showSyncProgressModal() {
         <h2 class="font-extrabold text-lg text-white">Synchronizing Cloud</h2>
         <p id="sync-modal-status" class="text-xs text-gray-400 leading-relaxed">Initializing secure handshake...</p>
       </div>
-      
+
       <div class="space-y-2">
         <div class="w-full bg-brandDark/50 rounded-full h-2 overflow-hidden border border-white/[0.02]">
           <div id="sync-modal-progress-bar" class="bg-brandCyan h-full transition-all duration-300" style="width: 0%"></div>
@@ -2849,12 +3387,12 @@ async function forceSyncNow() {
 
   showSyncProgressModal();
   updateSyncProgress(10, "Establishing connection to Trakt...");
-  await new Promise(resolve => setTimeout(resolve, 600));
+  await new Promise((resolve) => setTimeout(resolve, 600));
 
   try {
     window.electron.showNotification(
       "Cloud Sync Initiated",
-      "Pulling latest watch progress and profiles from Trakt..."
+      "Pulling latest watch progress and profiles from Trakt...",
     );
   } catch (err) {
     console.warn("Failed to show cloud sync notification:", err);
@@ -2865,26 +3403,26 @@ async function forceSyncNow() {
       updateSyncProgress(30, "Downloading watch history and settings...");
       await pullFromTrakt();
       updateSyncProgress(60, "Merging profiles and credentials...");
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } else {
       updateSyncProgress(50, "Skipping Trakt (not authenticated)...");
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 400));
     }
-    
+
     updateSyncProgress(75, "Re-rendering catalog feeds and trending lists...");
     await renderCatalogFeeds();
-    
+
     updateSyncProgress(90, "Updating Continue Watching shelf...");
     renderContinueWatching();
-    await new Promise(resolve => setTimeout(resolve, 450));
+    await new Promise((resolve) => setTimeout(resolve, 450));
 
     updateSyncProgress(100, "Synchronized!");
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     try {
       window.electron.showNotification(
         "Sync Completed",
-        "Dynamic catalogs and continue-watching watch history have been successfully synchronized!"
+        "Dynamic catalogs and continue-watching watch history have been successfully synchronized!",
       );
     } catch (err) {
       console.warn("Failed to show sync completed notification:", err);
@@ -2893,7 +3431,7 @@ async function forceSyncNow() {
     console.error("Force sync failed:", err);
     window.electron.showNotification(
       "Sync Warning",
-      "Sync finished with some network warnings."
+      "Sync finished with some network warnings.",
     );
   } finally {
     hideSyncProgressModal();

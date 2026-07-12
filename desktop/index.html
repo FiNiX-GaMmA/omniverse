@@ -15,14 +15,17 @@
             tailwind.config = {
                 theme: {
                     extend: {
+                        fontFamily: {
+                            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        },
                         colors: {
-                            brandDark: "#0a0b0d",
-                            brandDarker: "#060708",
-                            brandSec: "#12141c",
-                            brandTert: "#1a1d29",
-                            brandCyan: "#06b6d4",
-                            brandCyanDark: "#0891b2",
-                            brandGlow: "rgba(6, 182, 212, 0.15)",
+                            brandDark: "#000000",
+                            brandDarker: "#000000",
+                            brandSec: "#0E0E0E",
+                            brandTert: "#1C1C1C",
+                            brandCyan: "#8b5cf6", // Using purple for Stremio vibe but keeping class names
+                            brandCyanDark: "#7c3aed",
+                            brandGlow: "rgba(139, 92, 246, 0.15)",
                         },
                     },
                 },
@@ -30,383 +33,158 @@
         </script>
     </head>
     <body
-        class="h-full bg-brandDark text-gray-100 flex flex-col font-sans select-none overflow-hidden"
+        class="h-full text-gray-100 flex flex-col font-sans select-none overflow-hidden"
     >
-        <!-- FRAMELESS WINDOW TITLEBAR (Windows/Linux Custom, macOS Native Space) -->
-        <header id="titlebar" class="flex items-center justify-between px-4">
-            <div class="flex items-center gap-2">
-                <!-- High-fidelity Vector branding logo -->
-                <svg
-                    class="w-5 h-5 text-brandCyan"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polygon points="10 8 16 12 10 16 10 8"></polygon>
-                </svg>
-                <span
-                    class="text-sm font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500"
-                    >OMNIVERSE</span
-                >
+        <!-- Fluid Animated Background -->
+        <div class="lordflix-bg"></div>
+
+        <!-- TOP NAVBAR (Lordflix Style Pill) -->
+        <nav id="titlebar" class="fixed top-6 right-10 z-40 flex items-center gap-4 transition-all duration-300" style="-webkit-app-region: drag;">
+            <!-- Custom Windows Titlebar Control Buttons -->
+            <div id="window-controls" class="hidden items-center gap-2 mr-4 bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5 border border-white/10" style="-webkit-app-region: no-drag;">
+                <button class="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition shadow-lg" onclick="window.electron.close()"></button>
+                <button class="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition shadow-lg" onclick="window.electron.minimize()"></button>
+                <button class="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition shadow-lg" onclick="window.electron.maximize()"></button>
             </div>
 
-            <!-- Custom Windows Titlebar Control Buttons (Electron binds to these) -->
-            <div id="window-controls" class="titlebar-controls hidden no-drag">
-                <button
-                    class="titlebar-btn btn-minimize"
-                    onclick="window.electron.minimize()"
-                ></button>
-                <button
-                    class="titlebar-btn btn-maximize"
-                    onclick="window.electron.maximize()"
-                ></button>
-                <button
-                    class="titlebar-btn btn-close"
-                    onclick="window.electron.close()"
-                ></button>
+            <div class="flex items-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-full px-6 py-2 shadow-2xl gap-6" style="-webkit-app-region: no-drag;">
+                <button onclick="switchScreen('home')" id="nav-home" class="text-sm font-semibold text-white/70 hover:text-white transition">Home</button>
+                <button onclick="switchScreen('movies')" id="nav-movies" class="text-sm font-semibold text-white/70 hover:text-white transition">Movies</button>
+                <button onclick="switchScreen('tv')" id="nav-tv" class="text-sm font-semibold text-white/70 hover:text-white transition">Shows</button>
+                <button onclick="switchScreen('anime')" id="nav-anime" class="text-sm font-semibold text-white/70 hover:text-white transition">Anime</button>
+                <button onclick="switchScreen('livetv')" id="nav-livetv" class="text-sm font-semibold text-white/70 hover:text-white transition">Live TV</button>
+
+                <div class="w-[1px] h-4 bg-white/20 mx-2"></div>
+
+                <button onclick="switchScreen('search')" id="nav-search" class="text-white hover:scale-110 transition-transform">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </button>
+
+                <button onclick="switchScreen('settings')" id="nav-settings" class="text-white hover:scale-110 transition-transform bg-white/20 rounded-full p-1.5 ml-2">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
             </div>
-        </header>
+        </nav>
 
         <!-- MAIN APP CONTAINER -->
-        <div
-            id="main-layout"
-            class="flex flex-1 h-full pt-[44px] overflow-hidden"
-        >
-            <!-- SIDEBAR NAVIGATION PANEL -->
-            <aside
-                class="w-64 glass-sidebar flex flex-col justify-between flex-shrink-0"
-            >
-                <div class="flex flex-col flex-1 p-4 overflow-y-auto">
-                    <!-- GLOBAL SEARCH BAR -->
-                    <div class="relative mb-6 no-drag">
-                        <input
-                            type="text"
-                            id="search-input"
-                            placeholder="Search movies, TV, anime..."
-                            class="w-full input-glass rounded-lg py-2 pl-9 pr-4 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brandCyan transition duration-300"
-                        />
-                        <i
-                            data-lucide="search"
-                            class="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-500"
-                        ></i>
-                    </div>
+        <main id="content-viewport" class="h-screen w-full overflow-y-auto relative hide-scroll">
 
-                    <!-- MAIN NAV LINKS -->
-                    <nav class="space-y-1.5 no-drag flex-1">
-                        <button
-                            onclick="switchScreen('home')"
-                            id="nav-home"
-                            class="nav-active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
-                        >
-                            <i data-lucide="home" class="w-4 h-4"></i> Home
-                            Dashboard
-                        </button>
-                        <button
-                            onclick="switchScreen('movies')"
-                            id="nav-movies"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
-                        >
-                            <i data-lucide="film" class="w-4 h-4"></i> Movies
-                            Catalog
-                        </button>
-                        <button
-                            onclick="switchScreen('tv')"
-                            id="nav-tv"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
-                        >
-                            <i data-lucide="tv" class="w-4 h-4"></i> TV Series
-                        </button>
-                        <button
-                            onclick="switchScreen('anime')"
-                            id="nav-anime"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
-                        >
-                            <i data-lucide="sparkles" class="w-4 h-4"></i> Anime
-                            Center
-                        </button>
+            <!-- BRAND LOGO TOP LEFT -->
+            <div class="fixed top-8 left-10 z-40 flex items-center gap-2 pointer-events-none drop-shadow-xl">
+                <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                <span class="font-black text-white text-xl tracking-widest italic">OMNIVERSE</span>
+            </div>
 
-                        <button
-                            onclick="switchScreen('livetv')"
-                            id="nav-livetv"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
-                        >
-                            <i data-lucide="radio" class="w-4 h-4"></i> Premium
-                            Live TV
-                        </button>
-                        <button
-                            onclick="switchScreen('settings')"
-                            id="nav-settings"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/[0.02] transition duration-200"
-                        >
-                            <i data-lucide="settings" class="w-4 h-4"></i> Sync
-                            & Settings
-                        </button>
-
-                        <!-- Force Sync Action Button -->
-                        <div class="pt-4 border-t border-white/[0.04] mt-4">
-                            <button
-                                onclick="forceSyncNow()"
-                                id="btn-force-sync"
-                                class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-md hover:shadow-cyan-500/10 active:scale-[0.98] transition duration-200"
-                            >
-                                <i data-lucide="refresh-cw" id="icon-force-sync" class="w-3.5 h-3.5"></i> Force Sync Now
+            <!-- SCREEN: HOME DASHBOARD -->
+            <section id="screen-home" class="animate-fade-in">
+                <!-- FEATURED HERO CAROUSEL CARD -->
+                <div id="hero-banner" class="relative w-full h-[85vh] bg-cover bg-center transition-all duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#000000] via-transparent to-transparent z-0"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-[#000000] via-black/50 to-transparent z-0"></div>
+                    <div class="absolute bottom-20 left-16 max-w-3xl z-10 space-y-5">
+                        <h1 id="hero-title" class="text-6xl font-black text-white drop-shadow-2xl tracking-tight">One Piece</h1>
+                        <p id="hero-overview" class="text-lg text-gray-300 line-clamp-3 drop-shadow-md max-w-2xl leading-relaxed">
+                            Monkey D. Luffy refuses to let anyone or anything stand in the way of his quest to become the king of all pirates...
+                        </p>
+                        <div class="flex items-center gap-4 pt-4">
+                            <button id="hero-play-btn" class="bg-white text-black hover:scale-105 transition-transform duration-300 font-bold px-8 py-3 rounded-full flex items-center gap-2 shadow-lg shadow-white/20">
+                                <i data-lucide="play" class="w-5 h-5 fill-black"></i> Play
+                            </button>
+                            <button id="hero-detail-btn" class="bg-white/20 hover:bg-white/30 hover:scale-105 transition-transform duration-300 backdrop-blur-md text-white font-bold px-8 py-3 rounded-full flex items-center gap-2">
+                                <i data-lucide="info" class="w-5 h-5"></i> More Info
                             </button>
                         </div>
-                    </nav>
-                </div>
-
-                <!-- SIDEBAR FOOTER: LIVE ADBLOCK MONITOR -->
-                <div
-                    class="p-4 border-t border-white/[0.04] bg-brandDarker/[0.4] no-drag"
-                >
-                    <div
-                        class="flex items-center justify-between p-2.5 rounded-lg bg-cyan-950/20 border border-brandCyan/10 ad-pulse"
-                    >
-                        <div class="flex items-center gap-2">
-                            <i
-                                data-lucide="shield-check"
-                                class="w-4 h-4 text-brandCyan"
-                            ></i>
-                            <span
-                                class="text-[10px] uppercase font-bold tracking-wider text-brandCyan"
-                                >Ad Shield</span
-                            >
-                        </div>
-                        <span
-                            id="adblock-counter"
-                            class="text-xs font-black text-brandCyan bg-cyan-950 px-2 py-0.5 rounded-full"
-                            >0</span
-                        >
                     </div>
                 </div>
-            </aside>
 
-            <!-- CONTENT SCROLLER VIEWPORT -->
-            <main
-                id="content-viewport"
-                class="flex-1 overflow-y-auto px-8 py-6 space-y-8 pb-16"
-            >
-                <!-- ========================================== -->
-                <!-- SCREEN: HOME DASHBOARD                     -->
-                <!-- ========================================== -->
-                <section id="screen-home" class="animate-fade-in space-y-8">
-                    <!-- FEATURED HERO CAROUSEL CARD -->
-                    <div
-                        id="hero-banner"
-                        class="relative h-[340px] rounded-2xl overflow-hidden bg-cover bg-center border border-white/[0.04]"
-                    >
-                        <div
-                            class="absolute inset-0 bg-gradient-to-t from-brandDark via-brandDark/50 to-transparent"
-                        ></div>
-                        <div
-                            class="absolute inset-0 bg-gradient-to-r from-brandDark via-brandDark/40 to-transparent"
-                        ></div>
-                        <div
-                            class="absolute bottom-6 left-8 max-w-xl space-y-3 z-10"
-                        >
-                            <span
-                                class="bg-cyan-500/10 text-brandCyan border border-brandCyan/20 text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-full tracking-wider"
-                                >Featured Release</span
-                            >
-                            <h1
-                                id="hero-title"
-                                class="text-3xl font-black text-white"
-                            >
-                                One Piece
-                            </h1>
-                            <p
-                                id="hero-overview"
-                                class="text-xs text-gray-400 leading-relaxed line-clamp-3"
-                            >
-                                Monkey D. Luffy refuses to let anyone or
-                                anything stand in the way of his quest to become
-                                the king of all pirates. With a course charted
-                                for the treacherous waters of the Grand Line and
-                                beyond, this is one captain who'll never give up
-                                until he's claimed the greatest treasure on
-                                Earth: the Legendary One Piece!
-                            </p>
-                            <div class="flex items-center gap-3 pt-2">
-                                <button
-                                    id="hero-play-btn"
-                                    class="flex items-center gap-2 btn-action-glow text-brandDark font-extrabold px-5 py-2.5 rounded-lg text-xs tracking-wider transition duration-300"
-                                >
-                                    <i
-                                        data-lucide="play-circle"
-                                        class="w-4 h-4 fill-brandDark"
-                                    ></i>
-                                    WATCH STREAM
-                                </button>
-                                <button
-                                    id="hero-detail-btn"
-                                    class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-extrabold px-5 py-2.5 rounded-lg text-xs tracking-wider transition duration-300"
-                                >
-                                    <i data-lucide="info" class="w-4 h-4"></i>
-                                    GET INFO
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                <!-- CONTENT RAILS -->
+                <div class="px-12 -mt-32 relative z-20 space-y-12">
 
-                    <!-- CONTINUE WATCHING SHELF (hidden by default if empty) -->
-                    <div
-                        id="continue-watching-section"
-                        class="hidden space-y-3"
-                    >
-                        <div class="flex items-center justify-between">
-                            <h2
-                                class="text-sm font-black text-white uppercase tracking-wider"
-                            >
-                                Continue Watching
-                            </h2>
-                            <button
-                                onclick="clearWatchHistory()"
-                                class="text-[10px] text-red-400 hover:underline font-bold uppercase tracking-wider"
-                            >
-                                Clear History
-                            </button>
-                        </div>
-                        <div
-                            id="grid-continue-watching"
-                            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
-                        >
-                            <!-- Rendered dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- THE PREMIUM "STUDIOS" RAIL -->
-                    <div class="space-y-3">
-                        <h2
-                            class="text-xs font-extrabold text-gray-500 tracking-widest uppercase"
-                        >
-                            Premium Networks
-                        </h2>
-                        <div
-                            class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
-                        >
+                    <!-- PREMIUM STUDIOS -->
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-bold text-white tracking-wide">Networks & Studios</h2>
+                        <div class="horizontal-rail flex overflow-x-auto gap-6 pb-6 hide-scroll">
                             <!-- Disney+ -->
-                            <button
-                                onclick="filterByStudio('disney')"
-                                class="studio-card studio-disney h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
-                            >
-                                <img
-                                    src="https://image.tmdb.org/t/p/w500/uzK9u4w6FQm0zJbi9qRmN0R0ppU.png"
-                                    alt="Disney+"
-                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none"
-                                />
+                            <button onclick="filterByStudio('disney')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Disney%2B_logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
                             </button>
                             <!-- Netflix -->
-                            <button
-                                onclick="filterByStudio('netflix')"
-                                class="studio-card studio-netflix h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
-                            >
-                                <img
-                                    src="https://image.tmdb.org/t/p/w500/wwemzKWzjKYJFfCeiB67v84g67V.png"
-                                    alt="Netflix"
-                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none"
-                                />
+                            <button onclick="filterByStudio('netflix')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
                             </button>
                             <!-- HBO Max -->
-                            <button
-                                onclick="filterByStudio('hbo')"
-                                class="studio-card studio-hbo h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
-                            >
-                                <img
-                                    src="https://image.tmdb.org/t/p/w500/aS77vEmdTeE1UdGRZT3lmV3N0KzB.png"
-                                    alt="HBO MAX"
-                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none"
-                                />
+                            <button onclick="filterByStudio('hbo')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/1/17/HBO_Max_Logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
                             </button>
                             <!-- Apple TV+ -->
-                            <button
-                                onclick="filterByStudio('apple')"
-                                class="studio-card studio-apple h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
-                            >
-                                <img
-                                    src="https://image.tmdb.org/t/p/w500/4EClm3JjNzdXjVgXoNlM2bTBpTV.png"
-                                    alt="Apple TV+"
-                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none"
-                                />
+                            <button onclick="filterByStudio('apple')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/28/Apple_TV_Plus_Logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
+                            </button>
+                            <!-- Prime Video -->
+                            <button onclick="filterByStudio('prime')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/1/11/Amazon_Prime_Video_logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
                             </button>
                             <!-- Marvel -->
-                            <button
-                                onclick="filterByStudio('marvel')"
-                                class="studio-card studio-marvel h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
-                            >
-                                <img
-                                    src="https://image.tmdb.org/t/p/w500/hUze9aWFR6N2kzODAyMG9RVE1wY0Z.png"
-                                    alt="Marvel Studios"
-                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none"
-                                />
+                            <button onclick="filterByStudio('marvel')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b9/Marvel_Logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
                             </button>
                             <!-- Pixar -->
-                            <button
-                                onclick="filterByStudio('pixar')"
-                                class="studio-card studio-pixar h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
-                            >
-                                <img
-                                    src="https://image.tmdb.org/t/p/w500/1TjvGVDMYsj6JBxOAkUHpPEwLf7.png"
-                                    alt="PIXAR"
-                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none brightness-0 invert"
-                                />
+                            <button onclick="filterByStudio('pixar')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/4/40/Pixar_logo.svg" class="h-full object-contain pointer-events-none brightness-0 invert drop-shadow-md" />
+                            </button>
+                            <!-- A24 -->
+                            <button onclick="filterByStudio('a24')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/a/ae/A24_logo.svg" class="h-full object-contain pointer-events-none brightness-0 invert drop-shadow-md" />
+                            </button>
+                            <!-- Warner Bros -->
+                            <button onclick="filterByStudio('warner')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/6/64/Warner_Bros_logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
                             </button>
                         </div>
                     </div>
 
                     <!-- TRENDING FEED SECTIONS -->
-                    <div id="home-catalogs" class="space-y-8">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <h2
-                                    class="text-sm font-black text-white uppercase tracking-wider"
-                                >
-                                    Trending Movies
-                                </h2>
-                                <button
-                                    onclick="switchScreen('movies')"
-                                    class="text-xs text-brandCyan hover:underline font-bold"
-                                >
-                                    See All
-                                </button>
-                            </div>
-                            <div
-                                id="grid-trending-movies"
-                                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
-                            >
-                                <!-- Rendered dynamically -->
-                            </div>
+                    <div id="home-catalogs" class="space-y-12 pb-16">
+                        <div class="space-y-4">
+                            <h2 class="text-xl font-bold text-white tracking-wide">Trending Movies</h2>
+                            <div id="grid-trending-movies" class="horizontal-rail flex overflow-x-auto gap-6 pb-8 hide-scroll"></div>
                         </div>
 
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <h2
-                                    class="text-sm font-black text-white uppercase tracking-wider"
-                                >
-                                    Popular TV Series
-                                </h2>
-                                <button
-                                    onclick="switchScreen('tv')"
-                                    class="text-xs text-brandCyan hover:underline font-bold"
-                                >
-                                    See All
-                                </button>
-                            </div>
-                            <div
-                                id="grid-trending-tv"
-                                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
-                            >
-                                <!-- Rendered dynamically -->
-                            </div>
+                        <div class="space-y-4">
+                            <h2 class="text-xl font-bold text-white tracking-wide">Popular TV Series</h2>
+                            <div id="grid-trending-tv" class="horizontal-rail flex overflow-x-auto gap-6 pb-8 hide-scroll"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+                <!-- ========================================== -->
+                <!-- SCREEN: SEARCH                             -->
+                <!-- ========================================== -->
+                <section
+                    id="screen-search"
+                    class="hidden animate-fade-in space-y-10 pt-32 px-16 flex flex-col items-center min-h-screen"
+                >
+                    <div class="text-center space-y-6 w-full max-w-2xl mt-12 mb-8">
+                        <h1 class="text-4xl font-bold text-white drop-shadow-lg tracking-tight">Let's find a movie night pick</h1>
+                        <div class="relative w-full shadow-2xl">
+                            <input
+                                type="text"
+                                id="search-input"
+                                placeholder="Search for movies & TV shows..."
+                                class="w-full bg-white/10 backdrop-blur-xl border border-white/20 hover:border-white/40 rounded-full py-4 pl-12 pr-6 text-base font-semibold text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                            />
+                            <i data-lucide="search" class="absolute left-5 top-5 w-5 h-5 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <div class="w-full max-w-[1600px]">
+                        <h2 class="text-center text-sm font-bold text-gray-300 uppercase tracking-widest mb-8">Top Results</h2>
+                        <div id="grid-search-results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 w-full pb-32">
+                            <!-- Populated by search input event -->
                         </div>
                     </div>
                 </section>
-
-                <!-- ========================================== -->
-                <!-- SCREEN: MOVIES CATALOG                     -->
                 <!-- ========================================== -->
                 <section
                     id="screen-movies"
@@ -485,8 +263,6 @@
                         <!-- Dynamically populated -->
                     </div>
                 </section>
-
-
 
                 <!-- ========================================== -->
                 <!-- SCREEN: PREMIUM LIVE TV PLAYER             -->
@@ -630,19 +406,49 @@
                     </div>
 
                     <!-- macOS Gatekeeper Notice -->
-                    <div class="bg-cyan-950/20 border border-brandCyan/10 p-5 rounded-xl space-y-3">
+                    <div
+                        class="bg-cyan-950/20 border border-brandCyan/10 p-5 rounded-xl space-y-3"
+                    >
                         <div class="flex items-center gap-2">
-                            <i data-lucide="alert-triangle" class="w-5 h-5 text-brandCyan"></i>
-                            <h3 class="font-extrabold text-xs uppercase tracking-wider text-white">
-                                 macOS "App Damaged" or "Unidentified Developer" Gatekeeper Resolution
+                            <i
+                                data-lucide="alert-triangle"
+                                class="w-5 h-5 text-brandCyan"
+                            ></i>
+                            <h3
+                                class="font-extrabold text-xs uppercase tracking-wider text-white"
+                            >
+                                 macOS "App Damaged" or "Unidentified
+                                Developer" Gatekeeper Resolution
                             </h3>
                         </div>
                         <p class="text-xs text-gray-400 leading-relaxed">
-                            Because this app is signed using personal/developer identities, macOS Gatekeeper may block launch or falsely claim the app is damaged. To solve this instantly, copy and paste this command into your macOS Terminal and press Enter:
+                            Because this app is signed using personal/developer
+                            identities, macOS Gatekeeper may block launch or
+                            falsely claim the app is damaged. To solve this
+                            instantly, copy and paste this command into your
+                            macOS Terminal and press Enter:
                         </p>
-                        <div class="flex items-center gap-2 bg-brandDark p-3 rounded-lg border border-white/[0.04]">
-                            <code class="text-[11px] text-brandCyan font-mono flex-1 select-text">xattr -cr /Applications/Omniverse.app</code>
-                            <button onclick="navigator.clipboard.writeText('xattr -cr /Applications/Omniverse.app'); window.electron.showNotification('Copied', 'Command copied to clipboard!')" class="text-xs text-gray-400 hover:text-white px-2 py-1 bg-white/5 rounded transition">Copy</button>
+                        <div
+                            class="flex items-center gap-2 bg-brandDark p-3 rounded-lg border border-white/[0.04]"
+                        >
+                            <code
+                                class="text-[11px] text-brandCyan font-mono flex-1 select-text"
+                                >xattr -cr /Applications/Omniverse.app</code
+                            >
+                            <button
+                                onclick="
+                                    navigator.clipboard.writeText(
+                                        'xattr -cr /Applications/Omniverse.app',
+                                    );
+                                    window.electron.showNotification(
+                                        'Copied',
+                                        'Command copied to clipboard!',
+                                    );
+                                "
+                                class="text-xs text-gray-400 hover:text-white px-2 py-1 bg-white/5 rounded transition"
+                            >
+                                Copy
+                            </button>
                         </div>
                     </div>
 
@@ -918,13 +724,19 @@
                                 <p
                                     class="text-xs text-gray-500 leading-relaxed"
                                 >
-                                    Review, enter, or manually override the credentials transferred from your mobile devices. Any modifications will instantly update synced sessions.
+                                    Review, enter, or manually override the
+                                    credentials transferred from your mobile
+                                    devices. Any modifications will instantly
+                                    update synced sessions.
                                 </p>
-                                
+
                                 <div class="space-y-3.5">
                                     <!-- Trakt Client Credentials -->
                                     <div class="space-y-1.5">
-                                        <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Trakt Account User Token</label>
+                                        <label
+                                            class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
+                                            >Trakt Account User Token</label
+                                        >
                                         <input
                                             type="password"
                                             id="trakt-token-input"
@@ -934,7 +746,10 @@
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
                                         <div class="space-y-1.5">
-                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Trakt Client ID</label>
+                                            <label
+                                                class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
+                                                >Trakt Client ID</label
+                                            >
                                             <input
                                                 type="password"
                                                 id="trakt-client-id-input"
@@ -943,7 +758,10 @@
                                             />
                                         </div>
                                         <div class="space-y-1.5">
-                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Trakt Client Secret</label>
+                                            <label
+                                                class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
+                                                >Trakt Client Secret</label
+                                            >
                                             <input
                                                 type="password"
                                                 id="trakt-client-secret-input"
@@ -956,7 +774,10 @@
                                     <!-- Pixeldrain & AniList Keys -->
                                     <div class="grid grid-cols-2 gap-3">
                                         <div class="space-y-1.5">
-                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Pixeldrain API Key</label>
+                                            <label
+                                                class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
+                                                >Pixeldrain API Key</label
+                                            >
                                             <input
                                                 type="password"
                                                 id="pixeldrain-key-input"
@@ -965,7 +786,10 @@
                                             />
                                         </div>
                                         <div class="space-y-1.5">
-                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">AniList Access Token</label>
+                                            <label
+                                                class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
+                                                >AniList Access Token</label
+                                            >
                                             <input
                                                 type="password"
                                                 id="anilist-token-input"
@@ -978,7 +802,10 @@
                                     <!-- TVDB API Key & PIN -->
                                     <div class="grid grid-cols-2 gap-3">
                                         <div class="space-y-1.5">
-                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">TVDB API Key</label>
+                                            <label
+                                                class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
+                                                >TVDB API Key</label
+                                            >
                                             <input
                                                 type="password"
                                                 id="tvdb-key-input"
@@ -987,7 +814,10 @@
                                             />
                                         </div>
                                         <div class="space-y-1.5">
-                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">TVDB PIN</label>
+                                            <label
+                                                class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
+                                                >TVDB PIN</label
+                                            >
                                             <input
                                                 type="password"
                                                 id="tvdb-pin-input"
@@ -1003,7 +833,11 @@
                                             onclick="refreshTraktLoginState()"
                                             class="bg-white/5 hover:bg-white/10 text-white text-xs font-extrabold px-4 py-2 rounded-lg transition duration-200"
                                         >
-                                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline mr-1 select-none"></i> Refresh Login
+                                            <i
+                                                data-lucide="refresh-cw"
+                                                class="w-3.5 h-3.5 inline mr-1 select-none"
+                                            ></i>
+                                            Refresh Login
                                         </button>
                                         <button
                                             onclick="saveAllApiKeys()"
@@ -1117,118 +951,111 @@
             </main>
         </div>
 
-        <!-- DETAILS OVERLAY MODAL -->
+        t the<!-- DETAILS OVERLAY MODAL -->
         <div
             id="detail-modal"
-            class="hidden fixed inset-0 z-50 detail-modal-overlay flex items-center justify-center p-6"
+            class="hidden fixed inset-0 z-50 bg-[#070707] overflow-y-auto animate-fade-in"
         >
+            <!-- Background Backdrop with Fades -->
             <div
-                class="detail-modal-card w-full max-w-4xl h-[580px] rounded-2xl overflow-hidden flex flex-col relative animate-fade-in"
+                id="modal-backdrop-bg"
+                class="absolute top-0 left-0 w-full h-[85vh] bg-cover bg-center opacity-30 transition-all duration-700"
             >
+                <div class="absolute inset-0 bg-gradient-to-t from-[#070707] via-transparent to-transparent"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-[#070707] via-[#070707]/60 to-transparent"></div>
+            </div>
+
+            <div class="relative z-10 w-full h-full flex flex-col pt-[15vh]">
                 <!-- Close button -->
                 <button
                     onclick="closeDetailModal()"
-                    class="absolute top-4 right-4 z-50 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white p-2 rounded-full transition duration-200"
+                    class="fixed top-8 right-8 text-gray-400 hover:text-white bg-black/40 hover:bg-white/10 backdrop-blur-md rounded-full p-3 transition duration-200 z-50"
                 >
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                    <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
 
-                <!-- Content columns -->
-                <div class="flex flex-1 overflow-hidden">
-                    <!-- Poster & Background -->
-                    <div
-                        class="w-1/3 h-full relative border-r border-white/[0.04] flex-shrink-0"
-                    >
-                        <img
-                            id="modal-poster"
-                            src=""
-                            class="w-full h-full object-cover"
-                        />
-                        <div
-                            class="absolute inset-0 bg-gradient-to-t from-brandDark via-transparent to-transparent"
-                        ></div>
+                <div class="px-12 md:px-24 flex-1">
+                    <!-- Title or Logo -->
+                    <div class="mb-4 min-h-[120px] flex items-end">
+                        <img id="modal-logo" src="" alt="" class="hidden max-h-[100px] max-w-[400px] object-contain drop-shadow-2xl filter brightness-0 invert">
+                        <h1 id="modal-title" class="text-5xl md:text-7xl font-black text-white drop-shadow-2xl tracking-tight"></h1>
                     </div>
 
-                    <!-- Detail Meta panel -->
-                    <div
-                        class="w-2/3 h-full p-8 flex flex-col overflow-y-auto space-y-6"
-                    >
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-2">
-                                <span
-                                    id="modal-type-chip"
-                                    class="bg-cyan-500/10 text-brandCyan text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded border border-brandCyan/10"
-                                    >Movie</span
-                                >
-                                <span
-                                    id="modal-year-chip"
-                                    class="text-xs text-gray-400 font-bold"
-                                    >2024</span
-                                >
-                                <span
-                                    id="modal-rating-chip"
-                                    class="text-xs text-amber-400 font-extrabold flex items-center gap-0.5"
-                                    ><i
-                                        data-lucide="star"
-                                        class="w-3.5 h-3.5 fill-amber-400"
-                                    ></i>
-                                    8.5</span
-                                >
+                    <div class="text-gray-400 font-semibold text-sm mb-6 flex items-center gap-2 drop-shadow-md tracking-wide">
+                        <span id="modal-genres"></span>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-4 mb-8">
+                        <button id="modal-play-btn" class="bg-white hover:scale-105 transition-transform duration-300 text-black font-bold py-3 px-8 rounded-full flex items-center gap-2 shadow-lg shadow-white/20">
+                            <i data-lucide="play" class="fill-current w-5 h-5"></i> Play
+                        </button>
+                        <button class="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all hover:scale-105">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                        </button>
+                        <button class="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all hover:scale-105">
+                            <i data-lucide="download" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Meta Row -->
+                    <div class="flex items-center gap-3 text-sm font-bold text-gray-300 mb-4 drop-shadow-md">
+                        <span id="modal-year-chip"></span>
+                        <span id="modal-runtime-chip"></span>
+                        <span id="modal-content-rating-chip" class="border border-gray-500 text-gray-400 px-1.5 py-0.5 rounded text-[10px]"></span>
+                        <span id="modal-rating-chip" class="flex items-center gap-1 text-amber-400"><i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i> <span id="modal-rating-text"></span></span>
+                    </div>
+
+                    <div class="text-sm text-gray-400 mb-6 drop-shadow-md flex items-center gap-2">
+                        <span>Director:</span> <span id="modal-director" class="text-gray-200"></span>
+                    </div>
+
+                    <!-- Overview & Details Grid -->
+                    <div class="flex flex-col xl:flex-row gap-12">
+                        <div class="flex-1">
+                            <p id="modal-overview" class="text-gray-300 leading-relaxed text-base max-w-4xl drop-shadow-md"></p>
+
+                            <!-- Episodes Section -->
+                            <div id="modal-episodes-section" class="mt-12 hidden">
+                                <div class="flex items-center justify-between mb-6 max-w-4xl">
+                                    <select id="season-selector" onchange="loadSeasonEpisodes()" class="bg-white/10 backdrop-blur-md border border-white/10 rounded-lg px-4 py-2 text-base font-bold text-white focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"></select>
+                                </div>
+                                <div id="episodes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl"></div>
                             </div>
-                            <h2
-                                id="modal-title"
-                                class="text-2xl font-black text-white leading-tight"
-                            >
-                                Media Title
-                            </h2>
                         </div>
 
-                        <p
-                            id="modal-overview"
-                            class="text-xs text-gray-400 leading-relaxed"
-                        >
-                            Detailed storyline synopsis loader...
-                        </p>
-
-                        <!-- Trailer Container link -->
-                        <div class="flex gap-2">
-                            <button
-                                id="modal-play-btn"
-                                class="flex items-center gap-2 btn-action-glow text-brandDark font-extrabold px-6 py-2.5 rounded-xl text-xs tracking-wider transition duration-300"
-                            >
-                                <i
-                                    data-lucide="play-circle"
-                                    class="w-4 h-4 fill-brandDark"
-                                ></i>
-                                START PLAYBACK
-                            </button>
+                        <!-- Right Info Table -->
+                        <div class="w-full xl:w-72 bg-white/5 backdrop-blur-md border border-white/5 rounded-xl p-6 h-fit shrink-0">
+                            <div class="space-y-4 text-xs">
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-500 font-semibold">Runtime</span>
+                                    <span id="info-runtime" class="text-gray-200 font-bold"></span>
+                                </div>
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-500 font-semibold">Language</span>
+                                    <span id="info-language" class="text-gray-200 font-bold uppercase"></span>
+                                </div>
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-500 font-semibold">Release Date</span>
+                                    <span id="info-release" class="text-gray-200 font-bold"></span>
+                                </div>
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-500 font-semibold">Budget</span>
+                                    <span id="info-budget" class="text-gray-200 font-bold"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500 font-semibold">Revenue</span>
+                                    <span id="info-revenue" class="text-gray-200 font-bold"></span>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- Series Seasons and Episodes Container -->
-                        <div
-                            id="modal-episodes-section"
-                            class="space-y-4 pt-4 border-t border-white/[0.04] hidden"
-                        >
-                            <div class="flex items-center justify-between">
-                                <h3
-                                    class="text-xs font-extrabold uppercase tracking-widest text-gray-500"
-                                >
-                                    Seasons & Episodes
-                                </h3>
-                                <select
-                                    id="season-selector"
-                                    onchange="loadSeasonEpisodes()"
-                                    class="input-glass rounded-lg p-1.5 text-xs text-gray-200 focus:outline-none focus:border-brandCyan"
-                                >
-                                    <!-- Dropdown options -->
-                                </select>
-                            </div>
-                            <div
-                                id="episodes-grid"
-                                class="space-y-2 max-h-[200px] overflow-y-auto pr-2"
-                            >
-                                <!-- Episodes list rendered here -->
-                            </div>
+                    <!-- Cast Section -->
+                    <div class="mt-12 pb-16">
+                        <h3 class="text-xl font-bold text-white mb-6">Cast</h3>
+                        <div id="modal-cast-rail" class="horizontal-rail flex overflow-x-auto gap-6 hide-scroll pb-4">
+                            <!-- Cast cards injected here -->
                         </div>
                     </div>
                 </div>
@@ -1242,34 +1069,52 @@
         >
             <!-- Top controller bar -->
             <div
-                class="absolute top-4 left-4 right-4 z-[5001] flex items-center justify-between pointer-events-none no-drag"
+                class="absolute top-8 left-8 right-8 z-[5001] flex items-center justify-between pointer-events-none no-drag transition-opacity duration-300 hover:opacity-100"
             >
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-6">
                     <button
                         onclick="exitPlayer()"
-                        class="pointer-events-auto bg-brandSec/80 border border-white/[0.06] backdrop-blur-md hover:bg-red-500/80 hover:border-red-500/10 text-white flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold tracking-wider transition duration-300"
+                        class="pointer-events-auto w-12 h-12 flex items-center justify-center bg-black/50 backdrop-blur-xl border border-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105"
                     >
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i> EXIT
-                        PLAYER
+                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
                     </button>
                     <span
                         id="player-stream-title"
-                        class="text-xs font-extrabold text-white bg-brandSec/80 px-3 py-2 rounded-xl backdrop-blur-md border border-white/[0.06]"
+                        class="text-lg font-bold text-white drop-shadow-md"
                         >Streaming Source</span
                     >
                 </div>
 
-                <button
-                    onclick="togglePiP()"
-                    class="pointer-events-auto bg-brandSec/80 border border-white/[0.06] backdrop-blur-md hover:bg-brandCyan hover:text-brandDark text-white flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold tracking-wider transition duration-300"
-                >
-                    <i data-lucide="external-link" class="w-4 h-4"></i>
-                    PICTURE-IN-PICTURE
-                </button>
+                <div class="flex items-center gap-4">
+                    <!-- Dropdown for Servers (Lordflix style) -->
+                    <div class="relative pointer-events-auto group">
+                        <button class="bg-black/50 backdrop-blur-xl border border-white/10 hover:bg-white/20 text-white flex items-center gap-3 px-5 py-2.5 rounded-xl text-sm font-semibold transition duration-300">
+                            <i data-lucide="cloud" class="w-4 h-4"></i> Servers
+                            <i data-lucide="chevron-down" class="w-4 h-4 opacity-50"></i>
+                        </button>
+                        <!-- Server List Dropdown -->
+                        <div class="absolute right-0 mt-2 w-56 bg-[#111111]/90 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-right">
+                            <div class="p-2 space-y-1" id="server-dropdown-list">
+                                <!-- Populated dynamically based on media -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        onclick="togglePiP()"
+                        class="pointer-events-auto bg-black/50 backdrop-blur-xl border border-white/10 hover:bg-white/20 text-white flex items-center gap-3 px-5 py-2.5 rounded-xl text-sm font-semibold transition duration-300"
+                    >
+                        <i data-lucide="picture-in-picture" class="w-4 h-4"></i>
+                        PiP
+                    </button>
+                </div>
             </div>
 
             <!-- Isolated WebView loader container -->
-            <div id="webview-container" class="absolute inset-0 w-full h-full z-10 bg-black">
+            <div
+                id="webview-container"
+                class="absolute inset-0 w-full h-full z-10 bg-black"
+            >
                 <!-- Embedded webview will be inserted dynamically here -->
             </div>
 
@@ -1278,12 +1123,22 @@
                 id="player-toast"
                 class="hidden absolute bottom-12 right-12 z-[5002] pointer-events-auto bg-brandSec/95 border border-brandCyan/20 text-white flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in"
             >
-                <div class="w-8 h-8 rounded-full bg-cyan-950/40 border border-brandCyan/30 flex items-center justify-center text-brandCyan">
+                <div
+                    class="w-8 h-8 rounded-full bg-cyan-950/40 border border-brandCyan/30 flex items-center justify-center text-brandCyan"
+                >
                     <i data-lucide="skip-forward" class="w-4 h-4"></i>
                 </div>
                 <div class="flex flex-col">
-                    <span id="player-toast-title" class="text-xs font-black text-brandCyan uppercase tracking-widest">Auto Skipped</span>
-                    <span id="player-toast-body" class="text-[10px] text-gray-400 font-semibold">Intro / Recap</span>
+                    <span
+                        id="player-toast-title"
+                        class="text-xs font-black text-brandCyan uppercase tracking-widest"
+                        >Auto Skipped</span
+                    >
+                    <span
+                        id="player-toast-body"
+                        class="text-[10px] text-gray-400 font-semibold"
+                        >Intro / Recap</span
+                    >
                 </div>
             </div>
         </div>

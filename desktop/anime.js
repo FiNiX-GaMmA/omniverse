@@ -36,7 +36,9 @@
   // Raised by resolveSource when AllAnime answers NEED_CAPTCHA.
   class CaptchaRequiredError extends Error {
     constructor(url) {
-      super("AllAnime needs a captcha solved before it will hand over sources.");
+      super(
+        "AllAnime needs a captcha solved before it will hand over sources.",
+      );
       this.name = "CaptchaRequiredError";
       this.url = url;
     }
@@ -44,18 +46,43 @@
 
   // MARK: - HTTP helpers (via main-process fetch, no CORS)
 
-  async function httpText(url, { method = "GET", headers = {}, body = null } = {}) {
-    const res = await window.electron.iptvFetch(url, method, headers, body);
-    if (!res || res.ok === false) {
-      return { ok: false, status: res && res.status ? res.status : 0, body: "" };
+  async function httpText(
+    url,
+    { method = "GET", headers = {}, body = null } = {},
+  ) {
+    if (window.electron && window.electron.iptvFetch) {
+      const res = await window.electron.iptvFetch(url, method, headers, body);
+      if (!res || res.ok === false) {
+        return {
+          ok: false,
+          status: res && res.status ? res.status : 0,
+          body: "",
+        };
+      }
+      return { ok: true, status: res.status || 200, body: res.html || "" };
+    } else {
+      try {
+        const fetchOptions = { method, headers };
+        if (body)
+          fetchOptions.body =
+            typeof body === "string" ? body : JSON.stringify(body);
+        const response = await fetch(url, fetchOptions);
+        const html = await response.text();
+        return { ok: response.ok, status: response.status, body: html || "" };
+      } catch (e) {
+        return { ok: false, status: 0, body: "" };
+      }
     }
-    return { ok: true, status: res.status || 200, body: res.html || "" };
   }
 
   async function postJson(url, obj, headers = {}) {
     const res = await httpText(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json", ...headers },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...headers,
+      },
       body: JSON.stringify(obj),
     });
     try {
@@ -98,8 +125,8 @@
       json.seasonYear != null
         ? json.seasonYear
         : json.startDate && json.startDate.year != null
-        ? json.startDate.year
-        : null;
+          ? json.startDate.year
+          : null;
     const cover = json.coverImage || {};
     const studiosArr = (json.studios && json.studios.nodes) || [];
     const studios = studiosArr
@@ -115,7 +142,9 @@
       poster: cover.extraLarge || cover.large || "",
       backdrop: json.bannerImage || "",
       year: year != null ? String(year) : "",
-      rating: ((json.averageScore != null ? json.averageScore : 0) / 10).toFixed(1),
+      rating: (
+        (json.averageScore != null ? json.averageScore : 0) / 10
+      ).toFixed(1),
       genres: json.genres || [],
       directors: studios,
       runtimeMinutes: json.duration != null ? json.duration : null,
@@ -146,15 +175,54 @@ fragment animeFields on Media {
     const s = currentAnilistSeason();
     const specs = [
       { id: "anime_trending", title: "Trending Now", sort: ["TRENDING_DESC"] },
-      { id: "anime_airing", title: "Currently Airing", sort: ["POPULARITY_DESC"], status: "RELEASING" },
-      { id: "anime_this_season", title: `${s.label} ${s.year}`, sort: ["POPULARITY_DESC"], season: s.season, seasonYear: s.year },
-      { id: "anime_top_rated", title: "All-Time Top Rated", sort: ["SCORE_DESC"] },
-      { id: "anime_popular", title: "All-Time Popular", sort: ["POPULARITY_DESC"] },
+      {
+        id: "anime_airing",
+        title: "Currently Airing",
+        sort: ["POPULARITY_DESC"],
+        status: "RELEASING",
+      },
+      {
+        id: "anime_this_season",
+        title: `${s.label} ${s.year}`,
+        sort: ["POPULARITY_DESC"],
+        season: s.season,
+        seasonYear: s.year,
+      },
+      {
+        id: "anime_top_rated",
+        title: "All-Time Top Rated",
+        sort: ["SCORE_DESC"],
+      },
+      {
+        id: "anime_popular",
+        title: "All-Time Popular",
+        sort: ["POPULARITY_DESC"],
+      },
       { id: "anime_recent", title: "Recently Added", sort: ["ID_DESC"] },
-      { id: "anime_movies", title: "Anime Movies", sort: ["SCORE_DESC"], format: "MOVIE" },
-      { id: "anime_action", title: "Action", sort: ["POPULARITY_DESC"], genre: "Action" },
-      { id: "anime_romance", title: "Romance", sort: ["POPULARITY_DESC"], genre: "Romance" },
-      { id: "anime_fantasy", title: "Fantasy", sort: ["POPULARITY_DESC"], genre: "Fantasy" },
+      {
+        id: "anime_movies",
+        title: "Anime Movies",
+        sort: ["SCORE_DESC"],
+        format: "MOVIE",
+      },
+      {
+        id: "anime_action",
+        title: "Action",
+        sort: ["POPULARITY_DESC"],
+        genre: "Action",
+      },
+      {
+        id: "anime_romance",
+        title: "Romance",
+        sort: ["POPULARITY_DESC"],
+        genre: "Romance",
+      },
+      {
+        id: "anime_fantasy",
+        title: "Fantasy",
+        sort: ["POPULARITY_DESC"],
+        genre: "Fantasy",
+      },
     ];
 
     let aliasBlocks = "";
@@ -179,7 +247,12 @@ fragment animeFields on Media {
         return { id: c.id, title: c.title, type: "anime", items };
       });
     } catch {
-      return specs.map((c) => ({ id: c.id, title: c.title, type: "anime", items: [] }));
+      return specs.map((c) => ({
+        id: c.id,
+        title: c.title,
+        type: "anime",
+        items: [],
+      }));
     }
   }
 
@@ -188,7 +261,10 @@ fragment animeFields on Media {
     if (!q) return null;
     const gql = `query($search: String) { Page(page: 1, perPage: 5) { media(type: ANIME, search: $search, sort: [SEARCH_MATCH, POPULARITY_DESC], isAdult: false) { id title { romaji english native } description(asHtml: false) coverImage { extraLarge large } bannerImage genres averageScore episodes duration format seasonYear startDate { year } studios(isMain: true) { nodes { name } } } } }`;
     try {
-      const body = await postJson(ANILIST, { query: gql, variables: { search: q } });
+      const body = await postJson(ANILIST, {
+        query: gql,
+        variables: { search: q },
+      });
       const media = body && body.data && body.data.Page && body.data.Page.media;
       if (!media || !media.length) return null;
       return mediaFromAnilist(media[0]);
@@ -202,9 +278,15 @@ fragment animeFields on Media {
   async function anilistEpisodeMeta(title) {
     const gql = `query($search: String) { Media(type: ANIME, search: $search, sort: SEARCH_MATCH) { streamingEpisodes { title thumbnail } } }`;
     try {
-      const body = await postJson(ANILIST, { query: gql, variables: { search: title } });
+      const body = await postJson(ANILIST, {
+        query: gql,
+        variables: { search: title },
+      });
       const eps =
-        body && body.data && body.data.Media && body.data.Media.streamingEpisodes;
+        body &&
+        body.data &&
+        body.data.Media &&
+        body.data.Media.streamingEpisodes;
       if (!Array.isArray(eps)) return {};
       const out = {};
       const pattern = /^(?:Episode\s+)?(\d+)\s*[-:.|]\s*(.+)$/i;
@@ -242,7 +324,7 @@ fragment animeFields on Media {
     if (!candidates.length) candidates = edges;
 
     const exact = candidates.find(
-      (e) => ((e.name || "") + "").toLowerCase().trim() === lower
+      (e) => ((e.name || "") + "").toLowerCase().trim() === lower,
     );
     if (exact) return exact;
 
@@ -261,13 +343,21 @@ fragment animeFields on Media {
 
   async function searchAllmanga(query, translationType) {
     const variables = {
-      search: { allowAdult: false, allowUnknown: false, query: (query || "").toLowerCase() },
+      search: {
+        allowAdult: false,
+        allowUnknown: false,
+        query: (query || "").toLowerCase(),
+      },
       limit: 40,
       page: 1,
       translationType,
       countryOrigin: "ALL",
     };
-    const body = await postJson(ALLANIME, { variables, query: SEARCH_GQL }, ALLANIME_HEADERS);
+    const body = await postJson(
+      ALLANIME,
+      { variables, query: SEARCH_GQL },
+      ALLANIME_HEADERS,
+    );
     const edges = body && body.data && body.data.shows && body.data.shows.edges;
     return Array.isArray(edges) ? edges : null;
   }
@@ -324,11 +414,17 @@ fragment animeFields on Media {
       iv.set(bytes.slice(1, 13), 0);
       iv.set([0, 0, 0, 2], 12);
       const ciphertext = bytes.slice(13, bytes.length - 16);
-      const cryptoKey = await crypto.subtle.importKey("raw", key, { name: "AES-CTR" }, false, ["decrypt"]);
+      const cryptoKey = await crypto.subtle.importKey(
+        "raw",
+        key,
+        { name: "AES-CTR" },
+        false,
+        ["decrypt"],
+      );
       const plainBuf = await crypto.subtle.decrypt(
         { name: "AES-CTR", counter: iv, length: 128 },
         cryptoKey,
-        ciphertext
+        ciphertext,
       );
       const plain = new TextDecoder().decode(plainBuf);
       const sources = [];
@@ -350,18 +446,90 @@ fragment animeFields on Media {
   }
 
   const HEX_MAP = {
-    "79": "A", "7a": "B", "7b": "C", "7c": "D", "7d": "E", "7e": "F", "7f": "G",
-    "70": "H", "71": "I", "72": "J", "73": "K", "74": "L", "75": "M", "76": "N",
-    "77": "O", "68": "P", "69": "Q", "6a": "R", "6b": "S", "6c": "T", "6d": "U",
-    "6e": "V", "6f": "W", "60": "X", "61": "Y", "62": "Z", "59": "a", "5a": "b",
-    "5b": "c", "5c": "d", "5d": "e", "5e": "f", "5f": "g", "50": "h", "51": "i",
-    "52": "j", "53": "k", "54": "l", "55": "m", "56": "n", "57": "o", "48": "p",
-    "49": "q", "4a": "r", "4b": "s", "4c": "t", "4d": "u", "4e": "v", "4f": "w",
-    "40": "x", "41": "y", "42": "z", "08": "0", "09": "1", "0a": "2", "0b": "3",
-    "0c": "4", "0d": "5", "0e": "6", "0f": "7", "00": "8", "01": "9", "15": "-",
-    "16": ".", "67": "_", "46": "~", "02": ":", "17": "/", "07": "?", "1b": "#",
-    "63": "[", "65": "]", "78": "@", "19": "!", "1c": "$", "1e": "&", "10": "(",
-    "11": ")", "12": "*", "13": "+", "14": ",", "03": ";", "05": "=", "1d": "%",
+    79: "A",
+    "7a": "B",
+    "7b": "C",
+    "7c": "D",
+    "7d": "E",
+    "7e": "F",
+    "7f": "G",
+    70: "H",
+    71: "I",
+    72: "J",
+    73: "K",
+    74: "L",
+    75: "M",
+    76: "N",
+    77: "O",
+    68: "P",
+    69: "Q",
+    "6a": "R",
+    "6b": "S",
+    "6c": "T",
+    "6d": "U",
+    "6e": "V",
+    "6f": "W",
+    60: "X",
+    61: "Y",
+    62: "Z",
+    59: "a",
+    "5a": "b",
+    "5b": "c",
+    "5c": "d",
+    "5d": "e",
+    "5e": "f",
+    "5f": "g",
+    50: "h",
+    51: "i",
+    52: "j",
+    53: "k",
+    54: "l",
+    55: "m",
+    56: "n",
+    57: "o",
+    48: "p",
+    49: "q",
+    "4a": "r",
+    "4b": "s",
+    "4c": "t",
+    "4d": "u",
+    "4e": "v",
+    "4f": "w",
+    40: "x",
+    41: "y",
+    42: "z",
+    "08": "0",
+    "09": "1",
+    "0a": "2",
+    "0b": "3",
+    "0c": "4",
+    "0d": "5",
+    "0e": "6",
+    "0f": "7",
+    "00": "8",
+    "01": "9",
+    15: "-",
+    16: ".",
+    67: "_",
+    46: "~",
+    "02": ":",
+    17: "/",
+    "07": "?",
+    "1b": "#",
+    63: "[",
+    65: "]",
+    78: "@",
+    19: "!",
+    "1c": "$",
+    "1e": "&",
+    10: "(",
+    11: ")",
+    12: "*",
+    13: "+",
+    14: ",",
+    "03": ";",
+    "05": "=",
+    "1d": "%",
   };
 
   function decodeAllanimeUrl(encoded) {
@@ -405,8 +573,10 @@ fragment animeFields on Media {
       });
       const getUrl =
         ALLANIME +
-        "?variables=" + encodeURIComponent(JSON.stringify(variables)) +
-        "&extensions=" + encodeURIComponent(extensions);
+        "?variables=" +
+        encodeURIComponent(JSON.stringify(variables)) +
+        "&extensions=" +
+        encodeURIComponent(extensions);
       let body = "";
       const getRes = await httpText(getUrl, {
         headers: { ...ALLANIME_HEADERS, Origin: "https://youtu-chan.com" },
@@ -417,7 +587,11 @@ fragment animeFields on Media {
       }
       let parsed = body ? parseEpisodeSourceUrls(body) : null;
       if (!parsed) {
-        const postBody = await postJson(ALLANIME, { variables, query: EPISODE_GQL }, ALLANIME_HEADERS);
+        const postBody = await postJson(
+          ALLANIME,
+          { variables, query: EPISODE_GQL },
+          ALLANIME_HEADERS,
+        );
         const postStr = JSON.stringify(postBody);
         if (postStr.includes("NEED_CAPTCHA")) episodeNeededCaptcha = true;
         parsed = parseEpisodeSourceUrls(postStr);
@@ -480,7 +654,8 @@ fragment animeFields on Media {
           return !u.includes(".m3u8") && !u.includes("master.");
         });
         const chosen = (mp4.length ? mp4 : playable).sort(
-          (a, b) => resolutionNum(b.resolutionStr) - resolutionNum(a.resolutionStr)
+          (a, b) =>
+            resolutionNum(b.resolutionStr) - resolutionNum(a.resolutionStr),
         );
         const best = chosen[0];
         if (!best || !best.link || !isDirectVideoUrl(best.link)) continue;
@@ -497,7 +672,12 @@ fragment animeFields on Media {
     return null;
   }
 
-  async function resolveAllmanga(title, episodeNumber, isMovie, translationType) {
+  async function resolveAllmanga(
+    title,
+    episodeNumber,
+    isMovie,
+    translationType,
+  ) {
     const dubSub = translationType === "dub" ? "dub" : "sub";
     const epStr = isMovie ? "1" : String(episodeNumber);
     const edges = await searchAllmanga(title, dubSub);
@@ -522,7 +702,12 @@ fragment animeFields on Media {
     episodeNeededCaptcha = false;
 
     // Try AllAnime (AllManga)
-    let result = await resolveAllmanga(item.title, episodeNumber, isMovie, translationType);
+    let result = await resolveAllmanga(
+      item.title,
+      episodeNumber,
+      isMovie,
+      translationType,
+    );
     if (!result && translationType === "dub") {
       result = await resolveAllmanga(item.title, episodeNumber, isMovie, "sub");
     }

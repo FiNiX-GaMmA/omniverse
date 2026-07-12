@@ -13,6 +13,11 @@ const {
   shell,
   Notification,
 } = require("electron");
+const {
+  ElectronBlocker,
+  NetworkFilter,
+} = require("@ghostery/adblocker-electron");
+const fetch = require("cross-fetch");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
@@ -26,7 +31,6 @@ app.commandLine.appendSwitch(
   "disable-features",
   "HardwareMediaKeyHandling,MediaSessionService,UseSandboxedXdgPortal",
 );
-app.commandLine.appendSwitch("enable-features", "NetworkServiceInProcess2");
 app.commandLine.appendSwitch("disk-cache-size", String(100 * 1024 * 1024)); // 100MB cache limit
 app.commandLine.appendSwitch("renderer-process-limit", "3");
 
@@ -34,6 +38,7 @@ app.commandLine.appendSwitch("renderer-process-limit", "3");
 let mainWindow = null;
 let pipWindow = null;
 let adBlockStats = { adsBlocked: 0 };
+let mainBlocker = null;
 // Hosts of resolved anime direct streams that need a Referer. Scoped so Live TV
 // and other media are untouched. Populated by the renderer before playback.
 const animeRefererHosts = new Set();
@@ -74,7 +79,7 @@ const BLOCKED_KEYWORDS = [
 ];
 
 // Reusable session setup for custom partitions (e.g. video player webview)
-function setupPlaybackSession(playSession) {
+async function setupPlaybackSession(playSession) {
   const UA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
   playSession.setUserAgent(UA);
@@ -98,29 +103,21 @@ function setupPlaybackSession(playSession) {
     },
   );
 
-  // Block ad networks, tracking scripts, and pop-up loaders
-  playSession.webRequest.onBeforeRequest(
-    { urls: ["*://*/*"] },
-    (details, callback) => {
-      const urlLower = details.url.toLowerCase();
-      const shouldBlock = BLOCKED_KEYWORDS.some(keyword => urlLower.includes(keyword));
-      if (shouldBlock) {
-        adBlockStats.adsBlocked++;
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
-        }
-        callback({ cancel: true });
-      } else {
-        callback({ cancel: false });
+  if (mainBlocker) {
+    mainBlocker.enableBlockingInSession(playSession);
+    mainBlocker.on("request-blocked", (request) => {
+      adBlockStats.adsBlocked++;
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
       }
-    },
-  );
+    });
+  }
 
   // Inject a script into the webview to proactively disable standard redirects and alert-hijacks
   playSession.setPreloads([path.join(__dirname, "preload.js")]);
 }
 
-function createWindow() {
+async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1380,
     height: 850,
@@ -134,6 +131,7 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: false,
       webviewTag: true, // Required for secure embed containers
       backgroundThrottling: true,
       spellcheck: false,
@@ -142,18 +140,6 @@ function createWindow() {
 
   // Setup the default app session
   const defaultSession = session.defaultSession;
-
-  // Custom headers to optimize cache times for TMDB assets
-  defaultSession.webRequest.onHeadersReceived(
-    { urls: ["*://image.tmdb.org/*"] },
-    (details, callback) => {
-      const headers = { ...details.responseHeaders };
-      headers["cache-control"] = ["public, max-age=604800, immutable"]; // Cache for 7 days
-      delete headers["pragma"];
-      delete headers["expires"];
-      callback({ responseHeaders: headers });
-    },
-  );
 
   // Anime direct streams (AllAnime CDNs) require a Referer. Inject it only for
   // the exact stream host(s) the renderer registers, leaving Live TV/others alone.
@@ -172,9 +158,9 @@ function createWindow() {
   );
 
   // Configure custom webview permissions and block window redirection popup actions
-  mainWindow.webContents.on("did-attach-webview", (_, wc) => {
+  mainWindow.webContents.on("did-attach-webview", async (_, wc) => {
     const webviewSession = wc.session;
-    setupPlaybackSession(webviewSession);
+    await setupPlaybackSession(webviewSession);
 
     // Completely deny permission to open popup windows / new tabs
     wc.setWindowOpenHandler(() => {
@@ -281,7 +267,10 @@ ipcMain.handle(
         }
       } catch (_) {}
 
-      const fetchOptions = { method: method.toUpperCase(), headers: mergedHeaders };
+      const fetchOptions = {
+        method: method.toUpperCase(),
+        headers: mergedHeaders,
+      };
       if (body) {
         fetchOptions.body =
           typeof body === "string" ? body : JSON.stringify(body);
@@ -350,7 +339,7 @@ ipcMain.handle("window-close", () => {
 });
 
 // Picture-in-Picture (PiP) Window Controller
-ipcMain.handle("open-pip-window", (_, { url, title }) => {
+ipcMain.handle("open-pip-window", async (_, { url, title }) => {
   if (pipWindow && !pipWindow.isDestroyed()) {
     pipWindow.loadURL(url);
     pipWindow.focus();
@@ -375,7 +364,7 @@ ipcMain.handle("open-pip-window", (_, { url, title }) => {
     },
   });
 
-  setupPlaybackSession(session.fromPartition("persist:pip"));
+  await setupPlaybackSession(session.fromPartition("persist:pip"));
   pipWindow.loadURL(url);
 
   pipWindow.webContents.setWindowOpenHandler(() => {
@@ -426,13 +415,46 @@ if (!gotTheLock) {
     }
   });
 
-  app.whenReady().then(createWindow);
+  app.whenReady().then(async () => {
+    mainBlocker = await ElectronBlocker.fromPrebuiltAdsAndTracking(fetch);
+
+    // Whitelist critical source domains to prevent the adblocker from breaking streams
+    const whitelistedDomains = [
+      "vidsrc.me",
+      "vidsrc.to",
+      "vidsrc.pro",
+      "vidsrc.vip",
+      "vidsrc.net",
+      "vidsrc.cc",
+      "vidsrc.xyz",
+      "multiembed.mov",
+      "autoembed.cc",
+      "2embed.cc",
+      "embed.smashystream.com",
+      "allanime.day",
+      "allmanga.to",
+      "megacloud.tv",
+      "rabbitstream.net",
+      "pixeldrain.com",
+      "api.themoviedb.org",
+      "api.trakt.tv",
+      "graphql.anilist.co",
+    ];
+    const exceptions = whitelistedDomains.map((d) =>
+      NetworkFilter.parse(
+        `@@||${d}^$important,document,subdocument,script,xmlhttprequest`,
+      ),
+    );
+    mainBlocker.update({ newNetworkFilters: exceptions });
+
+    await createWindow();
+  });
 
   app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
   });
 
-  app.on("activate", () => {
-    if (mainWindow === null) createWindow();
+  app.on("activate", async () => {
+    if (mainWindow === null) await createWindow();
   });
 }

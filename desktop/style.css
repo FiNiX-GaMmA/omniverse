@@ -2,29 +2,30 @@
 /* Omniverse Desktop — Reputed Enterprise Design & UI Overhaul
 /* ============================================================================== */
 
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
 :root {
-    --bg-primary: #07080a;
-    --bg-secondary: rgba(13, 15, 22, 0.65);
-    --bg-tertiary: rgba(22, 25, 38, 0.45);
-    --accent-cyan: #06b6d4;
-    --accent-blue: #3b82f6;
+    --bg-primary: #000000;
+    --bg-secondary: #0e0e0e;
+    --bg-tertiary: #1c1c1c;
+    --accent-cyan: #8b5cf6;
+    --accent-blue: #7c3aed;
     --accent-purple: #8b5cf6;
     --accent-neon: #10b981;
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
-    --border-color: rgba(255, 255, 255, 0.03);
-    --border-hover: rgba(6, 182, 212, 0.3);
-    --card-glow: rgba(6, 182, 212, 0.15);
+    --border-color: rgba(255, 255, 255, 0.05);
+    --border-hover: rgba(139, 92, 246, 0.3);
+    --card-glow: rgba(139, 92, 246, 0.15);
 }
 
 body {
-    font-family: "Plus Jakarta Sans", sans-serif;
-    background-color: var(--bg-primary);
-    background-image: 
-        radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #050505;
+    background-image:
+        radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 50%),
+        radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 50%);
+    background-attachment: fixed;
     color: var(--text-primary);
     margin: 0;
     padding: 0;
@@ -33,8 +34,100 @@ body {
     letter-spacing: -0.01em;
 }
 
-/* Glassmorphism Titlebar (Frosted Glass Layer) */
-#titlebar {
+/* Fluid Animated Background (Lordflix Style) */
+.lordflix-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    background: linear-gradient(125deg, #0f0c29, #302b63, #24243e);
+    background-size: 400% 400%;
+    animation: fluidGradient 15s ease infinite;
+}
+.lordflix-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>');
+    opacity: 0.03;
+    pointer-events: none;
+}
+@keyframes fluidGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Apple TV (tvOS) / Lordflix Poster Styles */
+.tvos-card {
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.4s ease, filter 0.4s ease;
+    transform-origin: center center;
+    will-change: transform, box-shadow;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.tvos-card:hover {
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.6);
+    z-index: 20;
+}
+
+.tvos-card img {
+    border-radius: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Glassmorphism Settings Cards */
+.settings-glass-card {
+    background: rgba(20, 20, 25, 0.6);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transition: background 0.3s ease;
+}
+.settings-glass-card:hover {
+    background: rgba(30, 30, 35, 0.7);
+}
+
+.tvos-nav-item {
+    position: relative;
+    padding-bottom: 4px;
+}
+
+.tvos-nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: white;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.tvos-nav-item:hover::after,
+.tvos-nav-item.active::after {
+    width: 100%;
+}
+
+.hide-scroll::-webkit-scrollbar {
+    display: none;
+}
+.hide-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -70,7 +163,7 @@ body {
 }
 
 .titlebar-btn::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     border-radius: 50%;
@@ -122,31 +215,24 @@ body {
 
 /* Beautiful Translucent Material Panels */
 .glass-sidebar {
-    background: rgba(10, 11, 15, 0.6);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    background: #0e0e0e;
     border-right: 1px solid var(--border-color);
 }
 
 /* Premium Movie Cards Grid */
 .media-card {
-    background: rgba(20, 22, 33, 0.4);
-    border: 1px solid var(--border-color);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    background: transparent;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
     overflow: hidden;
 }
 
 .media-card:hover {
-    transform: translateY(-8px) scale(1.025);
-    border-color: var(--border-hover);
-    box-shadow:
-        0 20px 40px rgba(0, 0, 0, 0.85),
-        0 0 25px var(--card-glow);
+    transform: translateY(-4px) scale(1.02);
 }
 
 .media-card img {
-    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .media-card:hover img {
@@ -157,19 +243,27 @@ body {
 .studio-card {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.02) 0%,
+        rgba(255, 255, 255, 0.05) 100%
+    );
     border: 1px solid var(--border-color);
     border-radius: 16px;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .studio-card::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     opacity: 0;
     transition: opacity 0.4s;
-    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 70%
+    );
 }
 
 .studio-card:hover::before {
@@ -185,42 +279,54 @@ body {
     background: linear-gradient(135deg, #061130 0%, #0c235c 100%);
 }
 .studio-disney:hover {
-    box-shadow: 0 12px 30px rgba(6, 17, 48, 0.8), 0 0 15px rgba(6, 182, 212, 0.25);
+    box-shadow:
+        0 12px 30px rgba(6, 17, 48, 0.8),
+        0 0 15px rgba(6, 182, 212, 0.25);
 }
 
 .studio-netflix {
     background: linear-gradient(135deg, #1a0405 0%, #5e080d 100%);
 }
 .studio-netflix:hover {
-    box-shadow: 0 12px 30px rgba(94, 8, 13, 0.6), 0 0 15px rgba(239, 68, 68, 0.25);
+    box-shadow:
+        0 12px 30px rgba(94, 8, 13, 0.6),
+        0 0 15px rgba(239, 68, 68, 0.25);
 }
 
 .studio-hbo {
     background: linear-gradient(135deg, #0e021a 0%, #35065c 100%);
 }
 .studio-hbo:hover {
-    box-shadow: 0 12px 30px rgba(53, 6, 92, 0.7), 0 0 15px rgba(139, 92, 246, 0.25);
+    box-shadow:
+        0 12px 30px rgba(53, 6, 92, 0.7),
+        0 0 15px rgba(139, 92, 246, 0.25);
 }
 
 .studio-apple {
     background: linear-gradient(135deg, #050505 0%, #1c1c1c 100%);
 }
 .studio-apple:hover {
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 255, 0.15);
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.9),
+        0 0 15px rgba(255, 255, 255, 0.15);
 }
 
 .studio-marvel {
     background: linear-gradient(135deg, #1f0102 0%, #850c12 100%);
 }
 .studio-marvel:hover {
-    box-shadow: 0 12px 30px rgba(133, 12, 18, 0.7), 0 0 15px rgba(239, 68, 68, 0.3);
+    box-shadow:
+        0 12px 30px rgba(133, 12, 18, 0.7),
+        0 0 15px rgba(239, 68, 68, 0.3);
 }
 
 .studio-pixar {
     background: linear-gradient(135deg, #05101f 0%, #153259 100%);
 }
 .studio-pixar:hover {
-    box-shadow: 0 12px 30px rgba(21, 50, 89, 0.7), 0 0 15px rgba(59, 130, 246, 0.3);
+    box-shadow:
+        0 12px 30px rgba(21, 50, 89, 0.7),
+        0 0 15px rgba(59, 130, 246, 0.3);
 }
 
 /* Fluid Animation Routings */
@@ -241,10 +347,9 @@ body {
 
 /* Premium Sidebar Active Indicator (Sleek Glassmorphism Highlight) */
 .nav-active {
-    background: linear-gradient(90deg, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.01) 100%) !important;
-    border-left: 3px solid var(--accent-cyan) !important;
-    color: var(--text-primary) !important;
-    text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+    background: #1c1c1c !important;
+    border-left: 3px solid var(--accent-purple) !important;
+    color: #fff !important;
 }
 
 /* Ad Shield pulsing glowing meter */
@@ -283,14 +388,18 @@ body {
 
 /* Premium Action Buttons Glow */
 .btn-action-glow {
-    background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
+    background: linear-gradient(
+        135deg,
+        var(--accent-cyan) 0%,
+        var(--accent-blue) 100%
+    );
     box-shadow: 0 4px 18px rgba(6, 182, 212, 0.3);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-action-glow:hover {
     transform: scale(1.04);
-    box-shadow: 
+    box-shadow:
         0 6px 25px rgba(6, 182, 212, 0.55),
         0 0 15px rgba(6, 182, 212, 0.35);
 }
@@ -304,7 +413,9 @@ body {
 
 .input-glass:focus {
     border-color: var(--accent-cyan) !important;
-    box-shadow: 0 0 0 1px var(--accent-cyan), 0 0 15px rgba(6, 182, 212, 0.1) !important;
+    box-shadow:
+        0 0 0 1px var(--accent-cyan),
+        0 0 15px rgba(6, 182, 212, 0.1) !important;
 }
 
 /* Immersive Details Modal Cinema Design */
@@ -336,7 +447,8 @@ body {
 }
 
 /* Immersive Layout Constraints */
-html, body {
+html,
+body {
     height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -376,8 +488,8 @@ html, body {
     display: none;
 }
 .scrollbar-none {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }
 
 /* Dynamic Webview Player Immersive Overhaul */
@@ -398,4 +510,3 @@ html, body {
     background: #000000 !important;
     overflow: hidden !important;
 }
-

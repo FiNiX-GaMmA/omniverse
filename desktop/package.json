@@ -95,5 +95,9 @@
       "category": "Video;AudioVideo;Player;",
       "icon": "logo.png"
     }
+  },
+  "dependencies": {
+    "@ghostery/adblocker-electron": "^2.18.1",
+    "cross-fetch": "^4.1.0"
   }
 }
