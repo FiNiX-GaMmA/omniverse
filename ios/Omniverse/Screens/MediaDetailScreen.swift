@@ -28,14 +28,8 @@ struct MediaDetailScreen: View {
     private var isSeries: Bool { current.type == .series || current.type == .anime }
 
     var body: some View {
-        Group {
-            if (detailed?.title ?? item.title) == "One Pace" {
-                OnePaceScreen()
-            } else {
-                content
-            }
-        }
-        .task { await load() }
+        content
+            .task { await load() }
         .fullScreenCover(item: $player) { r in
             PlayerScreen(title: r.title, url: r.url, headers: r.headers, item: r.item, episode: r.episode,
                          subtitleUrl: r.subtitleUrl, startPositionMs: r.startPositionMs, aniSkipEpisode: r.aniSkipEpisode)
