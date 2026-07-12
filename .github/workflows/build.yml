@@ -42,7 +42,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Omniverse-android-release-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: android/app/build/outputs/apk/release/app-*.apk
           if-no-files-found: error
 
   build-ios:
@@ -230,7 +230,12 @@ jobs:
       - name: Package Release Assets
         run: |
           mkdir -p release_assets
-          cp out_android/app-release.apk release_assets/Omniverse.apk
+          cp out_android/app-arm64-v8a-release.apk release_assets/Omniverse-android-arm64.apk || true
+          cp out_android/app-universal-release.apk release_assets/Omniverse-android-universal.apk || true
+          # Fallback if both missing
+          if [ ! -f release_assets/Omniverse-android-arm64.apk ] && [ ! -f release_assets/Omniverse-android-universal.apk ]; then
+            cp out_android/app-release.apk release_assets/Omniverse-android-universal.apk || true
+          fi
           cp out_ios/Omniverse-Unsigned.ipa release_assets/Omniverse-Unsigned.ipa
           cp out_win/*.exe release_assets/
           cp out_mac/*.dmg release_assets/
@@ -257,7 +262,7 @@ jobs:
             ---
 
             ### 📦 Installation Packages:
-            *   🤖 **Android Devices**: Download **`Omniverse.apk`** to install directly on any Android Mobile, Tablet, or Android TV / Fire TV.
+            *   🤖 **Android Devices**: Download **`Omniverse-android-arm64.apk`** (optimized for 64-bit phone, tablet, and TV) or **`Omniverse-android-universal.apk`** (universal installer) to install directly on any Android Mobile, Tablet, or Android TV / Fire TV.
             *   🍎 **iOS/iPadOS/macOS (Native App)**: Download **`Omniverse-Unsigned.ipa`** to sideload or deploy on your Apple hardware.
             *   💻 **Windows Devices (Desktop App)**: Download the **`.exe`** NSIS setup installer (or portable build) to install on Windows PCs.
             *   🍏 **macOS Devices (Desktop App)**: Apple Silicon (M1–M4) → **`-arm64.dmg`**; Intel Macs → the plain **`.dmg`**. These builds are ad-hoc signed (not notarized), so on **first launch** right-click the app → **Open** (or run `xattr -dr com.apple.quarantine /Applications/Omniverse.app`) to get past Gatekeeper.
@@ -270,7 +275,8 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            release_assets/Omniverse.apk
+            release_assets/Omniverse-android-arm64.apk
+            release_assets/Omniverse-android-universal.apk
             release_assets/Omniverse-Unsigned.ipa
             release_assets/*.exe
             release_assets/*.dmg
