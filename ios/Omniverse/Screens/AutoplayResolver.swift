@@ -39,6 +39,33 @@ enum AutoplayResolver {
         return nil
     }
 
+    @MainActor
+    static func resolvePrev(item: MediaItem?, episode: MediaEpisode?, appState: AppState) async -> Next? {
+        guard let item, let current = episode else { return nil }
+        guard item.type != .movie, item.type != .liveTv else { return nil }
+
+        guard let prev = prevEpisodeFor(item, current) else { return nil }
+
+        let sources = (try? await appState.playbackSourcesFor(item, episode: prev)) ?? []
+        if let direct = sources.first(where: { $0.isDirect }) {
+            return .player(PlayerRoute(
+                title: "\(item.title) • \(direct.title)", url: direct.url, headers: direct.headers,
+                item: item, episode: prev, subtitleUrl: direct.subtitleUrl,
+                startPositionMs: nil, aniSkipEpisode: nil))
+        }
+        // Series fall back to the VidSrc embed resolver, same as a manual play.
+        if item.type == .series,
+           let embed = sources.first(where: { $0.isEmbed && $0.provider == "VidSrc" }) {
+            let urls = VidsrcExtractor().embedUrlsFor(
+                item: item, episode: prev, preferredDomain: appState.settings.vidsrcDomain,
+                subtitleUrl: appState.settings.subtitleUrl, subtitleLanguage: appState.settings.subtitleLanguage)
+            if !urls.isEmpty {
+                return .vidsrc(VidsrcRoute(item: item, title: embed.title, embedUrls: urls, episode: prev))
+            }
+        }
+        return nil
+    }
+
     /// Next episode on the current season, or episode 1 of the next season when
     /// the current season is exhausted. `nil` once the show is over.
     static func nextEpisodeFor(_ item: MediaItem, _ current: MediaEpisode) -> MediaEpisode? {
@@ -55,5 +82,21 @@ enum AutoplayResolver {
         }
         return MediaEpisode(seasonNumber: current.seasonNumber, episodeNumber: nextNumber,
                             title: "Episode \(nextNumber)")
+    }
+
+    static func prevEpisodeFor(_ item: MediaItem, _ current: MediaEpisode) -> MediaEpisode? {
+        let prevNumber = current.episodeNumber - 1
+        if prevNumber < 1 {
+            let prevSeasonNumber = current.seasonNumber - 1
+            if prevSeasonNumber < 1 { return nil }
+            let prevSeason = item.seasons.first { $0.seasonNumber == prevSeasonNumber }
+            let prevMaxEp = prevSeason?.episodeCount ?? item.episodes.filter { $0.seasonNumber == prevSeasonNumber }.count
+            if prevMaxEp > 0 {
+                return MediaEpisode(seasonNumber: prevSeasonNumber, episodeNumber: prevMaxEp, title: "Episode \(prevMaxEp)")
+            }
+            return nil
+        }
+        return MediaEpisode(seasonNumber: current.seasonNumber, episodeNumber: prevNumber,
+                            title: "Episode \(prevNumber)")
     }
 }

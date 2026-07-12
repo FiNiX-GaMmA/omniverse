@@ -780,12 +780,27 @@ final class AppState {
         return String((0..<32).map { _ in chars.randomElement()! })
     }
 
+    func getRealOnePaceSeason(season: Int) -> Int {
+        let repoFolders = [
+            "00 Cover Stories and Specials", "01 Romance Dawn", "02 Orange Town", "03 Syrup Village", "04 Gaimon",
+            "05 Baratie", "06 Arlong Park", "07 Loguetown", "08 Reverse Mountain", "09 Whisky Peak", "10 Little Garden",
+            "11 Drum Island", "12 Alabasta", "13 Jaya", "14 Skypiea", "16 Water Seven", "17 Enies Lobby",
+            "19 Thriller Bark", "22 Impel Down", "23 Marineford", "24 Post War", "25 Return to Sabaody",
+            "26 Fishman Island", "27 Punk Hazard", "28 Dressrosa", "29 Zou", "30 Whole Cake Island", "31 Reverie", "32 Wano", "33 Egghead"
+        ]
+        guard season >= 1, season <= repoFolders.count else { return season }
+        let folder = repoFolders[season - 1]
+        let prefixStr = folder.components(separatedBy: " ").first ?? ""
+        return Int(prefixStr) ?? season
+    }
+
     func migrateOnePaceWatchHistory() {
         let history = watchHistory
         if let paceEntry = history.first(where: { $0.itemId == "onepace:anime:21" || $0.title == "One Pace" || $0.itemId.hasPrefix("onepace:") }) {
             let season = paceEntry.seasonNumber ?? 1
             let epNum = paceEntry.episodeNumber ?? 1
-            let mappedEp = mapOnePaceToOnePiece(season: season, episode: epNum)
+            let realSeason = getRealOnePaceSeason(season: season)
+            let mappedEp = realSeason == 0 ? 1 : mapOnePaceToOnePiece(season: realSeason, episode: epNum)
             
             let pieceEntry = WatchProgress(
                 id: nil,

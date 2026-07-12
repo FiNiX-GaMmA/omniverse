@@ -93,19 +93,34 @@ target_android() {
         exit 1
     fi
 
-    echo -e "${BLUE}info:${NC} Compiling native Android signed APK via Gradle..."
+    echo -e "${BLUE}info:${NC} Compiling native Android signed APK variants via Gradle..."
     (cd android && ./gradlew assembleRelease)
 
-    # Package output binary
+    # Package output binaries
     mkdir -p dist
-    if [ -f "android/app/build/outputs/apk/release/app-release.apk" ]; then
-        cp android/app/build/outputs/apk/release/app-release.apk dist/Omniverse-android-signed.apk
+    SUCCESS=0
+    if [ -f "android/app/build/outputs/apk/release/app-arm64-v8a-release.apk" ]; then
+        cp android/app/build/outputs/apk/release/app-arm64-v8a-release.apk dist/Omniverse-android-arm64.apk
+        echo -e "${BLUE}Output location (arm64-v8a):${NC} ${BOLD}dist/Omniverse-android-arm64.apk${NC}"
+        SUCCESS=1
+    fi
+    if [ -f "android/app/build/outputs/apk/release/app-universal-release.apk" ]; then
+        cp android/app/build/outputs/apk/release/app-universal-release.apk dist/Omniverse-android-universal.apk
+        echo -e "${BLUE}Output location (Universal):${NC} ${BOLD}dist/Omniverse-android-universal.apk${NC}"
+        SUCCESS=1
+    fi
+    if [ -f "android/app/build/outputs/apk/release/app-release.apk" ] && [ $SUCCESS -eq 0 ]; then
+        cp android/app/build/outputs/apk/release/app-release.apk dist/Omniverse-android-universal.apk
+        echo -e "${BLUE}Output location (Universal):${NC} ${BOLD}dist/Omniverse-android-universal.apk${NC}"
+        SUCCESS=1
+    fi
+
+    if [ $SUCCESS -eq 1 ]; then
         echo -e "${GREEN}${BOLD}======================================================================${NC}"
-        echo -e "${GREEN}success:${NC} Native Android APK compiled successfully from source!"
-        echo -e "${BLUE}Output location:${NC} ${BOLD}dist/Omniverse-android-signed.apk${NC}"
+        echo -e "${GREEN}success:${NC} Native Android APK variants compiled successfully from source!"
         echo -e "${GREEN}${BOLD}======================================================================${NC}"
     else
-        echo -e "${RED}error:${NC} Android APK compilation failed."
+        echo -e "${RED}error:${NC} Android APK compilation failed. Output files not found."
         exit 1
     fi
 }
@@ -195,12 +210,33 @@ target_desktop() {
             mkdir -p dist/desktop
             rm -rf dist/desktop/Omniverse.app
             cp -R "$APP_PATH" dist/desktop/
-            echo -e "${GREEN}${BOLD}======================================================================${NC}"
             echo -e "${GREEN}success:${NC} Dedicated Native Mac Catalyst Desktop App compiled successfully!"
             echo -e "${BLUE}Output location:${NC} ${BOLD}dist/desktop/Omniverse.app${NC}"
+        else
+            echo -e "${YELLOW}warning:${NC} Native Mac Catalyst compilation failed. App package not found."
+        fi
+
+        # Now, ALSO bundle and package Electron macOS DMG variants (arm64 & x64)
+        if ! command -v npm &> /dev/null; then
+            echo -e "${RED}error:${NC} Node.js and npm are required to build the Electron desktop app."
+            exit 1
+        fi
+
+        echo -e "${BLUE}info:${NC} Installing Electron project dependencies via npm..."
+        (cd desktop && npm install)
+
+        echo -e "${BLUE}info:${NC} Target OS: macOS. Generating Electron DMG variants (arm64 & x64)..."
+        (cd desktop && npm run dist:mac)
+
+        # Copy Electron Mac outputs to dist/desktop/
+        if [ -d "desktop/dist" ]; then
+            cp -r desktop/dist/* dist/desktop/
+            echo -e "${GREEN}${BOLD}======================================================================${NC}"
+            echo -e "${GREEN}success:${NC} Omniverse Electron DMG variants (arm64 & x64) compiled successfully!"
+            echo -e "${BLUE}Output folder:${NC} ${BOLD}dist/desktop/${NC}"
             echo -e "${GREEN}${BOLD}======================================================================${NC}"
         else
-            echo -e "${RED}error:${NC} Native Mac Catalyst compilation failed. App package not found."
+            echo -e "${RED}error:${NC} Electron macOS packaging failed."
             exit 1
         fi
     else
@@ -221,7 +257,7 @@ target_desktop() {
             echo -e "${BLUE}info:${NC} Target OS: Linux. Generating AppImage and DEB package..."
             (cd desktop && npm run dist:linux)
         else
-            echo -e "${BLUE}info:${NC} Target OS: Windows. Generating Setup EXE installer..."
+            echo -e "${BLUE}info:${NC} Target OS: Windows. Generating Setup EXE installer and Portable EXE..."
             (cd desktop && npm run dist:win)
         fi
 

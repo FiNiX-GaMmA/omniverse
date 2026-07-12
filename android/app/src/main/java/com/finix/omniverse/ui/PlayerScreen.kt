@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -174,6 +175,11 @@ fun PlayerScreen(
     val nextEp = remember(args.item, args.episode) {
         if (args.item != null && args.episode != null) {
             nextEpisodeFor(args.item, args.episode)
+        } else null
+    }
+    val prevEp = remember(args.item, args.episode) {
+        if (args.item != null && args.episode != null) {
+            prevEpisodeFor(args.item, args.episode)
         } else null
     }
 
@@ -457,6 +463,30 @@ fun PlayerScreen(
                     onSeekBy = { player.seekTo((player.currentPosition + it).coerceIn(0, durationMs.toLong())); controlsVisible = true; interactionCount++ },
                     onScrub = { f -> player.seekTo((durationMs * f).toLong()); controlsVisible = true; interactionCount++ },
                     onToggleCaptions = { showCaptions = it },
+                    onPrevEp = if (args.item != null && args.episode != null && prevEp != null) {
+                        {
+                            scope.launch {
+                                toast = "Loading previous episode…"
+                                when (val prev = resolvePrevEpisode(args.item, args.episode, appState)) {
+                                    is AutoplayNext.Play -> onPlayNext(prev.args)
+                                    is AutoplayNext.Embed -> onPlayVidsrc(prev.args)
+                                    else -> { toast = "Could not resolve previous episode." }
+                                }
+                            }
+                        }
+                    } else null,
+                    onNextEp = if (args.item != null && args.episode != null && nextEp != null) {
+                        {
+                            scope.launch {
+                                toast = "Loading next episode…"
+                                when (val next = resolveNextEpisode(args.item, args.episode, appState)) {
+                                    is AutoplayNext.Play -> onPlayNext(next.args)
+                                    is AutoplayNext.Embed -> onPlayVidsrc(next.args)
+                                    else -> { toast = "Could not resolve next episode." }
+                                }
+                            }
+                        }
+                    } else null,
                 )
             }
 
@@ -627,6 +657,7 @@ internal fun RecommendationsEndScreen(
 private fun PlayerControls(
     title: String, episode: MediaEpisode?, isPlaying: Boolean, durationMs: Int, positionMs: Int, showCaptions: Boolean,
     onClose: () -> Unit, onPlayPause: () -> Unit, onSeekBy: (Long) -> Unit, onScrub: (Float) -> Unit, onToggleCaptions: (Boolean) -> Unit,
+    onPrevEp: (() -> Unit)? = null, onNextEp: (() -> Unit)? = null,
 ) {
     val isLive = durationMs <= 0
     Box(Modifier.fillMaxSize().background(
@@ -644,11 +675,19 @@ private fun PlayerControls(
             val playFocus = remember { FocusRequester() }
             LaunchedEffect(Unit) { if (isTv) runCatching { playFocus.requestFocus() } }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                if (onPrevEp != null) {
+                    LargeBtn(Icons.Filled.SkipPrevious, 82.dp, onClick = onPrevEp)
+                    Spacer(Modifier.size(40.dp))
+                }
                 LargeBtn(Icons.Filled.Replay10, 82.dp) { onSeekBy(-10_000) }
                 Spacer(Modifier.size(56.dp))
                 LargeBtn(if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, 112.dp, focusRequester = playFocus, onClick = onPlayPause)
                 Spacer(Modifier.size(56.dp))
                 LargeBtn(Icons.Filled.Forward10, 82.dp) { onSeekBy(10_000) }
+                if (onNextEp != null) {
+                    Spacer(Modifier.size(40.dp))
+                    LargeBtn(Icons.Filled.SkipNext, 82.dp, onClick = onNextEp)
+                }
             }
             Spacer(Modifier.weight(1f))
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

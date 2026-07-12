@@ -235,11 +235,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Configure Window Controls based on OS
 async function setupPlatformWindowDecorations() {
-  const platform = await window.electron.getPlatform();
-  if (platform !== "darwin") {
-    // Windows and Linux have custom draggable title bar buttons
-    const controls = document.getElementById("window-controls");
-    if (controls) controls.classList.remove("hidden");
+  try {
+    let platform = "win32"; // default fallback for Windows/Linux
+    if (window.electron && typeof window.electron.getPlatform === "function") {
+      platform = await window.electron.getPlatform();
+    } else {
+      // Fallback detection using navigator.platform
+      const isMac = /Mac|iPad|iPhone|iPod/.test(navigator.platform);
+      platform = isMac ? "darwin" : "win32";
+    }
+
+    if (platform !== "darwin") {
+      // Windows and Linux have custom draggable title bar buttons
+      const controls = document.getElementById("window-controls");
+      if (controls) controls.classList.remove("hidden");
+    }
+  } catch (err) {
+    console.warn("[Omniverse] Failed to detect platform window decorations:", err);
+    // Show them anyway as a safe fallback unless we are on Mac
+    const isMac = /Mac|iPad|iPhone|iPod/.test(navigator.platform);
+    if (!isMac) {
+      const controls = document.getElementById("window-controls");
+      if (controls) controls.classList.remove("hidden");
+    }
   }
 }
 
@@ -2020,7 +2038,7 @@ function checkOnePaceMigration() {
     );
 
     if (state.traktToken) {
-      await pushToTrakt();
+      pushToTrakt(); // Run in background, don't block UI!
     }
 
     modal.remove();
@@ -2322,6 +2340,56 @@ async function pushToTrakt() {
   }
 }
 
+function showSyncProgressModal() {
+  const existing = document.getElementById("sync-progress-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "sync-progress-modal";
+  modal.className = "fixed inset-0 z-[10000] detail-modal-overlay flex items-center justify-center p-6";
+  modal.innerHTML = `
+    <div class="detail-modal-card w-full max-w-sm p-6 rounded-2xl space-y-6 text-center bg-brandSec border border-white/[0.04] animate-fade-in shadow-2xl">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-cyan-950/40 border border-brandCyan/30 flex items-center justify-center text-brandCyan">
+          <i data-lucide="refresh-cw" class="w-6 h-6 animate-spin"></i>
+        </div>
+        <h2 class="font-extrabold text-lg text-white">Synchronizing Cloud</h2>
+        <p id="sync-modal-status" class="text-xs text-gray-400 leading-relaxed">Initializing secure handshake...</p>
+      </div>
+      
+      <div class="space-y-2">
+        <div class="w-full bg-brandDark/50 rounded-full h-2 overflow-hidden border border-white/[0.02]">
+          <div id="sync-modal-progress-bar" class="bg-brandCyan h-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <div class="flex justify-between text-[10px] text-gray-500 font-extrabold uppercase tracking-wider">
+          <span>Trakt Sync</span>
+          <span id="sync-modal-percentage">0%</span>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+}
+
+function updateSyncProgress(pct, statusText) {
+  const bar = document.getElementById("sync-modal-progress-bar");
+  const pctLabel = document.getElementById("sync-modal-percentage");
+  const status = document.getElementById("sync-modal-status");
+
+  if (bar) bar.style.width = `${pct}%`;
+  if (pctLabel) pctLabel.textContent = `${pct}%`;
+  if (status) status.textContent = statusText;
+}
+
+function hideSyncProgressModal() {
+  const modal = document.getElementById("sync-progress-modal");
+  if (modal) {
+    modal.classList.add("animate-fade-out");
+    setTimeout(() => modal.remove(), 250);
+  }
+}
+
 // Force Sync Action trigger (Unified Cloud Sync)
 async function forceSyncNow() {
   const icon = document.getElementById("icon-force-sync");
@@ -2333,6 +2401,10 @@ async function forceSyncNow() {
     btn.innerHTML = `<i data-lucide="refresh-cw" id="icon-force-sync" class="w-3.5 h-3.5 animate-spin"></i> Syncing...`;
   }
 
+  showSyncProgressModal();
+  updateSyncProgress(10, "Establishing connection to Trakt...");
+  await new Promise(resolve => setTimeout(resolve, 600));
+
   window.electron.showNotification(
     "Cloud Sync Initiated",
     "Pulling latest watch progress and profiles from Trakt..."
@@ -2340,10 +2412,24 @@ async function forceSyncNow() {
 
   try {
     if (state.traktToken) {
+      updateSyncProgress(30, "Downloading watch history and settings...");
       await pullFromTrakt();
+      updateSyncProgress(60, "Merging profiles and credentials...");
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } else {
+      updateSyncProgress(50, "Skipping Trakt (not authenticated)...");
+      await new Promise(resolve => setTimeout(resolve, 400));
     }
+    
+    updateSyncProgress(75, "Re-rendering catalog feeds and trending lists...");
     await renderCatalogFeeds();
+    
+    updateSyncProgress(90, "Updating Continue Watching shelf...");
     renderContinueWatching();
+    await new Promise(resolve => setTimeout(resolve, 450));
+
+    updateSyncProgress(100, "Synchronized!");
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     window.electron.showNotification(
       "Sync Completed",
@@ -2356,6 +2442,7 @@ async function forceSyncNow() {
       "Sync finished with some network warnings."
     );
   } finally {
+    hideSyncProgressModal();
     if (icon) icon.classList.remove("animate-spin");
     if (btn) {
       btn.disabled = false;

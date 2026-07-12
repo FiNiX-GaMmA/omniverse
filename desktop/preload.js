@@ -13,7 +13,8 @@ const crypto = require("crypto");
 const isMainApp =
   window.location.protocol === "file:" ||
   window.location.hostname === "localhost" ||
-  window.location.protocol === "chrome-extension:";
+  window.location.protocol === "chrome-extension:" ||
+  (window.location.protocol !== "http:" && window.location.protocol !== "https:");
 
 if (isMainApp) {
   // Expose secure API to the main application

@@ -1150,13 +1150,26 @@ class AppState(context: Context) {
             type = MediaType.fromWire(j.optStringOrNull("type")),
             posterPath = j.optStringOrNull("posterPath"),
             backdropPath = j.optStringOrNull("backdropPath"),
-            seasonNumber = j.optIntOrNull("seasonNumber"),
-            episodeNumber = j.optIntOrNull("episodeNumber"),
+            seasonNumber = j.optIntOrNull("seasonNumber") ?: j.optIntOrNull("season") ?: j.optIntOrNull("season_number"),
+            episodeNumber = j.optIntOrNull("episodeNumber") ?: j.optIntOrNull("episode") ?: j.optIntOrNull("episode_number") ?: j.optIntOrNull("number"),
             episodeTitle = j.optStringOrNull("episodeTitle"),
             positionMs = j.optIntOrNull("positionMs") ?: 0,
             durationMs = j.optIntOrNull("durationMs") ?: 0,
             lastWatchedAt = j.optLongOrNull("lastWatchedAt") ?: System.currentTimeMillis(),
         )
+    }
+
+    fun getRealOnePaceSeason(season: Int): Int {
+        val repoFolders = listOf(
+            "00 Cover Stories and Specials", "01 Romance Dawn", "02 Orange Town", "03 Syrup Village", "04 Gaimon",
+            "05 Baratie", "06 Arlong Park", "07 Loguetown", "08 Reverse Mountain", "09 Whisky Peak", "10 Little Garden",
+            "11 Drum Island", "12 Alabasta", "13 Jaya", "14 Skypiea", "16 Water Seven", "17 Enies Lobby",
+            "19 Thriller Bark", "22 Impel Down", "23 Marineford", "24 Post War", "25 Return to Sabaody",
+            "26 Fishman Island", "27 Punk Hazard", "28 Dressrosa", "29 Zou", "30 Whole Cake Island", "31 Reverie", "32 Wano", "33 Egghead"
+        )
+        val folder = repoFolders.getOrNull(season - 1) ?: return season
+        val prefix = folder.substringBefore(" ").toIntOrNull() ?: season
+        return prefix
     }
 
     fun migrateOnePaceWatchHistory() {
@@ -1165,7 +1178,8 @@ class AppState(context: Context) {
         if (paceEntry != null) {
             val season = paceEntry.seasonNumber ?: 1
             val epNum = paceEntry.episodeNumber ?: 1
-            val mappedEp = mapOnePaceToOnePiece(season, epNum)
+            val realSeason = getRealOnePaceSeason(season)
+            val mappedEp = if (realSeason == 0) 1 else mapOnePaceToOnePiece(realSeason, epNum)
             
             val pieceEntry = WatchProgress(
                 id = null,

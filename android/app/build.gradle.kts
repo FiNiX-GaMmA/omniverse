@@ -51,9 +51,14 @@ android {
         }
     }
 
-    // Force a single universal APK (no per-ABI splits).
+    // Configure ABI splits to generate an arm64-v8a specific APK and a universal APK
     splits {
-        abi { isEnable = false }
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a")
+            isUniversalApk = true
+        }
         density { isEnable = false }
     }
 

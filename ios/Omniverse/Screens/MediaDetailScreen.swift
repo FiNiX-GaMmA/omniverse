@@ -161,16 +161,17 @@ struct MediaDetailScreen: View {
         return isSeries ? "Play First Episode" : "Play"
     }
 
-    // MARK: Season + episodes (with 50-ep virtual chunking)
+    // MARK: Season + episodes (with 50-ep/100-ep virtual chunking)
 
     private var expandedSeasons: [MediaSeason] {
         var out: [MediaSeason] = []
+        let limit = current.type == .anime ? 100 : 50
         for s in current.seasons {
             let total = max(s.episodeCount, current.episodes.filter { $0.seasonNumber == s.seasonNumber }.count)
-            if total > 50 {
-                let chunks = Int(ceil(Double(total) / 50.0))
+            if total > limit {
+                let chunks = Int(ceil(Double(total) / Double(limit)))
                 for i in 0..<chunks {
-                    let start = i * 50 + 1, end = min(total, (i + 1) * 50)
+                    let start = i * limit + 1, end = min(total, (i + 1) * limit)
                     out.append(MediaSeason(seasonNumber: s.seasonNumber * 1000 + i, name: "\(s.name) (Part \(i + 1))", episodeCount: end - start + 1))
                 }
             } else { out.append(s) }
@@ -200,10 +201,25 @@ struct MediaDetailScreen: View {
             if loadingEpisodes { ProgressView().tint(LiquidColors.cyan).frame(height: 150).frame(maxWidth: .infinity) }
             else if episodes.isEmpty { Text("No episodes loaded for this season.").font(.system(size: 13)).foregroundStyle(.white.opacity(0.6)).padding(26) }
             else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 14) {
-                        ForEach(episodes) { ep in episodeCard(ep) }
-                    }.padding(.horizontal, 26)
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 14) {
+                            ForEach(episodes) { ep in
+                                episodeCard(ep)
+                                    .id(ep.episodeNumber)
+                            }
+                        }.padding(.horizontal, 26)
+                    }
+                    .onAppear {
+                        if let prog = state.continueWatching.first(where: { $0.itemId == current.id }),
+                           let epNum = prog.episodeNumber {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation {
+                                    proxy.scrollTo(epNum, anchor: .center)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -230,8 +246,28 @@ struct MediaDetailScreen: View {
         detailed = await state.detailsFor(item)
         loading = false
         if isSeries {
-            selectedSeason = expandedSeasons.first(where: { $0.seasonNumber > 0 })?.seasonNumber
+            var targetSeason = expandedSeasons.first(where: { $0.seasonNumber > 0 })?.seasonNumber
                 ?? expandedSeasons.first?.seasonNumber ?? 1
+            
+            if let prog = state.continueWatching.first(where: { $0.itemId == current.id }) {
+                let progEpNum = prog.episodeNumber
+                let progSeasonNum = prog.seasonNumber
+                
+                if let progSeasonNum {
+                    if expandedSeasons.contains(where: { $0.seasonNumber == progSeasonNum }) {
+                        targetSeason = progSeasonNum
+                    } else if progSeasonNum < 1000, let progEpNum {
+                        let limit = current.type == .anime ? 100 : 50
+                        let chunkIndex = (progEpNum - 1) / limit
+                        let virtualSeason = progSeasonNum * 1000 + chunkIndex
+                        if expandedSeasons.contains(where: { $0.seasonNumber == virtualSeason }) {
+                            targetSeason = virtualSeason
+                        }
+                    }
+                }
+            }
+            
+            selectedSeason = targetSeason
             await loadEpisodes()
         }
     }
@@ -242,7 +278,8 @@ struct MediaDetailScreen: View {
         if season >= 1000 {
             let original = season / 1000, chunk = season % 1000
             var full = current.episodes.first?.seasonNumber == original ? current.episodes : await state.seasonEpisodesFor(current, seasonNumber: original)
-            let start = chunk * 50, end = min(full.count, (chunk + 1) * 50)
+            let limit = current.type == .anime ? 100 : 50
+            let start = chunk * limit, end = min(full.count, (chunk + 1) * limit)
             if start < end { full = Array(full[start..<end]) } else { full = [] }
             episodes = full.map { var e = $0; e.seasonNumber = season; return e }
         } else {

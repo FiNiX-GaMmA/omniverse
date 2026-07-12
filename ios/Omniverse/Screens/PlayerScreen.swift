@@ -1118,9 +1118,33 @@ struct PlayerScreen: View {
         }
     }
 
+    private var prevEpisode: MediaEpisode? {
+        guard let item = route.item, let ep = route.episode else { return nil }
+        return AutoplayResolver.prevEpisodeFor(item, ep)
+    }
+
     @ViewBuilder
     private func centerControls(engine: PlaybackEngine) -> some View {
-        HStack(spacing: 74) {
+        HStack(spacing: 40) {
+            if let _ = prevEpisode {
+                largeButton("backward.end.fill", size: 82) {
+                    showControls()
+                    Task {
+                        engine.showToast("Loading previous episode...")
+                        if let prev = await AutoplayResolver.resolvePrev(item: route.item, episode: route.episode, appState: appState) {
+                            switch prev {
+                            case .player(let r):
+                                route = r
+                            case .vidsrc(let v):
+                                nextVidsrc = v
+                            }
+                        } else {
+                            engine.showToast("Could not resolve previous episode.")
+                        }
+                    }
+                }
+            }
+            
             largeButton("gobackward.10", size: 82) {
                 showControls(); engine.seekBy(-10)
             }
@@ -1131,6 +1155,25 @@ struct PlayerScreen: View {
             }
             largeButton("goforward.10", size: 82) {
                 showControls(); engine.seekBy(10)
+            }
+            
+            if let _ = nextEpisode {
+                largeButton("forward.end.fill", size: 82) {
+                    showControls()
+                    Task {
+                        engine.showToast("Loading next episode...")
+                        if let next = await AutoplayResolver.resolveNext(item: route.item, episode: route.episode, appState: appState) {
+                            switch next {
+                            case .player(let r):
+                                route = r
+                            case .vidsrc(let v):
+                                nextVidsrc = v
+                            }
+                        } else {
+                            engine.showToast("Could not resolve next episode.")
+                        }
+                    }
+                }
             }
         }
     }

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -88,12 +89,13 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
 
     fun expandedSeasons(c: MediaItem): List<MediaSeason> {
         val out = ArrayList<MediaSeason>()
+        val limit = if (c.type == MediaType.ANIME) 100 else 50
         for (s in c.seasons) {
             val total = maxOf(s.episodeCount, c.episodes.count { it.seasonNumber == s.seasonNumber })
-            if (total > 50) {
-                val chunks = ceil(total / 50.0).toInt()
+            if (total > limit) {
+                val chunks = ceil(total / limit.toDouble()).toInt()
                 for (i in 0 until chunks) {
-                    val startE = i * 50 + 1; val endE = minOf(total, (i + 1) * 50)
+                    val startE = i * limit + 1; val endE = minOf(total, (i + 1) * limit)
                     out.add(MediaSeason(s.seasonNumber * 1000 + i, "${s.name} (Part ${i + 1})", endE - startE + 1))
                 }
             } else out.add(s)
@@ -103,11 +105,12 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
 
     suspend fun loadEpisodes(c: MediaItem, season: Int) {
         loadingEpisodes = true
+        val limit = if (c.type == MediaType.ANIME) 100 else 50
         val result = if (season >= 1000) {
             val original = season / 1000; val chunk = season % 1000
             var full = if (c.episodes.firstOrNull()?.seasonNumber == original) c.episodes
                 else state.seasonEpisodesFor(c, original)
-            val startI = chunk * 50; val endI = minOf(full.size, (chunk + 1) * 50)
+            val startI = chunk * limit; val endI = minOf(full.size, (chunk + 1) * limit)
             full = if (startI < endI) full.subList(startI, endI) else emptyList()
             full.map { it.copy(seasonNumber = season) }
         } else state.seasonEpisodesFor(c, season)
@@ -120,7 +123,25 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
         detailed = d
         if (d.type == MediaType.SERIES || d.type == MediaType.ANIME) {
             val seasons = expandedSeasons(d)
-            selectedSeason = seasons.firstOrNull { it.seasonNumber > 0 }?.seasonNumber ?: seasons.firstOrNull()?.seasonNumber ?: 1
+            val prog = state.continueWatching.firstOrNull { it.itemId == d.id }
+            var targetSeason = seasons.firstOrNull { it.seasonNumber > 0 }?.seasonNumber ?: seasons.firstOrNull()?.seasonNumber ?: 1
+            if (prog != null) {
+                val progEpNum = prog.episodeNumber
+                val progSeasonNum = prog.seasonNumber
+                if (progSeasonNum != null) {
+                    if (seasons.any { it.seasonNumber == progSeasonNum }) {
+                        targetSeason = progSeasonNum
+                    } else if (progSeasonNum < 1000 && progEpNum != null) {
+                        val limit = if (d.type == MediaType.ANIME) 100 else 50
+                        val chunkIndex = (progEpNum - 1) / limit
+                        val virtualSeason = progSeasonNum * 1000 + chunkIndex
+                        if (seasons.any { it.seasonNumber == virtualSeason }) {
+                            targetSeason = virtualSeason
+                        }
+                    }
+                }
+            }
+            selectedSeason = targetSeason
             loadEpisodes(d, selectedSeason)
         }
     }
@@ -226,13 +247,26 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                         }
                         episodes.isEmpty() -> Text("No episodes loaded for this season.",
                             color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, modifier = Modifier.padding(26.dp))
-                        else -> LazyRow(
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 26.dp),
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
-                            modifier = Modifier.padding(top = 14.dp),
-                        ) {
-                            items(episodes, key = { "${it.seasonNumber}-${it.episodeNumber}" }) { ep ->
-                                EpisodeCard(ep) { scope.launch { openSources(ep) } }
+                        else -> {
+                            val listState = rememberLazyListState()
+                            LaunchedEffect(episodes.toList()) {
+                                val prog = state.continueWatching.firstOrNull { it.itemId == current.id }
+                                if (prog != null && prog.episodeNumber != null) {
+                                    val index = episodes.indexOfFirst { it.episodeNumber == prog.episodeNumber }
+                                    if (index >= 0) {
+                                        listState.scrollToItem(index)
+                                    }
+                                }
+                            }
+                            LazyRow(
+                                state = listState,
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 26.dp),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                modifier = Modifier.padding(top = 14.dp),
+                            ) {
+                                items(episodes, key = { "${it.seasonNumber}-${it.episodeNumber}" }) { ep ->
+                                    EpisodeCard(ep) { scope.launch { openSources(ep) } }
+                                }
                             }
                         }
                     }
