@@ -126,7 +126,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
     }
 
     fun dispatch(source: PlaybackSource, episode: MediaEpisode?) {
-        if (current.type != MediaType.ANIME && current.title != "One Pace") {
+        if (current.type != MediaType.ANIME) {
             scope.launch { state.recordProgress(current, 10000, 3600000, episode) }
         }
         val resume = state.continueWatching.firstOrNull { it.itemId == current.id && it.episodeNumber == episode?.episodeNumber }?.positionMs

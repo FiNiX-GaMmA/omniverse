@@ -70,15 +70,42 @@ object UpdateChecker {
                 val tagName = json.optString("tag_name", "")
                 val notes = json.optString("body", "").takeIf { it.isNotBlank() }
 
-                // Scan through assets to find Omniverse.apk
+                // Detect device architecture
+                val abis = android.os.Build.SUPPORTED_ABIS
+                val isArm64 = abis.contains("arm64-v8a")
+                val isArmv7 = abis.contains("armeabi-v7a")
+                val isX86_64 = abis.contains("x86_64")
+
+                // Scan through assets to find matching APK
                 var apkUrl = ""
                 val assets = json.optJSONArray("assets")
                 if (assets != null) {
+                    // 1. Try to find architecture-specific APK first
                     for (i in 0 until assets.length()) {
                         val asset = assets.optJSONObject(i) ?: continue
-                        if (asset.optString("name", "") == "Omniverse.apk") {
-                            apkUrl = asset.optString("browser_download_url", "")
-                            break
+                        val name = asset.optString("name", "").lowercase()
+                        if (name.endsWith(".apk")) {
+                            if (isArm64 && (name.contains("arm64") || name.contains("v8a"))) {
+                                apkUrl = asset.optString("browser_download_url", "")
+                                break
+                            } else if (isArmv7 && (name.contains("armv7") || name.contains("v7a") || name.contains("armeabi"))) {
+                                apkUrl = asset.optString("browser_download_url", "")
+                                break
+                            } else if (isX86_64 && name.contains("x86_64")) {
+                                apkUrl = asset.optString("browser_download_url", "")
+                                break
+                            }
+                        }
+                    }
+                    // 2. Fallback to first matching universal Omniverse.apk
+                    if (apkUrl.isBlank()) {
+                        for (i in 0 until assets.length()) {
+                            val asset = assets.optJSONObject(i) ?: continue
+                            val name = asset.optString("name", "")
+                            if (name == "Omniverse.apk" || name.lowercase().endsWith(".apk")) {
+                                apkUrl = asset.optString("browser_download_url", "")
+                                break
+                            }
                         }
                     }
                 }

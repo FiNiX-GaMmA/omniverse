@@ -100,18 +100,6 @@ fun HomeScreen(nav: NavController) {
     /// Returns true on a successful resolve+navigate, false if it fell back to detail.
     suspend fun resolveAndPlay(entry: WatchProgress, startPositionMs: Int): Boolean {
         val item = mediaItemFor(entry)
-        // One Pace: resolve the arc/episode and resume playback directly.
-        if (entry.title == "One Pace" || entry.itemId.startsWith("onepace:") || (entry.itemId.startsWith("anilist:anime:21") && entry.title == "One Pace")) {
-            val season = entry.seasonNumber
-            val epNum = entry.episodeNumber
-            if (season == null || epNum == null) { openDetail(item); return false }
-            val resume = runCatching { resolveOnePaceResume(season, epNum, state.credentials.pixeldrainApiKey) }.getOrNull()
-            if (resume == null) { openDetail(item); return false }
-            RouteArgs.player = PlayerArgs(resume.title, resume.url, emptyMap(),
-                resume.item, resume.episode, resume.subtitleUrl, startPositionMs, resume.aniSkipEpisode)
-            nav.navigate("player")
-            return true
-        }
         val episode = if (entry.seasonNumber != null && entry.episodeNumber != null)
             MediaEpisode(entry.seasonNumber!!, entry.episodeNumber!!, entry.episodeTitle ?: "Episode") else null
         return try {

@@ -145,7 +145,7 @@ fun PlayerScreen(
     var hasError by remember { mutableStateOf(false) }
     // One Pace: on playback error, fall back once from the GameDrive proxy to the
     // direct Pixeldrain (+api_key) URL, preserving position.
-    val isOnePace = args.item?.title == "One Pace"
+    val isOnePace = false
     var currentUrl by remember { mutableStateOf(args.url) }
     var fallbackAttempted by remember { mutableStateOf(false) }
     // Stall auto-recovery: bounded re-resolve when playback freezes mid-stream.

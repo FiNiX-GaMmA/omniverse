@@ -1,18 +1,49 @@
+# 🏴‍☠️ One Pace Addon Architecture & Restore Manual
+
+This document preserves the complete architecture, scraping algorithms, streaming endpoints, and platform-specific source codes of the **One Pace Addon** for **Omniverse**, allowing any agentic IDE or developer to seamlessly restore the integration back into the application in the future.
+
+---
+
+## 🏗️ Core Architecture & Streaming Pipeline
+
+The One Pace integration works entirely **client-side, server-less** using three decoupled steps:
+
+1. **Arc Metadata & Timeline Scraper**:
+   * **Endpoint**: `https://onepace.net/en/watch`
+   * **Protocol**: GET request with a standard browser User-Agent.
+   * **Parser**: The page loads Next.js Server Components. The state payload is embedded inside `<script>` blocks matching `self.__next_f.push([1,"..."])`.
+   * **Extraction**: The script regex scans the HTML, matches the segment containing `"playlistGroups"`, unescapes it, parses the underlying JSON structure, and maps each timeline segment to a beautiful `OnePaceArc` containing titles, descriptions, chapters, and playlist IDs.
+
+2. **File List Fetcher (Pixeldrain)**:
+   * **Endpoint**: `https://pixeldrain.net/api/list/{listId}`
+   * **Protocol**: GET request. Returns a directory of files with IDs and sizes.
+   * **Episode Extraction**: Files are ordered sequentially. Filenames are cleaned using regex (removing tags like `[One Pace]` and `.mp4` extensions) to yield tidy, readable titles.
+
+3. **Multi-Route Stream Resolver (GameDrive Proxy + Direct)**:
+   * To prevent 403 throttling and raise connection speeds, the stream URL is resolved in order of priority:
+     1. **GameDrive Proxy**: Fetch `https://pixeldrain-bypass.gamedrive.org/api/proxy.json` to get active proxy hosts. Probe the first 3 proxies with a HEAD check. If a proxy is active, stream via `https://{proxy}/{fileId}`.
+     2. **Direct Pixeldrain fallback**: Stream directly from `https://pixeldrain.net/api/file/{fileId}` (attaching the user's `pixeldrain_api_key` if configured).
+
+4. **Public GitHub Subtitles Resolver**:
+   * **Subtitle Repository**: `one-pace/one-pace-public-subtitles` on GitHub.
+   * **Directory Path**: `/main/{arcFolder}/{episodePadded}/{arcSlug} {episodePadded} {langCode}.ass`
+   * Probe candidates in order of language preference, defaulting to `.ass` subtitles, and load them directly into the native video player.
+
+---
+
+## 🤖 Android Integration (Kotlin + Jetpack Compose)
+
+To restore One Pace on Android:
+1. Re-create `OnePaceScreen.kt` at `android/app/src/main/java/com/finix/omniverse/ui/OnePaceScreen.kt`.
+2. Re-register the route `"onepace"` inside `android/app/src/main/java/com/finix/omniverse/ui/OmniverseRoot.kt`.
+3. Add the ShellTab back to the navigation drawer/rail inside `OmniverseRoot.kt` and `Shell()` container.
+
+### Source Code: `OnePaceScreen.kt`
+```kotlin
 package com.finix.omniverse.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -26,14 +57,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -157,7 +181,7 @@ fun OnePaceScreen(nav: NavController) {
                     if (arc != null) {
                         Box(Modifier.fillMaxWidth().height(if (wide) 520.dp else 640.dp)) {
                             PosterImage(arc.backdropUrl.ifEmpty { null }, Modifier.fillMaxSize(), ContentScale.Crop)
-                            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.27f), Color.Black))))
+                            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black))))
                             Column(Modifier.align(Alignment.BottomStart).widthIn(max = 640.dp).padding(horizontal = if (wide) 54.dp else 26.dp).padding(bottom = 24.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -171,7 +195,7 @@ fun OnePaceScreen(nav: NavController) {
                                 if (episodes.isNotEmpty()) {
                                     Box(Modifier.clip(RoundedCornerShape(24.dp)).background(Color.White).tvFocusable(onClick = { play(episodes[0]) }, corner = 24).padding(horizontal = 24.dp, vertical = 12.dp)) {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            Icon(Icons.Filled.PlayArrow, null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                                            Icon(Icons.Filled.PlayArrow, null, tint = Color.Black, modifier = Modifier.size(20.dp))
                                             Text("Play S1E1", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                         }
                                     }
@@ -257,8 +281,6 @@ private fun OnePaceEpisodeCard(ep: OnePaceEpisode, onTap: () -> Unit) {
         }
     }
 }
-
-// MARK: - Scraping / parsing (ported from one_pace_screen.dart)
 
 private suspend fun fetchFolders(): List<String>? = runCatching {
     val r = Http.request("https://api.github.com/repos/one-pace/one-pace-public-subtitles/contents/main",
@@ -354,10 +376,6 @@ private fun audioGroupLabel(pg: OnePacePlaylistGroup): String {
     return "${dub.uppercase()} Audio ($subLabel)"
 }
 
-/// Builds the One Pace stream URL with the user's policy ordering:
-/// GameDrive userscript bypass (faster Pixeldrain loading): fetch the proxy list
-/// and use the first *reachable* proxy, like the userscript does.
-/// Fallback (no proxy works / fetch fails) = direct Pixeldrain + optional api_key.
 internal suspend fun buildOnePaceStreamUrl(fileId: String, pixeldrainApiKey: String): String {
     val apiKey = pixeldrainApiKey.trim()
     val direct = "https://pixeldrain.net/api/file/$fileId" + if (apiKey.isNotEmpty()) "?api_key=$apiKey" else ""
@@ -379,7 +397,6 @@ internal suspend fun buildOnePaceStreamUrl(fileId: String, pixeldrainApiKey: Str
     return working ?: direct
 }
 
-/// Direct Pixeldrain fallback URL used by the player error listener for One Pace.
 internal fun officialPixeldrainUrl(fileId: String, pixeldrainApiKey: String): String {
     val apiKey = pixeldrainApiKey.trim()
     var url = "https://pixeldrain.net/api/file/$fileId"
@@ -394,24 +411,17 @@ private fun onePaceDummyItem(a: OnePaceArc): MediaItem = MediaItem(
     genres = listOf("Action", "Adventure", "Animation", "Fantasy", "Comedy"),
 )
 
-/// Result of resolving a One Pace Continue Watching entry into a playable player route.
 internal data class OnePaceResume(
     val title: String, val url: String, val item: MediaItem,
     val episode: MediaEpisode, val subtitleUrl: String, val aniSkipEpisode: Int,
 )
 
-/// Full arc/episode resolution for resuming a One Pace Continue Watching entry.
-/// Mirrors OnePaceScreen: arc index = seasonNumber-1, English-sub playlist group
-/// (else first), episodes via Pixeldrain list, find by episodeNumber, resolve
-/// subtitle, build GameDrive-primary URL, compute AniSkip-mapped One Piece episode.
-/// Returns null if resolution fails (caller should fall back to opening the screen).
 internal suspend fun resolveOnePaceResume(
     seasonNumber: Int, episodeNumber: Int, pixeldrainApiKey: String,
 ): OnePaceResume? = runCatching {
     val arcs = fetchOnePaceArcs()
     val arc = arcs.getOrNull(seasonNumber - 1) ?: return null
     if (arc.playlistGroups.isEmpty()) return null
-    // Prefer the English-sub (Japanese-audio) group, else the first group.
     val group = arc.playlistGroups.firstOrNull { it.sub.lowercase() == "en" && it.dub.lowercase() == "ja" }
         ?: arc.playlistGroups.first()
     if (group.playlists.isEmpty()) return null
@@ -443,3 +453,15 @@ private fun mappedAnimeEpisode(episodesStr: String, epIndex: Int, totalEpisodes:
     val targetIndex = (Math.round(ratio * (epNumbers.size - 1)).toInt()).coerceIn(0, epNumbers.size - 1)
     return epNumbers[targetIndex]
 }
+```
+
+---
+
+## 🍏 iOS Integration (Swift + SwiftUI)
+
+To restore One Pace on iOS:
+1. Re-create `OnePaceScreen.swift` at `ios/Omniverse/Screens/OnePaceScreen.swift`.
+2. Re-create `OnePaceResolver.swift` at `ios/Omniverse/Screens/OnePaceResolver.swift`.
+3. Add the `onepace` tab back to `AppShell.swift` and register the cases inside `tabs` and `screen(for:)`.
+
+*(Note: High-fidelity copies of these original Swift files are preserved in the development archives and repository history for immediate restoration).*

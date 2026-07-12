@@ -100,6 +100,7 @@ class AppState(context: Context) {
             liveTv.clear(); liveTv.addAll(cachedLiveTv)
             hasScannedLiveTv = liveTv.isNotEmpty()
             watchHistory.clear(); watchHistory.addAll(settingsStore.loadWatchHistory())
+            migrateOnePaceWatchHistory()
             initialized = true
 
             // Always perform a silent refresh of all categories, watchlist, and anime on launch to ensure lists are 100% current every time the app opens.
@@ -1156,6 +1157,85 @@ class AppState(context: Context) {
             durationMs = j.optIntOrNull("durationMs") ?: 0,
             lastWatchedAt = j.optLongOrNull("lastWatchedAt") ?: System.currentTimeMillis(),
         )
+    }
+
+    fun migrateOnePaceWatchHistory() {
+        val history = watchHistory.toList()
+        val paceEntry = history.find { it.itemId == "onepace:anime:21" || it.title == "One Pace" || it.itemId.startsWith("onepace:") }
+        if (paceEntry != null) {
+            val season = paceEntry.seasonNumber ?: 1
+            val epNum = paceEntry.episodeNumber ?: 1
+            val mappedEp = mapOnePaceToOnePiece(season, epNum)
+            
+            val pieceEntry = WatchProgress(
+                id = null,
+                itemId = "anilist:anime:21",
+                title = "One Piece",
+                type = MediaType.ANIME,
+                posterPath = "/or06gK6hxJN98Es842gZgYI7CIE.jpg",
+                backdropPath = "/bMv9mO_b2qf8U4VwYAtW3Zc40S9.jpg",
+                seasonNumber = 1,
+                episodeNumber = mappedEp,
+                episodeTitle = "Episode $mappedEp",
+                positionMs = paceEntry.positionMs,
+                durationMs = paceEntry.durationMs,
+                lastWatchedAt = System.currentTimeMillis()
+            )
+            
+            val next = watchHistory.filter { it.itemId != "onepace:anime:21" && it.title != "One Pace" && !it.itemId.startsWith("onepace:") }.toMutableList()
+            next.add(pieceEntry)
+            val capped = next.sortedByDescending { it.lastWatchedAt }.take(30)
+            watchHistory.clear()
+            watchHistory.addAll(capped)
+            settingsStore.saveWatchHistory(capped)
+            
+            message = "One Pace progress migrated to One Piece Episode $mappedEp!"
+            
+            if (credentials.hasTraktUser) {
+                scope.launch { runCatching { syncSettingsToTrakt(silent = true) } }
+            }
+        }
+    }
+
+    fun mapOnePaceToOnePiece(season: Int, episode: Int): Int {
+        val arcEpisodes = mapOf(
+            1 to "1-3", 2 to "4-8", 3 to "9-17", 4 to "18", 5 to "19-30",
+            6 to "31-44", 7 to "45,48-53", 8 to "62-63", 9 to "64-67", 10 to "70-77",
+            11 to "78-91", 12 to "92-130", 13 to "144-152", 14 to "153-195", 15 to "207-219",
+            16 to "229-263", 17 to "263-312", 18 to "313-325", 19 to "337-381", 20 to "385-405",
+            21 to "408-417", 22 to "422-452", 23 to "457-489", 24 to "490-516", 25 to "517-522",
+            26 to "523-574", 27 to "579-625", 28 to "629-746", 29 to "751-779", 30 to "777-877",
+            31 to "878-889", 32 to "890-1085", 33 to "1086-1155"
+        )
+        val arcTotalEpisodes = mapOf(
+            1 to 2, 2 to 3, 3 to 7, 4 to 1, 5 to 10, 6 to 10, 7 to 5, 8 to 1, 9 to 2, 10 to 5,
+            11 to 6, 12 to 21, 13 to 5, 14 to 24, 15 to 3, 16 to 20, 17 to 25, 18 to 5, 19 to 22,
+            20 to 11, 21 to 4, 22 to 14, 23 to 17, 24 to 8, 25 to 2, 26 to 22, 27 to 20, 28 to 48,
+            29 to 10, 30 to 39, 31 to 4, 32 to 60, 33 to 21
+        )
+        val episodesStr = arcEpisodes[season] ?: "1"
+        val epNumbers = ArrayList<Int>()
+        for (part in episodesStr.split(",")) {
+            val clean = part.trim()
+            if (clean.contains("-")) {
+                val rp = clean.split("-")
+                if (rp.size == 2) {
+                    val s = rp[0].trim().toIntOrNull()
+                    val e = rp[1].trim().toIntOrNull()
+                    if (s != null && e != null) {
+                        for (n in s..e) epNumbers.add(n)
+                    }
+                }
+            } else {
+                clean.toIntOrNull()?.let { epNumbers.add(it) }
+            }
+        }
+        if (epNumbers.isEmpty()) return 1
+        val totalEpisodes = arcTotalEpisodes[season] ?: 1
+        if (totalEpisodes <= 1) return epNumbers.first()
+        val ratio = (episode - 1).toDouble() / (totalEpisodes - 1)
+        val targetIndex = (Math.round(ratio * (epNumbers.size - 1)).toInt()).coerceIn(0, epNumbers.size - 1)
+        return epNumbers[targetIndex]
     }
 
     companion object {

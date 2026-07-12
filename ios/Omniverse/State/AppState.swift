@@ -62,6 +62,7 @@ final class AppState {
         liveTv = cachedLiveTv
         hasScannedLiveTv = !liveTv.isEmpty
         watchHistory = settingsStore.loadWatchHistory()
+        migrateOnePaceWatchHistory()
         initialized = true
 
         // Silent refresh only if cache older than 6 hours.
@@ -777,6 +778,84 @@ final class AppState {
     private func randomState() -> String {
         let chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         return String((0..<32).map { _ in chars.randomElement()! })
+    }
+
+    func migrateOnePaceWatchHistory() {
+        let history = watchHistory
+        if let paceEntry = history.first(where: { $0.itemId == "onepace:anime:21" || $0.title == "One Pace" || $0.itemId.hasPrefix("onepace:") }) {
+            let season = paceEntry.seasonNumber ?? 1
+            let epNum = paceEntry.episodeNumber ?? 1
+            let mappedEp = mapOnePaceToOnePiece(season: season, episode: epNum)
+            
+            let pieceEntry = WatchProgress(
+                id: nil,
+                itemId: "anilist:anime:21",
+                title: "One Piece",
+                type: .anime,
+                posterPath: "/or06gK6hxJN98Es842gZgYI7CIE.jpg",
+                backdropPath: "/bMv9mO_b2qf8U4VwYAtW3Zc40S9.jpg",
+                seasonNumber: 1,
+                episodeNumber: mappedEp,
+                episodeTitle: "Episode \(mappedEp)",
+                positionMs: paceEntry.positionMs,
+                durationMs: paceEntry.durationMs,
+                lastWatchedAt: Int(Date().timeIntervalSince1970 * 1000)
+            )
+            
+            var next = watchHistory.filter { $0.itemId != "onepace:anime:21" && $0.title != "One Pace" && !$0.itemId.hasPrefix("onepace:") }
+            next.append(pieceEntry)
+            let capped = Array(next.sorted { $0.lastWatchedAt > $1.lastWatchedAt }.prefix(30))
+            watchHistory = capped
+            settingsStore.saveWatchHistory(capped)
+            
+            message = "One Pace progress migrated to One Piece Episode \(mappedEp)!"
+            
+            if credentials.hasTraktUser {
+                Task { try? await syncSettingsToTrakt(silent: true) }
+            }
+        }
+    }
+
+    func mapOnePaceToOnePiece(season: Int, episode: Int) -> Int {
+        let arcEpisodes = [
+            1: "1-3", 2: "4-8", 3: "9-17", 4: "18", 5: "19-30",
+            6: "31-44", 7: "45,48-53", 8: "62-63", 9: "64-67", 10: "70-77",
+            11: "78-91", 12: "92-130", 13: "144-152", 14: "153-195", 15: "207-219",
+            16: "229-263", 17: "263-312", 18: "313-325", 19: "337-381", 20: "385-405",
+            21: "408-417", 22: "422-452", 23: "457-489", 24: "490-516", 25: "517-522",
+            26: "523-574", 27: "579-625", 28: "629-746", 29: "751-779", 30: "777-877",
+            31: "878-889", 32: "890-1085", 33: "1086-1155"
+        ]
+        let arcTotalEpisodes = [
+            1: 2, 2: 3, 3: 7, 4: 1, 5: 10, 6: 10, 7: 5, 8: 1, 9: 2, 10: 5,
+            11: 6, 12: 21, 13: 5, 14: 24, 15: 3, 16: 20, 17: 25, 18: 5, 19: 22,
+            20: 11, 21: 4, 22: 14, 23: 17, 24: 8, 25: 2, 26: 22, 27: 20, 28: 48,
+            29: 10, 30: 39, 31: 4, 32: 60, 33: 21
+        ]
+        let episodesStr = arcEpisodes[season] ?? "1"
+        var epNumbers: [Int] = []
+        let parts = episodesStr.components(separatedBy: ",")
+        for part in parts {
+            let clean = part.trimmingCharacters(in: .whitespacesAndNewlines)
+            if clean.contains("-") {
+                let rp = clean.components(separatedBy: "-")
+                if rp.count == 2 {
+                    let s = Int(rp[0].trimmingCharacters(in: .whitespacesAndNewlines))
+                    let e = Int(rp[1].trimmingCharacters(in: .whitespacesAndNewlines))
+                    if let s, let e {
+                        for n in s...e { epNumbers.append(n) }
+                    }
+                }
+            } else {
+                if let parsed = Int(clean) { epNumbers.append(parsed) }
+            }
+        }
+        if epNumbers.isEmpty { return 1 }
+        let totalEpisodes = arcTotalEpisodes[season] ?? 1
+        if totalEpisodes <= 1 { return epNumbers.first! }
+        let ratio = Double(episode - 1) / Double(totalEpisodes - 1)
+        let targetIndex = min(epNumbers.count - 1, max(0, Int(round(ratio * Double(epNumbers.count - 1)))))
+        return epNumbers[targetIndex]
     }
 }
 

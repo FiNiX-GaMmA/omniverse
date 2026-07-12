@@ -11,11 +11,7 @@ import CommonCrypto
 
 final class AnimeRepository: AnimeRepositoryProtocol {
 
-    private let hianime: HianimeRepository
-
-    init(hianime: HianimeRepository = HianimeRepository()) {
-        self.hianime = hianime
-    }
+    init() {}
 
     private static let anilist = URL(string: "https://graphql.anilist.co")!
     private static let allanime = URL(string: "https://api.allanime.day/api")!
@@ -563,24 +559,6 @@ final class AnimeRepository: AnimeRepositoryProtocol {
         // fallback; once solved, the cached session cookie lets the retry through.
         if episodeNeededCaptcha {
             throw AnimeError.captchaRequired(url: Self.captchaURL)
-        }
-
-        // HiAnime fallback. AllAnime's episode endpoint increasingly answers
-        // NEED_CAPTCHA (its search endpoint still works, so listing succeeds even
-        // when this fails), leaving the primary path with no source. Fall back to
-        // the hianime/Zoro + Megacloud pipeline, which resolves off different
-        // infrastructure. Episode numbering there is absolute, matching what we
-        // list for single-season shows like One Piece.
-        if let hi = await hianime.resolve(title: item.title, episodeNumber: episode.episodeNumber, dub: dub) {
-            return PlaybackSource(
-                id: "hianime:\(item.id):\(episode.seasonNumber):\(episode.episodeNumber)",
-                title: hi.serverName.isEmpty ? "HiAnime" : hi.serverName,
-                url: hi.url,
-                provider: "HiAnime",
-                kind: .direct,
-                headers: ["Referer": hi.referer],
-                subtitleUrl: hi.subtitleUrl.isEmpty ? settings.subtitleUrl.trimmed : hi.subtitleUrl
-            )
         }
 
         throw AnimeError.noSource(item.title)

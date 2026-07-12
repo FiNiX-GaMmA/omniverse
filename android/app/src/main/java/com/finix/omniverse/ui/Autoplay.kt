@@ -32,21 +32,10 @@ internal fun nextEpisodeFor(item: MediaItem, current: MediaEpisode): MediaEpisod
 }
 
 /// Resolves the next thing to play. Series/anime roll into the next episode (and
-/// into season N+1, episode 1, at a season boundary); One Pace resolves the next
-/// arc/episode. Movies and Live TV never autoplay. `null` => nothing left to play.
+/// into season N+1, episode 1, at a season boundary). Movies and Live TV never autoplay. `null` => nothing left to play.
 internal suspend fun resolveNextEpisode(item: MediaItem?, episode: MediaEpisode?, appState: AppState): AutoplayNext? {
     if (item == null || episode == null) return null
     if (item.type == MediaType.MOVIE || item.type == MediaType.LIVE_TV) return null
-
-    if (item.title == "One Pace") {
-        val apiKey = appState.credentials.pixeldrainApiKey
-        fun route(r: OnePaceResume) = AutoplayNext.Play(
-            PlayerArgs(r.title, r.url, emptyMap(), r.item, r.episode, r.subtitleUrl, 0, r.aniSkipEpisode),
-        )
-        resolveOnePaceResume(episode.seasonNumber, episode.episodeNumber + 1, apiKey)?.let { return route(it) }
-        resolveOnePaceResume(episode.seasonNumber + 1, 1, apiKey)?.let { return route(it) }
-        return null
-    }
 
     val next = nextEpisodeFor(item, episode) ?: return null
     val sources = runCatching { appState.playbackSourcesFor(item, next) }.getOrDefault(emptyList())

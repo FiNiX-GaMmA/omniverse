@@ -69,3 +69,4 @@ ios/DerivedData/
 .pub-cache/
 .pub/
 /coverage/
+*.png

@@ -51,7 +51,6 @@ class AnimeRepositoryImpl(
         // authenticates AllAnime API calls. Mirrors iOS HTTPCookieStorage.shared.
         .cookieJar(WebViewCookieJar)
         .build(),
-    private val hianime: HianimeRepository = HianimeRepository(),
 ) : AnimeRepository {
 
     private val anilist = "https://graphql.anilist.co"
@@ -593,29 +592,6 @@ query(${'$'}search: String) {
         // fallback; once solved, the cached session cookie lets the retry through.
         if (episodeNeededCaptcha) {
             throw CaptchaRequiredException(captchaUrl)
-        }
-
-        // HiAnime fallback. AllAnime's episode endpoint increasingly answers
-        // NEED_CAPTCHA (its search endpoint still works, so listing succeeds even
-        // when this fails), leaving the primary path with no source. Fall back to
-        // the hianime/Zoro + Megacloud pipeline, which resolves off different
-        // infrastructure. Episode numbering there is absolute, matching what we
-        // list for single-season shows like One Piece.
-        val hi = hianime.resolve(
-            title = item.title,
-            episodeNumber = episode.episodeNumber,
-            dub = dub,
-        )
-        if (hi != null) {
-            return PlaybackSource(
-                id = "hianime:${item.id}:${episode.seasonNumber}:${episode.episodeNumber}",
-                title = hi.serverName.ifBlank { "HiAnime" },
-                url = hi.url,
-                provider = "HiAnime",
-                kind = PlaybackSourceKind.DIRECT,
-                headers = mapOf("Referer" to hi.referer),
-                subtitleUrl = hi.subtitleUrl.ifBlank { settings.subtitleUrl.trim() },
-            )
         }
 
         throw AnimeException("No playable anime source found for ${item.title}.")

@@ -19,9 +19,6 @@ struct AppShell: View {
         if state.settings.showMoviesTv && state.credentials.hasTmdb {
             t.append(Tab(id: "home", title: "Home", icon: "house", selectedIcon: "house.fill"))
         }
-        if state.credentials.hasPixeldrain {
-            t.append(Tab(id: "onepace", title: "One Pace", icon: "play.circle", selectedIcon: "play.circle.fill"))
-        }
         if state.settings.showLiveTv {
             t.append(Tab(id: "livetv", title: "LiveTV", icon: "tv", selectedIcon: "tv.fill"))
         }
@@ -65,7 +62,6 @@ struct AppShell: View {
     private func screen(for id: String) -> some View {
         switch id {
         case "home": HomeScreen()
-        case "onepace": OnePaceScreen()
         case "livetv": LiveTvScreen()
         case "search": SearchScreen()
         default: SettingsScreen()

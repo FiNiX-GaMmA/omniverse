@@ -39,44 +39,38 @@ let adBlockStats = { adsBlocked: 0 };
 const animeRefererHosts = new Set();
 
 // Extended list of ad network, tracker, popunder, and anti-devtool script domains
-const BLOCKED_HOSTS = [
-  "*://*.google-analytics.com/*",
-  "*://analytics.google.com/*",
-  "*://googletagmanager.com/*",
-  "*://*.googletagmanager.com/*",
-  "*://googletagservices.com/*",
-  "*://doubleclick.net/*",
-  "*://*.doubleclick.net/*",
-  "*://adservice.google.com/*",
-  "*://pagead2.googlesyndication.com/*",
-  "*://stats.g.doubleclick.net/*",
-  "*://*.adx1.com/*",
-  "*://intelligenceadx.com/*",
-  "*://adsco.re/*",
-  "*://mc.yandex.ru/*",
-  "*://mc.yandex.com/*",
-  "*://*.rtmark.net/*",
-  "*://acscdn.com/*",
-  "*://*.protrafficinspector.com/*",
-  "*://*.histats.com/*",
-  "*://*.cloudflareinsights.com/*",
-  "*://*.kettledroopingcontinuation.com/*",
-  "*://*.wayfarerorthodox.com/*",
-  "*://*.woxaglasuy.net/*",
-  "*://*.adeptspiritual.com/*",
-  "*://*.calculating-laugh.com/*",
-  "*://*.onclickads*/*",
-  "*://*.adsterra*/*",
-  "*://*.exoclick*/*",
-  "*://*.popads*/*",
-  "*://*.popcash*/*",
-  "*://*.propellerads*/*",
-  "*://*.juicyads*/*",
-  "*://*disable-devtool*/*", // Block the annoying blackout scripts!
-  "*://*.disable-devtool.min.js*",
-  "*://*.disable-devtool.js*",
-  "*://*.disable-devtool.min.js",
-  "*://*.disable-devtool.js",
+const BLOCKED_KEYWORDS = [
+  "google-analytics.com",
+  "analytics.google.com",
+  "googletagmanager.com",
+  "googletagservices.com",
+  "doubleclick.net",
+  "adservice.google.com",
+  "pagead2.googlesyndication.com",
+  "stats.g.doubleclick.net",
+  "adx1.com",
+  "intelligenceadx.com",
+  "adsco.re",
+  "mc.yandex.ru",
+  "mc.yandex.com",
+  "rtmark.net",
+  "acscdn.com",
+  "protrafficinspector.com",
+  "histats.com",
+  "cloudflareinsights.com",
+  "kettledroopingcontinuation.com",
+  "wayfarerorthodox.com",
+  "woxaglasuy.net",
+  "adeptspiritual.com",
+  "calculating-laugh.com",
+  "onclickads",
+  "adsterra",
+  "exoclick",
+  "popads",
+  "popcash",
+  "propellerads",
+  "juicyads",
+  "disable-devtool",
 ];
 
 // Reusable session setup for custom partitions (e.g. video player webview)
@@ -203,6 +197,7 @@ function createWindow() {
 
 // IPC Handlers
 ipcMain.handle("get-platform", () => process.platform);
+ipcMain.handle("get-arch", () => process.arch);
 
 // The installed build's version (from package.json, stamped at release time).
 // The updater compares this against the latest GitHub release.

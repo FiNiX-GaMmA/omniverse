@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCatalogFeeds();
   setupSearchInput();
   setupLiveTvCenter();
-  setupOnePaceCenter();
+  checkOnePaceMigration();
   renderContinueWatching(); // Initial local history render
   setupAdblockObserver();
   lucide.createIcons();
@@ -787,7 +787,7 @@ async function playAnimeStream(media, episode) {
       dub: state.preferDub || false,
     });
     state.animeResume = { media, episode };
-    playDirectVideo(container, src.url, src.referer);
+    playDirectVideo(container, src.url, src.referer, media, episode);
   } catch (e) {
     if (e && e.name === "CaptchaRequiredError") {
       showAnimeCaptcha(e.url, () => playAnimeStream(media, episode));
@@ -803,7 +803,7 @@ async function playAnimeStream(media, episode) {
 // Plays a direct mp4/m3u8 URL in a <video> (hls.js for HLS). The stream host's
 // Referer is applied to HLS segment requests; for progressive mp4 the main
 // process injects it (see main.js onBeforeSendHeaders).
-function playDirectVideo(container, url, referer) {
+function playDirectVideo(container, url, referer, media = null, episode = null) {
   // Register the stream host so the main process injects the Referer for it.
   try {
     window.electron.registerAnimeHost(new URL(url).host);
@@ -818,6 +818,31 @@ function playDirectVideo(container, url, referer) {
   video.style.background = "#000";
   container.appendChild(video);
   state.activeWebview = null;
+
+  let skipIntervals = [];
+  let skippedTypes = new Set();
+
+  video.addEventListener("loadedmetadata", async () => {
+    if (media && media.anilistId && episode) {
+      const duration = Math.round(video.duration) || 1440;
+      skipIntervals = await fetchDesktopAniSkip(media.anilistId, episode, duration);
+    }
+  });
+
+  video.addEventListener("timeupdate", () => {
+    const current = video.currentTime;
+    if (skipIntervals && skipIntervals.length > 0) {
+      for (const interval of skipIntervals) {
+        if (skippedTypes.has(interval.type)) continue;
+        if (current >= interval.start && current < interval.end - 1) {
+          skippedTypes.add(interval.type);
+          video.currentTime = interval.end;
+          showPlayerToast("Auto Skipped", interval.type === "op" ? "Opening Intro" : (interval.type === "recap" ? "Recap" : "Ending Outro"));
+          break;
+        }
+      }
+    }
+  });
 
   const isHls = /\.m3u8(\?|$)/i.test(url);
   if (isHls && window.Hls && window.Hls.isSupported()) {
@@ -835,6 +860,42 @@ function playDirectVideo(container, url, referer) {
     video.src = url;
   }
   video.play().catch(() => {});
+}
+
+async function fetchDesktopAniSkip(anilistId, episode, durationSec) {
+  const url = `https://api.aniskip.com/v2/skip-times/${anilistId}/${episode}?types[]=op&types[]=ed&types[]=recap&episodeLength=${durationSec}`;
+  try {
+    const res = await window.electron.iptvFetch(url, "GET", { "Accept": "application/json" });
+    if (res.ok && res.html) {
+      const data = JSON.parse(res.html);
+      if (data.found && Array.isArray(data.results)) {
+        return data.results.map(r => ({
+          type: r.skipType || r.skip_type,
+          start: r.interval.startTime,
+          end: r.interval.endTime
+        }));
+      }
+    }
+  } catch (e) {
+    console.warn("AniSkip fetch failed:", e);
+  }
+  return [];
+}
+
+function showPlayerToast(title, body) {
+  const toast = document.getElementById("player-toast");
+  const titleEl = document.getElementById("player-toast-title");
+  const bodyEl = document.getElementById("player-toast-body");
+  if (!toast || !titleEl || !bodyEl) return;
+
+  titleEl.textContent = title;
+  bodyEl.textContent = body;
+  toast.classList.remove("hidden");
+  
+  if (state.toastTimeout) clearTimeout(state.toastTimeout);
+  state.toastTimeout = setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 4000);
 }
 
 // Captcha WebView: AllAnime gated the request. Let the user solve it, then retry.
@@ -1490,31 +1551,50 @@ async function checkAppUpdates(silent = false) {
     // Only prompt when the latest release is strictly newer than what's installed.
     if (isNewerVersion(APP_VERSION, remoteVersion)) {
       const platform = await window.electron.getPlatform();
+      let arch = "x64";
+      try {
+        if (window.electron.getArch) {
+          arch = (await window.electron.getArch()) || "x64";
+        }
+      } catch (_) {}
       let targetAsset = null;
 
-      // Filter assets based on host platform extension
+      // Filter assets based on host platform extension and CPU architecture
       if (release.assets && Array.isArray(release.assets)) {
+        // Try to find an exact match for architecture first
         release.assets.forEach((asset) => {
           const name = asset.name.toLowerCase();
-          if (
-            platform === "win32" &&
-            name.endsWith(".exe") &&
-            !name.includes("unsigned") &&
-            !name.includes("apk")
-          ) {
-            targetAsset = asset;
-          } else if (platform === "darwin" && name.endsWith(".dmg")) {
-            targetAsset = asset;
-          } else if (
-            platform === "linux" &&
-            (name.endsWith(".appimage") || name.endsWith(".deb"))
-          ) {
-            // Prefer AppImage for portable running
-            if (!targetAsset || name.endsWith(".appimage")) {
+          if (platform === "win32" && name.endsWith(".exe") && !name.includes("unsigned") && !name.includes("apk")) {
+            if (name.includes(arch) || (arch === "x64" && !name.includes("arm64") && !name.includes("arm32"))) {
               targetAsset = asset;
+            }
+          } else if (platform === "darwin" && name.endsWith(".dmg")) {
+            if (name.includes(arch) || (arch === "arm64" && name.includes("arm")) || (arch === "x64" && (name.includes("x64") || name.includes("intel") || name.includes("universal")))) {
+              targetAsset = asset;
+            }
+          } else if (platform === "linux" && (name.endsWith(".appimage") || name.endsWith(".deb"))) {
+            if (name.includes(arch) || (arch === "x64" && (name.includes("amd64") || name.includes("x86_64")))) {
+              if (!targetAsset || name.endsWith(".appimage")) {
+                targetAsset = asset;
+              }
             }
           }
         });
+        // Fallback to first matching platform asset if no architecture-specific asset matches
+        if (!targetAsset) {
+          release.assets.forEach((asset) => {
+            const name = asset.name.toLowerCase();
+            if (platform === "win32" && name.endsWith(".exe") && !name.includes("unsigned") && !name.includes("apk")) {
+              if (!targetAsset) targetAsset = asset;
+            } else if (platform === "darwin" && name.endsWith(".dmg")) {
+              if (!targetAsset) targetAsset = asset;
+            } else if (platform === "linux" && (name.endsWith(".appimage") || name.endsWith(".deb"))) {
+              if (!targetAsset || name.endsWith(".appimage")) {
+                targetAsset = asset;
+              }
+            }
+          });
+        }
       }
 
       if (targetAsset) {
@@ -1788,354 +1868,164 @@ function cancelPairing() {
 }
 
 // ==============================================================================
-// One Pace Fan-Cut Scraper & Streaming Engine
+// One Pace to One Piece Migration Engine
 // ==============================================================================
-let activeOnePaceArcs = [];
-let activeOnePaceEpisodes = [];
+function mapOnePaceToOnePiece(seasonNumber, episodeNumber) {
+  const arcEpisodes = {
+    1: "1-3",          // Romance Dawn
+    2: "4-8",          // Orange Town
+    3: "9-17",         // Syrup Village
+    4: "18",           // Gaimon
+    5: "19-30",        // Baratie
+    6: "31-44",        // Arlong Park
+    7: "45,48-53",     // Loguetown
+    8: "62-63",        // Reverse Mountain
+    9: "64-67",        // Whisky Peak
+    10: "70-77",       // Little Garden
+    11: "78-91",       // Drum Island
+    12: "92-130",      // Alabasta
+    13: "144-152",     // Jaya
+    14: "153-195",     // Skypiea
+    15: "207-219",     // Long Ring Long Land
+    16: "229-263",     // Water Seven
+    17: "263-312",     // Enies Lobby
+    18: "313-325",     // Post-Enies Lobby
+    19: "337-381",     // Thriller Bark
+    20: "385-405",     // Sabaody Archipelago
+    21: "408-417",     // Amazon Lily
+    22: "422-452",     // Impel Down
+    23: "457-489",     // Marineford
+    24: "490-516",     // Post-War
+    25: "517-522",     // Return to Sabaody
+    26: "523-574",     // Fishman Island
+    27: "579-625",     // Punk Hazard
+    28: "629-746",     // Dressrosa
+    29: "751-779",     // Zou
+    30: "777-877",     // Whole Cake Island
+    31: "878-889",     // Reverie
+    32: "890-1085",    // Wano
+    33: "1086-1155"    // Egghead
+  };
+  
+  const arcTotalEpisodes = {
+    1: 2, 2: 3, 3: 7, 4: 1, 5: 10, 6: 10, 7: 5, 8: 1, 9: 2, 10: 5,
+    11: 6, 12: 21, 13: 5, 14: 24, 15: 3, 16: 20, 17: 25, 18: 5, 19: 22,
+    20: 11, 21: 4, 22: 14, 23: 17, 24: 8, 25: 2, 26: 22, 27: 20, 28: 48,
+    29: 10, 30: 39, 31: 4, 32: 60, 33: 21
+  };
 
-async function setupOnePaceCenter() {
-  const select = document.getElementById("onepace-arc-select");
-  if (!select) return;
-
-  select.innerHTML = '<option value="">Syncing arcs...</option>';
-
-  try {
-    const arcs = await fetchOnePaceArcs();
-    activeOnePaceArcs = arcs;
-
-    select.innerHTML = "";
-    arcs.forEach((arc, i) => {
-      const option = document.createElement("option");
-      option.value = i;
-      option.textContent = `${arc.title} (${arc.episodes} eps)`;
-      select.appendChild(option);
-    });
-
-    // Load first arc details by default
-    if (arcs.length > 0) {
-      onOnePaceArcChanged();
-    }
-  } catch (err) {
-    console.error("One Pace Arcs load error: ", err);
-    select.innerHTML = '<option value="">Failed to sync arcs</option>';
-    const info = document.getElementById("onepace-arc-info");
-    if (info) {
-      info.innerHTML = `
-        <div class="text-center py-10 space-y-2 text-gray-500">
-          <i data-lucide="alert-triangle" class="w-8 h-8 text-red-500/50 mx-auto"></i>
-          <h4 class="text-xs font-bold text-gray-400">Connection Failed</h4>
-          <p class="text-[10px] leading-relaxed text-gray-600">Could not retrieve One Pace timeline. Please verify network access.</p>
-        </div>
-      `;
-      lucide.createIcons();
-    }
-  }
-}
-
-async function onOnePaceArcChanged() {
-  const select = document.getElementById("onepace-arc-select");
-  if (!select) return;
-  const idx = parseInt(select.value);
-  const arc = activeOnePaceArcs[idx];
-  if (!arc) return;
-
-  // Render Arc details
-  const infoContainer = document.getElementById("onepace-arc-info");
-  const backdropHtml = arc.backdrop
-    ? `<img src="${arc.backdrop}" class="w-full h-40 object-cover rounded-lg border border-white/[0.04] shadow-md hover:scale-[1.01] transition duration-500">`
-    : `<div class="w-full h-32 bg-brandTert rounded-lg flex items-center justify-center border border-white/[0.04]"><i data-lucide="play" class="w-8 h-8 text-gray-600"></i></div>`;
-
-  infoContainer.innerHTML = `
-    ${backdropHtml}
-    <div class="space-y-1">
-      <h2 class="text-sm font-black text-white leading-tight uppercase tracking-wider">${arc.title}</h2>
-      <div class="flex flex-wrap gap-2 text-[9px] font-bold text-gray-500 uppercase tracking-widest">
-        <span>${arc.episodes} Episodes</span>
-        <span>•</span>
-        <span>Chapters ${arc.chapters}</span>
-      </div>
-    </div>
-    <p class="text-[10px] text-gray-400 leading-relaxed font-medium">${arc.description}</p>
-  `;
-  lucide.createIcons();
-
-  // Find English subbed playlist group or fallback to first
-  let targetGroup = arc.playlistGroups.find(
-    (pg) =>
-      pg.sub.toLowerCase() === "en" || pg.sub.toLowerCase().includes("english"),
-  );
-  if (!targetGroup && arc.playlistGroups.length > 0) {
-    targetGroup = arc.playlistGroups[0];
-  }
-
-  if (
-    targetGroup &&
-    targetGroup.playlists &&
-    targetGroup.playlists.length > 0
-  ) {
-    // Pick highest resolution available
-    const bestPlaylist = targetGroup.playlists.sort(
-      (a, b) => b.resolution - a.resolution,
-    )[0];
-    await loadOnePaceEpisodes(bestPlaylist.id);
-  } else {
-    document.getElementById("onepace-episodes-container").innerHTML = `
-      <p class="text-[10px] text-gray-500 italic py-6">No stream playlists available for this Arc.</p>
-    `;
-    document.getElementById("onepace-episodes-count").textContent =
-      "0 available";
-  }
-}
-
-async function loadOnePaceEpisodes(listId) {
-  const container = document.getElementById("onepace-episodes-container");
-  if (!container) return;
-
-  container.innerHTML = `
-    <div class="flex items-center gap-2 text-gray-500 py-6 pl-4">
-      <div class="w-4 h-4 rounded-full border-2 border-brandCyan border-t-transparent animate-spin"></div>
-      <span class="text-[10px] font-bold uppercase tracking-widest text-brandCyan">Loading Episodes...</span>
-    </div>
-  `;
-
-  try {
-    const episodes = await fetchOnePaceEpisodes(listId);
-    activeOnePaceEpisodes = episodes;
-
-    document.getElementById("onepace-episodes-count").textContent =
-      `${episodes.length} available`;
-    container.innerHTML = "";
-
-    if (episodes.length === 0) {
-      container.innerHTML =
-        '<p class="text-xs text-gray-500 italic pl-4">No video files listed inside this playlist.</p>';
-      return;
-    }
-
-    episodes.forEach((ep) => {
-      const card = document.createElement("button");
-      card.className =
-        "w-[240px] h-[130px] rounded-xl overflow-hidden relative flex-shrink-0 border border-white/[0.04] hover:border-brandCyan/20 cursor-pointer flex flex-col justify-end group transition duration-300 transform hover:scale-[1.02] hover:shadow-lg no-drag text-left";
-      card.onclick = () => playOnePaceEpisode(ep, card);
-
-      // Pixeldrain thumbnail URL
-      const thumbUrl = `https://pixeldrain.net/api/file/${ep.id}/thumbnail`;
-
-      card.innerHTML = `
-        <img src="${thumbUrl}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition duration-500" loading="lazy" onerror="this.onerror=null; this.outerHTML='<div class=\"absolute inset-0 bg-brandTert flex items-center justify-center\"><i data-lucide=\"film\" class=\"w-8 h-8 text-gray-600\"></i></div>'">
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10"></div>
-        <div class="p-3 z-20 space-y-0.5">
-          <span class="text-[9px] font-extrabold text-brandCyan bg-cyan-950/60 border border-brandCyan/20 px-1.5 py-0.5 rounded uppercase tracking-wider">EPISODE ${ep.episodeNumber}</span>
-          <h4 class="text-xs font-bold text-gray-100 truncate leading-snug w-full pt-1">${ep.cleanTitle}</h4>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-    lucide.createIcons();
-  } catch (err) {
-    console.error("One Pace Episodes load failed: ", err);
-    container.innerHTML = `
-      <p class="text-[10px] text-red-400 font-semibold pl-4">Failed to load episodes: ${err.message}</p>
-    `;
-    document.getElementById("onepace-episodes-count").textContent =
-      "0 available";
-  }
-}
-
-function playOnePaceEpisode(episode, cardEl) {
-  // Highlight active card
-  const cards = document.querySelectorAll("#onepace-episodes-container button");
-  cards.forEach((c) =>
-    c.classList.remove("border-brandCyan/40", "shadow-brandCyan/10"),
-  );
-
-  if (cardEl) {
-    cardEl.classList.add("border-brandCyan/40", "shadow-brandCyan/10");
-  }
-
-  // Remove player placeholder
-  document.getElementById("onepace-player-placeholder").classList.add("hidden");
-
-  // Get Pixeldrain API key from credentials / localStorage
-  const apiKey = localStorage.getItem("omni_pixeldrain_key") || "";
-  let streamUrl = `https://pixeldrain.net/api/file/${episode.id}`;
-  if (apiKey.trim().length > 0) {
-    streamUrl += `?api_key=${apiKey.trim()}`;
-  }
-
-  const video = document.getElementById("onepace-player");
-  if (video) {
-    video.src = streamUrl;
-    video.load();
-
-    // Seek to previous progress if available
-    const selectEl = document.getElementById("onepace-arc-select");
-    const currentSeason = selectEl ? parseInt(selectEl.value) + 1 : 1;
-    const existing = state.watchHistory.find(
-      (h) =>
-        h.itemId === "onepace:anime:21" &&
-        h.seasonNumber === currentSeason &&
-        h.episodeNumber === episode.episodeNumber,
-    );
-    if (existing && existing.positionMs) {
-      video.addEventListener("loadedmetadata", function seekHandler() {
-        video.currentTime = existing.positionMs / 1000;
-        video.removeEventListener("loadedmetadata", seekHandler);
-      });
-    }
-
-    video.play().catch((err) => console.log("Autoplay blocked: ", err));
-
-    // Time update listener to save progress every 5 seconds
-    let lastSaveTime = 0;
-    const timeUpdateHandler = () => {
-      const now = Date.now();
-      if (now - lastSaveTime > 5000) {
-        lastSaveTime = now;
-        const duration = video.duration || 0;
-        if (duration > 0) {
-          const selectedArc = selectEl
-            ? activeOnePaceArcs[parseInt(selectEl.value)]
-            : null;
-
-          saveWatchProgress({
-            itemId: "onepace:anime:21", // MATCH NATIVE MOBILE GLOBAL ID
-            title: "One Pace", // MATCH NATIVE MOBILE GLOBAL TITLE
-            type: "series", // Map onepace to series for mobile compatibility!
-            positionMs: Math.round(video.currentTime * 1000),
-            durationMs: Math.round(duration * 1000),
-            lastWatchedAt: Date.now(),
-            posterPath:
-              selectedArc && selectedArc.backdrop
-                ? selectedArc.backdrop
-                : "https://onepace.net/images/og-backdrop.jpg",
-            backdropPath:
-              selectedArc && selectedArc.backdrop
-                ? selectedArc.backdrop
-                : "https://onepace.net/images/og-backdrop.jpg",
-            seasonNumber: selectEl ? parseInt(selectEl.value) + 1 : 1,
-            episodeNumber: episode.episodeNumber,
-            episodeTitle: episode.cleanTitle,
-          });
+  const episodesStr = arcEpisodes[seasonNumber] || "1";
+  const epNumbers = [];
+  const parts = episodesStr.split(",");
+  for (const part of parts) {
+    const clean = part.trim();
+    if (clean.includes("-")) {
+      const rp = clean.split("-");
+      if (rp.length === 2) {
+        const s = parseInt(rp[0].trim(), 10);
+        const e = parseInt(rp[1].trim(), 10);
+        if (!isNaN(s) && !isNaN(e)) {
+          for (let n = s; n <= e; n++) epNumbers.push(n);
         }
       }
+    } else {
+      const parsed = parseInt(clean, 10);
+      if (!isNaN(parsed)) epNumbers.push(parsed);
+    }
+  }
+
+  if (epNumbers.length === 0) return 1;
+  const totalEpisodes = arcTotalEpisodes[seasonNumber] || 1;
+  if (totalEpisodes <= 1) return epNumbers[0];
+  
+  const ratio = (episodeNumber - 1) / (totalEpisodes - 1);
+  const targetIndex = Math.min(
+    epNumbers.length - 1,
+    Math.max(0, Math.round(ratio * (epNumbers.length - 1)))
+  );
+  return epNumbers[targetIndex];
+}
+
+function checkOnePaceMigration() {
+  const history = state.watchHistory || [];
+  const paceEntry = history.find(
+    (h) => h.itemId === "onepace:anime:21" || h.title === "One Pace" || (h.itemId && h.itemId.startsWith("onepace:"))
+  );
+  if (!paceEntry) return;
+
+  const modal = document.createElement("div");
+  modal.id = "onepace-migration-modal";
+  modal.className = "fixed inset-0 z-[10000] detail-modal-overlay flex items-center justify-center p-6";
+  modal.innerHTML = `
+    <div class="detail-modal-card w-full max-w-md p-6 rounded-2xl space-y-6 text-center animate-fade-in bg-brandSec border border-white/[0.04]">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-cyan-950/40 border border-brandCyan/30 flex items-center justify-center text-brandCyan">
+          <i data-lucide="refresh-cw" class="w-6 h-6 animate-spin"></i>
+        </div>
+        <h2 class="font-extrabold text-lg text-white">One Pace Migration Assistant</h2>
+      </div>
+      <p class="text-xs text-gray-400 leading-relaxed">
+        The One Pace addon has been removed in this update. We detected that you were watching <span class="text-brandCyan font-bold">One Pace</span> (Season ${paceEntry.season || paceEntry.seasonNumber || 1}, Episode ${paceEntry.episode || paceEntry.episodeNumber || 1}).
+      </p>
+      <p class="text-xs text-gray-400 leading-relaxed">
+        Would you like to automatically migrate your watch progress to the official <span class="text-brandCyan font-bold">One Piece</span> anime series? We will map your current episode and position to the correct corresponding episode in One Piece.
+      </p>
+      <div class="flex gap-3 pt-2">
+        <button id="btn-migrate-dismiss" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-400 bg-white/5 hover:bg-white/10 transition">
+          Dismiss & Clear
+        </button>
+        <button id="btn-migrate-confirm" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-brandDark btn-action-glow">
+          Migrate Progress
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+
+  document.getElementById("btn-migrate-dismiss").onclick = () => {
+    state.watchHistory = history.filter(
+      (h) => h.itemId !== "onepace:anime:21" && h.title !== "One Pace" && !(h.itemId && h.itemId.startsWith("onepace:"))
+    );
+    localStorage.setItem("omni_watch_history", JSON.stringify(state.watchHistory));
+    modal.remove();
+    renderContinueWatching();
+  };
+
+  document.getElementById("btn-migrate-confirm").onclick = async () => {
+    const originalEpisode = mapOnePaceToOnePiece(paceEntry.season || paceEntry.seasonNumber || 1, paceEntry.episode || paceEntry.episodeNumber || 1);
+    
+    const pieceEntry = {
+      itemId: "anilist:anime:21",
+      title: "One Piece",
+      type: "anime",
+      seasonNumber: 1,
+      episodeNumber: originalEpisode,
+      positionMs: paceEntry.positionMs || 0,
+      durationMs: paceEntry.durationMs || 1500000,
+      lastWatchedAt: Date.now(),
+      poster: "https://image.tmdb.org/t/p/w500/or06gK6hxJN98Es842gZgYI7CIE.jpg",
+      backdrop: "https://image.tmdb.org/t/p/original/bMv9mO_b2qf8U4VwYAtW3Zc40S9.jpg"
     };
 
-    video.removeEventListener("timeupdate", video._timeListener);
-    video._timeListener = timeUpdateHandler;
-    video.addEventListener("timeupdate", timeUpdateHandler);
+    state.watchHistory = history.filter(
+      (h) => h.itemId !== "onepace:anime:21" && h.title !== "One Pace" && !(h.itemId && h.itemId.startsWith("onepace:"))
+    );
+    state.watchHistory.push(pieceEntry);
+    localStorage.setItem("omni_watch_history", JSON.stringify(state.watchHistory));
 
     window.electron.showNotification(
-      "One Pace Streaming",
-      `Now playing Episode ${episode.episodeNumber}: ${episode.cleanTitle}`,
+      "Migration Successful",
+      `Your progress has been migrated to One Piece Episode ${originalEpisode}!`
     );
-  }
-}
 
-async function fetchOnePaceArcs() {
-  const res = await window.electron.iptvFetch("https://onepace.net/en/watch");
-  if (!res.ok) throw new Error("Could not retrieve One Pace metadata.");
-
-  const html = res.html;
-  const regex = /self\.__next_f\.push\(\[1,\"(.*?)\"\]\)/gs;
-  let match;
-  let block = "";
-  while ((match = regex.exec(html)) !== null) {
-    if (match[1].includes("playlistGroups")) {
-      block = match[1];
-      break;
-    }
-  }
-
-  if (!block)
-    throw new Error("Could not locate One Pace data timeline segment.");
-
-  // Unescape strings exactly matching native android unescaper rules
-  const unescaped = block
-    .replace(/\\"/g, '"')
-    .replace(/\\n/g, "\n")
-    .replace(/\\r/g, "\r")
-    .replace(/\\t/g, "\t")
-    .replace(/\\\\/g, "\\");
-
-  let startIdx = unescaped.indexOf('{"timeline"');
-  if (startIdx < 0) startIdx = unescaped.indexOf('{"data"');
-  if (startIdx < 0) throw new Error("Could not unescape timeline data block.");
-
-  const jsonChunk = extractBalancedJson(unescaped, startIdx);
-  const decoded = JSON.parse(jsonChunk);
-  const data = decoded.data || decoded;
-  const timeline = data.timeline;
-  if (!timeline || !timeline.segments)
-    throw new Error("No timeline segments found in One Pace.");
-
-  return timeline.segments.map((seg) => {
-    let backdrop = "";
-    if (seg.backdrops && seg.backdrops[0]) {
-      const src = seg.backdrops[0].src;
-      backdrop = src.startsWith("http") ? src : "https://onepace.net" + src;
+    if (state.traktToken) {
+      await pushToTrakt();
     }
 
-    const playlistGroups = (seg.playlistGroups || []).map((pg) => {
-      const playlists = (pg.playlists || []).map((pl) => ({
-        id: pl.id,
-        resolution: pl.resolution,
-      }));
-      return { sub: pg.sub, dub: pg.dub, playlists };
-    });
-
-    return {
-      title: seg.title,
-      slug: seg.slug,
-      description: seg.description || "No description available.",
-      chapters: seg.chapters || "",
-      episodes: seg.episodes || "",
-      backdrop: backdrop,
-      playlistGroups,
-    };
-  });
-}
-
-async function fetchOnePaceEpisodes(listId) {
-  const res = await window.electron.iptvFetch(
-    `https://pixeldrain.net/api/list/${listId}`,
-  );
-  if (!res.ok) throw new Error("Could not load Pixeldrain files list.");
-  const data = JSON.parse(res.html);
-  if (!data.files) return [];
-
-  return data.files.map((f, i) => {
-    const name = f.name;
-    let clean = name
-      .replace(/\[One\s+Pace\]/gi, "")
-      .replace(/\[[a-zA-Z0-9\s-]+\]/g, "")
-      .replace(/\.mp4$/i, "")
-      .trim();
-    if (clean.startsWith("]")) clean = clean.substring(1).trim();
-
-    return {
-      id: f.id,
-      name,
-      size: f.size,
-      episodeNumber: i + 1,
-      cleanTitle: clean || `Episode ${i + 1}`,
-    };
-  });
-}
-
-function extractBalancedJson(text, startIdx) {
-  let balance = 0;
-  let i = startIdx;
-  while (i < text.length) {
-    if (text[i] === "{") {
-      balance++;
-    } else if (text[i] === "}") {
-      balance--;
-      if (balance === 0) return text.substring(startIdx, i + 1);
-    }
-    i++;
-  }
-  return text.substring(startIdx);
+    modal.remove();
+    renderContinueWatching();
+  };
 }
 
 // ==============================================================================
@@ -2277,37 +2167,22 @@ function clearWatchHistory() {
 
 async function resumeWatchProgress(rawItem) {
   const item = normalizeWatchProgress(rawItem);
-  if (item.itemId === "onepace:anime:21" || item.title === "One Pace") {
-    switchScreen("onepace");
-    const arcIndex = (item.season || 1) - 1; // seasonNumber is 1-based arc index!
-    if (arcIndex >= 0 && arcIndex < activeOnePaceArcs.length) {
-      document.getElementById("onepace-arc-select").value = arcIndex;
-      await onOnePaceArcChanged();
-      const ep = activeOnePaceEpisodes.find(
-        (e) => e.episodeNumber === item.episode,
-      );
-      if (ep) {
-        playOnePaceEpisode(ep);
-      }
-    }
-  } else {
-    // Map WatchProgress back to MediaItem for detail modal
-    const mediaItem = {
-      id: item.itemId,
-      title: item.title,
-      type: item.type,
-      poster: item.poster,
-      backdrop: item.backdrop,
-      year: new Date(item.lastWatchedAt).getFullYear(),
-      rating: "—",
-      overview: item.episodeTitle
-        ? `Resume watching: ${item.episodeTitle}`
-        : "Continue watching from history.",
-      seasons: item.season ? item.season : 1,
-      tmdbId: parseInt(item.itemId.split(":").pop()) || null,
-    };
-    openDetailModal(mediaItem);
-  }
+  // Map WatchProgress back to MediaItem for detail modal
+  const mediaItem = {
+    id: item.itemId,
+    title: item.title,
+    type: item.type,
+    poster: item.poster,
+    backdrop: item.backdrop,
+    year: new Date(item.lastWatchedAt).getFullYear(),
+    rating: "—",
+    overview: item.episodeTitle
+      ? `Resume watching: ${item.episodeTitle}`
+      : "Continue watching from history.",
+    seasons: item.season ? item.season : 1,
+    tmdbId: parseInt(item.itemId.split(":").pop()) || null,
+  };
+  openDetailModal(mediaItem);
 }
 
 async function pullFromTrakt() {

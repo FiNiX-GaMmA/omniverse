@@ -521,6 +521,7 @@ fragment animeFields on Media {
     const isMovie = item.episodesTotal === 1 && episodeNumber === 1;
     episodeNeededCaptcha = false;
 
+    // Try AllAnime (AllManga)
     let result = await resolveAllmanga(item.title, episodeNumber, isMovie, translationType);
     if (!result && translationType === "dub") {
       result = await resolveAllmanga(item.title, episodeNumber, isMovie, "sub");
@@ -529,8 +530,6 @@ fragment animeFields on Media {
 
     if (episodeNeededCaptcha) throw new CaptchaRequiredError(CAPTCHA_URL);
 
-    // TODO: HiAnime/Megacloud fallback (ported separately). AllAnime + captcha
-    // is the primary path and covers the captcha-gated case.
     throw new Error("No playable anime source found for " + item.title + ".");
   }
 

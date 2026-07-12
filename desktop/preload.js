@@ -8,6 +8,7 @@
 // ==============================================================================
 
 const { contextBridge, ipcRenderer } = require("electron");
+const crypto = require("crypto");
 
 const isMainApp =
   window.location.protocol === "file:" ||
@@ -18,6 +19,7 @@ if (isMainApp) {
   // Expose secure API to the main application
   contextBridge.exposeInMainWorld("electron", {
     getPlatform: () => ipcRenderer.invoke("get-platform"),
+    getArch: () => ipcRenderer.invoke("get-arch"),
     getAppVersion: () => ipcRenderer.invoke("get-app-version"),
     minimize: () => ipcRenderer.invoke("window-minimize"),
     maximize: () => ipcRenderer.invoke("window-maximize"),
@@ -50,6 +52,42 @@ if (isMainApp) {
       const handler = (_, state) => cb(state);
       ipcRenderer.on("webview-fullscreen", handler);
       return () => ipcRenderer.removeListener("webview-fullscreen", handler);
+    },
+    decryptMegacloud: (encrypted, passphrase) => {
+      try {
+        const cipherBytes = Buffer.from(encrypted, "base64");
+        if (cipherBytes.length < 16) return null;
+        const prefix = cipherBytes.subarray(0, 8).toString("utf8");
+        if (prefix !== "Salted__") return null;
+        const salt = cipherBytes.subarray(8, 16);
+        const ciphertext = cipherBytes.subarray(16);
+        
+        const pass = Buffer.from(passphrase, "utf8");
+        
+        // OpenSSL EVP_BytesToKey with MD5
+        const out = [];
+        let prev = Buffer.alloc(0);
+        while (out.reduce((acc, b) => acc + b.length, 0) < 32 + 16) {
+          const hash = crypto.createHash("md5");
+          hash.update(prev);
+          hash.update(pass);
+          hash.update(salt);
+          const block = hash.digest();
+          out.push(block);
+          prev = block;
+        }
+        const all = Buffer.concat(out);
+        const key = all.subarray(0, 32);
+        const iv = all.subarray(32, 48);
+        
+        const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+        let decrypted = decipher.update(ciphertext, null, "utf8");
+        decrypted += decipher.final("utf8");
+        return decrypted;
+      } catch (err) {
+        console.error("Megacloud decryption error:", err);
+        return null;
+      }
     },
   });
 } else {

@@ -69,6 +69,14 @@
       ],
       "icon": "logo.png"
     },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Omniverse",
+      "runAfterFinish": true
+    },
     "linux": {
       "target": [
         {

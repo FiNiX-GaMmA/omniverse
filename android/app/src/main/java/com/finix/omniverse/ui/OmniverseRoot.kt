@@ -192,8 +192,6 @@ private fun Shell(nav: androidx.navigation.NavController) {
         buildList {
             if (state.settings.showMoviesTv && state.credentials.hasTmdb)
                 add(ShellTab("home", "Home", Icons.Filled.Home))
-            if (state.credentials.hasPixeldrain)
-                add(ShellTab("onepace", "One Pace", Icons.Filled.PlayCircle))
             if (state.settings.showLiveTv)
                 add(ShellTab("livetv", "LiveTV", Icons.Filled.LiveTv))
             add(ShellTab("settings", "Settings", Icons.Filled.Settings))
@@ -219,7 +217,6 @@ private fun Shell(nav: androidx.navigation.NavController) {
             Box(Modifier.fillMaxSize().padding(start = if (wide) 96.dp else 0.dp)) {
                 when (activeId) {
                     "home" -> HomeScreen(nav)
-                    "onepace" -> OnePaceScreen(nav)
                     "livetv" -> LiveTvScreen(nav)
                     "search" -> SearchScreen(nav)
                     else -> SettingsScreen()
