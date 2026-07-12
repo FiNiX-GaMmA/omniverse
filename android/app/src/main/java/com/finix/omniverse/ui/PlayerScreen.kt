@@ -221,21 +221,7 @@ fun PlayerScreen(
                 if (reconnectAttempts < 3) {
                     reconnectAttempts++
                     val resumePos = player.currentPosition.coerceAtLeast(0)
-                    if (isOnePace) {
-                        val fileId = currentUrl.trimEnd('/').substringAfterLast('/').substringBefore('?')
-                        if (fileId.isNotEmpty()) {
-                            toast = "Reconnecting…"
-                            scope.launch {
-                                val bypassUrl = buildOnePaceStreamUrl(fileId, appState.credentials.pixeldrainApiKey)
-                                currentUrl = bypassUrl
-                                player.setMediaItem(Media3Item.fromUri(bypassUrl))
-                                player.prepare()
-                                if (resumePos > 0) player.seekTo(resumePos)
-                                player.playWhenReady = true
-                            }
-                            return
-                        }
-                    } else if (args.item != null) {
+                    if (args.item != null) {
                         toast = "Reconnecting…"
                         scope.launch {
                             val src = runCatching { appState.playbackSourcesFor(args.item, args.episode) }
@@ -373,20 +359,7 @@ fun PlayerScreen(
                 stalledFor = 0
                 val savedPos = pos.coerceAtLeast(0)
                 toast = "Reconnecting…"
-                val rebuildAsPixeldrain = isOnePace ||
-                    currentUrl.contains("gamedrive", ignoreCase = true) ||
-                    currentUrl.contains("pixeldrain", ignoreCase = true)
-                if (rebuildAsPixeldrain) {
-                    val fileId = currentUrl.trimEnd('/').substringAfterLast('/').substringBefore('?')
-                    if (fileId.isNotEmpty()) {
-                        val bypassUrl = buildOnePaceStreamUrl(fileId, appState.credentials.pixeldrainApiKey)
-                        currentUrl = bypassUrl
-                        player.setMediaItem(Media3Item.fromUri(bypassUrl))
-                        player.prepare()
-                        if (savedPos > 0) player.seekTo(savedPos)
-                        player.playWhenReady = true
-                    }
-                } else if (args.item != null) {
+                if (args.item != null) {
                     val src = runCatching { appState.playbackSourcesFor(args.item, args.episode) }
                         .getOrNull()?.firstOrNull { it.isDirect }
                     if (src != null) {

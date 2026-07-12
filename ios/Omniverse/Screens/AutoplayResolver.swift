@@ -3,7 +3,7 @@ import Foundation
 /// Resolves the *next* thing to play when an episode finishes, ported from the
 /// Flutter `_autoplayNextEpisode` / `_nextEpisodeFor` logic. Series and anime
 /// roll into the next episode; the last episode of a season rolls into episode 1
-/// of the next season. One Pace has its own arc/season resolution. Movies and
+/// of the next season. Movies and
 /// Live TV never autoplay. Returns `nil` when there is nothing more to play, in
 /// which case the host shows recommendations instead.
 enum AutoplayResolver {
@@ -16,10 +16,6 @@ enum AutoplayResolver {
     static func resolveNext(item: MediaItem?, episode: MediaEpisode?, appState: AppState) async -> Next? {
         guard let item, let current = episode else { return nil }
         guard item.type != .movie, item.type != .liveTv else { return nil }
-
-        if item.title == "One Pace" {
-            return await resolveNextOnePace(current: current, appState: appState)
-        }
 
         guard let next = nextEpisodeFor(item, current) else { return nil }
 
@@ -59,27 +55,5 @@ enum AutoplayResolver {
         }
         return MediaEpisode(seasonNumber: current.seasonNumber, episodeNumber: nextNumber,
                             title: "Episode \(nextNumber)")
-    }
-
-    /// One Pace: try the next episode in the current arc, then episode 1 of the
-    /// next arc/season. `OnePaceResolver.resolveForResume` throws when an episode
-    /// or season doesn't exist, which we use to detect the rollover boundary.
-    @MainActor
-    private static func resolveNextOnePace(current: MediaEpisode, appState: AppState) async -> Next? {
-        let apiKey = appState.credentials.pixeldrainApiKey.trimmed
-        func route(_ r: OnePaceResolver.Resolved) -> Next {
-            .player(PlayerRoute(title: r.title, url: r.url, headers: [:], item: r.item,
-                                episode: r.episode, subtitleUrl: r.subtitleUrl,
-                                startPositionMs: 0, aniSkipEpisode: r.aniSkipEpisode))
-        }
-        if let r = try? await OnePaceResolver.resolveForResume(
-            seasonNumber: current.seasonNumber, episodeNumber: current.episodeNumber + 1, apiKey: apiKey) {
-            return route(r)
-        }
-        if let r = try? await OnePaceResolver.resolveForResume(
-            seasonNumber: current.seasonNumber + 1, episodeNumber: 1, apiKey: apiKey) {
-            return route(r)
-        }
-        return nil
     }
 }

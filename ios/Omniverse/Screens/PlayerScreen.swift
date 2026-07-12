@@ -417,10 +417,7 @@ private final class PlaybackEngine {
     /// (by title) or pixeldrain/gamedrive-hosted URLs, and only once.
     private func tryPixeldrainFallback(error: Error?) -> Bool {
         guard !fallbackAttempted else { return false }
-        let host = URL(string: currentURL)?.host?.lowercased() ?? ""
-        let isOnePace = item?.title == "One Pace"
-            || host.contains("gamedrive")
-            || (host.contains("pixeldrain") && currentURL.contains("/api/file/"))
+        let isOnePace = false
         guard isOnePace else { return false }
 
         let officialUrl = officialPixeldrainUrl(currentURL)
@@ -580,26 +577,7 @@ private final class PlaybackEngine {
         showToast("Reconnecting…")
 
         let resumeMs = positionMs
-        let host = URL(string: currentURL)?.host?.lowercased() ?? ""
-        let isOnePace = item?.title == "One Pace"
-            || host.contains("gamedrive")
-            || (host.contains("pixeldrain") && currentURL.contains("/api/file/"))
-
-        if isOnePace {
-            // Re-resolve using the bypass proxy instead of immediately falling back to official!
-            // This is what the userscript does and keeps the stream working.
-            let noQuery = currentURL.components(separatedBy: "?").first ?? currentURL
-            let fileId = noQuery.split(separator: "/").last.map(String.init) ?? ""
-            if !fileId.isEmpty {
-                let apiKey = appState?.credentials.pixeldrainApiKey.trimmed ?? ""
-                let bypassUrl = await OnePaceResolver.streamUrl(fileId: fileId, apiKey: apiKey)
-                rebuild(with: bypassUrl, resumeMs: resumeMs)
-            } else {
-                rebuild(with: officialPixeldrainUrl(currentURL), resumeMs: resumeMs)
-            }
-            resetStallBaseline(resumeMs)
-            return
-        }
+        let isOnePace = false
 
         // Anime / direct sources: re-fetch and take the first direct source.
         guard let item, let state = appState else {

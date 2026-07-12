@@ -91,15 +91,6 @@ struct HomeScreen: View {
     private func resume(_ entry: WatchProgress, fromBeginning: Bool = false) async {
         let startPositionMs = fromBeginning ? 0 : entry.positionMs
         let item = continueItem(entry)
-        // One Pace: resolve the arc/episode (same path OnePaceScreen uses) and
-        // play directly, rather than opening the metadata/detail screen. Only
-        // fall back to the One Pace browse screen if resolution fails.
-        if entry.title == "One Pace"
-            || entry.itemId.hasPrefix("onepace:")
-            || (entry.itemId.hasPrefix("anilist:anime:21") && entry.title == "One Pace") {
-            await resumeOnePace(entry, fallbackItem: item, startPositionMs: startPositionMs)
-            return
-        }
         let episode = continueEpisode(entry)
         do {
             let sources = try await state.playbackSourcesFor(item, episode: episode)
@@ -120,27 +111,6 @@ struct HomeScreen: View {
                                      episode: episode, subtitleUrl: src.subtitleUrl, startPositionMs: startPositionMs, aniSkipEpisode: nil)
             }
         } catch { path.append(item) }
-    }
-
-    /// Resolves the One Pace arc + episode for a Continue Watching entry and
-    /// opens the player at the saved position. Falls back to the One Pace browse
-    /// screen only if resolution fails. Mirrors OnePaceScreen's play() path.
-    private func resumeOnePace(_ entry: WatchProgress, fallbackItem: MediaItem, startPositionMs: Int) async {
-        let season = entry.seasonNumber ?? 1
-        let episodeNumber = entry.episodeNumber ?? 1
-        let apiKey = state.credentials.pixeldrainApiKey.trimmed
-        do {
-            let resolved = try await OnePaceResolver.resolveForResume(
-                seasonNumber: season, episodeNumber: episodeNumber, apiKey: apiKey)
-            player = PlayerRoute(
-                title: resolved.title, url: resolved.url, headers: [:],
-                item: resolved.item, episode: resolved.episode,
-                subtitleUrl: resolved.subtitleUrl, startPositionMs: startPositionMs,
-                aniSkipEpisode: resolved.aniSkipEpisode)
-        } catch {
-            // Could not resolve — open the One Pace browse screen instead.
-            path.append(fallbackItem)
-        }
     }
 
     private func continueItem(_ e: WatchProgress) -> MediaItem {
