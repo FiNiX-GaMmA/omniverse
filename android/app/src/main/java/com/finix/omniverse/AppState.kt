@@ -1160,16 +1160,85 @@ class AppState(context: Context) {
     }
 
     fun getRealOnePaceSeason(season: Int): Int {
-        val repoFolders = listOf(
-            "00 Cover Stories and Specials", "01 Romance Dawn", "02 Orange Town", "03 Syrup Village", "04 Gaimon",
-            "05 Baratie", "06 Arlong Park", "07 Loguetown", "08 Reverse Mountain", "09 Whisky Peak", "10 Little Garden",
-            "11 Drum Island", "12 Alabasta", "13 Jaya", "14 Skypiea", "16 Water Seven", "17 Enies Lobby",
-            "19 Thriller Bark", "22 Impel Down", "23 Marineford", "24 Post War", "25 Return to Sabaody",
-            "26 Fishman Island", "27 Punk Hazard", "28 Dressrosa", "29 Zou", "30 Whole Cake Island", "31 Reverie", "32 Wano", "33 Egghead"
+        // Definitive list of One Pace website slugs in order (1-based index is the website's season number).
+        val websiteSlugs = listOf(
+            "romance-dawn", // 1
+            "orange-town", // 2
+            "syrup-village", // 3
+            "gaimon", // 4
+            "baratie", // 5
+            "arlong-park", // 6
+            "the-adventures-of-buggys-crew", // 7 (Specials / Cover Stories)
+            "loguetown", // 8
+            "reverse-mountain", // 9
+            "whisky-peak", // 10
+            "the-trials-of-koby-meppo", // 11 (Specials / Cover Stories)
+            "little-garden", // 12
+            "drum-island", // 13
+            "alabasta", // 14
+            "jaya", // 15
+            "skypiea", // 16
+            "long-ring-long-land", // 17
+            "water-seven", // 18
+            "enies-lobby", // 19
+            "post-enies-lobby", // 20
+            "thriller-bark", // 21
+            "sabaody-archipelago", // 22
+            "amazon-lily", // 23
+            "impel-down", // 24
+            "if-you-could-go-anywhere-the-adventures-of-the-straw-hats", // 25 (Specials / Cover Stories)
+            "marineford", // 26
+            "post-war", // 27
+            "return-to-sabaody", // 28
+            "fishman-island", // 29
+            "punk-hazard", // 30
+            "dressrosa", // 31
+            "zou", // 32
+            "whole-cake-island", // 33
+            "reverie", // 34
+            "wano", // 35
+            "egghead" // 36
         )
-        val folder = repoFolders.getOrNull(season - 1) ?: return season
-        val prefix = folder.substringBefore(" ").toIntOrNull() ?: season
-        return prefix
+        val slug = websiteSlugs.getOrNull(season - 1) ?: return season
+        return when (slug) {
+            "romance-dawn" -> 1
+            "orange-town" -> 2
+            "syrup-village" -> 3
+            "gaimon" -> 4
+            "baratie" -> 5
+            "arlong-park" -> 6
+            "the-adventures-of-buggys-crew" -> 0 // special
+            "loguetown" -> 7
+            "reverse-mountain" -> 8
+            "whisky-peak" -> 9
+            "the-trials-of-koby-meppo" -> 0 // special
+            "little-garden" -> 10
+            "drum-island" -> 11
+            "alabasta" -> 12
+            "jaya" -> 13
+            "skypiea" -> 14
+            "long-ring-long-land" -> 15
+            "water-seven" -> 16
+            "enies-lobby" -> 17
+            "post-enies-lobby" -> 18
+            "thriller-bark" -> 19
+            "sabaody-archipelago" -> 20
+            "amazon-lily" -> 21
+            "impel-down" -> 22
+            "if-you-could-go-anywhere-the-adventures-of-the-straw-hats" -> 0 // special
+            "marineford" -> 23
+            "post-war" -> 24
+            "return-to-sabaody" -> 25
+            "fishman-island" -> 26
+            "punk-hazard" -> 27
+            "dressrosa" -> 28
+            "zou" -> 29
+            "whole-cake-island" -> 30
+            "reverie" -> 31
+            "wano" -> 32
+            "egghead" -> 33
+            else -> season
+        }
     }
 
     fun migrateOnePaceWatchHistory() {
@@ -1248,7 +1317,7 @@ class AppState(context: Context) {
         val totalEpisodes = arcTotalEpisodes[season] ?: 1
         if (totalEpisodes <= 1) return epNumbers.first()
         val ratio = (episode - 1).toDouble() / (totalEpisodes - 1)
-        val targetIndex = (Math.round(ratio * (epNumbers.size - 1)).toInt()).coerceIn(0, epNumbers.size - 1)
+        val targetIndex = (Math.floor(ratio * (epNumbers.size - 1)).toInt()).coerceIn(0, epNumbers.size - 1)
         return epNumbers[targetIndex]
     }
 

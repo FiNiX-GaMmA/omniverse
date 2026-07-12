@@ -33,6 +33,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -216,27 +218,65 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                 }
             }
             if (isSeries) {
+                var episodeQuery by remember { mutableStateOf("") }
+                val filteredEpisodes = remember(episodes.toList(), episodeQuery) {
+                    val trimmed = episodeQuery.trim().lowercase()
+                    if (trimmed.isEmpty()) episodes.toList()
+                    else episodes.filter { ep ->
+                        ep.episodeNumber.toString() == trimmed ||
+                        ep.title.lowercase().contains(trimmed) ||
+                        ep.overview.lowercase().contains(trimmed)
+                    }
+                }
+
                 item {
                     val seasons = expandedSeasons(current)
-                    Box(Modifier.padding(horizontal = 26.dp, vertical = 10.dp)) {
-                        Box(
-                            Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.1f))
-                                .tvFocusable(onClick = { seasonMenu = true }, corner = 50)
-                                .padding(horizontal = 16.dp, vertical = 10.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(seasons.firstOrNull { it.seasonNumber == selectedSeason }?.name ?: "Season",
-                                    color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                Icon(Icons.Filled.KeyboardArrowDown, null, tint = Color.White.copy(alpha = 0.7f))
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 26.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(Modifier.weight(0.45f)) {
+                            Box(
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.1f))
+                                    .tvFocusable(onClick = { seasonMenu = true }, corner = 50)
+                                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(seasons.firstOrNull { it.seasonNumber == selectedSeason }?.name ?: "Season",
+                                        color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                    Icon(Icons.Filled.KeyboardArrowDown, null, tint = Color.White.copy(alpha = 0.7f))
+                                }
+                            }
+                            DropdownMenu(seasonMenu, { seasonMenu = false }) {
+                                seasons.forEach { s ->
+                                    DropdownMenuItem(text = { Text(s.name) }, onClick = {
+                                        seasonMenu = false; selectedSeason = s.seasonNumber; episodeQuery = ""
+                                        scope.launch { loadEpisodes(current, s.seasonNumber) }
+                                    })
+                                }
                             }
                         }
-                        DropdownMenu(seasonMenu, { seasonMenu = false }) {
-                            seasons.forEach { s ->
-                                DropdownMenuItem(text = { Text(s.name) }, onClick = {
-                                    seasonMenu = false; selectedSeason = s.seasonNumber
-                                    scope.launch { loadEpisodes(current, s.seasonNumber) }
-                                })
-                            }
+
+                        // Premium Episode Filter input
+                        Box(Modifier.weight(0.55f)) {
+                            OutlinedTextField(
+                                value = episodeQuery,
+                                onValueChange = { episodeQuery = it },
+                                modifier = Modifier.fillMaxWidth().height(42.dp),
+                                placeholder = { Text("Filter by Ep # or title...", color = Color.White.copy(alpha = 0.45f), fontSize = 12.sp) },
+                                singleLine = true,
+                                shape = RoundedCornerShape(50),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    focusedContainerColor = Color.White.copy(alpha = 0.05f),
+                                    unfocusedContainerColor = Color.White.copy(alpha = 0.02f),
+                                    focusedBorderColor = LiquidColors.Cyan,
+                                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                                    cursorColor = LiquidColors.Cyan
+                                )
+                            )
                         }
                     }
                 }
@@ -245,14 +285,14 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                         loadingEpisodes -> Box(Modifier.fillMaxWidth().height(150.dp), Alignment.Center) {
                             CircularProgressIndicator(color = LiquidColors.Cyan)
                         }
-                        episodes.isEmpty() -> Text("No episodes loaded for this season.",
+                        filteredEpisodes.isEmpty() -> Text("No episodes found matching filter.",
                             color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, modifier = Modifier.padding(26.dp))
                         else -> {
                             val listState = rememberLazyListState()
-                            LaunchedEffect(episodes.toList()) {
+                            LaunchedEffect(filteredEpisodes) {
                                 val prog = state.continueWatching.firstOrNull { it.itemId == current.id }
                                 if (prog != null && prog.episodeNumber != null) {
-                                    val index = episodes.indexOfFirst { it.episodeNumber == prog.episodeNumber }
+                                    val index = filteredEpisodes.indexOfFirst { it.episodeNumber == prog.episodeNumber }
                                     if (index >= 0) {
                                         listState.scrollToItem(index)
                                     }
@@ -264,7 +304,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                                 modifier = Modifier.padding(top = 14.dp),
                             ) {
-                                items(episodes, key = { "${it.seasonNumber}-${it.episodeNumber}" }) { ep ->
+                                items(filteredEpisodes, key = { "${it.seasonNumber}-${it.episodeNumber}" }) { ep ->
                                     EpisodeCard(ep) { scope.launch { openSources(ep) } }
                                 }
                             }

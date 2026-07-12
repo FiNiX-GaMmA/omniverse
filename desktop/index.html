@@ -991,7 +991,14 @@
                                         </div>
                                     </div>
 
-                                    <div class="flex justify-end pt-2">
+                                    <div class="flex justify-end gap-2 pt-2">
+                                        <button
+                                            id="btn-refresh-login"
+                                            onclick="refreshTraktLoginState()"
+                                            class="bg-white/5 hover:bg-white/10 text-white text-xs font-extrabold px-4 py-2 rounded-lg transition duration-200"
+                                        >
+                                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline mr-1 select-none"></i> Refresh Login
+                                        </button>
                                         <button
                                             onclick="saveAllApiKeys()"
                                             class="bg-brandCyan hover:bg-cyan-500 text-brandDark text-xs font-extrabold px-5 py-2 rounded-lg transition duration-200 shadow-md hover:shadow-cyan-500/10"

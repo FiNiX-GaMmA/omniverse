@@ -281,9 +281,18 @@ ipcMain.handle(
           typeof body === "string" ? body : JSON.stringify(body);
       }
 
-      const response = await fetch(url, fetchOptions);
-      const html = await response.text();
-      return { ok: response.ok, status: response.status, html };
+      // Add a robust 8-second request timeout via AbortController to prevent infinite hangs
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      fetchOptions.signal = controller.signal;
+
+      try {
+        const response = await fetch(url, fetchOptions);
+        const html = await response.text();
+        return { ok: response.ok, status: response.status, html };
+      } finally {
+        clearTimeout(timeoutId);
+      }
     } catch (err) {
       return { ok: false, error: err.message };
     }

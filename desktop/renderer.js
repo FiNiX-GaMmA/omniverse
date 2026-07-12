@@ -210,7 +210,7 @@ const FALLBACK_DB = {
   ],
 };
 // Initialize UI on startup
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   setupPlatformWindowDecorations();
   loadSavedPreferences();
   switchScreen("home");
@@ -221,6 +221,18 @@ document.addEventListener("DOMContentLoaded", () => {
   renderContinueWatching(); // Initial local history render
   setupAdblockObserver();
   lucide.createIcons();
+
+  // Dynamically resolve and display installed version in settings
+  try {
+    if (window.electron && typeof window.electron.getAppVersion === "function") {
+      const actualVer = await window.electron.getAppVersion();
+      if (actualVer) {
+        APP_VERSION = actualVer;
+        const verLabel = document.getElementById("update-version-label");
+        if (verLabel) verLabel.textContent = `Version ${actualVer} (Installed)`;
+      }
+    }
+  } catch (_) {}
 
   // Background cloud sync continue-watching if Trakt connected
   if (state.traktToken) {
@@ -1516,6 +1528,77 @@ function importSyncCode() {
   }
 }
 
+// Interactively refresh and verify Trakt authentication state
+async function refreshTraktLoginState() {
+  const btn = document.getElementById("btn-refresh-login");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline mr-1 animate-spin"></i> Verifying...`;
+    lucide.createIcons();
+  }
+
+  const token = (document.getElementById("trakt-token-input").value || state.traktToken || "").trim();
+  const clientId = (document.getElementById("trakt-client-id-input").value || state.traktClientId || "").trim();
+
+  if (!token || !clientId) {
+    window.electron.showNotification(
+      "Login Status",
+      "Please enter your Trakt Account Token and Client ID first to verify authentication."
+    );
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline mr-1 select-none"></i> Refresh Login`;
+      lucide.createIcons();
+    }
+    return;
+  }
+
+  try {
+    const url = "https://api.trakt.tv/users/settings";
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+      "trakt-api-version": "2",
+      "trakt-api-key": clientId,
+    };
+
+    const res = await window.electron.iptvFetch(url, "GET", headers);
+    if (res.ok && res.html) {
+      const data = JSON.parse(res.html);
+      const username = data.user && data.user.username ? data.user.username : "";
+      
+      // Persist verified state
+      state.traktToken = token;
+      state.traktClientId = clientId;
+      localStorage.setItem("omni_trakt_token", token);
+      localStorage.setItem("omni_trakt_client_id", clientId);
+      loadSavedPreferences();
+
+      window.electron.showNotification(
+        "Sync Authenticated",
+        username ? `Welcome back, ${username}! Sync channels are active.` : "Trakt session verified successfully."
+      );
+    } else {
+      window.electron.showNotification(
+        "Authentication Refused",
+        "Trakt rejected this Token. Please verify credentials."
+      );
+    }
+  } catch (err) {
+    console.error("Trakt refresh settings error:", err);
+    window.electron.showNotification(
+      "Sync Network Warning",
+      "Could not complete verification. Server connection timed out."
+    );
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline mr-1 select-none"></i> Refresh Login`;
+      lucide.createIcons();
+    }
+  }
+}
+
 // ==============================================================================
 // In-App Update Engine (Over-The-Air Sideloading)
 // ==============================================================================
@@ -1959,9 +2042,92 @@ function mapOnePaceToOnePiece(seasonNumber, episodeNumber) {
   const ratio = (episodeNumber - 1) / (totalEpisodes - 1);
   const targetIndex = Math.min(
     epNumbers.length - 1,
-    Math.max(0, Math.round(ratio * (epNumbers.length - 1)))
+    Math.max(0, Math.floor(ratio * (epNumbers.length - 1)))
   );
   return epNumbers[targetIndex];
+}
+
+function getRealOnePaceSeason(season) {
+  // Definitive list of One Pace website slugs in order (1-based index is the website's season number).
+  const websiteSlugs = [
+    "romance-dawn", // 1
+    "orange-town", // 2
+    "syrup-village", // 3
+    "gaimon", // 4
+    "baratie", // 5
+    "arlong-park", // 6
+    "the-adventures-of-buggys-crew", // 7 (Specials / Cover Stories)
+    "loguetown", // 8
+    "reverse-mountain", // 9
+    "whisky-peak", // 10
+    "the-trials-of-koby-meppo", // 11 (Specials / Cover Stories)
+    "little-garden", // 12
+    "drum-island", // 13
+    "alabasta", // 14
+    "jaya", // 15
+    "skypiea", // 16
+    "long-ring-long-land", // 17
+    "water-seven", // 18
+    "enies-lobby", // 19
+    "post-enies-lobby", // 20
+    "thriller-bark", // 21
+    "sabaody-archipelago", // 22
+    "amazon-lily", // 23
+    "impel-down", // 24
+    "if-you-could-go-anywhere-the-adventures-of-the-straw-hats", // 25 (Specials / Cover Stories)
+    "marineford", // 26
+    "post-war", // 27
+    "return-to-sabaody", // 28
+    "fishman-island", // 29
+    "punk-hazard", // 30
+    "dressrosa", // 31
+    "zou", // 32
+    "whole-cake-island", // 33
+    "reverie", // 34
+    "wano", // 35
+    "egghead" // 36
+  ];
+  const slug = websiteSlugs[season - 1];
+  if (!slug) return season;
+  switch (slug) {
+    case "romance-dawn": return 1;
+    case "orange-town": return 2;
+    case "syrup-village": return 3;
+    case "gaimon": return 4;
+    case "baratie": return 5;
+    case "arlong-park": return 6;
+    case "the-adventures-of-buggys-crew": return 0; // special
+    case "loguetown": return 7;
+    case "reverse-mountain": return 8;
+    case "whisky-peak": return 9;
+    case "the-trials-of-koby-meppo": return 0; // special
+    case "little-garden": return 10;
+    case "drum-island": return 11;
+    case "alabasta": return 12;
+    case "jaya": return 13;
+    case "skypiea": return 14;
+    case "long-ring-long-land": return 15;
+    case "water-seven": return 16;
+    case "enies-lobby": return 17;
+    case "post-enies-lobby": return 18;
+    case "thriller-bark": return 19;
+    case "sabaody-archipelago": return 20;
+    case "amazon-lily": return 21;
+    case "impel-down": return 22;
+    case "if-you-could-go-anywhere-the-adventures-of-the-straw-hats": return 0; // special
+    case "marineford": return 23;
+    case "post-war": return 24;
+    case "return-to-sabaody": return 25;
+    case "fishman-island": return 26;
+    case "punk-hazard": return 27;
+    case "dressrosa": return 28;
+    case "zou": return 29;
+    case "whole-cake-island": return 30;
+    case "reverie": return 31;
+    case "wano": return 32;
+    case "egghead": return 33;
+    default: return season;
+  }
 }
 
 function checkOnePaceMigration() {
@@ -2011,7 +2177,10 @@ function checkOnePaceMigration() {
   };
 
   document.getElementById("btn-migrate-confirm").onclick = async () => {
-    const originalEpisode = mapOnePaceToOnePiece(paceEntry.season || paceEntry.seasonNumber || 1, paceEntry.episode || paceEntry.episodeNumber || 1);
+    const season = paceEntry.season || paceEntry.seasonNumber || 1;
+    const epNum = paceEntry.episode || paceEntry.episodeNumber || 1;
+    const realSeason = getRealOnePaceSeason(season);
+    const originalEpisode = realSeason === 0 ? 1 : mapOnePaceToOnePiece(realSeason, epNum);
     
     const pieceEntry = {
       itemId: "anilist:anime:21",

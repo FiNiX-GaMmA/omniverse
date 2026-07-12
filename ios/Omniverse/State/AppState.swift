@@ -781,17 +781,86 @@ final class AppState {
     }
 
     func getRealOnePaceSeason(season: Int) -> Int {
-        let repoFolders = [
-            "00 Cover Stories and Specials", "01 Romance Dawn", "02 Orange Town", "03 Syrup Village", "04 Gaimon",
-            "05 Baratie", "06 Arlong Park", "07 Loguetown", "08 Reverse Mountain", "09 Whisky Peak", "10 Little Garden",
-            "11 Drum Island", "12 Alabasta", "13 Jaya", "14 Skypiea", "16 Water Seven", "17 Enies Lobby",
-            "19 Thriller Bark", "22 Impel Down", "23 Marineford", "24 Post War", "25 Return to Sabaody",
-            "26 Fishman Island", "27 Punk Hazard", "28 Dressrosa", "29 Zou", "30 Whole Cake Island", "31 Reverie", "32 Wano", "33 Egghead"
+        // Definitive list of One Pace website slugs in order (1-based index is the website's season number).
+        let websiteSlugs = [
+            "romance-dawn", // 1
+            "orange-town", // 2
+            "syrup-village", // 3
+            "gaimon", // 4
+            "baratie", // 5
+            "arlong-park", // 6
+            "the-adventures-of-buggys-crew", // 7 (Specials / Cover Stories)
+            "loguetown", // 8
+            "reverse-mountain", // 9
+            "whisky-peak", // 10
+            "the-trials-of-koby-meppo", // 11 (Specials / Cover Stories)
+            "little-garden", // 12
+            "drum-island", // 13
+            "alabasta", // 14
+            "jaya", // 15
+            "skypiea", // 16
+            "long-ring-long-land", // 17
+            "water-seven", // 18
+            "enies-lobby", // 19
+            "post-enies-lobby", // 20
+            "thriller-bark", // 21
+            "sabaody-archipelago", // 22
+            "amazon-lily", // 23
+            "impel-down", // 24
+            "if-you-could-go-anywhere-the-adventures-of-the-straw-hats", // 25 (Specials / Cover Stories)
+            "marineford", // 26
+            "post-war", // 27
+            "return-to-sabaody", // 28
+            "fishman-island", // 29
+            "punk-hazard", // 30
+            "dressrosa", // 31
+            "zou", // 32
+            "whole-cake-island", // 33
+            "reverie", // 34
+            "wano", // 35
+            "egghead" // 36
         ]
-        guard season >= 1, season <= repoFolders.count else { return season }
-        let folder = repoFolders[season - 1]
-        let prefixStr = folder.components(separatedBy: " ").first ?? ""
-        return Int(prefixStr) ?? season
+        guard season >= 1, season <= websiteSlugs.count else { return season }
+        let slug = websiteSlugs[season - 1]
+        switch slug {
+        case "romance-dawn": return 1
+        case "orange-town": return 2
+        case "syrup-village": return 3
+        case "gaimon": return 4
+        case "baratie": return 5
+        case "arlong-park": return 6
+        case "the-adventures-of-buggys-crew": return 0 // special
+        case "loguetown": return 7
+        case "reverse-mountain": return 8
+        case "whisky-peak": return 9
+        case "the-trials-of-koby-meppo": return 0 // special
+        case "little-garden": return 10
+        case "drum-island": return 11
+        case "alabasta": return 12
+        case "jaya": return 13
+        case "skypiea": return 14
+        case "long-ring-long-land": return 15
+        case "water-seven": return 16
+        case "enies-lobby": return 17
+        case "post-enies-lobby": return 18
+        case "thriller-bark": return 19
+        case "sabaody-archipelago": return 20
+        case "amazon-lily": return 21
+        case "impel-down": return 22
+        case "if-you-could-go-anywhere-the-adventures-of-the-straw-hats": return 0 // special
+        case "marineford": return 23
+        case "post-war": return 24
+        case "return-to-sabaody": return 25
+        case "fishman-island": return 26
+        case "punk-hazard": return 27
+        case "dressrosa": return 28
+        case "zou": return 29
+        case "whole-cake-island": return 30
+        case "reverie": return 31
+        case "wano": return 32
+        case "egghead": return 33
+        default: return season
+        }
     }
 
     func migrateOnePaceWatchHistory() {
@@ -869,7 +938,7 @@ final class AppState {
         let totalEpisodes = arcTotalEpisodes[season] ?? 1
         if totalEpisodes <= 1 { return epNumbers.first! }
         let ratio = Double(episode - 1) / Double(totalEpisodes - 1)
-        let targetIndex = min(epNumbers.count - 1, max(0, Int(round(ratio * Double(epNumbers.count - 1)))))
+        let targetIndex = min(epNumbers.count - 1, max(0, Int(floor(ratio * Double(epNumbers.count - 1)))))
         return epNumbers[targetIndex]
     }
 }

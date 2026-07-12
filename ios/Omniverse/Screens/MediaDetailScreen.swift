@@ -12,6 +12,7 @@ struct MediaDetailScreen: View {
     @State private var episodes: [MediaEpisode] = []
     @State private var loadingEpisodes = false
     @State private var loadingStreams = false
+    @State private var episodeQuery = ""
 
     // Source selection + playback presentation
     @State private var sources: [PlaybackSource] = []
@@ -179,19 +180,50 @@ struct MediaDetailScreen: View {
         return out
     }
 
+    private var filteredEpisodes: [MediaEpisode] {
+        let trimmed = episodeQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if trimmed.isEmpty { return episodes }
+        return episodes.filter { ep in
+            String(ep.episodeNumber) == trimmed ||
+            ep.title.lowercased().contains(trimmed) ||
+            ep.overview.lowercased().contains(trimmed)
+        }
+    }
+
     private var seasonSelector: some View {
-        Menu {
-            ForEach(expandedSeasons, id: \.seasonNumber) { s in
-                Button(s.name) { selectedSeason = s.seasonNumber; Task { await loadEpisodes() } }
+        HStack(spacing: 12) {
+            Menu {
+                ForEach(expandedSeasons, id: \.seasonNumber) { s in
+                    Button(s.name) { selectedSeason = s.seasonNumber; episodeQuery = ""; Task { await loadEpisodes() } }
+                }
+            } label: {
+                HStack {
+                    Text(expandedSeasons.first { $0.seasonNumber == selectedSeason }?.name ?? "Season")
+                        .font(.system(size: 14, weight: .bold)).foregroundStyle(.white)
+                        .lineLimit(1)
+                    Image(systemName: "chevron.down").font(.system(size: 11, weight: .bold)).foregroundStyle(.white.opacity(0.7))
+                }
+                .padding(.horizontal, 16).padding(.vertical, 10)
+                .background(.white.opacity(0.08))
+                .clipShape(Capsule())
+                .overlay(Capsule().strokeBorder(.white.opacity(0.12), lineWidth: 1))
             }
-        } label: {
-            HStack {
-                Text(expandedSeasons.first { $0.seasonNumber == selectedSeason }?.name ?? "Season")
-                    .font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
-                Image(systemName: "chevron.down").font(.system(size: 13, weight: .bold)).foregroundStyle(.white.opacity(0.7))
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Sleek Rounded Episode Search Field
+            HStack(spacing: 6) {
+                Image(systemName: "magnifyingglass").font(.system(size: 12)).foregroundStyle(.white.opacity(0.4))
+                TextField("", text: $episodeQuery, prompt: Text("Filter by Ep #...").font(.system(size: 12)).foregroundStyle(.white.opacity(0.4)))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
             }
-            .padding(.horizontal, 16).padding(.vertical, 10)
-            .background(.ultraThinMaterial, in: Capsule())
+            .padding(.horizontal, 14).padding(.vertical, 8)
+            .background(.white.opacity(0.05))
+            .clipShape(Capsule())
+            .overlay(Capsule().strokeBorder(episodeQuery.isEmpty ? .white.opacity(0.12) : LiquidColors.cyan.opacity(0.4), lineWidth: 1))
+            .frame(width: 180)
         }
         .padding(.horizontal, 26).padding(.top, 10)
     }
@@ -199,12 +231,12 @@ struct MediaDetailScreen: View {
     private var episodeRail: some View {
         Group {
             if loadingEpisodes { ProgressView().tint(LiquidColors.cyan).frame(height: 150).frame(maxWidth: .infinity) }
-            else if episodes.isEmpty { Text("No episodes loaded for this season.").font(.system(size: 13)).foregroundStyle(.white.opacity(0.6)).padding(26) }
+            else if filteredEpisodes.isEmpty { Text("No episodes found matching filter.").font(.system(size: 13)).foregroundStyle(.white.opacity(0.6)).padding(26) }
             else {
                 ScrollViewReader { proxy in
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 14) {
-                            ForEach(episodes) { ep in
+                            ForEach(filteredEpisodes) { ep in
                                 episodeCard(ep)
                                     .id(ep.episodeNumber)
                             }
