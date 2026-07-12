@@ -291,62 +291,68 @@
                             <!-- Disney+ -->
                             <button
                                 onclick="filterByStudio('disney')"
-                                class="studio-card studio-disney h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
+                                class="studio-card studio-disney h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
                             >
-                                <span
-                                    class="text-sm font-black italic tracking-tighter text-white"
-                                    >Disney+</span
-                                >
+                                <img
+                                    src="https://image.tmdb.org/t/p/w500/uzK9u4w6FQm0zJbi9qRmN0R0ppU.png"
+                                    alt="Disney+"
+                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none"
+                                />
                             </button>
                             <!-- Netflix -->
                             <button
                                 onclick="filterByStudio('netflix')"
-                                class="studio-card studio-netflix h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
+                                class="studio-card studio-netflix h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
                             >
-                                <span
-                                    class="text-sm font-black tracking-widest text-red-600 uppercase"
-                                    >Netflix</span
-                                >
+                                <img
+                                    src="https://image.tmdb.org/t/p/w500/wwemzKWzjKYJFfCeiB67v84g67V.png"
+                                    alt="Netflix"
+                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none"
+                                />
                             </button>
                             <!-- HBO Max -->
                             <button
                                 onclick="filterByStudio('hbo')"
-                                class="studio-card studio-hbo h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
+                                class="studio-card studio-hbo h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
                             >
-                                <span
-                                    class="text-sm font-black tracking-normal text-purple-200 font-serif"
-                                    >HBO MAX</span
-                                >
+                                <img
+                                    src="https://image.tmdb.org/t/p/w500/aS77vEmdTeE1UdGRZT3lmV3N0KzB.png"
+                                    alt="HBO MAX"
+                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none"
+                                />
                             </button>
                             <!-- Apple TV+ -->
                             <button
                                 onclick="filterByStudio('apple')"
-                                class="studio-card studio-apple h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
+                                class="studio-card studio-apple h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
                             >
-                                <span
-                                    class="text-sm font-bold text-gray-300 tracking-tight"
-                                    > tv+</span
-                                >
+                                <img
+                                    src="https://image.tmdb.org/t/p/w500/4EClm3JjNzdXjVgXoNlM2bTBpTV.png"
+                                    alt="Apple TV+"
+                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none"
+                                />
                             </button>
                             <!-- Marvel -->
                             <button
                                 onclick="filterByStudio('marvel')"
-                                class="studio-card studio-marvel h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
+                                class="studio-card studio-marvel h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
                             >
-                                <span
-                                    class="text-xs font-black bg-red-600 px-2 py-0.5 text-white tracking-tighter uppercase"
-                                    >Marvel</span
-                                >
+                                <img
+                                    src="https://image.tmdb.org/t/p/w500/hUze9aWFR6N2kzODAyMG9RVE1wY0Z.png"
+                                    alt="Marvel Studios"
+                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none"
+                                />
                             </button>
                             <!-- Pixar -->
                             <button
                                 onclick="filterByStudio('pixar')"
-                                class="studio-card studio-pixar h-16 rounded-xl flex items-center justify-center p-3 transition duration-300"
+                                class="studio-card studio-pixar h-16 rounded-xl flex items-center justify-center p-4 transition duration-300"
                             >
-                                <span
-                                    class="text-sm font-semibold tracking-widest text-blue-100 uppercase"
-                                    >PIXAR</span
-                                >
+                                <img
+                                    src="https://image.tmdb.org/t/p/w500/1TjvGVDMYsj6JBxOAkUHpPEwLf7.png"
+                                    alt="PIXAR"
+                                    class="h-full max-w-[85%] object-contain select-none pointer-events-none brightness-0 invert"
+                                />
                             </button>
                         </div>
                     </div>
@@ -1232,7 +1238,7 @@
         <!-- INTEGRATED EMBED STREAM PLAYER OVERLAY -->
         <div
             id="player-overlay"
-            class="hidden fixed inset-0 z-[5000] bg-black flex flex-col justify-between overflow-hidden"
+            class="hidden fixed inset-0 z-[5000] bg-black overflow-hidden"
         >
             <!-- Top controller bar -->
             <div
@@ -1263,7 +1269,7 @@
             </div>
 
             <!-- Isolated WebView loader container -->
-            <div id="webview-container" class="w-full h-full">
+            <div id="webview-container" class="absolute inset-0 w-full h-full z-10 bg-black">
                 <!-- Embedded webview will be inserted dynamically here -->
             </div>
 

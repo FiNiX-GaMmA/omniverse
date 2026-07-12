@@ -100,13 +100,19 @@ function setupPlaybackSession(playSession) {
 
   // Block ad networks, tracking scripts, and pop-up loaders
   playSession.webRequest.onBeforeRequest(
-    { urls: BLOCKED_HOSTS },
+    { urls: ["*://*/*"] },
     (details, callback) => {
-      adBlockStats.adsBlocked++;
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
+      const urlLower = details.url.toLowerCase();
+      const shouldBlock = BLOCKED_KEYWORDS.some(keyword => urlLower.includes(keyword));
+      if (shouldBlock) {
+        adBlockStats.adsBlocked++;
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
+        }
+        callback({ cancel: true });
+      } else {
+        callback({ cancel: false });
       }
-      callback({ cancel: true });
     },
   );
 

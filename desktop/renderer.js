@@ -321,11 +321,22 @@ async function fetchTmdb(path, params = {}) {
   }
 }
 
+const TMDB_GENRES = {
+  28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
+  99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
+  27: "Horror", 10402: "Music", 9648: "Mystery", 10749: "Romance", 878: "Science Fiction",
+  10770: "TV Movie", 53: "Thriller", 10752: "War", 37: "Western",
+  10759: "Action", 10762: "Kids", 10763: "News", 10764: "Reality", 10765: "Sci-Fi & Fantasy",
+  10766: "Soap", 10767: "Talk", 10768: "War"
+};
+
 function mapTmdbItem(item, type) {
   const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://onepace.net/images/og-backdrop.jpg";
   const backdropPath = item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : "https://onepace.net/images/og-backdrop.jpg";
   const releaseDate = item.release_date || item.first_air_date || "";
   const year = releaseDate ? new Date(releaseDate).getFullYear() : "—";
+  const genreIds = item.genre_ids || [];
+  const genres = genreIds.map(id => TMDB_GENRES[id]).filter(Boolean);
   return {
     id: `tmdb:${type}:${item.id}`,
     title: item.title || item.name || "Untitled",
@@ -336,6 +347,7 @@ function mapTmdbItem(item, type) {
     poster: posterPath,
     backdrop: backdropPath,
     overview: item.overview || "No description available.",
+    genres: genres
   };
 }
 
@@ -383,20 +395,21 @@ function updateHeroBanner(media) {
 }
 
 // Render dynamic elements
-async function renderCatalogFeeds() {
+async function renderCatalogFeeds(skipAnimeLoad = false) {
+  let trendingMovies = [];
+  let trendingTv = [];
+
   if (state.tmdbToken) {
-    showGridLoading("grid-trending-movies");
-    showGridLoading("grid-trending-tv");
     showGridLoading("grid-all-movies");
     showGridLoading("grid-all-tv");
 
     const trendingMoviesData = await fetchTmdb("trending/movie/week");
-    const trendingMovies = trendingMoviesData && trendingMoviesData.results
+    trendingMovies = trendingMoviesData && trendingMoviesData.results
       ? trendingMoviesData.results.map(item => mapTmdbItem(item, "movie"))
       : FALLBACK_DB.movies;
 
     const trendingTvData = await fetchTmdb("trending/tv/week");
-    const trendingTv = trendingTvData && trendingTvData.results
+    trendingTv = trendingTvData && trendingTvData.results
       ? trendingTvData.results.map(item => mapTmdbItem(item, "tv"))
       : FALLBACK_DB.tv;
 
@@ -410,23 +423,191 @@ async function renderCatalogFeeds() {
       ? topRatedTvData.results.map(item => mapTmdbItem(item, "tv"))
       : FALLBACK_DB.tv;
 
-    renderGrid("grid-trending-movies", trendingMovies.slice(0, 12));
-    renderGrid("grid-trending-tv", trendingTv.slice(0, 12));
     renderGrid("grid-all-movies", popularMovies.slice(0, 18));
     renderGrid("grid-all-tv", topRatedTv.slice(0, 18));
 
     const heroMedia = trendingMovies[0] || trendingTv[0] || FALLBACK_DB.movies[0];
     updateHeroBanner(heroMedia);
   } else {
-    renderGrid("grid-trending-movies", FALLBACK_DB.movies);
-    renderGrid("grid-trending-tv", FALLBACK_DB.tv);
+    trendingMovies = FALLBACK_DB.movies;
+    trendingTv = FALLBACK_DB.tv;
+
     renderGrid("grid-all-movies", FALLBACK_DB.movies);
     renderGrid("grid-all-tv", FALLBACK_DB.tv);
     updateHeroBanner(FALLBACK_DB.movies[0]);
   }
 
-  renderGrid("grid-all-anime", FALLBACK_DB.anime);
-  loadAnimeCatalog();
+  // Define and build high-fidelity categories list exactly like the mobile apps (paritied with Kotlin/Swift lists)
+  const categories = [];
+
+  // Blend movies, tv, and anime for top 10 trending
+  const blendTop10 = [];
+  let mi = 0, si = 0, ai = 0;
+  const maxLimit = 10;
+  const dynamicAnimeList = state.animeCatalog && state.animeCatalog.length ? state.animeCatalog : FALLBACK_DB.anime;
+
+  while (blendTop10.length < maxLimit && (mi < trendingMovies.length || si < trendingTv.length || ai < dynamicAnimeList.length)) {
+    if (mi < trendingMovies.length) {
+      blendTop10.push(trendingMovies[mi++]);
+      if (blendTop10.length >= maxLimit) break;
+    }
+    if (si < trendingTv.length) {
+      blendTop10.push(trendingTv[si++]);
+      if (blendTop10.length >= maxLimit) break;
+    }
+    if (ai < dynamicAnimeList.length) {
+      blendTop10.push(dynamicAnimeList[ai++]);
+      if (blendTop10.length >= maxLimit) break;
+    }
+  }
+
+  if (blendTop10.length > 0) {
+    categories.push({
+      id: "top_10_trending",
+      title: "Top 10 Trending",
+      description: "The most watched movies, TV shows, and anime this week",
+      items: blendTop10,
+      isTop10: true
+    });
+  }
+
+  if (trendingMovies.length > 0) {
+    categories.push({
+      id: "top_10_movies",
+      title: "Top 10 Trending Movies",
+      description: "Popular theatrical and digital releases",
+      items: trendingMovies.slice(0, 10),
+      isTop10: true
+    });
+  }
+
+  if (trendingTv.length > 0) {
+    categories.push({
+      id: "top_10_tv",
+      title: "Top 10 Trending TV Shows",
+      description: "Series gaining the most momentum this week",
+      items: trendingTv.slice(0, 10),
+      isTop10: true
+    });
+  }
+
+  if (dynamicAnimeList.length > 0) {
+    categories.push({
+      id: "top_10_anime",
+      title: "Top 10 Trending Anime",
+      description: "What everyone is watching right now",
+      items: dynamicAnimeList.slice(0, 10),
+      isTop10: true
+    });
+  }
+
+  // Genre Categories
+  const allItems = [...trendingMovies, ...trendingTv, ...dynamicAnimeList];
+  const genresToRender = ["Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery"];
+  genresToRender.forEach(genre => {
+    const seen = new Set();
+    const picks = [];
+    for (const item of allItems) {
+      const itemGenres = item.genres || [];
+      if (item.type === "anime" && !itemGenres.includes("Animation")) {
+        itemGenres.push("Animation");
+      }
+      const matchesGenre = itemGenres.some(g => g.toLowerCase().includes(genre.toLowerCase()) || (genre === "Science Fiction" && g.toLowerCase().includes("sci")));
+      if (matchesGenre && !seen.has(item.id)) {
+        seen.add(item.id);
+        picks.push(item);
+      }
+    }
+    if (picks.length >= 4) {
+      categories.push({
+        id: `genre_${genre.toLowerCase().replace(/\s+/g, "_")}`,
+        title: `Trending ${genre}`,
+        description: `Popular ${genre} titles to watch this week`,
+        items: picks.slice(0, 15),
+        isTop10: false
+      });
+    }
+  });
+
+  const homeCatalogs = document.getElementById("home-catalogs");
+  if (homeCatalogs) {
+    homeCatalogs.innerHTML = "";
+    categories.forEach(cat => {
+      const catSection = document.createElement("div");
+      catSection.className = "space-y-3";
+
+      const header = document.createElement("div");
+      header.className = "flex items-center justify-between";
+      header.innerHTML = `
+        <div class="flex flex-col">
+          <h2 class="text-sm font-black text-white uppercase tracking-wider">${cat.title}</h2>
+          <p class="text-[10px] text-gray-500 font-semibold">${cat.description}</p>
+        </div>
+      `;
+
+      const rail = document.createElement("div");
+      rail.className = "horizontal-rail flex overflow-x-auto gap-4 pb-4 scrollbar-none no-drag";
+
+      cat.items.forEach((item, index) => {
+        if (cat.isTop10) {
+          const card = document.createElement("div");
+          card.className = "relative flex items-end h-[220px] min-w-[180px] select-none shrink-0";
+          card.onclick = () => openDetailModal(item);
+          const rank = index + 1;
+          card.innerHTML = `
+            <span class="absolute bottom-[-10px] left-0 text-[130px] font-black leading-none text-white/[0.08] select-none pointer-events-none font-sans z-0">
+              ${rank}
+            </span>
+            <div class="media-card ml-auto w-[130px] h-[195px] rounded-xl border border-white/[0.04] p-1.5 hover:border-brandCyan/20 cursor-pointer text-left bg-brandSec relative z-10">
+              <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-1.5">
+                <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://onepace.net/images/og-backdrop.jpg'">
+                <span class="absolute top-1 right-1 bg-brandDark/85 border border-white/[0.06] text-amber-400 font-extrabold text-[8px] px-1.5 py-0.5 rounded flex items-center gap-0.5 z-20">
+                  ★ ${item.rating || "—"}
+                </span>
+              </div>
+              <div class="px-0.5 space-y-0.5">
+                <h4 class="text-[11px] font-bold text-gray-200 truncate leading-snug">${item.title}</h4>
+                <div class="flex items-center justify-between text-[9px] text-gray-500 font-medium">
+                  <span>${item.year || "—"}</span>
+                  <span class="uppercase text-[8px] tracking-wider text-brandCyan bg-cyan-950/20 border border-brandCyan/10 px-1 rounded">${item.type}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          rail.appendChild(card);
+        } else {
+          const card = document.createElement("div");
+          card.className = "media-card bg-brandSec rounded-xl border border-white/[0.04] p-2 hover:border-brandCyan/20 cursor-pointer text-left w-[130px] shrink-0";
+          card.onclick = () => openDetailModal(item);
+          card.innerHTML = `
+            <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-2">
+              <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://onepace.net/images/og-backdrop.jpg'">
+              <span class="absolute top-1.5 right-1.5 bg-brandDark/80 border border-white/[0.06] text-amber-400 font-extrabold text-[9px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                ★ ${item.rating || "—"}
+              </span>
+            </div>
+            <div class="px-1 space-y-0.5">
+              <h4 class="text-xs font-bold text-gray-200 truncate leading-snug">${item.title}</h4>
+              <div class="flex items-center justify-between text-[10px] text-gray-500 font-medium">
+                <span>${item.year || "—"}</span>
+                <span class="uppercase text-[9px] tracking-wider text-brandCyan bg-cyan-950/20 border border-brandCyan/10 px-1 rounded">${item.type}</span>
+              </div>
+            </div>
+          `;
+          rail.appendChild(card);
+        }
+      });
+
+      catSection.appendChild(header);
+      catSection.appendChild(rail);
+      homeCatalogs.appendChild(catSection);
+    });
+  }
+
+  renderGrid("grid-all-anime", dynamicAnimeList);
+  if (!skipAnimeLoad) {
+    loadAnimeCatalog();
+  }
   lucide.createIcons();
 }
 
@@ -449,6 +630,8 @@ async function loadAnimeCatalog() {
     if (items.length) {
       state.animeCatalog = items;
       renderGrid("grid-all-anime", items);
+      // Seamlessly trigger updated categories rail blend
+      renderCatalogFeeds(true);
     }
   } catch (e) {
     console.warn("[Omniverse] AniList anime catalog failed, using fallback:", e);

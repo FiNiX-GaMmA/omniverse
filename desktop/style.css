@@ -334,3 +334,68 @@ body {
     border-color: rgba(6, 182, 212, 0.15);
     transform: translateX(4px);
 }
+
+/* Immersive Layout Constraints */
+html, body {
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Elegant Custom Scrollbar and Scroll-behavior for Rails */
+.horizontal-rail {
+    display: flex;
+    overflow-x: auto;
+    gap: 16px;
+    padding-bottom: 12px;
+    scroll-behavior: smooth;
+}
+
+.horizontal-rail::-webkit-scrollbar {
+    height: 6px;
+}
+
+.horizontal-rail::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.01);
+    border-radius: 99px;
+}
+
+.horizontal-rail::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 99px;
+    transition: all 0.3s ease;
+}
+
+.horizontal-rail::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-cyan);
+}
+
+/* Hide scrollbars on modern elements if needed */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Dynamic Webview Player Immersive Overhaul */
+.webview-player {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    display: block !important;
+    background: #000000 !important;
+}
+
+#webview-container {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 10 !important;
+    background: #000000 !important;
+    overflow: hidden !important;
+}
+
