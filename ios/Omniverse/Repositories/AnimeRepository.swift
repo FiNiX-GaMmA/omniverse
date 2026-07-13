@@ -43,20 +43,6 @@ final class AnimeRepository: AnimeRepositoryProtocol {
         "Accept": "*/*",
     ]
 
-    private static let hianimeDomains = [
-        "https://hianime.to",
-        "https://hianime.tv",
-        "https://hianime.cv",
-        "https://hianimes.ro",
-        "https://hianime.nz",
-        "https://hianime.bz",
-        "https://hianime.pe",
-        "https://hianime.cx",
-        "https://hianime.do",
-    ]
-    private static let hianimeOnePieceSlug = "one-piece-100"
-    private static let hianimeOnePieceMinEpisode = 1020
-
     // MARK: - Supporting value types
 
     struct AnilistEpisodeMeta {
@@ -101,12 +87,7 @@ final class AnimeRepository: AnimeRepositoryProtocol {
         let referer: String
     }
 
-    private struct HianimeSource {
-        let url: String
-        let referer: String
-        let quality: String
-        let direct: Bool
-    }
+
 
     enum AnimeError: Error, CustomStringConvertible {
         case noSource(String)
@@ -449,32 +430,15 @@ final class AnimeRepository: AnimeRepositoryProtocol {
 
     /// Picks the AllAnime show that best matches `query`.
     ///
-    /// AllAnime lists some popular long-runners under obfuscated names — One Piece
-    /// is stored as "1P" with 1000+ episodes — while padding the results with
-    /// one-episode specials and spin-offs ("One Piece: Heroines", etc.). The old
-    /// logic did an exact name match then fell back to `edges.first`, which for
-    /// One Piece never matched "1P" and grabbed the 1-episode "Heroines" special
-    /// instead — so only a single episode was ever listed. Here an exact
-    /// (normalised) name match still wins when present; otherwise we drop obvious
-    /// fan-cuts ("One Pace" when that isn't what was asked for) and take the entry
-    /// with the most available episodes, i.e. the main series rather than a
-    /// special. Both the episode-count and playback paths call this, so listing
-    /// and playback always resolve to the same show.
+    /// Some long-running shows are indexed under obfuscated names (for example,
+    /// "1P" for One Piece) while related specials/spin-offs are also returned.
+    /// Keep an exact normalised name match as the first priority, then fall back
+    /// to the entry with the highest available episode count.
     private func bestAllmangaMatch(_ edges: [[String: Any]], query: String) -> [String: Any]? {
         guard !edges.isEmpty else { return nil }
         let lower = query.lowercased().trimmed
-        // One Piece (the anime) and One Pace (the fan recut) are separate entities.
-        // Unless the caller is explicitly after One Pace, drop any "One Pace" entry
-        // so a One Piece lookup can never resolve to it. Match the full phrase, not
-        // a bare "pace" substring, so titles containing "space" etc. are untouched.
-        let queryIsOnePace = lower.contains("one pace")
-        var candidates = edges.filter { edge in
-            let name = (edge["name"] as? String)?.lowercased().trimmed ?? ""
-            return queryIsOnePace || !name.contains("one pace")
-        }
-        if candidates.isEmpty { candidates = edges }
 
-        if let exact = candidates.first(where: { ($0.str("name")?.lowercased().trimmed ?? "") == lower }) {
+        if let exact = edges.first(where: { ($0.str("name")?.lowercased().trimmed ?? "") == lower }) {
             return exact
         }
 
@@ -486,7 +450,7 @@ final class AnimeRepository: AnimeRepositoryProtocol {
             return max(sub, max(dub, raw))
         }
 
-        return candidates.max { episodeCount($0) < episodeCount($1) }
+        return edges.max { episodeCount($0) < episodeCount($1) }
     }
 
     func anilistEpisodeMeta(_ title: String) async -> [Int: AnilistEpisodeMeta] {
@@ -553,13 +517,14 @@ final class AnimeRepository: AnimeRepositoryProtocol {
             isMovie: isMovie,
             translationType: translationType
         )
-        if result == nil && translationType == "dub" {
+        if result == nil {
+            let fallbackType = (translationType == "dub") ? "sub" : "dub"
             result = await resolveAllmanga(
                 title: item.title,
                 seasonNumber: episode.seasonNumber,
                 episodeNumber: episode.episodeNumber,
                 isMovie: isMovie,
-                translationType: "sub"
+                translationType: fallbackType
             )
         }
         if let result {
@@ -575,34 +540,9 @@ final class AnimeRepository: AnimeRepositoryProtocol {
             )
         }
 
-        // Try HiAnime (embed/iframe) as fallback
-        if let hiAnime = try? await resolveAnimeFromHianime(title: item.title, episodeNumber: episode.episodeNumber, preferDub: dub) {
-            return PlaybackSource(
-                id: "hianime:\(item.id):\(episode.seasonNumber):\(episode.episodeNumber)",
-                title: hiAnime.direct ? "HiAnime \(hiAnime.quality)".trimmed : "HiAnime Embed",
-                url: hiAnime.url,
-                provider: "HiAnime",
-                kind: hiAnime.direct ? .direct : .embed,
-                quality: hiAnime.direct ? hiAnime.quality : "Embed",
-                headers: ["Referer": hiAnime.referer],
-                subtitleUrl: settings.subtitleUrl.trimmed
-            )
-        } else if dub, let hiAnime = try? await resolveAnimeFromHianime(title: item.title, episodeNumber: episode.episodeNumber, preferDub: false) {
-            return PlaybackSource(
-                id: "hianime:\(item.id):\(episode.seasonNumber):\(episode.episodeNumber)",
-                title: hiAnime.direct ? "HiAnime \(hiAnime.quality)".trimmed : "HiAnime Embed",
-                url: hiAnime.url,
-                provider: "HiAnime",
-                kind: hiAnime.direct ? .direct : .embed,
-                quality: hiAnime.direct ? hiAnime.quality : "Embed",
-                headers: ["Referer": hiAnime.referer],
-                subtitleUrl: settings.subtitleUrl.trimmed
-            )
-        }
-
         // AllAnime gated this request behind a captcha. Prompt the user to solve
-        // it (the preferred ani-cli path) rather than silently dropping to the
-        // fallback; once solved, the cached session cookie lets the retry through.
+        // it so we can continue on the preferred ani-cli path.
+        // No third-party anime fallback providers are used.
         if episodeNeededCaptcha {
             throw AnimeError.captchaRequired(url: Self.captchaURL)
         }
@@ -702,7 +642,6 @@ final class AnimeRepository: AnimeRepositoryProtocol {
     }
 
     private func anilistSeasonTitle(_ baseTitle: String, seasonNumber: Int) async -> SeasonTitle {
-        if seasonNumber <= 1 { return SeasonTitle(title: baseTitle) }
         let query = """
         query($search:String) {
           Media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
@@ -728,6 +667,14 @@ final class AnimeRepository: AnimeRepositoryProtocol {
                 "variables": ["search": baseTitle],
             ])
             guard let media = body.obj("data")?.obj("Media") else { return SeasonTitle(title: baseTitle) }
+
+            let baseNodeTitle = media.obj("title")
+            let baseResolved = SeasonTitle(
+                title: baseNodeTitle?.str("english") ?? baseNodeTitle?.str("romaji") ?? baseTitle,
+                romaji: baseNodeTitle?.str("romaji")
+            )
+            if seasonNumber <= 1 { return baseResolved }
+
             let relations = media.obj("relations")?.arr("edges") ?? []
             var sequels = relations.compactMap { $0 as? [String: Any] }.filter { edge in
                 let node = edge.obj("node") ?? [:]
@@ -865,7 +812,7 @@ final class AnimeRepository: AnimeRepositoryProtocol {
         // Split on regex [{}].
         let chunks = plain.components(separatedBy: CharacterSet(charactersIn: "{}"))
         for chunk in chunks {
-            guard let url = firstCapture(in: chunk, pattern: #""sourceUrl"\s*:\s*"(--[^"]+)""#) else { continue }
+            guard let url = firstCapture(in: chunk, pattern: #""sourceUrl"\s*:\s*"([^"]+)""#) else { continue }
             let name = firstCapture(in: chunk, pattern: #""sourceName"\s*:\s*"([^"]+)""#) ?? ""
             let priorityStr = firstCapture(in: chunk, pattern: #""priority"\s*:\s*([0-9.]+)"#) ?? ""
             sources.append(AllAnimeSource(
@@ -1149,235 +1096,4 @@ final class AnimeRepository: AnimeRepositoryProtocol {
         return ns.substring(with: m.range(at: 1))
     }
 
-    // MARK: - HiAnime Fallback Engine
-
-    private func isHiAnimeFallbackTarget(item: MediaItem, episode: MediaEpisode) -> Bool {
-        guard isOnePieceLikeTitle(item.title) else { return false }
-        return episode.episodeNumber >= Self.hianimeOnePieceMinEpisode
-    }
-
-    private func isOnePieceLikeTitle(_ title: String) -> Bool {
-        let lower = title.lowercased()
-        return lower == "one piece" || lower.contains("one piece")
-    }
-
-    private func hianimeHeaders(base: String, ajax: Bool = false) -> [String: String] {
-        var headers = [
-            "Accept": ajax ? "application/json, text/plain, */*" : "text/html,*/*",
-            "Referer": "\(base)/",
-            "Origin": base,
-        ]
-        if ajax { headers["X-Requested-With"] = "XMLHttpRequest" }
-        return headers
-    }
-
-    private func stripHtml(_ value: String) -> String {
-        return value.replacingOccurrences(of: "<[^>]*>", with: " ", options: .regularExpression)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .trimmed
-    }
-
-    private func resolveAnimeFromHianime(title: String, episodeNumber: Int, preferDub: Bool = false) async -> HianimeSource? {
-        let epNum = episodeNumber
-        guard epNum > 0 else { return nil }
-
-        for base in Self.hianimeDomains {
-            let slugs = await discoverAnimeSlugs(base: base, title: title)
-            for slug in slugs {
-                do {
-                    guard let watchUrl = URL(string: "\(base)/watch/\(slug)") else { continue }
-                    let watchRes = try await Http.shared.request(watchUrl, headers: hianimeHeaders(base: base), timeout: 12)
-                    guard watchRes.ok else { continue }
-
-                    guard let animeId = extractHianimeAnimeId(watchHtml: watchRes.bodyString, slug: slug) else { continue }
-
-                    guard let listUrl = URL(string: "\(base)/ajax/v2/episode/list/\(animeId)") else { continue }
-                    let listRes = try await Http.shared.request(listUrl, headers: hianimeHeaders(base: base, ajax: true), timeout: 12)
-                    guard listRes.ok else { continue }
-                    let listHtml = htmlFromMaybeAjaxJson(listRes.bodyString)
-
-                    guard let episodeId = extractHianimeEpisodeId(listHtml: listHtml, episodeNumber: epNum) else { continue }
-
-                    guard let serversUrl = URL(string: "\(base)/ajax/v2/episode/servers?episodeId=\(episodeId)") else { continue }
-                    let serversRes = try await Http.shared.request(serversUrl, headers: hianimeHeaders(base: base, ajax: true), timeout: 12)
-                    guard serversRes.ok else { continue }
-                    let serversHtml = htmlFromMaybeAjaxJson(serversRes.bodyString)
-
-                    guard let serverId = extractHianimeServerId(serversHtml: serversHtml, preferDub: preferDub) else { continue }
-
-                    guard let sourcesUrl = URL(string: "\(base)/ajax/v2/episode/sources?id=\(serverId)") else { continue }
-                    let sourcesRes = try await Http.shared.request(sourcesUrl, headers: hianimeHeaders(base: base, ajax: true), timeout: 12)
-                    guard sourcesRes.ok else { continue }
-
-                    let srcJson = sourcesRes.jsonObject()
-                    let srcData = srcJson["data"] as? [String: Any] ?? srcJson
-
-                    if let direct = pickHianimeDirectUrl(json: srcData) {
-                        return HianimeSource(
-                            url: direct,
-                            referer: "\(base)/",
-                            quality: "?",
-                            direct: true
-                        )
-                    }
-
-                    let linkValue = (srcData["link"] as? String) ?? (srcJson["link"] as? String) ?? ""
-                    if let link = absoluteUrl(base: base, value: linkValue) {
-                        return HianimeSource(
-                            url: link,
-                            referer: "\(base)/",
-                            quality: "Embed",
-                            direct: false
-                        )
-                    }
-                } catch {
-                    // Try next slug/domain
-                }
-            }
-        }
-        return nil
-    }
-
-    private func discoverAnimeSlugs(base: String, title: String) async -> [String] {
-        var slugs: [String] = []
-        if title.lowercased() == "one piece" {
-            slugs.append(Self.hianimeOnePieceSlug)
-        }
-        let encodedTitle = title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        guard let url = URL(string: "\(base)/search?keyword=\(encodedTitle)") else { return slugs }
-        do {
-            let res = try await Http.shared.request(url, headers: hianimeHeaders(base: base), timeout: 12)
-            if res.ok {
-                var seen = Set(slugs)
-                let body = res.bodyString
-                let pattern = #"href=["']\/watch\/([^"'#?\s]+)["']"#
-                if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
-                    let ns = body as NSString
-                    let matches = regex.matches(in: body, options: [], range: NSRange(location: 0, length: ns.length))
-                    for m in matches where m.numberOfRanges >= 2 {
-                        let slug = ns.substring(with: m.range(at: 1)).trimmed
-                        if !slug.isEmpty && !seen.contains(slug) {
-                            if !slug.lowercased().contains("movie") &&
-                                !slug.lowercased().contains("film") &&
-                                !slug.lowercased().contains("special") &&
-                                !slug.lowercased().contains("recap") {
-                                seen.insert(slug)
-                                slugs.insert(slug, at: 0) // priority
-                            }
-                        }
-                    }
-                }
-            }
-        } catch {}
-        return slugs
-    }
-
-    private func extractHianimeAnimeId(watchHtml: String, slug: String) -> String? {
-        let patterns = [
-            #"id=["']ani_detail["'][^>]*data-id=["']([^"']+)["']"#,
-            #"class=["'][^"']*film-detail[^"']*["'][^>]*data-id=["']([^"']+)["']"#,
-            #"data-id=["'](\d+)["']"#
-        ]
-        for pattern in patterns {
-            if let id = firstCapture(in: watchHtml, pattern: pattern) {
-                return id
-            }
-        }
-        return firstCapture(in: slug, pattern: #"-(\d+)(?:$|\?)"#)
-    }
-
-    private func extractHianimeEpisodeId(listHtml: String, episodeNumber: Int) -> String? {
-        let ep = String(episodeNumber)
-        let rxPattern1 = "data-number=[\"']\(ep)[\"'][^>]*data-id=[\"']([^\"']+)[\"']"
-        let rxPattern2 = "data-id=[\"']([^\"']+)[\"'][^>]*data-number=[\"']\(ep)[\"']"
-        for pattern in [rxPattern1, rxPattern2] {
-            if let id = firstCapture(in: listHtml, pattern: pattern) {
-                return id
-            }
-        }
-        return nil
-    }
-
-    private func extractHianimeServerId(serversHtml: String, preferDub: Bool) -> String? {
-        let pattern = #"<[^>]*data-id=["']([^"']+)["'][^>]*>([\s\S]*?)<\/[^>]+>"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return nil }
-        let ns = serversHtml as NSString
-        let matches = regex.matches(in: serversHtml, options: [], range: NSRange(location: 0, length: ns.length))
-        var entries: [(id: String, text: String)] = []
-        for m in matches where m.numberOfRanges >= 3 {
-            let id = ns.substring(with: m.range(at: 1)).trimmed
-            let raw = ns.substring(with: m.range(at: 0))
-            let label = stripHtml(ns.substring(with: m.range(at: 2)))
-            if !id.isEmpty {
-                entries.append((id: id, text: "\(raw) \(label)".lowercased()))
-            }
-        }
-        if entries.isEmpty { return nil }
-
-        let preferredLane = preferDub ? "dub" : "sub"
-        func score(_ entry: (id: String, text: String)) -> Int {
-            var s = 0
-            if entry.text.contains(preferredLane) { s += 30 }
-            if !preferDub && !entry.text.contains("dub") { s += 4 }
-            if entry.text.range(of: #"(hd-?1|vidstream|megacloud|streamsb|streamtape|default|server\s*1)"#, options: .regularExpression) != nil { s += 20 }
-            if entry.text.range(of: #"(hd-?2|server\s*2)"#, options: .regularExpression) != nil { s += 10 }
-            return s
-        }
-
-        let sorted = entries.sorted { score($0) > score($1) }
-        return sorted.first?.id ?? entries.first?.id
-    }
-
-    private func htmlFromMaybeAjaxJson(_ body: String) -> String {
-        guard let data = body.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return body
-        }
-        if let html = json["html"] as? String { return html }
-        if let subData = json["data"] as? [String: Any], let html = subData["html"] as? String { return html }
-        return body
-    }
-
-    private func pickHianimeDirectUrl(json: Any?) -> String? {
-        var urls: [String] = []
-        var seen = Set<String>()
-        collectHttpUrls(value: json, out: &urls, seen: &seen)
-        for u in urls {
-            if isDirectVideoUrl(u) { return u }
-        }
-        return nil
-    }
-
-    private func collectHttpUrls(value: Any?, out: inout [String], seen: inout Set<String>) {
-        guard let value else { return }
-        if let s = value as? String {
-            let v = s.trimmed
-            if v.hasPrefix("http://") || v.hasPrefix("https://") {
-                out.append(v)
-            }
-            return
-        }
-        let desc = "\(value)"
-        if seen.contains(desc) { return }
-        seen.insert(desc)
-
-        if let arr = value as? [Any] {
-            for item in arr {
-                collectHttpUrls(value: item, out: &out, seen: &seen)
-            }
-        } else if let dict = value as? [String: Any] {
-            for (_, val) in dict {
-                collectHttpUrls(value: val, out: &out, seen: &seen)
-            }
-        }
-    }
-
-    private func absoluteUrl(base: String, value: String) -> String? {
-        let raw = value.trimmed
-        if raw.isEmpty { return nil }
-        if raw.hasPrefix("http://") || raw.hasPrefix("https://") { return raw }
-        if raw.hasPrefix("//") { return "https:\(raw)" }
-        guard let baseUri = URL(string: base) else { return nil }
-        return URL(string: raw, relativeTo: baseUri)?.absoluteString
-    }
 }

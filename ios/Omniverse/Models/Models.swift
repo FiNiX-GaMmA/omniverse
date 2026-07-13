@@ -24,10 +24,7 @@ func imageUrl(_ path: String?, size: String) -> String? {
     guard let path, !path.isEmpty else { return nil }
     if path.hasPrefix("http") { return path }
     if path.hasPrefix("//") { return "https:\(path)" }
-    if path.hasPrefix("/_next/") || path.hasPrefix("_next/") {
-        let clean = path.hasPrefix("/") ? path : "/\(path)"
-        return "https://onepace.net\(clean)"
-    }
+
     if path.hasPrefix("banners/") || path.hasPrefix("/banners/") {
         let clean = path.hasPrefix("/") ? path : "/\(path)"
         return "https://artworks.thetvdb.com\(clean)"
@@ -146,9 +143,9 @@ struct MediaItem: Codable, Equatable, Identifiable, Hashable {
     var backdropUrl: String? { imageUrl(backdropPath, size: "w1280") }
     var heroBackdropUrl: String? { imageUrl(backdropPath, size: "original") }
 
-    /// AniList id when sourced from AniList / One Pace ("anilist:anime:{id}").
+    /// AniList id when sourced from AniList ("anilist:anime:{id}").
     var anilistId: Int? {
-        guard id.hasPrefix("anilist:") || id.hasPrefix("onepace:") else { return nil }
+        guard id.hasPrefix("anilist:") else { return nil }
         let parts = id.split(separator: ":")
         guard parts.count >= 3 else { return nil }
         return Int(parts.last!)

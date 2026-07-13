@@ -149,9 +149,6 @@ fun PlayerScreen(
     var isPlaying by remember { mutableStateOf(false) }
     var isReady by remember { mutableStateOf(false) }
     var hasError by remember { mutableStateOf(false) }
-    // One Pace: on playback error, fall back once from the GameDrive proxy to the
-    // direct Pixeldrain (+api_key) URL, preserving position.
-    val isOnePace = false
     var currentUrl by remember { mutableStateOf(args.url) }
     var fallbackAttempted by remember { mutableStateOf(false) }
     // Stall auto-recovery: bounded re-resolve when playback freezes mid-stream.
@@ -314,10 +311,10 @@ fun PlayerScreen(
             }
 
             // Autoplay next episode when countdown reaches 0 (1s or less remaining)
-            val hasNextEp = args.item != null && args.episode != null && (isOnePace || nextEpisodeFor(
+            val hasNextEp = args.item != null && args.episode != null && nextEpisodeFor(
                 args.item,
                 args.episode
-            ) != null)
+            ) != null
             if (hasNextEp && durationMs > 0 && durationMs - positionMs <= 1000) {
                 onEpisodeFinished()
             }
@@ -344,13 +341,11 @@ fun PlayerScreen(
     // Stall watchdog: re-resolve and rebuild the stream at the same position when
     // playback freezes for ~12s (sampled every ~3s). Two stall signatures both count:
     //   (a) STUCK BUFFERING — STATE_BUFFERING with playWhenReady=true but isPlaying()==false
-    //       (the stream is trying to play but never delivers; this is the case the user
-    //       reports for anime + One Pace where recovery never fired before).
     //   (b) FROZEN PLAYBACK — actively playing (isPlaying()==true) but currentPosition
     //       has not advanced.
     // Excluded: user pause (playWhenReady=false), seeking, ended, hard error, not ready.
-    // One Pace/gamedrive/pixeldrain -> official Pixeldrain (+api_key) URL. Other items
-    // -> re-fetch playback sources, take the first direct stream. Bounded to 3 retries.
+    // Recovery re-fetches playback sources, takes the first direct stream, and is
+    // bounded to 3 retries.
     LaunchedEffect(player) {
         var lastPos = -1L
         var stalledFor = 0
@@ -399,9 +394,6 @@ fun PlayerScreen(
     // Fetch AniSkip once ready
     LaunchedEffect(isReady, durationMs) {
         if (!isReady || durationMs <= 0) return@LaunchedEffect
-        val title = args.item?.title?.lowercase() ?: ""
-        val id = args.item?.id?.lowercase() ?: ""
-        if (title == "one pace" || title.contains("one pace") || id.startsWith("onepace:") || id.contains("onepace")) return@LaunchedEffect
         val anilistId = args.item?.anilistId ?: return@LaunchedEffect
         val ep = args.episode ?: return@LaunchedEffect
         val intervals = fetchAniSkip(anilistId, args.aniSkipEpisode ?: ep.episodeNumber, durationMs / 1000)
@@ -578,7 +570,7 @@ fun PlayerScreen(
             }
 
             // Next Episode Countdown Overlay (last 10s of play)
-            val hasNextEp = args.item != null && args.episode != null && (isOnePace || nextEp != null)
+            val hasNextEp = args.item != null && args.episode != null && nextEp != null
             val remainingSecs = maxOf(0, (durationMs - positionMs) / 1000)
             val isLast10Sec = durationMs > 0 && (durationMs - positionMs <= 10000)
 
@@ -623,7 +615,7 @@ fun PlayerScreen(
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = if (isOnePace) "Next Episode" else "S${nextEp?.seasonNumber ?: 0} • E${nextEp?.episodeNumber ?: 0}: ${nextEp?.title ?: ""}",
+                                text = "S${nextEp?.seasonNumber ?: 0} • E${nextEp?.episodeNumber ?: 0}: ${nextEp?.title ?: ""}",
                                 color = Color.White,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Black,

@@ -104,7 +104,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
-    // HTML scraping (HiAnime, yarrlist, onepace, vidsrc)
+    // HTML scraping (yarrlist, anime sources, vidsrc)
     implementation("org.jsoup:jsoup:1.18.1")
 
     // Images

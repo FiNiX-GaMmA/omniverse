@@ -336,15 +336,13 @@ fun SettingsScreen() {
                                     scope.launch {
                                         Toast.makeText(
                                             context,
-                                            "📡 Checking Anime Servers & CDNs...",
+                                            "📡 Checking ani-cli anime endpoints...",
                                             Toast.LENGTH_SHORT
                                         ).show()
                                         val results = ArrayList<String>()
                                         val domains = listOf(
-                                            "https://hianime.to",
-                                            "https://hianime.tv",
-                                            "https://hianime.bz",
-                                            "https://allmanga.to"
+                                            "https://allmanga.to",
+                                            "https://api.allanime.day/api"
                                         )
                                         var fastestDomain = ""
                                         var minLatency = Long.MAX_VALUE
@@ -356,48 +354,17 @@ fun SettingsScreen() {
                                             }.getOrDefault(false)
                                             val duration = System.currentTimeMillis() - start
                                             if (isUp) {
-                                                var details = "$duration ms"
-                                                if (domain.contains("hianime") && duration < minLatency) {
+                                                if (duration < minLatency) {
                                                     minLatency = duration
                                                     fastestDomain = domain
                                                 }
-                                                if (domain.contains("hianime")) {
-                                                    val epCheck = runCatching {
-                                                        val watchRes = com.finix.omniverse.Http.request(
-                                                            "$domain/watch/one-piece-100",
-                                                            timeoutMs = 4000
-                                                        )
-                                                        if (watchRes.ok) {
-                                                            val pattern = Regex(
-                                                                "id=[\"']ani_detail[\"'][^>]*data-id=[\"']([^\"']+)[\"']",
-                                                                RegexOption.IGNORE_CASE
-                                                            )
-                                                            val match = pattern.find(watchRes.body)
-                                                            val animeId = match?.groupValues?.getOrNull(1) ?: "100"
-                                                            val listRes = com.finix.omniverse.Http.request(
-                                                                "$domain/ajax/v2/episode/list/$animeId",
-                                                                timeoutMs = 4000
-                                                            )
-                                                            if (listRes.ok && (listRes.body.contains("data-number=\"1088\"") || listRes.body.contains(
-                                                                    "data-number='1088'"
-                                                                ) || listRes.body.contains("Episode 1088"))
-                                                            ) {
-                                                                "1088 PASS"
-                                                            } else {
-                                                                "1088 MISS"
-                                                            }
-                                                        } else "Fail"
-                                                    }.getOrElse { "Err" }
-                                                    details += " ($epCheck)"
-                                                }
-                                                results.add("${domain.substringAfter("://")}: $details")
+                                                results.add("${domain.substringAfter("://")}: $duration ms (ani-cli path)")
                                             } else {
                                                 results.add("${domain.substringAfter("://")}: Offline")
                                             }
                                         }
                                         if (fastestDomain.isNotEmpty()) {
-                                            state.saveSettings(state.settings.copy(fastestHianimeDomain = fastestDomain))
-                                            results.add("\n🚀 Auto-selected fastest: ${fastestDomain.substringAfter("://")}")
+                                            results.add("\n🚀 Fastest ani-cli endpoint: ${fastestDomain.substringAfter("://")}")
                                         }
                                         val summary = results.joinToString("\n")
                                         Toast.makeText(context, "📡 Server Latencies:\n$summary", Toast.LENGTH_LONG)

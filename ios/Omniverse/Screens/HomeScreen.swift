@@ -122,7 +122,8 @@ struct HomeScreen: View {
                 web = WebRoute(title: src.title, url: src.url, headers: src.headers, item: item, episode: episode)
             } else {
                 player = PlayerRoute(title: item.title, url: src.url, headers: src.headers, item: item,
-                                     episode: episode, subtitleUrl: src.subtitleUrl, startPositionMs: startPositionMs, aniSkipEpisode: nil)
+                                     episode: episode, subtitleUrl: src.subtitleUrl, startPositionMs: startPositionMs,
+                                     aniSkipEpisode: state.aniSkipEpisodeFor(item: item, episode: episode))
             }
         } catch { path.append(item) }
     }

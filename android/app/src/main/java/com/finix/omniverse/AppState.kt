@@ -123,7 +123,6 @@ class AppState(context: Context) {
             liveTv.clear(); liveTv.addAll(cachedLiveTv)
             hasScannedLiveTv = liveTv.isNotEmpty()
             watchHistory.clear(); watchHistory.addAll(settingsStore.loadWatchHistory())
-            migrateOnePaceWatchHistory()
             initialized = true
 
             // Always perform a silent refresh of all categories, watchlist, and anime on launch to ensure lists are 100% current every time the app opens.
@@ -544,7 +543,6 @@ class AppState(context: Context) {
         repos.tmdb.searchMulti(query, credentials, settings)
 
     suspend fun detailsFor(item: MediaItem): MediaItem {
-        if (item.title == "One Pace") return item
         if (item.type == MediaType.ANIME) {
             repos.anime.findByTitle(item.title)?.let { hydrated ->
                 return hydrated.copy(
@@ -565,7 +563,6 @@ class AppState(context: Context) {
         }
         val detailed = repos.tmdb.fetchDetails(item, credentials, settings) ?: item
         val enriched = repos.tvdb.enrichDetails(detailed, credentials)
-        if (enriched.title == "One Pace") return enriched
         if (enriched.isAnime && enriched.type != MediaType.ANIME) {
             repos.anime.findByTitle(enriched.title)?.let { anilist ->
                 return anilist.copy(
@@ -587,7 +584,6 @@ class AppState(context: Context) {
     }
 
     suspend fun seasonEpisodesFor(item: MediaItem, seasonNumber: Int): List<MediaEpisode> {
-        if (item.title == "One Pace") return emptyList()
         if (item.type == MediaType.ANIME) {
             var eps = repos.anime.fetchEpisodes(item, seasonNumber)
             if (item.tmdbId != null) {
@@ -610,7 +606,7 @@ class AppState(context: Context) {
     }
 
     private fun isAnimePlaybackCandidate(item: MediaItem): Boolean {
-        return item.type == MediaType.ANIME || item.isAnime || item.title == "One Pace"
+        return item.type == MediaType.ANIME || item.isAnime
     }
 
     private val onePieceSeasonStartEpisodes = mapOf(
@@ -676,8 +672,15 @@ class AppState(context: Context) {
         return episode.copy(episodeNumber = mapped)
     }
 
+    fun aniSkipEpisodeFor(item: MediaItem?, episode: MediaEpisode?): Int? {
+        if (item == null || episode == null) return null
+        if (!isAnimePlaybackCandidate(item)) return null
+
+        return normalizeAnimeEpisodeLinkage(item, episode).episodeNumber
+    }
+
     private suspend fun hydrateAnimePlaybackItem(item: MediaItem): MediaItem {
-        if (item.type == MediaType.ANIME || item.title == "One Pace") return item
+        if (item.type == MediaType.ANIME) return item
         val hydrated = repos.anime.findByTitle(item.title) ?: return item
         return hydrated.copy(
             tmdbId = item.tmdbId ?: hydrated.tmdbId,
@@ -701,33 +704,26 @@ class AppState(context: Context) {
         overrides: PlaybackOverrides = PlaybackOverrides()
     ): List<PlaybackSource> {
         val effective = settings.applying(overrides)
-        val embedFallback = repos.vidsrc.sourcesFor(item, effective, episode)
 
         if (isAnimePlaybackCandidate(item)) {
             val targetBase = episode ?: item.episodes.firstOrNull()
             ?: MediaEpisode(seasonNumber = 1, episodeNumber = 1, title = "Episode 1")
             val playbackItem = hydrateAnimePlaybackItem(item)
             val target = normalizeAnimeEpisodeLinkage(playbackItem, targetBase)
-
-            val direct = runCatching {
-                repos.anime.resolveSource(playbackItem, target, effective)
-            }.getOrNull()
-
-            if (direct != null) return listOf(direct) + embedFallback
-            if (embedFallback.isNotEmpty()) return embedFallback
+            val direct = repos.anime.resolveSource(playbackItem, target, effective)
+            return listOf(direct)
         }
 
-        return embedFallback
+        return repos.vidsrc.sourcesFor(item, effective, episode)
     }
 
     // MARK: - Recommendations
 
     /// "Because you watched ..." recommendations for the end-of-show screen when
     /// there are no more episodes/seasons to autoplay. Anime resolve through
-    /// AniList, One Pace maps to One Piece (id 21), movies/TV use TMDB.
+    /// AniList, movies/TV use TMDB.
     suspend fun recommendationsFor(item: MediaItem?): List<MediaItem> {
         if (item == null) return emptyList()
-        if (item.title == "One Pace") return repos.anime.recommendations(21)
         if ((item.type == MediaType.ANIME || item.isAnime) && item.anilistId != null) {
             val recs = repos.anime.recommendations(item.anilistId!!)
             if (recs.isNotEmpty()) return recs
@@ -787,8 +783,8 @@ class AppState(context: Context) {
     suspend fun stopTraktPlayback(item: MediaItem, progress: Double, episode: MediaEpisode?) {
         sendScrobble(item) { repos.trakt.stopScrobble(it, item, episode, progress) }
         if (credentials.hasAnilist && episode != null) {
-            val isAnime = item.type == MediaType.ANIME || item.isAnime || item.title == "One Pace"
-            val anilistId = if (item.title == "One Pace") 21 else item.anilistId
+            val isAnime = item.type == MediaType.ANIME || item.isAnime
+            val anilistId = item.anilistId
             if (isAnime && anilistId != null) {
                 runCatching {
                     repos.anime.updateAniListProgress(
@@ -1382,170 +1378,6 @@ class AppState(context: Context) {
         )
     }
 
-    fun getRealOnePaceSeason(season: Int): Int {
-        // Definitive list of One Pace website slugs in order (1-based index is the website's season number).
-        val websiteSlugs = listOf(
-            "romance-dawn", // 1
-            "orange-town", // 2
-            "syrup-village", // 3
-            "gaimon", // 4
-            "baratie", // 5
-            "arlong-park", // 6
-            "the-adventures-of-buggys-crew", // 7 (Specials / Cover Stories)
-            "loguetown", // 8
-            "reverse-mountain", // 9
-            "whisky-peak", // 10
-            "the-trials-of-koby-meppo", // 11 (Specials / Cover Stories)
-            "little-garden", // 12
-            "drum-island", // 13
-            "alabasta", // 14
-            "jaya", // 15
-            "skypiea", // 16
-            "long-ring-long-land", // 17
-            "water-seven", // 18
-            "enies-lobby", // 19
-            "post-enies-lobby", // 20
-            "thriller-bark", // 21
-            "sabaody-archipelago", // 22
-            "amazon-lily", // 23
-            "impel-down", // 24
-            "if-you-could-go-anywhere-the-adventures-of-the-straw-hats", // 25 (Specials / Cover Stories)
-            "marineford", // 26
-            "post-war", // 27
-            "return-to-sabaody", // 28
-            "fishman-island", // 29
-            "punk-hazard", // 30
-            "dressrosa", // 31
-            "zou", // 32
-            "whole-cake-island", // 33
-            "reverie", // 34
-            "wano", // 35
-            "egghead" // 36
-        )
-        val slug = websiteSlugs.getOrNull(season - 1) ?: return season
-        return when (slug) {
-            "romance-dawn" -> 1
-            "orange-town" -> 2
-            "syrup-village" -> 3
-            "gaimon" -> 4
-            "baratie" -> 5
-            "arlong-park" -> 6
-            "the-adventures-of-buggys-crew" -> 0 // special
-            "loguetown" -> 7
-            "reverse-mountain" -> 8
-            "whisky-peak" -> 9
-            "the-trials-of-koby-meppo" -> 0 // special
-            "little-garden" -> 10
-            "drum-island" -> 11
-            "alabasta" -> 12
-            "jaya" -> 13
-            "skypiea" -> 14
-            "long-ring-long-land" -> 15
-            "water-seven" -> 16
-            "enies-lobby" -> 17
-            "post-enies-lobby" -> 18
-            "thriller-bark" -> 19
-            "sabaody-archipelago" -> 20
-            "amazon-lily" -> 21
-            "impel-down" -> 22
-            "if-you-could-go-anywhere-the-adventures-of-the-straw-hats" -> 0 // special
-            "marineford" -> 23
-            "post-war" -> 24
-            "return-to-sabaody" -> 25
-            "fishman-island" -> 26
-            "punk-hazard" -> 27
-            "dressrosa" -> 28
-            "zou" -> 29
-            "whole-cake-island" -> 30
-            "reverie" -> 31
-            "wano" -> 32
-            "egghead" -> 33
-            else -> season
-        }
-    }
-
-    fun migrateOnePaceWatchHistory() {
-        val history = watchHistory.toList()
-        val paceEntry =
-            history.find { it.itemId == "onepace:anime:21" || it.title == "One Pace" || it.itemId.startsWith("onepace:") }
-        if (paceEntry != null) {
-            val season = paceEntry.seasonNumber ?: 1
-            val epNum = paceEntry.episodeNumber ?: 1
-            val realSeason = getRealOnePaceSeason(season)
-            val mappedEp = if (realSeason == 0) 1 else mapOnePaceToOnePiece(realSeason, epNum)
-
-            val pieceEntry = WatchProgress(
-                id = null,
-                itemId = "anilist:anime:21",
-                title = "One Piece",
-                type = MediaType.ANIME,
-                posterPath = "/or06gK6hxJN98Es842gZgYI7CIE.jpg",
-                backdropPath = "/bMv9mO_b2qf8U4VwYAtW3Zc40S9.jpg",
-                seasonNumber = 1,
-                episodeNumber = mappedEp,
-                episodeTitle = "Episode $mappedEp",
-                positionMs = paceEntry.positionMs,
-                durationMs = paceEntry.durationMs,
-                lastWatchedAt = System.currentTimeMillis()
-            )
-
-            val next = watchHistory.filter {
-                it.itemId != "onepace:anime:21" && it.title != "One Pace" && !it.itemId.startsWith("onepace:")
-            }.toMutableList()
-            next.add(pieceEntry)
-            val capped = next.sortedByDescending { it.lastWatchedAt }.take(30)
-            watchHistory.clear()
-            watchHistory.addAll(capped)
-            settingsStore.saveWatchHistory(capped)
-
-            message = "One Pace progress migrated to One Piece Episode $mappedEp!"
-
-            if (credentials.hasTraktUser) {
-                scope.launch { runCatching { syncSettingsToTrakt(silent = true) } }
-            }
-        }
-    }
-
-    fun mapOnePaceToOnePiece(season: Int, episode: Int): Int {
-        val arcEpisodes = mapOf(
-            1 to "1-3", 2 to "4-8", 3 to "9-17", 4 to "18", 5 to "19-30",
-            6 to "31-44", 7 to "45,48-53", 8 to "62-63", 9 to "64-67", 10 to "70-77",
-            11 to "78-91", 12 to "92-130", 13 to "144-152", 14 to "153-195", 15 to "207-219",
-            16 to "229-263", 17 to "263-312", 18 to "313-325", 19 to "337-381", 20 to "385-405",
-            21 to "408-417", 22 to "422-452", 23 to "457-489", 24 to "490-516", 25 to "517-522",
-            26 to "523-574", 27 to "579-625", 28 to "629-746", 29 to "751-779", 30 to "777-877",
-            31 to "878-889", 32 to "890-1085", 33 to "1086-1155"
-        )
-        val arcTotalEpisodes = mapOf(
-            1 to 2, 2 to 3, 3 to 7, 4 to 1, 5 to 10, 6 to 10, 7 to 5, 8 to 1, 9 to 2, 10 to 5,
-            11 to 6, 12 to 21, 13 to 5, 14 to 24, 15 to 3, 16 to 20, 17 to 25, 18 to 5, 19 to 22,
-            20 to 11, 21 to 4, 22 to 14, 23 to 17, 24 to 8, 25 to 2, 26 to 22, 27 to 20, 28 to 48,
-            29 to 10, 30 to 39, 31 to 4, 32 to 60, 33 to 21
-        )
-        val episodesStr = arcEpisodes[season] ?: "1"
-        val epNumbers = ArrayList<Int>()
-        for (part in episodesStr.split(",")) {
-            val clean = part.trim()
-            if (clean.contains("-")) {
-                val rp = clean.split("-")
-                if (rp.size == 2) {
-                    val s = rp[0].trim().toIntOrNull()
-                    val e = rp[1].trim().toIntOrNull()
-                    if (s != null && e != null) {
-                        for (n in s..e) epNumbers.add(n)
-                    }
-                }
-            } else {
-                clean.toIntOrNull()?.let { epNumbers.add(it) }
-            }
-        }
-        if (epNumbers.isEmpty()) return 1
-        val totalEpisodes = arcTotalEpisodes[season] ?: 1
-        if (totalEpisodes <= 1) return epNumbers.first()
-        val ratio = (episode - 1).toDouble() / (totalEpisodes - 1)
-        val targetIndex = (Math.floor(ratio * (epNumbers.size - 1)).toInt()).coerceIn(0, epNumbers.size - 1)
-        return epNumbers[targetIndex]
-    }
 
     companion object {
         private val IPTV_M3U_URLS = listOf(

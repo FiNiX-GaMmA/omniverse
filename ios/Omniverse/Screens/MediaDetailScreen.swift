@@ -445,7 +445,7 @@ struct MediaDetailScreen: View {
     /// One-click preferred-server bypass + anime direct auto open.
     private func maybeAutoOpen(_ s: [PlaybackSource], episode: MediaEpisode?, fallback: () -> Void) async throws {
         let preferAnimeDirect = current.type == .anime || current.isAnime
-        if preferAnimeDirect, let animeSource = s.first(where: { $0.provider == "HiAnime" || $0.provider == "AllManga" }) {
+        if preferAnimeDirect, let animeSource = s.first(where: { $0.provider == "AllManga" }) {
             openSource(animeSource, episode: episode); return
         }
         if preferAnimeDirect, let direct = s.first(where: { $0.isDirect }) {
@@ -484,15 +484,16 @@ struct MediaDetailScreen: View {
 
     private func openSource(_ source: PlaybackSource, episode: MediaEpisode?) {
         // Movies/TV: stub progress so it appears in Continue Watching.
-        if current.type != .anime && current.title != "One Pace" {
+        if current.type != .anime {
             Task { await state.recordProgress(item: current, positionMs: 10000, durationMs: 3600000, episode: episode) }
         }
         let resume = state.continueWatching.first { $0.itemId == current.id && $0.episodeNumber == episode?.episodeNumber }?.positionMs
 
         if source.isEmbed && source.provider == "VidSrc" {
             let extractor = VidsrcExtractor()
+            let preferredDomain = URL(string: source.url)?.host ?? state.settings.vidsrcDomain
             let urls = extractor.embedUrlsFor(item: current, episode: episode,
-                                              preferredDomain: state.settings.vidsrcDomain,
+                                              preferredDomain: preferredDomain,
                                               subtitleUrl: state.settings.subtitleUrl,
                                               subtitleLanguage: state.settings.subtitleLanguage)
             if urls.isEmpty { webEmbed = WebRoute(title: source.title, url: source.url, headers: source.headers, item: current, episode: episode) }
@@ -501,7 +502,8 @@ struct MediaDetailScreen: View {
             webEmbed = WebRoute(title: source.title, url: source.url, headers: source.headers, item: current, episode: episode)
         } else {
             player = PlayerRoute(title: "\(current.title) • \(source.title)", url: source.url, headers: source.headers,
-                                 item: current, episode: episode, subtitleUrl: source.subtitleUrl, startPositionMs: resume, aniSkipEpisode: nil)
+                                 item: current, episode: episode, subtitleUrl: source.subtitleUrl, startPositionMs: resume,
+                                 aniSkipEpisode: state.aniSkipEpisodeFor(item: current, episode: episode))
         }
     }
 }

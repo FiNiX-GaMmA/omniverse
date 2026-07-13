@@ -269,9 +269,9 @@ jobs:
             *   🐧 **Linux Devices (Desktop App)**: Download the **`.AppImage`** or **`.deb`** to install on Linux distributions.
 
             ### ⚡ Features Highlight:
-            *   🏴‍☠️ **One Pace Integration**: Fully synchronized One Pace arcs.
             *   🌸 **AniList Integration**: Live scrobbling for all your favorite animes.
             *   🍿 **Trakt Sync**: Real-time cloud sync & watchlist manager.
+            *   ⚡ **ani-cli Anime Streaming**: Direct AllAnime/AllManga playback path.
           draft: false
           prerelease: false
           files: |

@@ -356,9 +356,8 @@ private let videoEndedProbeJS = #"""
 @MainActor
 @Observable
 private final class VidsrcResolver: NSObject, WKNavigationDelegate, WKUIDelegate {
-    // Poll constants (ported 1:1).
-    static let pollAttempts = 14
-    static let turnstilePollAttempts = 45
+    // Hard cap: ~30s per source/domain before automatic fallback.
+    static let sourceTimeoutNanos: UInt64 = 30_000_000_000
     static let pollIntervalNanos: UInt64 = 700_000_000  // 700ms
 
     let embedUrls: [URL]
@@ -525,18 +524,25 @@ private final class VidsrcResolver: NSObject, WKNavigationDelegate, WKUIDelegate
         pollTask?.cancel()
         pollTask = Task { [weak self] in
             guard let self else { return }
-            var attempt = 0
+            let startedAt = DispatchTime.now().uptimeNanoseconds
             while !Task.isCancelled {
                 if self.finishedPlaying { return }
-                attempt += 1
+                let now = DispatchTime.now().uptimeNanoseconds
+                let elapsedNanos = now >= startedAt ? now - startedAt : 0
+                let elapsedSec = max(1, Int((elapsedNanos + 999_999_999) / 1_000_000_000))
+
                 guard let probe = await self.probeEmbed() else {
+                    if elapsedNanos >= Self.sourceTimeoutNanos {
+                        self.nextDomain(error: "Timed out waiting for servers on \(self.embedUrls[self.domainIndex].host ?? "").")
+                        return
+                    }
                     try? await Task.sleep(nanoseconds: Self.pollIntervalNanos)
                     continue
                 }
 
                 if probe.hasChallenge && probe.servers.isEmpty {
-                    self.status = "Solving Cloudflare check (\(attempt)s)..."
-                    if attempt >= Self.pollAttempts {
+                    self.status = "Solving Cloudflare check (\(elapsedSec)s)..."
+                    if elapsedNanos >= Self.sourceTimeoutNanos {
                         self.lastDiagnostic = probe.diagnostic
                         self.nextDomain(error: "Cloudflare did not clear on \(self.embedUrls[self.domainIndex].host ?? "").")
                         return
@@ -562,7 +568,7 @@ private final class VidsrcResolver: NSObject, WKNavigationDelegate, WKUIDelegate
                     return
                 }
 
-                if attempt >= Self.pollAttempts {
+                if elapsedNanos >= Self.sourceTimeoutNanos {
                     self.lastDiagnostic = probe.diagnostic
                     self.nextDomain(error: "No servers visible on \(self.embedUrls[self.domainIndex].host ?? "").")
                     return
@@ -622,18 +628,25 @@ private final class VidsrcResolver: NSObject, WKNavigationDelegate, WKUIDelegate
         pollTask?.cancel()
         pollTask = Task { [weak self] in
             guard let self else { return }
-            var attempt = 0
+            let startedAt = DispatchTime.now().uptimeNanoseconds
             while !Task.isCancelled {
                 if self.finishedPlaying { return }
-                attempt += 1
+                let now = DispatchTime.now().uptimeNanoseconds
+                let elapsedNanos = now >= startedAt ? now - startedAt : 0
+                let elapsedSec = max(1, Int((elapsedNanos + 999_999_999) / 1_000_000_000))
+
                 guard let probe = await self.probePlayer() else {
+                    if elapsedNanos >= Self.sourceTimeoutNanos {
+                        self.tryNextServer()
+                        return
+                    }
                     try? await Task.sleep(nanoseconds: Self.pollIntervalNanos)
                     continue
                 }
 
                 if probe.hasChallenge {
-                    self.status = "Cloudflare check on cloudnestra (\(attempt)s)..."
-                    if attempt >= Self.pollAttempts {
+                    self.status = "Cloudflare check on cloudnestra (\(elapsedSec)s)..."
+                    if elapsedNanos >= Self.sourceTimeoutNanos {
                         self.lastDiagnostic = probe.diagnostic
                         self.tryNextServer()
                         return
@@ -643,8 +656,8 @@ private final class VidsrcResolver: NSObject, WKNavigationDelegate, WKUIDelegate
                 }
 
                 if probe.hasTurnstile && !probe.hasRcpToken {
-                    self.status = "Verifying with Cloudflare Turnstile (\(attempt)s)..."
-                    if attempt >= Self.turnstilePollAttempts {
+                    self.status = "Verifying with Cloudflare Turnstile (\(elapsedSec)s)..."
+                    if elapsedNanos >= Self.sourceTimeoutNanos {
                         self.lastDiagnostic = probe.diagnostic
                         self.tryNextServer()
                         return
@@ -666,7 +679,7 @@ private final class VidsrcResolver: NSObject, WKNavigationDelegate, WKUIDelegate
                     return
                 }
 
-                if attempt >= Self.pollAttempts {
+                if elapsedNanos >= Self.sourceTimeoutNanos {
                     self.lastDiagnostic = probe.diagnostic
                     self.tryNextServer()
                     return

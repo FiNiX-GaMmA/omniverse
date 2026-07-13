@@ -58,11 +58,10 @@ interface VidsrcRepository {
     suspend fun fetchLatestCategories(): List<MediaCategory>
 }
 
-// NOTE: `interface AnimeRepository` and `class HianimeRepository` /
-// `class AnimeRepositoryImpl` are declared in AnimeRepositoryImpl.kt /
-// HianimeRepository.kt (owned by the crypto agent). They are intentionally NOT
-// redeclared here to avoid duplicate-declaration errors. The factory below
-// references the crypto-provided `AnimeRepositoryImpl()`.
+// NOTE: `interface AnimeRepository` and `class AnimeRepositoryImpl` are
+// declared in AnimeRepositoryImpl.kt. They are intentionally NOT redeclared
+// here to avoid duplicate-declaration errors. The factory below references the
+// crypto-provided `AnimeRepositoryImpl()`.
 
 interface LiveTvRepository {
     suspend fun fetchSource(source: LiveTvSource): List<LiveTvEntry>

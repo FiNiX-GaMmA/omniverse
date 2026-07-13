@@ -58,7 +58,16 @@ internal suspend fun resolveNextEpisode(item: MediaItem?, episode: MediaEpisode?
 
     sources.firstOrNull { it.isDirect }?.let { direct ->
         return AutoplayNext.Play(
-            PlayerArgs("${item.title} • ${direct.title}", direct.url, direct.headers, item, next, direct.subtitleUrl, null, null),
+            PlayerArgs(
+                "${item.title} • ${direct.title}",
+                direct.url,
+                direct.headers,
+                item,
+                next,
+                direct.subtitleUrl,
+                null,
+                appState.aniSkipEpisodeFor(item, next),
+            ),
         )
     }
     // Series fall back to the VidSrc embed resolver, same as a manual play.
@@ -84,7 +93,16 @@ internal suspend fun resolvePrevEpisode(item: MediaItem?, episode: MediaEpisode?
 
     sources.firstOrNull { it.isDirect }?.let { direct ->
         return AutoplayNext.Play(
-            PlayerArgs("${item.title} • ${direct.title}", direct.url, direct.headers, item, prev, direct.subtitleUrl, null, null),
+            PlayerArgs(
+                "${item.title} • ${direct.title}",
+                direct.url,
+                direct.headers,
+                item,
+                prev,
+                direct.subtitleUrl,
+                null,
+                appState.aniSkipEpisodeFor(item, prev),
+            ),
         )
     }
     // Series fall back to the VidSrc embed resolver, same as a manual play.

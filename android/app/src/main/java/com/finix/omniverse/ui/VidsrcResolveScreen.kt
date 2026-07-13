@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.graphics.Color as AndroidColor
 import android.net.Uri
+import android.os.SystemClock
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -40,7 +41,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,8 +64,8 @@ import org.json.JSONObject
 private data class VServer(val name: String, val hash: String)
 private enum class VStage { EMBED, PLAYER }
 
-private const val POLL_ATTEMPTS = 14
-private const val TURNSTILE_ATTEMPTS = 45
+// Hard cap: ~30s per source/domain before automatic fallback.
+private const val SOURCE_TIMEOUT_MS = 30_000L
 private const val POLL_MS = 700L
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -181,13 +181,18 @@ fun VidsrcResolveScreen(
         status = "Looking for servers..."
         machine.pollJob?.cancel()
         machine.pollJob = scope.launch {
-            var attempt = 0
+            val startedAt = SystemClock.elapsedRealtime()
             while (true) {
                 if (finished) return@launch
-                attempt++
+                val elapsedMs = SystemClock.elapsedRealtime() - startedAt
+                val elapsedSec = ((elapsedMs + 999L) / 1000L).toInt().coerceAtLeast(1)
+
                 val text = runJs(WebGuards.embedProbeJs)
                 val json = text?.let { runCatching { JSONObject(it) }.getOrNull() }
                 if (json == null) {
+                    if (elapsedMs >= SOURCE_TIMEOUT_MS) {
+                        nextDomain(); return@launch
+                    }
                     delay(POLL_MS); continue
                 }
                 val list = json.optJSONArray("servers")
@@ -200,8 +205,8 @@ fun VidsrcResolveScreen(
                 val hasChallenge = json.optBoolean("hasChallenge")
                 val iframeSrc = json.optString("iframeSrc")
                 if (hasChallenge && parsed.isEmpty()) {
-                    status = "Solving Cloudflare check (${attempt}s)..."
-                    if (attempt >= POLL_ATTEMPTS) {
+                    status = "Solving Cloudflare check (${elapsedSec}s)..."
+                    if (elapsedMs >= SOURCE_TIMEOUT_MS) {
                         nextDomain(); return@launch
                     }
                     delay(POLL_MS); continue
@@ -214,7 +219,7 @@ fun VidsrcResolveScreen(
                         if (uri?.scheme != null && uri.host != null) "${uri.scheme}://${uri.host}" else "https://cloudnestra.com"
                     navigateToServer(); return@launch
                 }
-                if (attempt >= POLL_ATTEMPTS) {
+                if (elapsedMs >= SOURCE_TIMEOUT_MS) {
                     nextDomain(); return@launch
                 }
                 delay(POLL_MS)
@@ -271,13 +276,18 @@ fun VidsrcResolveScreen(
     fun onPlayerLoaded() {
         machine.pollJob?.cancel()
         machine.pollJob = scope.launch {
-            var attempt = 0
+            val startedAt = SystemClock.elapsedRealtime()
             while (true) {
                 if (finished) return@launch
-                attempt++
+                val elapsedMs = SystemClock.elapsedRealtime() - startedAt
+                val elapsedSec = ((elapsedMs + 999L) / 1000L).toInt().coerceAtLeast(1)
+
                 val text = runJs(WebGuards.playerProbeJs)
                 val json = text?.let { runCatching { JSONObject(it) }.getOrNull() }
                 if (json == null) {
+                    if (elapsedMs >= SOURCE_TIMEOUT_MS) {
+                        tryNextServer(); return@launch
+                    }
                     delay(POLL_MS); continue
                 }
                 val hasChallenge = json.optBoolean("hasChallenge")
@@ -286,15 +296,15 @@ fun VidsrcResolveScreen(
                 val hasPlay = json.optBoolean("hasPlayButton")
                 val iframeLoaded = json.optBoolean("iframeLoaded")
                 if (hasChallenge) {
-                    status = "Cloudflare check on cloudnestra (${attempt}s)..."
-                    if (attempt >= POLL_ATTEMPTS) {
+                    status = "Cloudflare check on cloudnestra (${elapsedSec}s)..."
+                    if (elapsedMs >= SOURCE_TIMEOUT_MS) {
                         tryNextServer(); return@launch
                     }
                     delay(POLL_MS); continue
                 }
                 if (hasTurnstile && !hasRcp) {
-                    status = "Verifying with Cloudflare Turnstile (${attempt}s)..."
-                    if (attempt >= TURNSTILE_ATTEMPTS) {
+                    status = "Verifying with Cloudflare Turnstile (${elapsedSec}s)..."
+                    if (elapsedMs >= SOURCE_TIMEOUT_MS) {
                         tryNextServer(); return@launch
                     }
                     delay(POLL_MS); continue
@@ -307,7 +317,7 @@ fun VidsrcResolveScreen(
                     startEndWatch()
                     return@launch
                 }
-                if (attempt >= POLL_ATTEMPTS) {
+                if (elapsedMs >= SOURCE_TIMEOUT_MS) {
                     tryNextServer(); return@launch
                 }
                 delay(POLL_MS)

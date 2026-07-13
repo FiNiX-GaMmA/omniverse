@@ -120,7 +120,7 @@ struct SettingsScreen: View {
                 SecretField(text: $tmdb, label: "TheMovieDB (TMDB) token", hint: "TMDB API key or v4 bearer token", logoUrl: "https://themoviedb.org/favicon.ico", onCopy: copy)
                 SecretField(text: $tvdb, label: "TVDB v4 API key", hint: "E.g., tvdb_api_key_xxxxxxxx", logoUrl: "https://thetvdb.com/favicon.ico", onCopy: copy)
                 SecretField(text: $tvdbPin, label: "TVDB Subscriber PIN (optional)", hint: "Enter your custom subscriber pin", logoUrl: "https://thetvdb.com/favicon.ico", onCopy: copy)
-                SecretField(text: $pixeldrainApiKey, label: "Pixeldrain API key", hint: "Used for secure One Pace video streams", logoUrl: "https://pixeldrain.net/favicon.ico", onCopy: copy)
+                SecretField(text: $pixeldrainApiKey, label: "Pixeldrain API key", hint: "Used for direct Pixeldrain video streams", logoUrl: "https://pixeldrain.net/favicon.ico", onCopy: copy)
                 SecretField(text: $anilistAccessToken, label: "AniList Access Token", hint: "Required for real-time completed scrobbling", logoUrl: "https://anilist.co/img/icons/android-chrome-512x512.png", onCopy: copy)
             }
             section("Trakt Developer Client Keys") {

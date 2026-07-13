@@ -1,5 +1,6 @@
 package com.finix.omniverse.ui
 
+import android.net.Uri
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -187,8 +188,13 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
             state.continueWatching.firstOrNull { it.itemId == current.id && it.episodeNumber == episode?.episodeNumber }?.positionMs
         when {
             source.isEmbed && source.provider == "VidSrc" -> {
+                val preferredDomain = runCatching { Uri.parse(source.url).host }
+                    .getOrNull()
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?: state.settings.vidsrcDomain
                 val urls = VidsrcExtractor().embedUrlsFor(
-                    current, episode, state.settings.vidsrcDomain,
+                    current, episode, preferredDomain,
                     state.settings.subtitleUrl, state.settings.subtitleLanguage,
                 )
                 if (urls.isEmpty()) {
@@ -206,7 +212,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
             else -> {
                 RouteArgs.player = PlayerArgs(
                     "${current.title} • ${source.title}", source.url, source.headers, current, episode,
-                    source.subtitleUrl, resume, null,
+                    source.subtitleUrl, resume, state.aniSkipEpisodeFor(current, episode),
                 )
                 nav.navigate("player")
             }
@@ -227,7 +233,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
             // one-click preferred-server bypass + anime direct auto-open
             val preferAnimeDirect = current.type == MediaType.ANIME || current.isAnime
             val animeSource =
-                if (preferAnimeDirect) s.firstOrNull { it.provider == "HiAnime" || it.provider == "AllManga" } else null
+                if (preferAnimeDirect) s.firstOrNull { it.provider == "AllManga" } else null
             val direct = if (preferAnimeDirect) s.firstOrNull { it.isDirect } else null
             val domain = state.settings.vidsrcDomain.trim()
             val match = if (domain.isNotEmpty()) s.firstOrNull { it.url.contains(domain) } else null

@@ -137,7 +137,7 @@ fun HomeScreen(nav: NavController) {
                         episode,
                         src.subtitleUrl,
                         startPositionMs,
-                        null
+                        state.aniSkipEpisodeFor(item, episode)
                     )
                     nav.navigate("player")
                 }

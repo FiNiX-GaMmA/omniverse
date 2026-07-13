@@ -94,7 +94,6 @@ final class AppState {
         liveTv = cachedLiveTv
         hasScannedLiveTv = !liveTv.isEmpty
         watchHistory = settingsStore.loadWatchHistory()
-        migrateOnePaceWatchHistory()
         initialized = true
 
         // Silent refresh only if cache older than 6 hours.
@@ -549,7 +548,6 @@ final class AppState {
     }
 
     func detailsFor(_ item: MediaItem) async -> MediaItem {
-        if item.title == "One Pace" { return item }
         if item.type == .anime {
             if let hydrated = await repos.anime.findByTitle(item.title) {
                 var h = hydrated
@@ -570,7 +568,6 @@ final class AppState {
         }
         let detailed = await repos.tmdb.fetchDetails(item, credentials: credentials, settings: settings) ?? item
         let enriched = await repos.tvdb.enrichDetails(detailed, credentials: credentials)
-        if enriched.title == "One Pace" { return enriched }
         if enriched.isAnime && enriched.type != .anime, let anilist = await repos.anime.findByTitle(enriched.title) {
             var a = anilist
             a.tmdbId = enriched.tmdbId ?? anilist.tmdbId
@@ -590,7 +587,6 @@ final class AppState {
     }
 
     func seasonEpisodesFor(_ item: MediaItem, seasonNumber: Int) async -> [MediaEpisode] {
-        if item.title == "One Pace" { return [] }
         if item.type == .anime {
             var eps = await repos.anime.fetchEpisodes(item, seasonNumber: seasonNumber)
             if item.tmdbId != nil {
@@ -613,7 +609,7 @@ final class AppState {
     }
 
     private func isAnimePlaybackCandidate(_ item: MediaItem) -> Bool {
-        item.type == .anime || item.isAnime || item.title == "One Pace"
+        item.type == .anime || item.isAnime
     }
 
     private let onePieceSeasonStartEpisodes: [Int: Int] = [
@@ -681,8 +677,15 @@ final class AppState {
         return linked
     }
 
+    func aniSkipEpisodeFor(item: MediaItem?, episode: MediaEpisode?) -> Int? {
+        guard let item, let episode else { return nil }
+        guard isAnimePlaybackCandidate(item) else { return nil }
+
+        return normalizeAnimeEpisodeLinkage(item, episode).episodeNumber
+    }
+
     private func hydrateAnimePlaybackItem(_ item: MediaItem) async -> MediaItem {
-        if item.type == .anime || item.title == "One Pace" { return item }
+        if item.type == .anime { return item }
         guard let hydrated = await repos.anime.findByTitle(item.title) else { return item }
 
         var merged = hydrated
@@ -702,32 +705,25 @@ final class AppState {
 
     func playbackSourcesFor(_ item: MediaItem, episode: MediaEpisode? = nil, overrides: PlaybackOverrides = .init()) async throws -> [PlaybackSource] {
         let effective = settings.applying(overrides)
-        let embedFallback = repos.vidsrc.sourcesFor(item, settings: effective, episode: episode)
 
         if isAnimePlaybackCandidate(item) {
             let targetBase = episode ?? item.episodes.first ?? MediaEpisode(seasonNumber: 1, episodeNumber: 1, title: "Episode 1")
             let playbackItem = await hydrateAnimePlaybackItem(item)
             let target = normalizeAnimeEpisodeLinkage(playbackItem, targetBase)
-
-            if let direct = try? await repos.anime.resolveSource(item: playbackItem, episode: target, settings: effective) {
-                return [direct] + embedFallback
-            }
-            if !embedFallback.isEmpty { return embedFallback }
+            let direct = try await repos.anime.resolveSource(item: playbackItem, episode: target, settings: effective)
+            return [direct]
         }
 
-        return embedFallback
+        return repos.vidsrc.sourcesFor(item, settings: effective, episode: episode)
     }
 
     // MARK: - Recommendations
 
     /// "Because you watched ..." recommendations shown on the end-of-show screen
     /// when there are no more episodes/seasons to autoplay. Anime resolve through
-    /// AniList, One Pace maps to One Piece (id 21), movies/TV use TMDB.
+    /// AniList, movies/TV use TMDB.
     func recommendationsFor(_ item: MediaItem?) async -> [MediaItem] {
         guard let item else { return [] }
-        if item.title == "One Pace" {
-            return await repos.anime.recommendations(anilistId: 21)
-        }
         if item.type == .anime || item.isAnime, let anilistId = item.anilistId {
             let recs = await repos.anime.recommendations(anilistId: anilistId)
             if !recs.isEmpty { return recs }
@@ -785,8 +781,8 @@ final class AppState {
     func stopTraktPlayback(_ item: MediaItem, _ progress: Double, episode: MediaEpisode?) async {
         await sendScrobble(item) { try await self.repos.trakt.stopScrobble($0, item, episode: episode, progress: progress) }
         if credentials.hasAnilist, let episode {
-            let isAnime = item.type == .anime || item.isAnime || item.title == "One Pace"
-            let anilistId = item.title == "One Pace" ? 21 : item.anilistId
+            let isAnime = item.type == .anime || item.isAnime
+            let anilistId = item.anilistId
             if isAnime, let anilistId {
                 try? await repos.anime.updateAniListProgress(accessToken: credentials.anilistAccessToken, mediaId: anilistId, progress: episode.episodeNumber, status: "CURRENT")
             }
@@ -960,167 +956,7 @@ final class AppState {
         return String((0..<32).map { _ in chars.randomElement()! })
     }
 
-    func getRealOnePaceSeason(season: Int) -> Int {
-        // Definitive list of One Pace website slugs in order (1-based index is the website's season number).
-        let websiteSlugs = [
-            "romance-dawn", // 1
-            "orange-town", // 2
-            "syrup-village", // 3
-            "gaimon", // 4
-            "baratie", // 5
-            "arlong-park", // 6
-            "the-adventures-of-buggys-crew", // 7 (Specials / Cover Stories)
-            "loguetown", // 8
-            "reverse-mountain", // 9
-            "whisky-peak", // 10
-            "the-trials-of-koby-meppo", // 11 (Specials / Cover Stories)
-            "little-garden", // 12
-            "drum-island", // 13
-            "alabasta", // 14
-            "jaya", // 15
-            "skypiea", // 16
-            "long-ring-long-land", // 17
-            "water-seven", // 18
-            "enies-lobby", // 19
-            "post-enies-lobby", // 20
-            "thriller-bark", // 21
-            "sabaody-archipelago", // 22
-            "amazon-lily", // 23
-            "impel-down", // 24
-            "if-you-could-go-anywhere-the-adventures-of-the-straw-hats", // 25 (Specials / Cover Stories)
-            "marineford", // 26
-            "post-war", // 27
-            "return-to-sabaody", // 28
-            "fishman-island", // 29
-            "punk-hazard", // 30
-            "dressrosa", // 31
-            "zou", // 32
-            "whole-cake-island", // 33
-            "reverie", // 34
-            "wano", // 35
-            "egghead" // 36
-        ]
-        guard season >= 1, season <= websiteSlugs.count else { return season }
-        let slug = websiteSlugs[season - 1]
-        switch slug {
-        case "romance-dawn": return 1
-        case "orange-town": return 2
-        case "syrup-village": return 3
-        case "gaimon": return 4
-        case "baratie": return 5
-        case "arlong-park": return 6
-        case "the-adventures-of-buggys-crew": return 0 // special
-        case "loguetown": return 7
-        case "reverse-mountain": return 8
-        case "whisky-peak": return 9
-        case "the-trials-of-koby-meppo": return 0 // special
-        case "little-garden": return 10
-        case "drum-island": return 11
-        case "alabasta": return 12
-        case "jaya": return 13
-        case "skypiea": return 14
-        case "long-ring-long-land": return 15
-        case "water-seven": return 16
-        case "enies-lobby": return 17
-        case "post-enies-lobby": return 18
-        case "thriller-bark": return 19
-        case "sabaody-archipelago": return 20
-        case "amazon-lily": return 21
-        case "impel-down": return 22
-        case "if-you-could-go-anywhere-the-adventures-of-the-straw-hats": return 0 // special
-        case "marineford": return 23
-        case "post-war": return 24
-        case "return-to-sabaody": return 25
-        case "fishman-island": return 26
-        case "punk-hazard": return 27
-        case "dressrosa": return 28
-        case "zou": return 29
-        case "whole-cake-island": return 30
-        case "reverie": return 31
-        case "wano": return 32
-        case "egghead": return 33
-        default: return season
-        }
-    }
 
-    func migrateOnePaceWatchHistory() {
-        let history = watchHistory
-        if let paceEntry = history.first(where: { $0.itemId == "onepace:anime:21" || $0.title == "One Pace" || $0.itemId.hasPrefix("onepace:") }) {
-            let season = paceEntry.seasonNumber ?? 1
-            let epNum = paceEntry.episodeNumber ?? 1
-            let realSeason = getRealOnePaceSeason(season: season)
-            let mappedEp = realSeason == 0 ? 1 : mapOnePaceToOnePiece(season: realSeason, episode: epNum)
-
-            let pieceEntry = WatchProgress(
-                id: nil,
-                itemId: "anilist:anime:21",
-                title: "One Piece",
-                type: .anime,
-                posterPath: "/or06gK6hxJN98Es842gZgYI7CIE.jpg",
-                backdropPath: "/bMv9mO_b2qf8U4VwYAtW3Zc40S9.jpg",
-                seasonNumber: 1,
-                episodeNumber: mappedEp,
-                episodeTitle: "Episode \(mappedEp)",
-                positionMs: paceEntry.positionMs,
-                durationMs: paceEntry.durationMs,
-                lastWatchedAt: Int(Date().timeIntervalSince1970 * 1000)
-            )
-
-            var next = watchHistory.filter { $0.itemId != "onepace:anime:21" && $0.title != "One Pace" && !$0.itemId.hasPrefix("onepace:") }
-            next.append(pieceEntry)
-            let capped = Array(next.sorted { $0.lastWatchedAt > $1.lastWatchedAt }.prefix(30))
-            watchHistory = capped
-            settingsStore.saveWatchHistory(capped)
-
-            message = "One Pace progress migrated to One Piece Episode \(mappedEp)!"
-
-            if credentials.hasTraktUser {
-                Task { try? await syncSettingsToTrakt(silent: true) }
-            }
-        }
-    }
-
-    func mapOnePaceToOnePiece(season: Int, episode: Int) -> Int {
-        let arcEpisodes = [
-            1: "1-3", 2: "4-8", 3: "9-17", 4: "18", 5: "19-30",
-            6: "31-44", 7: "45,48-53", 8: "62-63", 9: "64-67", 10: "70-77",
-            11: "78-91", 12: "92-130", 13: "144-152", 14: "153-195", 15: "207-219",
-            16: "229-263", 17: "263-312", 18: "313-325", 19: "337-381", 20: "385-405",
-            21: "408-417", 22: "422-452", 23: "457-489", 24: "490-516", 25: "517-522",
-            26: "523-574", 27: "579-625", 28: "629-746", 29: "751-779", 30: "777-877",
-            31: "878-889", 32: "890-1085", 33: "1086-1155"
-        ]
-        let arcTotalEpisodes = [
-            1: 2, 2: 3, 3: 7, 4: 1, 5: 10, 6: 10, 7: 5, 8: 1, 9: 2, 10: 5,
-            11: 6, 12: 21, 13: 5, 14: 24, 15: 3, 16: 20, 17: 25, 18: 5, 19: 22,
-            20: 11, 21: 4, 22: 14, 23: 17, 24: 8, 25: 2, 26: 22, 27: 20, 28: 48,
-            29: 10, 30: 39, 31: 4, 32: 60, 33: 21
-        ]
-        let episodesStr = arcEpisodes[season] ?? "1"
-        var epNumbers: [Int] = []
-        let parts = episodesStr.components(separatedBy: ",")
-        for part in parts {
-            let clean = part.trimmingCharacters(in: .whitespacesAndNewlines)
-            if clean.contains("-") {
-                let rp = clean.components(separatedBy: "-")
-                if rp.count == 2 {
-                    let s = Int(rp[0].trimmingCharacters(in: .whitespacesAndNewlines))
-                    let e = Int(rp[1].trimmingCharacters(in: .whitespacesAndNewlines))
-                    if let s, let e {
-                        for n in s...e { epNumbers.append(n) }
-                    }
-                }
-            } else {
-                if let parsed = Int(clean) { epNumbers.append(parsed) }
-            }
-        }
-        if epNumbers.isEmpty { return 1 }
-        let totalEpisodes = arcTotalEpisodes[season] ?? 1
-        if totalEpisodes <= 1 { return epNumbers.first! }
-        let ratio = Double(episode - 1) / Double(totalEpisodes - 1)
-        let targetIndex = min(epNumbers.count - 1, max(0, Int(floor(ratio * Double(epNumbers.count - 1)))))
-        return epNumbers[targetIndex]
-    }
 }
 
 // JSON conversion helpers for the Trakt backup payload.

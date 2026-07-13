@@ -17,9 +17,6 @@ const isMainApp =
     window.location.protocol !== "https:");
 
 if (isMainApp) {
-  // crypto is a Node built-in — only available in the main-app preload context,
-  // not in the sandboxed player webview (where requiring it throws).
-  const crypto = require("crypto");
   // Expose secure API to the main application
   contextBridge.exposeInMainWorld("electron", {
     getPlatform: () => ipcRenderer.invoke("get-platform"),
@@ -63,42 +60,7 @@ if (isMainApp) {
       ipcRenderer.on("webview-load-failed", handler);
       return () => ipcRenderer.removeListener("webview-load-failed", handler);
     },
-    decryptMegacloud: (encrypted, passphrase) => {
-      try {
-        const cipherBytes = Buffer.from(encrypted, "base64");
-        if (cipherBytes.length < 16) return null;
-        const prefix = cipherBytes.subarray(0, 8).toString("utf8");
-        if (prefix !== "Salted__") return null;
-        const salt = cipherBytes.subarray(8, 16);
-        const ciphertext = cipherBytes.subarray(16);
 
-        const pass = Buffer.from(passphrase, "utf8");
-
-        // OpenSSL EVP_BytesToKey with MD5
-        const out = [];
-        let prev = Buffer.alloc(0);
-        while (out.reduce((acc, b) => acc + b.length, 0) < 32 + 16) {
-          const hash = crypto.createHash("md5");
-          hash.update(prev);
-          hash.update(pass);
-          hash.update(salt);
-          const block = hash.digest();
-          out.push(block);
-          prev = block;
-        }
-        const all = Buffer.concat(out);
-        const key = all.subarray(0, 32);
-        const iv = all.subarray(32, 48);
-
-        const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
-        let decrypted = decipher.update(ciphertext, null, "utf8");
-        decrypted += decipher.final("utf8");
-        return decrypted;
-      } catch (err) {
-        console.error("Megacloud decryption error:", err);
-        return null;
-      }
-    },
   });
 } else {
   // Guest Webview Context: Inject a client-side defensive shield to block redirects and popups
@@ -174,17 +136,6 @@ if (isMainApp) {
         "smashystream.com",
         "autoembed.cc",
         "multiembed.mov",
-        "rabbitstream.net",
-        "megacloud.tv",
-        "hianime.to",
-        "hianime.tv",
-        "hianime.cv",
-        "hianimes.ro",
-        "hianime.nz",
-        "hianime.bz",
-        "hianime.pe",
-        "hianime.cx",
-        "hianime.do",
         "streamtape.com",
         "streamlare.com",
         "doodstream.com",

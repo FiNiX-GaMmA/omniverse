@@ -59,8 +59,8 @@ AniList is utilized to search for anime metadata, fetch anime recommendations, a
 
 ---
 
-## 🏴‍☠️ 4. Pixeldrain API Key (Recommended for One Pace)
-Pixeldrain is the hosting provider for **One Pace** fan-cut videos. Using an API key is highly recommended because it raises streaming/download rate limits and unlocks premium high-speed streaming.
+## 📦 4. Pixeldrain API Key (Optional)
+Pixeldrain can be used for direct stream links. Using an API key is recommended because it raises streaming/download rate limits and unlocks premium high-speed streaming.
 
 ### Steps to obtain your key:
 1. Register/Log in to [Pixeldrain](https://pixeldrain.net/).

@@ -39,10 +39,7 @@ fun imageUrl(path: String?, size: String): String? {
     if (path.isNullOrEmpty()) return null
     if (path.startsWith("http")) return path
     if (path.startsWith("//")) return "https:$path"
-    if (path.startsWith("/_next/") || path.startsWith("_next/")) {
-        val clean = if (path.startsWith("/")) path else "/$path"
-        return "https://onepace.net$clean"
-    }
+
     if (path.startsWith("banners/") || path.startsWith("/banners/")) {
         val clean = if (path.startsWith("/")) path else "/$path"
         return "https://artworks.thetvdb.com$clean"
@@ -92,7 +89,6 @@ data class UserSettings(
     val disableVidsrc: Boolean = false,
     val stremioServerUrl: String = "http://localhost:11470",
     val enableStremioService: Boolean = true,
-    val fastestHianimeDomain: String = "",
 ) {
     fun applying(o: PlaybackOverrides) = copy(
         subtitleLanguage = o.subtitleLanguage ?: subtitleLanguage,
@@ -157,7 +153,7 @@ data class MediaItem(
 
     val anilistId: Int?
         get() {
-            if (!id.startsWith("anilist:") && !id.startsWith("onepace:")) return null
+            if (!id.startsWith("anilist:")) return null
             val parts = id.split(":"); if (parts.size < 3) return null
             return parts.last().toIntOrNull()
         }

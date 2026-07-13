@@ -236,7 +236,7 @@ private final class PlaybackEngine {
     private weak var appState: AppState?
 
     // Current data source (mutable so we can rebuild the player item on a
-    // playback failure, e.g. the One Pace GameDrive proxy's invalid TLS cert).
+    // playback failure).
     private var currentURL: String
     private let headers: [String: String]
     // Guards against repeatedly falling back (parity with Dart `_fallbackAttempted`).
@@ -343,7 +343,6 @@ private final class PlaybackEngine {
 
     private var nextEpisodeExists: Bool {
         guard let item, let episode else { return false }
-        if item.title == "One Pace" { return true }
         return AutoplayResolver.nextEpisodeFor(item, episode) != nil
     }
 
@@ -377,7 +376,7 @@ private final class PlaybackEngine {
     }
 
     /// Attaches (or re-attaches, after a rebuild) the status KVO on the current
-    /// player item. On `.failed` for One Pace it triggers the Pixeldrain fallback.
+    /// player item. On `.failed` it can trigger the Pixeldrain fallback.
     private func observeCurrentItem() {
         statusObservation?.invalidate()
         statusObservation = player.currentItem?.observe(\.status, options: [.new]) { [weak self] item, _ in
@@ -413,12 +412,13 @@ private final class PlaybackEngine {
 
     // MARK: - Pixeldrain fallback (parity with Dart `_handlePlaybackError`)
 
-    /// Returns true if a fallback rebuild was initiated. Applies only to One Pace
-    /// (by title) or pixeldrain/gamedrive-hosted URLs, and only once.
+    /// Returns true if a fallback rebuild was initiated. Applies only to
+    /// pixeldrain/gamedrive-hosted URLs, and only once.
     private func tryPixeldrainFallback(error: Error?) -> Bool {
         guard !fallbackAttempted else { return false }
-        let isOnePace = false
-        guard isOnePace else { return false }
+        let host = URL(string: currentURL)?.host?.lowercased() ?? ""
+        let isPixeldrainHosted = host.contains("pixeldrain") || host.contains("gamedrive")
+        guard isPixeldrainHosted else { return false }
 
         let officialUrl = officialPixeldrainUrl(currentURL)
         // If we're already on the direct pixeldrain.net URL, nothing to fall back to.
@@ -567,8 +567,7 @@ private final class PlaybackEngine {
     }
 
     /// Re-resolves the current stream and rebuilds the player item at the saved
-    /// position. One Pace rebuilds via the existing Pixeldrain URL path; other
-    /// direct sources re-fetch via `playbackSourcesFor` and take the first
+    /// position by re-fetching via `playbackSourcesFor` and taking the first
     /// direct source.
     private func recoverFromStall() async {
         guard !isRecoveringStall else { return }
@@ -577,7 +576,6 @@ private final class PlaybackEngine {
         showToast("Reconnecting…")
 
         let resumeMs = positionMs
-        let isOnePace = false
 
         // Anime / direct sources: re-fetch and take the first direct source.
         guard let item, let state = appState else {
@@ -700,8 +698,6 @@ private final class PlaybackEngine {
     // MARK: AniSkip (ported from _fetchSkipIntervals / _maybeAutoSkip)
 
     private func fetchSkipIntervals() async {
-        if let title = item?.title.lowercased(), title == "one pace" || title.contains("one pace") { return }
-        if let id = item?.id.lowercased(), id.hasPrefix("onepace:") || id.contains("onepace") { return }
         guard let item, let episode, let anilistId = item.anilistId else { return }
         let lengthSec = durationMs / 1000
         guard lengthSec > 0 else { return }
@@ -1373,21 +1369,15 @@ struct PlayerScreen: View {
     // MARK: - Title / meta derivation (ported from _BottomPlayerControls / _PauseInfoOverlay)
 
     private var displayTitle: String {
-        var t = title
-        if t.hasPrefix("One Pace • ") {
-            t = String(t.dropFirst("One Pace • ".count))
-            return t
-        }
         if let episode {
             let parts = title.split(separator: "•" as Character, omittingEmptySubsequences: false)
             let cleanShowTitle = parts.first.map { $0.trimmingCharacters(in: .whitespaces) } ?? title
-            if cleanShowTitle.lowercased() == "one pace" { return title }
             let epNum = "S\(episode.seasonNumber)E\(episode.episodeNumber)"
             let epTitle = (!episode.title.trimmed.isEmpty && !episode.title.lowercased().hasPrefix("episode"))
                 ? episode.title : "Episode \(episode.episodeNumber)"
             return "\(cleanShowTitle) • \(epNum) • \(epTitle)"
         }
-        return t
+        return title
     }
 
     private var metaText: String {

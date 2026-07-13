@@ -24,7 +24,7 @@ enum AutoplayResolver {
             return .player(PlayerRoute(
                 title: "\(item.title) • \(direct.title)", url: direct.url, headers: direct.headers,
                 item: item, episode: next, subtitleUrl: direct.subtitleUrl,
-                startPositionMs: nil, aniSkipEpisode: nil))
+                startPositionMs: nil, aniSkipEpisode: appState.aniSkipEpisodeFor(item: item, episode: next)))
         }
         // Series fall back to the VidSrc embed resolver, same as a manual play.
         if item.type == .series,
@@ -51,7 +51,7 @@ enum AutoplayResolver {
             return .player(PlayerRoute(
                 title: "\(item.title) • \(direct.title)", url: direct.url, headers: direct.headers,
                 item: item, episode: prev, subtitleUrl: direct.subtitleUrl,
-                startPositionMs: nil, aniSkipEpisode: nil))
+                startPositionMs: nil, aniSkipEpisode: appState.aniSkipEpisodeFor(item: item, episode: prev)))
         }
         // Series fall back to the VidSrc embed resolver, same as a manual play.
         if item.type == .series,

@@ -60,6 +60,7 @@ let state = {
 
   watchHistory: JSON.parse(localStorage.getItem("omni_watch_history") || "[]"),
   returnToDetailContext: null,
+  activeDirectPlayback: null,
 };
 
 const STUDIO_PROVIDER_MAP = {
@@ -106,7 +107,6 @@ const screenScrollPositions = {
   movies: 0,
   tv: 0,
   anime: 0,
-  onepace: 0,
   livetv: 0,
   settings: 0,
   search: 0,
@@ -194,6 +194,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   setTimeout(() => {
     checkAppUpdates(true);
   }, 3000);
+});
+
+window.addEventListener("beforeunload", () => {
+  stopActiveDirectPlayback({ saveFinal: true });
 });
 
 // Configure Window Controls based on OS
@@ -741,10 +745,6 @@ async function fetchAniListRecommendations(anilistId) {
 
 async function fetchDesktopRecommendationsFor(media) {
   if (!media) return [];
-
-  if (media.title === "One Pace") {
-    return await fetchAniListRecommendations(21);
-  }
 
   if ((media.type === "anime" || isLikelyAnime(media)) && media.anilistId) {
     const aniListRecs = await fetchAniListRecommendations(media.anilistId);
@@ -1490,7 +1490,6 @@ function switchScreen(screenName) {
     "movies",
     "tv",
     "anime",
-    "onepace",
     "livetv",
     "settings",
     "search",
@@ -1519,11 +1518,7 @@ function switchScreen(screenName) {
     if (player) player.pause();
   }
 
-  // Pause One Pace player if leaving One Pace screen
-  if (screenName !== "onepace") {
-    const player = document.getElementById("onepace-player");
-    if (player) player.pause();
-  }
+
 }
 
 // Studio Filtering logic
@@ -1572,6 +1567,156 @@ async function filterByStudio(studio) {
 function parsePositiveIntOrNull(value) {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function normalizeWatchType(type) {
+  const lower = (type || "").toString().toLowerCase();
+  if (lower === "series") return "tv";
+  if (lower === "live_tv") return "livetv";
+  return lower;
+}
+
+function removeWatchProgressByItemId(itemId, options = {}) {
+  const { syncRemote = true } = options;
+  const key = (itemId || "").toString().trim();
+  if (!key) return false;
+
+  const next = (state.watchHistory || []).filter((h) => h && h.itemId !== key);
+  if (next.length === (state.watchHistory || []).length) return false;
+
+  state.watchHistory = next;
+  localStorage.setItem("omni_watch_history", JSON.stringify(state.watchHistory));
+  renderContinueWatching();
+
+  if (syncRemote && state.traktToken) {
+    pushToTrakt();
+  }
+  return true;
+}
+
+function recordWatchProgress(
+  media,
+  positionMs,
+  durationMs,
+  episodeContext = {},
+  options = {},
+) {
+  const { syncRemote = false } = options;
+  if (!media || !media.id) return false;
+
+  const type = normalizeWatchType(media.type);
+  if (!type || type === "livetv") return false;
+
+  const duration = Math.round(Number(durationMs) || 0);
+  if (duration <= 0) return false;
+
+  const position = Math.max(0, Math.round(Number(positionMs) || 0));
+  const fraction = position / duration;
+  if (position < 5000 || fraction >= 0.95) {
+    if (fraction >= 0.95) {
+      removeWatchProgressByItemId(media.id, { syncRemote });
+    }
+    return false;
+  }
+
+  const seasonNumber = parsePositiveIntOrNull(episodeContext.seasonNumber);
+  const episodeNumber = parsePositiveIntOrNull(episodeContext.episodeNumber);
+  const fallbackEpisodeTitle = episodeNumber ? `Episode ${episodeNumber}` : null;
+
+  const entry = {
+    id: null,
+    itemId: media.id,
+    title: media.title || "Unknown",
+    showTitle: media.title || "Unknown",
+    type,
+    posterPath: media.posterPath || media.poster || null,
+    backdropPath: media.backdropPath || media.backdrop || null,
+    seasonNumber,
+    episodeNumber,
+    episodeTitle: episodeContext.episodeTitle || fallbackEpisodeTitle,
+    positionMs: position,
+    durationMs: duration,
+    lastWatchedAt: Date.now(),
+  };
+
+  saveWatchProgress(entry, { syncRemote });
+  return true;
+}
+
+function findResumePositionMs(media, seasonNumber = null, episodeNumber = null) {
+  if (!media || !media.id) return null;
+  const raw = (state.watchHistory || []).find((h) => h && h.itemId === media.id);
+  if (!raw) return null;
+
+  const entry = normalizeWatchProgress(raw);
+  const wantedSeason = parsePositiveIntOrNull(seasonNumber);
+  const wantedEpisode = parsePositiveIntOrNull(episodeNumber);
+  const savedSeason = parsePositiveIntOrNull(entry.seasonNumber || entry.season);
+  const savedEpisode = parsePositiveIntOrNull(entry.episodeNumber || entry.episode);
+
+  if (wantedEpisode && savedEpisode && wantedEpisode !== savedEpisode) return null;
+  if (wantedSeason && savedSeason && wantedSeason !== savedSeason) return null;
+
+  const savedPos = parsePositiveIntOrNull(entry.positionMs);
+  const savedDuration = parsePositiveIntOrNull(entry.durationMs);
+  if (!savedPos || !savedDuration || savedPos < 5000) return null;
+  if (savedPos / savedDuration >= 0.95) return null;
+
+  return savedPos;
+}
+
+function stopActiveDirectPlayback(options = {}) {
+  const { saveFinal = true, completed = false } = options;
+  const active = state.activeDirectPlayback;
+  if (!active) return;
+
+  if (active.intervalId) {
+    clearInterval(active.intervalId);
+  }
+  state.activeDirectPlayback = null;
+
+  if (saveFinal && typeof active.persist === "function") {
+    active.persist({ syncRemote: true, completed });
+  }
+}
+
+function startDirectPlaybackTracking(video, media, seasonNumber = null, episodeNumber = null) {
+  if (!video || !media || !media.id) return;
+
+  const trackedType = normalizeWatchType(media.type);
+  if (!trackedType || trackedType === "livetv") return;
+
+  const context = {
+    seasonNumber: parsePositiveIntOrNull(seasonNumber),
+    episodeNumber: parsePositiveIntOrNull(episodeNumber),
+    episodeTitle: parsePositiveIntOrNull(episodeNumber)
+      ? `Episode ${parsePositiveIntOrNull(episodeNumber)}`
+      : null,
+  };
+
+  const tracker = {
+    media,
+    video,
+    context,
+    intervalId: null,
+    persist({ syncRemote = false, completed = false } = {}) {
+      const durationSec = Number(video.duration);
+      if (!Number.isFinite(durationSec) || durationSec <= 0) return;
+
+      const duration = Math.round(durationSec * 1000);
+      const position = completed
+        ? duration
+        : Math.max(0, Math.round((Number(video.currentTime) || 0) * 1000));
+
+      recordWatchProgress(media, position, duration, context, { syncRemote });
+    },
+  };
+
+  tracker.intervalId = setInterval(() => {
+    tracker.persist({ syncRemote: false, completed: false });
+  }, 10_000);
+
+  state.activeDirectPlayback = tracker;
 }
 
 function captureReturnToDetailContext(media, season = null, episode = null) {
@@ -1746,7 +1891,7 @@ async function openDetailModal(media) {
 
   // If TMDB is active, fetch deeper details dynamically from the live API.
   // Anime can use TMDB details too when it has a tmdbId.
-  if (state.tmdbToken && media.tmdbId && media.title !== "One Pace") {
+  if (state.tmdbToken && media.tmdbId) {
     const tmdbEndpoint = media.type === "movie" ? "movie" : "tv";
 
     modalOverview.innerHTML = `
@@ -2161,9 +2306,6 @@ const STREAM_SERVERS = [
 // the stream play in-place with the provider's chrome stripped away.
 // ===========================================================================
 const VIDSRC_EMBED_DOMAINS = ["vsembed.ru", "vsembed.su", "vidsrcme.ru"];
-const RESOLVE_POLL_MS = 700;
-const RESOLVE_POLL_ATTEMPTS = 14;
-const RESOLVE_TURNSTILE_ATTEMPTS = 45;
 
 // --- Injected JS guard payloads (verbatim from WebGuards.kt) ---------------
 const WG_UNSANDBOX = String.raw`
@@ -2211,7 +2353,7 @@ const WG_GUARD = String.raw`
   try { window.open = function () { return null; }; } catch (_) {}
   var noop = function () {}; try { window.alert = noop; window.confirm = function(){return false;}; window.prompt = function(){return null;}; } catch (_) {}
   try { var o = window.addEventListener; window.addEventListener = function (t, l, op) { if (t==='beforeunload'||t==='unload') return; o.apply(this, arguments); }; } catch (_) {}
-  var safeHosts = ['vidcore','created.app','vidsrc','vidsrc-embed','cloudnestra','cloudorchestra','vsembed','vsrc.','vidsrcme','about:','localhost','127.0.0.1','cdn','2embed','streamsrcs','embed.su','smashystream','autoembed','multiembed','rabbitstream','megacloud','hianime','streamtape','streamlare','doodstream','mixdrop','vidplay','filemoon','upstream','fembed','streamhide','mp4upload','streamsb','voe.sx','streamwish','vidcloud','youtube','workers.dev','instafashion662','ferocitycandour','cinezo','notyourtype.dad','1shows.app','vidlink','vidnest','vidrock','vidzee'];
+  var safeHosts = ['vidcore','created.app','vidsrc','vidsrc-embed','cloudnestra','cloudorchestra','vsembed','vsrc.','vidsrcme','about:','localhost','127.0.0.1','cdn','2embed','streamsrcs','embed.su','smashystream','autoembed','multiembed','streamtape','streamlare','doodstream','mixdrop','vidplay','filemoon','upstream','fembed','streamhide','mp4upload','streamsb','voe.sx','streamwish','vidcloud','youtube','workers.dev','instafashion662','ferocitycandour','cinezo','notyourtype.dad','1shows.app','vidlink','vidnest','vidrock','vidzee'];
   var isAdHost = function (url) { try { if (!url) return false; var h = new URL(url, location.href).hostname.toLowerCase(); return !safeHosts.some(function(s){return h.indexOf(s)>=0;}); } catch (_) { return false; } };
   var adTokens = ['ads','ad-','analytics','doubleclick','googletagmanager','googletagservices','pagead','popunder','popcash','propellerads','adservice','adsco','rtmark','profitable','histats','usrpubtrk','adexchangeclear','realizationnewestfangs','unbrownunflat','sixmossin','malocacomals','cloudflareinsights','videasy','bvtpk','b7510','adx1','intelligenceadx','yandex','tmstr.','click','track','redirect','pop'];
   var isAdSrc = function (src) { if (!src) return false; var s = String(src).toLowerCase(); if (safeHosts.some(function(h){return s.indexOf(h)>=0;})) return false; return adTokens.some(function(t){return s.indexOf(t)>=0;}); };
@@ -2355,10 +2497,11 @@ function buildEmbedUrls(media, season, episode, forceDomain) {
 // embedded-player pipeline for every server instead: load the provider's own
 // embed, allow the real nested player hosts, probe for a playable surface, and
 // fail over when a page loads but stays blank.
-const EMBED_LOAD_TIMEOUT_MS = 22000;
+// Give each embed source up to ~30s to become playable, then auto-failover.
+const EMBED_LOAD_TIMEOUT_MS = 30000;
 const EMBED_HEALTH_DELAY_MS = 4500;
 const EMBED_HEALTH_RECHECK_MS = 4500;
-const EMBED_HEALTH_GRACE_MS = 15000;
+const EMBED_HEALTH_GRACE_MS = 30000;
 
 const EMBED_HEALTH_PROBE = String.raw`
 (function () {
@@ -2571,10 +2714,27 @@ async function playStream(
   episode = null,
   forceDomain = null,
 ) {
-  if (isLikelyAnime(media) && window.OmniAnime) {
-    playAnimeStream(media, episode || 1, season || 1);
+  const animeCandidate = isLikelyAnime(media);
+  if (animeCandidate) {
+    if (window.OmniAnime) {
+      playAnimeStream(media, episode || 1, season || 1);
+      return;
+    }
+
+    // Keep anime on the ani-cli path: if the anime module failed to load,
+    // surface that explicitly instead of dropping to generic embed providers.
+    captureReturnToDetailContext(media, season || 1, episode || 1);
+    closeDetailModal();
+    const overlay = document.getElementById("player-overlay");
+    if (overlay) overlay.classList.remove("hidden");
+    showPlayerStatus(
+      `<i data-lucide="wifi-off" class="w-12 h-12 text-brandCyan"></i>
+       <h3 class="text-lg font-bold text-white">Anime module unavailable</h3>
+       <p class="text-sm text-gray-400 max-w-md">AniList/AllAnime failed to load. Reload the app and try again.</p>`,
+    );
     return;
   }
+
   await ensurePlaybackIds(media);
   playStreamEmbed(media, season, episode, forceDomain);
 }
@@ -2587,6 +2747,25 @@ function playStreamEmbed(
 ) {
   captureReturnToDetailContext(media, season, episode);
   closeDetailModal();
+
+  // Direct-player progress tracker applies to anime direct streams only; stop and
+  // flush it before switching to an embed-based playback session.
+  stopActiveDirectPlayback({ saveFinal: true });
+
+  // Match mobile behavior: seed non-anime entries into Continue Watching as soon
+  // as playback is launched, so the shelf reflects the current title immediately.
+  if (media && normalizeWatchType(media.type) !== "anime") {
+    recordWatchProgress(
+      media,
+      10_000,
+      3_600_000,
+      {
+        seasonNumber: season,
+        episodeNumber: episode,
+      },
+      { syncRemote: true },
+    );
+  }
 
   if (vidsrcResolver) {
     vidsrcResolver.cancelled = true;
@@ -3006,20 +3185,31 @@ function playAnimeEmbed(container, media, episode, src) {
   if (window.electron && window.electron.showNotification) {
     window.electron.showNotification(
       "Streaming Live",
-      `Loading ${src.sourceName || src.provider || "HiAnime"}`,
+      `Loading ${src.sourceName || src.provider || "Anime"}`,
     );
   }
 }
 
 // Anime direct-stream playback (parity with mobile: AllAnime -> direct URL).
-async function playAnimeStream(media, episode, season = 1) {
+// `startPositionMs` is optional: null = use saved resume position, 0 = from start.
+async function playAnimeStream(
+  media,
+  episode,
+  season = 1,
+  startPositionMs = null,
+) {
   const seasonSelector = document.getElementById("season-selector");
   const selectedSeason =
     parsePositiveIntOrNull(seasonSelector && seasonSelector.value) ||
     parsePositiveIntOrNull(season) ||
     1;
-  captureReturnToDetailContext(media, selectedSeason, episode);
+  const selectedEpisode = parsePositiveIntOrNull(episode) || 1;
+  captureReturnToDetailContext(media, selectedSeason, selectedEpisode);
   closeDetailModal();
+
+  // Leaving any previous direct session: flush final progress first.
+  stopActiveDirectPlayback({ saveFinal: true });
+
   if (state.activeEmbedSession && state.activeEmbedSession.cancel) {
     state.activeEmbedSession.cancel();
     state.activeEmbedSession = null;
@@ -3031,7 +3221,7 @@ async function playAnimeStream(media, episode, season = 1) {
     state.activeHls = null;
   }
   const titleEl = document.getElementById("player-stream-title");
-  titleEl.textContent = `${media.title} — E${episode}`;
+  titleEl.textContent = `${media.title} — E${selectedEpisode}`;
   const container = document.getElementById("webview-container");
   unsizeWebview(state.activeWebview);
   state.activeWebview = null;
@@ -3043,43 +3233,53 @@ async function playAnimeStream(media, episode, season = 1) {
     <div class="relative z-20 flex flex-col items-center justify-center h-full gap-4 animate-pulse">
         <img src="https://media.tenor.com/e2qU2h4aEVEAAAAC/anime-cooking.gif" class="w-32 h-32 rounded-xl border-4 border-white/10 shadow-2xl">
         <h2 class="text-white text-2xl font-black tracking-widest drop-shadow-lg">Brewing Sources...</h2>
-        <p class="text-gray-400 font-semibold tracking-wide text-sm drop-shadow-md">${media.title} • Episode ${episode}</p>
+        <p class="text-gray-400 font-semibold tracking-wide text-sm drop-shadow-md">${media.title} • Episode ${selectedEpisode}</p>
     </div>
   `;
   document.getElementById("player-overlay").classList.remove("hidden");
 
   try {
-    const src = await window.OmniAnime.resolveSource(media, episode, {
+    const src = await window.OmniAnime.resolveSource(media, selectedEpisode, {
       dub: state.preferDub || false,
       seasonNumber: selectedSeason,
     });
-    state.animeResume = { media, episode };
+    state.animeResume = { media, episode: selectedEpisode };
     if (src && src.kind === "embed") {
-      showPlayerToast("Anime Source", "Using HiAnime fallback…");
-      playAnimeEmbed(container, media, episode, src);
-      return;
+      throw new Error("Anime embed sources are disabled. Direct ani-cli source required.");
     }
-    playDirectVideo(container, src.url, src.referer, media, episode);
+
+    const explicitStartMs =
+      Number.isFinite(Number(startPositionMs)) && Number(startPositionMs) >= 0
+        ? Math.max(0, Math.round(Number(startPositionMs)))
+        : null;
+    const resumeMs =
+      explicitStartMs !== null
+        ? explicitStartMs
+        : findResumePositionMs(media, selectedSeason, selectedEpisode);
+
+    playDirectVideo(
+      container,
+      src.url,
+      src.referer,
+      media,
+      selectedEpisode,
+      selectedSeason,
+      resumeMs,
+    );
   } catch (e) {
     if (e && e.name === "CaptchaRequiredError") {
       showAnimeCaptcha(e.url, () =>
-        playAnimeStream(media, episode, selectedSeason),
+        playAnimeStream(media, selectedEpisode, selectedSeason, startPositionMs),
       );
       return;
     }
     console.warn("[Omniverse] anime resolve failed:", e);
 
-    if (media && media.tmdbId) {
-      showPlayerToast("Anime Source Failed", "Trying your server list…");
-      playStreamEmbed(media, selectedSeason, episode);
-      return;
-    }
-
     container.innerHTML =
-      '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#fff;font-weight:600">No playable source found.</div>';
+      '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#fff;font-weight:600">No playable ani-cli source found.</div>';
     window.electron.showNotification(
       "Playback",
-      "No playable anime source found.",
+      "No playable ani-cli anime source found.",
     );
   }
 }
@@ -3093,11 +3293,17 @@ function playDirectVideo(
   referer,
   media = null,
   episode = null,
+  seasonNumber = 1,
+  startPositionMs = null,
 ) {
   // Register the stream host so the main process injects the Referer for it.
   try {
     window.electron.registerAnimeHost(new URL(url).host);
   } catch (_) {}
+
+  // Replacing any existing direct session: persist its final progress first.
+  stopActiveDirectPlayback({ saveFinal: true });
+
   if (state.activeEmbedSession && state.activeEmbedSession.cancel) {
     state.activeEmbedSession.cancel();
     state.activeEmbedSession = null;
@@ -3117,14 +3323,50 @@ function playDirectVideo(
   let skippedTypes = new Set();
 
   video.addEventListener("loadedmetadata", async () => {
-    if (media && media.anilistId && episode) {
-      const duration = Math.round(video.duration) || 1440;
-      skipIntervals = await fetchDesktopAniSkip(
-        media.anilistId,
-        episode,
-        duration,
+    const durationSec = Number(video.duration);
+
+    if (
+      startPositionMs != null &&
+      durationSec > 0 &&
+      Number.isFinite(durationSec) &&
+      startPositionMs > 0
+    ) {
+      const resumeSec = Math.min(
+        startPositionMs / 1000,
+        Math.max(0, durationSec - 2),
       );
+      if (Number.isFinite(resumeSec) && resumeSec > 0) {
+        try {
+          video.currentTime = resumeSec;
+        } catch (_) {}
+      }
     }
+
+    if (media) {
+      startDirectPlaybackTracking(video, media, seasonNumber, episode);
+    }
+
+    if (!media || !episode) return;
+
+    const anilistId =
+      parsePositiveIntOrNull(media.anilistId) ||
+      (() => {
+        const m = /anilist:anime:(\d+)/i.exec(media.id || "");
+        return m ? parsePositiveIntOrNull(m[1]) : null;
+      })();
+    if (!anilistId) return;
+
+    const mappedAniSkipEpisode =
+      window.OmniAnime && typeof window.OmniAnime.aniSkipEpisodeFor === "function"
+        ? parsePositiveIntOrNull(
+            window.OmniAnime.aniSkipEpisodeFor(media, seasonNumber, episode),
+          )
+        : null;
+    const skipEpisode = mappedAniSkipEpisode || parsePositiveIntOrNull(episode);
+    if (!skipEpisode) return;
+
+    const duration = Math.round(video.duration) || 1440;
+    skipIntervals = await fetchDesktopAniSkip(anilistId, skipEpisode, duration);
   });
 
   video.addEventListener("timeupdate", () => {
@@ -3149,6 +3391,10 @@ function playDirectVideo(
     }
   });
 
+  video.addEventListener("ended", () => {
+    stopActiveDirectPlayback({ saveFinal: true, completed: true });
+  });
+
   const isHls = /\.m3u8(\?|$)/i.test(url);
   if (isHls && window.Hls && window.Hls.isSupported()) {
     const hls = new window.Hls({
@@ -3168,25 +3414,68 @@ function playDirectVideo(
 }
 
 async function fetchDesktopAniSkip(anilistId, episode, durationSec) {
-  const url = `https://api.aniskip.com/v2/skip-times/${anilistId}/${episode}?types[]=op&types[]=ed&types[]=recap&episodeLength=${durationSec}`;
-  try {
-    const res = await appFetch(url, "GET", {
-      Accept: "application/json",
-    });
-    if (res.ok && res.html) {
-      const data = JSON.parse(res.html);
-      if (data.found && Array.isArray(data.results)) {
-        return data.results.map((r) => ({
-          type: r.skipType || r.skip_type,
-          start: r.interval.startTime,
-          end: r.interval.endTime,
-        }));
-      }
+  const aniList = parsePositiveIntOrNull(anilistId);
+  const ep = parsePositiveIntOrNull(episode);
+  const length = parsePositiveIntOrNull(durationSec) || 1440;
+  if (!aniList || !ep) return [];
+
+  const parseIntervals = (raw) => {
+    if (!raw) return [];
+    let data;
+    try {
+      data = typeof raw === "string" ? JSON.parse(raw) : raw;
+    } catch {
+      return [];
     }
-  } catch (e) {
-    console.warn("AniSkip fetch failed:", e);
-  }
-  return [];
+    if (!data || data.found !== true || !Array.isArray(data.results)) return [];
+
+    const allowedTypes = new Set(["op", "ed", "recap"]);
+    return data.results
+      .map((entry) => {
+        const type = ((entry && (entry.skipType || entry.skip_type)) || "")
+          .toString()
+          .toLowerCase();
+        if (!allowedTypes.has(type)) return null;
+
+        const interval = entry && entry.interval;
+        const start = Number(interval && interval.startTime);
+        const end = Number(interval && interval.endTime);
+        if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+          return null;
+        }
+
+        return { type, start, end };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.start - b.start);
+  };
+
+  const fetchUrl = async (url) => {
+    try {
+      const res = await appFetch(url, "GET", {
+        Accept: "application/json",
+      });
+      if (!res.ok || !res.html) return [];
+      return parseIntervals(res.html);
+    } catch (e) {
+      console.warn("AniSkip fetch failed:", e);
+      return [];
+    }
+  };
+
+  let list = await fetchUrl(
+    `https://api.aniskip.com/v2/skip-times/${aniList}/${ep}?types[]=op&types[]=ed&types[]=recap&episodeLength=${length}`,
+  );
+  if (list.length) return list;
+
+  list = await fetchUrl(
+    `https://api.aniskip.com/v2/skip-times/${aniList}/${ep}?types[]=op&types[]=ed&types[]=recap&episodeLength=1440`,
+  );
+  if (list.length) return list;
+
+  return fetchUrl(
+    `https://api.aniskip.com/v1/skip-times/${aniList}/${ep}?types=op&types=ed`,
+  );
 }
 
 function showPlayerToast(title, body) {
@@ -3243,6 +3532,8 @@ function showAnimeCaptcha(url, onSolved) {
 
 async function exitPlayer(options = {}) {
   const { restoreDetail = true } = options;
+
+  stopActiveDirectPlayback({ saveFinal: true });
 
   if (state.activeEmbedSession && state.activeEmbedSession.cancel) {
     state.activeEmbedSession.cancel();
@@ -4441,383 +4732,267 @@ function cancelPairing() {
   if (pairBtn) pairBtn.disabled = false;
 }
 
-// ==============================================================================
-// One Pace to One Piece Migration Engine
-// ==============================================================================
-function mapOnePaceToOnePiece(seasonNumber, episodeNumber) {
-  const arcEpisodes = {
-    1: "1-3", // Romance Dawn
-    2: "4-8", // Orange Town
-    3: "9-17", // Syrup Village
-    4: "18", // Gaimon
-    5: "19-30", // Baratie
-    6: "31-44", // Arlong Park
-    7: "45,48-53", // Loguetown
-    8: "62-63", // Reverse Mountain
-    9: "64-67", // Whisky Peak
-    10: "70-77", // Little Garden
-    11: "78-91", // Drum Island
-    12: "92-130", // Alabasta
-    13: "144-152", // Jaya
-    14: "153-195", // Skypiea
-    15: "207-219", // Long Ring Long Land
-    16: "229-263", // Water Seven
-    17: "263-312", // Enies Lobby
-    18: "313-325", // Post-Enies Lobby
-    19: "337-381", // Thriller Bark
-    20: "385-405", // Sabaody Archipelago
-    21: "408-417", // Amazon Lily
-    22: "422-452", // Impel Down
-    23: "457-489", // Marineford
-    24: "490-516", // Post-War
-    25: "517-522", // Return to Sabaody
-    26: "523-574", // Fishman Island
-    27: "579-625", // Punk Hazard
-    28: "629-746", // Dressrosa
-    29: "751-779", // Zou
-    30: "777-877", // Whole Cake Island
-    31: "878-889", // Reverie
-    32: "890-1085", // Wano
-    33: "1086-1155", // Egghead
-  };
 
-  const arcTotalEpisodes = {
-    1: 2,
-    2: 3,
-    3: 7,
-    4: 1,
-    5: 10,
-    6: 10,
-    7: 5,
-    8: 1,
-    9: 2,
-    10: 5,
-    11: 6,
-    12: 21,
-    13: 5,
-    14: 24,
-    15: 3,
-    16: 20,
-    17: 25,
-    18: 5,
-    19: 22,
-    20: 11,
-    21: 4,
-    22: 14,
-    23: 17,
-    24: 8,
-    25: 2,
-    26: 22,
-    27: 20,
-    28: 48,
-    29: 10,
-    30: 39,
-    31: 4,
-    32: 60,
-    33: 21,
-  };
 
-  const episodesStr = arcEpisodes[seasonNumber] || "1";
-  const epNumbers = [];
-  const parts = episodesStr.split(",");
-  for (const part of parts) {
-    const clean = part.trim();
-    if (clean.includes("-")) {
-      const rp = clean.split("-");
-      if (rp.length === 2) {
-        const s = parseInt(rp[0].trim(), 10);
-        const e = parseInt(rp[1].trim(), 10);
-        if (!isNaN(s) && !isNaN(e)) {
-          for (let n = s; n <= e; n++) epNumbers.push(n);
-        }
-      }
-    } else {
-      const parsed = parseInt(clean, 10);
-      if (!isNaN(parsed)) epNumbers.push(parsed);
-    }
-  }
 
-  if (epNumbers.length === 0) return 1;
-  const totalEpisodes = arcTotalEpisodes[seasonNumber] || 1;
-  if (totalEpisodes <= 1) return epNumbers[0];
 
-  const ratio = (episodeNumber - 1) / (totalEpisodes - 1);
-  const targetIndex = Math.min(
-    epNumbers.length - 1,
-    Math.max(0, Math.floor(ratio * (epNumbers.length - 1))),
-  );
-  return epNumbers[targetIndex];
-}
 
-function getRealOnePaceSeason(season) {
-  // Definitive list of One Pace website slugs in order (1-based index is the website's season number).
-  const websiteSlugs = [
-    "romance-dawn", // 1
-    "orange-town", // 2
-    "syrup-village", // 3
-    "gaimon", // 4
-    "baratie", // 5
-    "arlong-park", // 6
-    "the-adventures-of-buggys-crew", // 7 (Specials / Cover Stories)
-    "loguetown", // 8
-    "reverse-mountain", // 9
-    "whisky-peak", // 10
-    "the-trials-of-koby-meppo", // 11 (Specials / Cover Stories)
-    "little-garden", // 12
-    "drum-island", // 13
-    "alabasta", // 14
-    "jaya", // 15
-    "skypiea", // 16
-    "long-ring-long-land", // 17
-    "water-seven", // 18
-    "enies-lobby", // 19
-    "post-enies-lobby", // 20
-    "thriller-bark", // 21
-    "sabaody-archipelago", // 22
-    "amazon-lily", // 23
-    "impel-down", // 24
-    "if-you-could-go-anywhere-the-adventures-of-the-straw-hats", // 25 (Specials / Cover Stories)
-    "marineford", // 26
-    "post-war", // 27
-    "return-to-sabaody", // 28
-    "fishman-island", // 29
-    "punk-hazard", // 30
-    "dressrosa", // 31
-    "zou", // 32
-    "whole-cake-island", // 33
-    "reverie", // 34
-    "wano", // 35
-    "egghead", // 36
-  ];
-  const slug = websiteSlugs[season - 1];
-  if (!slug) return season;
-  switch (slug) {
-    case "romance-dawn":
-      return 1;
-    case "orange-town":
-      return 2;
-    case "syrup-village":
-      return 3;
-    case "gaimon":
-      return 4;
-    case "baratie":
-      return 5;
-    case "arlong-park":
-      return 6;
-    case "the-adventures-of-buggys-crew":
-      return 0; // special
-    case "loguetown":
-      return 7;
-    case "reverse-mountain":
-      return 8;
-    case "whisky-peak":
-      return 9;
-    case "the-trials-of-koby-meppo":
-      return 0; // special
-    case "little-garden":
-      return 10;
-    case "drum-island":
-      return 11;
-    case "alabasta":
-      return 12;
-    case "jaya":
-      return 13;
-    case "skypiea":
-      return 14;
-    case "long-ring-long-land":
-      return 15;
-    case "water-seven":
-      return 16;
-    case "enies-lobby":
-      return 17;
-    case "post-enies-lobby":
-      return 18;
-    case "thriller-bark":
-      return 19;
-    case "sabaody-archipelago":
-      return 20;
-    case "amazon-lily":
-      return 21;
-    case "impel-down":
-      return 22;
-    case "if-you-could-go-anywhere-the-adventures-of-the-straw-hats":
-      return 0; // special
-    case "marineford":
-      return 23;
-    case "post-war":
-      return 24;
-    case "return-to-sabaody":
-      return 25;
-    case "fishman-island":
-      return 26;
-    case "punk-hazard":
-      return 27;
-    case "dressrosa":
-      return 28;
-    case "zou":
-      return 29;
-    case "whole-cake-island":
-      return 30;
-    case "reverie":
-      return 31;
-    case "wano":
-      return 32;
-    case "egghead":
-      return 33;
-    default:
-      return season;
-  }
-}
-
-function checkOnePaceMigration() {
-  const history = state.watchHistory || [];
-  const paceEntry = history.find(
-    (h) =>
-      h.itemId === "onepace:anime:21" ||
-      h.title === "One Pace" ||
-      (h.itemId && h.itemId.startsWith("onepace:")),
-  );
-  if (!paceEntry) return;
-
-  const modal = document.createElement("div");
-  modal.id = "onepace-migration-modal";
-  modal.className =
-    "fixed inset-0 z-[10000] detail-modal-overlay flex items-center justify-center p-6";
-  modal.innerHTML = `
-    <div class="detail-modal-card w-full max-w-md p-6 rounded-2xl space-y-6 text-center animate-fade-in bg-brandSec border border-white/[0.04]">
-      <div class="flex flex-col items-center gap-3">
-        <div class="w-12 h-12 rounded-full bg-cyan-950/40 border border-brandCyan/30 flex items-center justify-center text-brandCyan">
-          <i data-lucide="refresh-cw" class="w-6 h-6 animate-spin"></i>
-        </div>
-        <h2 class="font-extrabold text-lg text-white">One Pace Migration Assistant</h2>
-      </div>
-      <p class="text-xs text-gray-400 leading-relaxed">
-        The One Pace addon has been removed in this update. We detected that you were watching <span class="text-brandCyan font-bold">One Pace</span> (Season ${paceEntry.season || paceEntry.seasonNumber || 1}, Episode ${paceEntry.episode || paceEntry.episodeNumber || 1}).
-      </p>
-      <p class="text-xs text-gray-400 leading-relaxed">
-        Would you like to automatically migrate your watch progress to the official <span class="text-brandCyan font-bold">One Piece</span> anime series? We will map your current episode and position to the correct corresponding episode in One Piece.
-      </p>
-      <div class="flex gap-3 pt-2">
-        <button id="btn-migrate-dismiss" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-400 bg-white/5 hover:bg-white/10 transition">
-          Dismiss & Clear
-        </button>
-        <button id="btn-migrate-confirm" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-brandDark btn-action-glow">
-          Migrate Progress
-        </button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  lucide.createIcons();
-
-  document.getElementById("btn-migrate-dismiss").onclick = () => {
-    state.watchHistory = history.filter(
-      (h) =>
-        h.itemId !== "onepace:anime:21" &&
-        h.title !== "One Pace" &&
-        !(h.itemId && h.itemId.startsWith("onepace:")),
-    );
-    localStorage.setItem(
-      "omni_watch_history",
-      JSON.stringify(state.watchHistory),
-    );
-    modal.remove();
-    renderContinueWatching();
-  };
-
-  document.getElementById("btn-migrate-confirm").onclick = async () => {
-    const season = paceEntry.season || paceEntry.seasonNumber || 1;
-    const epNum = paceEntry.episode || paceEntry.episodeNumber || 1;
-    const realSeason = getRealOnePaceSeason(season);
-    const originalEpisode =
-      realSeason === 0 ? 1 : mapOnePaceToOnePiece(realSeason, epNum);
-
-    const pieceEntry = {
-      itemId: "anilist:anime:21",
-      title: "One Piece",
-      type: "anime",
-      seasonNumber: 1,
-      episodeNumber: originalEpisode,
-      positionMs: paceEntry.positionMs || 0,
-      durationMs: paceEntry.durationMs || 1500000,
-      lastWatchedAt: Date.now(),
-      poster: "https://image.tmdb.org/t/p/w500/zGDhn834DojaLU7KkczgWWk75ET.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/2rmK7mnchw9Xr3XdiTFSxTTLXqv.jpg",
-    };
-
-    state.watchHistory = history.filter(
-      (h) =>
-        h.itemId !== "onepace:anime:21" &&
-        h.title !== "One Pace" &&
-        !(h.itemId && h.itemId.startsWith("onepace:")),
-    );
-    state.watchHistory.push(pieceEntry);
-    localStorage.setItem(
-      "omni_watch_history",
-      JSON.stringify(state.watchHistory),
-    );
-
-    window.electron.showNotification(
-      "Migration Successful",
-      `Your progress has been migrated to One Piece Episode ${originalEpisode}!`,
-    );
-
-    if (state.traktToken) {
-      pushToTrakt(); // Run in background, don't block UI!
-    }
-
-    modal.remove();
-    renderContinueWatching();
-  };
-}
 
 // ==============================================================================
 // Trakt Bidirectional Sync Engine & Continue Watching Shelf
 // ==============================================================================
 function normalizeWatchProgress(rawItem) {
-  const poster = rawItem.posterPath
-    ? rawItem.posterPath.startsWith("http")
-      ? rawItem.posterPath
-      : `https://image.tmdb.org/t/p/w500${rawItem.posterPath}`
-    : rawItem.poster ||
+  const source = rawItem || {};
+  const poster = source.posterPath
+    ? source.posterPath.startsWith("http")
+      ? source.posterPath
+      : `https://image.tmdb.org/t/p/w500${source.posterPath}`
+    : source.poster ||
       "https://ui-avatars.com/api/?background=111&color=fff&name=Media";
 
-  const backdrop = rawItem.backdropPath
-    ? rawItem.backdropPath.startsWith("http")
-      ? rawItem.backdropPath
-      : `https://image.tmdb.org/t/p/original${rawItem.backdropPath}`
-    : rawItem.backdrop ||
+  const backdrop = source.backdropPath
+    ? source.backdropPath.startsWith("http")
+      ? source.backdropPath
+      : `https://image.tmdb.org/t/p/original${source.backdropPath}`
+    : source.backdrop ||
       "https://ui-avatars.com/api/?background=111&color=fff&name=Media";
 
   let progress = 0;
-  if (rawItem.positionMs && rawItem.durationMs && rawItem.durationMs > 0) {
-    progress = rawItem.positionMs / rawItem.durationMs;
-  } else if (rawItem.progress !== undefined) {
-    progress = rawItem.progress;
+  if (source.positionMs && source.durationMs && source.durationMs > 0) {
+    progress = source.positionMs / source.durationMs;
+  } else if (source.progress !== undefined) {
+    progress = source.progress;
   }
 
-  const season =
-    rawItem.seasonNumber !== undefined
-      ? rawItem.seasonNumber
-      : rawItem.season !== undefined
-        ? rawItem.season
-        : 1;
-  const episode =
-    rawItem.episodeNumber !== undefined
-      ? rawItem.episodeNumber
-      : rawItem.episode !== undefined
-        ? rawItem.episode
-        : 1;
+  const season = parsePositiveIntOrNull(
+    source.seasonNumber !== undefined ? source.seasonNumber : source.season,
+  );
+  const episode = parsePositiveIntOrNull(
+    source.episodeNumber !== undefined ? source.episodeNumber : source.episode,
+  );
 
   return {
-    ...rawItem,
+    ...source,
+    type: normalizeWatchType(source.type) || "movie",
     poster,
     backdrop,
     progress,
-    season,
-    episode,
+    season: season || 1,
+    episode: episode || 1,
+    seasonNumber: season,
+    episodeNumber: episode,
   };
+}
+
+function mediaItemForWatchProgress(rawItem) {
+  const entry = normalizeWatchProgress(rawItem);
+  const mediaType = normalizeWatchType(entry.type) || "movie";
+
+  const mediaItem = {
+    id: entry.itemId,
+    title: entry.title,
+    type: mediaType,
+    poster: entry.poster,
+    backdrop: entry.backdrop,
+    year: new Date(entry.lastWatchedAt).getFullYear(),
+    rating: "—",
+    overview: entry.episodeTitle
+      ? `Resume watching: ${entry.episodeTitle}`
+      : "Continue watching from history.",
+    seasons: entry.season ? entry.season : 1,
+    tmdbId: null,
+    traktId: null,
+    anilistId: null,
+  };
+
+  const parts = (entry.itemId || "").split(":");
+  if (parts.length >= 3) {
+    const provider = (parts[0] || "").toLowerCase();
+    const parsedId = parsePositiveIntOrNull(parts[2]);
+    if (provider === "tmdb") mediaItem.tmdbId = parsedId;
+    if (provider === "trakt") mediaItem.traktId = parsedId;
+    if (provider === "anilist") mediaItem.anilistId = parsedId;
+  }
+
+  return { entry, mediaItem };
+}
+
+async function focusContinueEpisodeInDetail(entry) {
+  const season = parsePositiveIntOrNull(entry.seasonNumber || entry.season);
+  const episode = parsePositiveIntOrNull(entry.episodeNumber || entry.episode);
+  if (!season || !episode) return;
+
+  const seasonSelector = document.getElementById("season-selector");
+  if (seasonSelector) {
+    const desired = String(season);
+    const hasDesiredSeason = Array.from(seasonSelector.options || []).some(
+      (opt) => opt.value === desired,
+    );
+    if (hasDesiredSeason && seasonSelector.value !== desired) {
+      seasonSelector.value = desired;
+      await loadSeasonEpisodes();
+    }
+  }
+
+  const activeSeason =
+    parsePositiveIntOrNull(
+      seasonSelector && seasonSelector.value ? seasonSelector.value : season,
+    ) || season;
+  focusEpisodeCardInDetail(activeSeason, episode);
+}
+
+async function openContinueWatchingDetails(rawItem) {
+  const { entry, mediaItem } = mediaItemForWatchProgress(rawItem);
+  await openDetailModal(mediaItem);
+  await focusContinueEpisodeInDetail(entry);
+}
+
+async function resolveAndPlayContinueWatching(rawItem, fromBeginning = false) {
+  const { entry, mediaItem } = mediaItemForWatchProgress(rawItem);
+  const season = parsePositiveIntOrNull(entry.seasonNumber || entry.season);
+  const episode = parsePositiveIntOrNull(entry.episodeNumber || entry.episode);
+  const savedPositionMs = Math.max(0, Math.round(Number(entry.positionMs) || 0));
+
+  try {
+    if (isLikelyAnime(mediaItem) && window.OmniAnime) {
+      const explicitStartMs = fromBeginning
+        ? 0
+        : savedPositionMs > 0
+          ? savedPositionMs
+          : null;
+      await playAnimeStream(
+        mediaItem,
+        episode || 1,
+        season || 1,
+        explicitStartMs,
+      );
+      return true;
+    }
+
+    await playStream(mediaItem, season || null, episode || null);
+    return true;
+  } catch (err) {
+    console.warn("[Omniverse] continue watching resolve failed:", err);
+    await openDetailModal(mediaItem);
+    await focusContinueEpisodeInDetail(entry);
+    return false;
+  }
+}
+
+function closeContinueWatchingSheet() {
+  const modal = document.getElementById("continue-watching-sheet");
+  if (!modal) return;
+
+  if (typeof modal.__onKeyDown === "function") {
+    window.removeEventListener("keydown", modal.__onKeyDown);
+  }
+  modal.remove();
+}
+
+function showContinueWatchingSheet(rawItem) {
+  const { entry } = mediaItemForWatchProgress(rawItem);
+  closeContinueWatchingSheet();
+
+  const title = escapeHtml(entry.title || "Untitled");
+  const backdrop = entry.backdrop || entry.poster;
+  const progressPercent = Math.max(0, Math.min(100, Math.round((entry.progress || 0) * 100)));
+  const subtitle =
+    entry.type === "tv" || entry.type === "anime"
+      ? `S${entry.season || 1} E${entry.episode || 1} • ${progressPercent}% watched`
+      : `${progressPercent}% watched`;
+
+  const modal = document.createElement("div");
+  modal.id = "continue-watching-sheet";
+  modal.className =
+    "fixed inset-0 z-[10000] detail-modal-overlay flex items-end justify-center p-4 md:p-6";
+  modal.innerHTML = `
+    <div class="detail-modal-card w-full max-w-md rounded-2xl border border-white/[0.08] bg-brandSec p-5 space-y-4 animate-fade-in" data-sheet-card>
+      <div class="flex items-center gap-3">
+        <img src="${backdrop}" alt="${title}" class="w-32 h-[72px] rounded-lg object-cover border border-white/10" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media';">
+        <div class="min-w-0 flex-1">
+          <p class="text-white text-base font-black truncate">${title}</p>
+          <p class="text-xs text-gray-400 font-semibold mt-0.5">${subtitle}</p>
+        </div>
+      </div>
+
+      <div class="space-y-2" data-sheet-actions>
+        <button data-action="resume" class="w-full rounded-xl bg-white text-black font-black py-3 text-sm hover:opacity-95 transition">▶ Resume</button>
+        <button data-action="restart" class="w-full rounded-xl bg-white/10 text-white border border-white/15 font-bold py-3 text-sm hover:bg-white/15 transition">↺ Play from beginning</button>
+        <button data-action="details" class="w-full rounded-xl bg-transparent text-gray-300 border border-white/10 font-semibold py-3 text-sm hover:bg-white/5 transition">ℹ Details</button>
+      </div>
+
+      <div class="hidden items-center justify-center gap-2 py-3" data-sheet-resolving>
+        <div class="w-4 h-4 rounded-full border-2 border-brandCyan border-t-transparent animate-spin"></div>
+        <span class="text-sm text-white font-semibold">Resolving…</span>
+      </div>
+    </div>
+  `;
+
+  const card = modal.querySelector("[data-sheet-card]");
+  const actions = modal.querySelector("[data-sheet-actions]");
+  const resolving = modal.querySelector("[data-sheet-resolving]");
+
+  const setResolving = (value) => {
+    if (!actions || !resolving) return;
+    actions.classList.toggle("hidden", value);
+    resolving.classList.toggle("hidden", !value);
+    resolving.classList.toggle("flex", value);
+
+    modal.querySelectorAll("button[data-action]").forEach((btn) => {
+      btn.disabled = value;
+    });
+  };
+
+  const runResolve = async (fromBeginning) => {
+    setResolving(true);
+    await resolveAndPlayContinueWatching(entry, fromBeginning);
+    closeContinueWatchingSheet();
+  };
+
+  const runDetails = async () => {
+    closeContinueWatchingSheet();
+    await openContinueWatchingDetails(entry);
+  };
+
+  modal.addEventListener("click", () => closeContinueWatchingSheet());
+  if (card) card.addEventListener("click", (event) => event.stopPropagation());
+
+  const onKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeContinueWatchingSheet();
+    }
+  };
+  modal.__onKeyDown = onKeyDown;
+  window.addEventListener("keydown", onKeyDown);
+
+  const resumeBtn = modal.querySelector('button[data-action="resume"]');
+  const restartBtn = modal.querySelector('button[data-action="restart"]');
+  const detailsBtn = modal.querySelector('button[data-action="details"]');
+
+  if (resumeBtn) {
+    resumeBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void runResolve(false);
+    });
+  }
+  if (restartBtn) {
+    restartBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void runResolve(true);
+    });
+  }
+  if (detailsBtn) {
+    detailsBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void runDetails();
+    });
+  }
+
+  document.body.appendChild(modal);
 }
 
 function renderContinueWatching() {
@@ -4833,12 +5008,13 @@ function renderContinueWatching() {
   section.classList.remove("hidden");
   container.innerHTML = "";
 
-  // Grouping logic: movie -> standalone, tv/anime/onepace -> group by show title (Clean Continue Watching)
+  // Grouping logic: movie -> standalone, tv/anime -> group by show title (Clean Continue Watching)
   const grouped = [];
   const seenShows = new Set();
 
   const sortedHistory = [...state.watchHistory]
     .map(normalizeWatchProgress)
+    .filter((item) => item.type !== "livetv")
     .sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
 
   sortedHistory.forEach((item) => {
@@ -4857,15 +5033,11 @@ function renderContinueWatching() {
     const card = document.createElement("div");
     card.className =
       "media-card bg-brandSec rounded-xl border border-white/[0.04] p-2 hover:border-brandCyan/20 cursor-pointer text-left relative";
-    card.onclick = () => resumeWatchProgress(item);
+    card.onclick = () => showContinueWatchingSheet(item);
 
     const progressPercent = Math.round((item.progress || 0) * 100);
     let subtitle = item.type.toUpperCase();
-    if (
-      item.type === "tv" ||
-      item.type === "anime" ||
-      item.type === "onepace"
-    ) {
+    if (item.type === "tv" || item.type === "anime") {
       subtitle = `S${item.season} E${item.episode}`;
     }
 
@@ -4892,13 +5064,15 @@ function renderContinueWatching() {
   lucide.createIcons();
 }
 
-function saveWatchProgress(item) {
-  const idx = state.watchHistory.findIndex((h) => h.itemId === item.itemId);
-  if (idx >= 0) {
-    state.watchHistory[idx] = item;
-  } else {
-    state.watchHistory.push(item);
-  }
+function saveWatchProgress(item, options = {}) {
+  const { syncRemote = true } = options;
+  if (!item || !item.itemId) return;
+
+  const next = [item];
+  next.push(
+    ...(state.watchHistory || []).filter((h) => h && h.itemId !== item.itemId),
+  );
+  state.watchHistory = next.slice(0, 30);
 
   localStorage.setItem(
     "omni_watch_history",
@@ -4906,7 +5080,7 @@ function saveWatchProgress(item) {
   );
   renderContinueWatching();
 
-  if (state.traktToken) {
+  if (syncRemote && state.traktToken) {
     pushToTrakt();
   }
 }
@@ -4926,23 +5100,8 @@ function clearWatchHistory() {
 }
 
 async function resumeWatchProgress(rawItem) {
-  const item = normalizeWatchProgress(rawItem);
-  // Map WatchProgress back to MediaItem for detail modal
-  const mediaItem = {
-    id: item.itemId,
-    title: item.title,
-    type: item.type,
-    poster: item.poster,
-    backdrop: item.backdrop,
-    year: new Date(item.lastWatchedAt).getFullYear(),
-    rating: "—",
-    overview: item.episodeTitle
-      ? `Resume watching: ${item.episodeTitle}`
-      : "Continue watching from history.",
-    seasons: item.season ? item.season : 1,
-    tmdbId: parseInt(item.itemId.split(":").pop()) || null,
-  };
-  openDetailModal(mediaItem);
+  // Backward-compatible alias: card taps now use showContinueWatchingSheet.
+  await openContinueWatchingDetails(rawItem);
 }
 
 async function pullFromTrakt() {
@@ -5011,7 +5170,9 @@ function mergeWatchHistory(remoteHistory) {
     }
   });
 
-  state.watchHistory = Array.from(localMap.values());
+  state.watchHistory = Array.from(localMap.values())
+    .sort((a, b) => (Number(b.lastWatchedAt) || 0) - (Number(a.lastWatchedAt) || 0))
+    .slice(0, 30);
   localStorage.setItem(
     "omni_watch_history",
     JSON.stringify(state.watchHistory),
@@ -5220,27 +5381,15 @@ async function checkAnimeServerLatencies(btn) {
   if (window.lucide) lucide.createIcons();
 
   container.classList.remove("hidden");
-  container.innerHTML = `<div class="flex items-center gap-2 text-brandCyan"><i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>📡 Pinging FMHY anime sources & validating One Piece 1088...</span></div>`;
+  container.innerHTML = `<div class="flex items-center gap-2 text-brandCyan"><i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>📡 Pinging ani-cli anime sources...</span></div>`;
   if (window.lucide) lucide.createIcons();
 
   const sites = [
-    { name: "Miruro (Main)", url: "https://www.miruro.com" },
-    { name: "Miruro (TV)", url: "https://miruro.tv" },
-    { name: "All Manga (Main)", url: "https://allmanga.to" },
-    { name: "animepahe (Main)", url: "https://animepahe.pw" },
-    { name: "KickAssAnime", url: "https://kaa.lt" },
-    { name: "Animetsu", url: "https://animetsu.net" },
-    { name: "AnimeX", url: "https://animex.one" },
-    { name: "Anidap", url: "https://anidap.se" },
-    { name: "Yenime", url: "https://yenime.net" },
-    { name: "HiAnime (to)", url: "https://hianime.to" },
-    { name: "HiAnime (tv)", url: "https://hianime.tv" },
-    { name: "HiAnime (bz)", url: "https://hianime.bz" }
+    { name: "AllManga", url: "https://allmanga.to" },
+    { name: "AllAnime API", url: "https://api.allanime.day/api" },
   ];
 
   let htmlResults = `<div class="space-y-2">`;
-  let fastestHiAnimeDomain = null;
-  let minHiAnimeLatency = Infinity;
   let fastestGeneralDomain = null;
   let minGeneralLatency = Infinity;
 
@@ -5256,41 +5405,10 @@ async function checkAnimeServerLatencies(btn) {
 
     const duration = Date.now() - start;
     if (isUp) {
-      let details = `${duration} ms`;
-      let passes1088 = false;
-      
-      // If it's a HiAnime mirror, check for One Piece 1088 via its specific API
-      if (s.url.includes("hianime")) {
-        try {
-          const watchRes = await appFetch(`${s.url}/watch/one-piece-100`);
-          if (watchRes.ok) {
-            const match = /id=["']ani_detail["'][^>]*data-id=["']([^"']+)["']/i.exec(watchRes.html);
-            const animeId = match ? match[1] : "100";
-            const listRes = await appFetch(`${s.url}/ajax/v2/episode/list/${animeId}`, "GET", { "X-Requested-With": "XMLHttpRequest" });
-            if (listRes.ok && (listRes.html.includes('data-number="1088"') || listRes.html.includes("data-number='1088'") || listRes.html.includes("Episode 1088"))) {
-              details += ` <span class="text-emerald-400 font-bold">(OP 1088 PASS)</span>`;
-              passes1088 = true;
-            } else {
-              details += ` <span class="text-amber-500 font-medium">(OP 1088 MISS)</span>`;
-            }
-          } else {
-            details += ` <span class="text-red-400 font-light">(API Fail)</span>`;
-          }
-        } catch (e) {
-          details += ` <span class="text-red-400 font-light">(Err)</span>`;
-        }
-
-        if (duration < minHiAnimeLatency) {
-          minHiAnimeLatency = duration;
-          fastestHiAnimeDomain = s.url;
-        }
-      } else if (s.url.includes("allmanga") || s.url.includes("miruro") || s.url.includes("animepahe")) {
-        // These platforms dynamically generate or serve lists, we validate their online status
-        details += ` <span class="text-brandCyan font-semibold">(Vetted Source)</span>`;
-        if (duration < minGeneralLatency) {
-          minGeneralLatency = duration;
-          fastestGeneralDomain = s.url;
-        }
+      let details = `${duration} ms <span class="text-brandCyan font-semibold">(ani-cli path)</span>`;
+      if (duration < minGeneralLatency) {
+        minGeneralLatency = duration;
+        fastestGeneralDomain = s.url;
       }
 
       htmlResults += `<div class="flex justify-between items-center py-1 border-b border-white/[0.02]">
@@ -5305,18 +5423,12 @@ async function checkAnimeServerLatencies(btn) {
     }
   }
 
-  if (fastestHiAnimeDomain) {
-    localStorage.setItem("omni_fastest_hianime_domain", fastestHiAnimeDomain);
-    htmlResults += `<div class="mt-4 p-2.5 text-center text-xs font-bold text-brandCyan bg-brandCyan/10 border border-brandCyan/20 rounded-lg flex items-center justify-center gap-2 animate-pulse">
-      <i data-lucide="zap" class="w-4 h-4"></i>
-      <span>Auto-configured fastest HiAnime mirror: ${fastestHiAnimeDomain.replace("https://", "")} (${minHiAnimeLatency} ms)</span>
-    </div>`;
-  }
+
 
   if (fastestGeneralDomain) {
     htmlResults += `<div class="mt-2 p-2.5 text-center text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center justify-center gap-2">
       <i data-lucide="activity" class="w-4 h-4"></i>
-      <span>Fastest overall vetted streaming CDN: ${fastestGeneralDomain.replace("https://", "")} (${minGeneralLatency} ms)</span>
+      <span>Fastest ani-cli endpoint: ${fastestGeneralDomain.replace("https://", "")} (${minGeneralLatency} ms)</span>
     </div>`;
   }
 
