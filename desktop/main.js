@@ -280,6 +280,10 @@ async function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
 
+  if (process.env.DEBUG === "true" || process.argv.includes("--omni-debug")) {
+    mainWindow.webContents.openDevTools();
+  }
+
   mainWindow.on("closed", () => {
     mainWindow = null;
     if (process.platform !== "darwin") app.quit();

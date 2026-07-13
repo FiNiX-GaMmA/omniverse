@@ -431,10 +431,26 @@ function mapTmdbItem(item, type) {
 function isLikelyAnime(media) {
   if (!media) return false;
   if (media.type === "anime") return true;
+
+  // Explicitly identify One Piece (both TMDB and AniList variants)
+  const title = (media.title || media.name || media.showTitle || "").toLowerCase();
+  const tmdbId = parseInt(media.tmdbId || media.id || "0", 10);
+  if (
+    title === "one piece" || 
+    title.includes("one piece") || 
+    tmdbId === 37854 || 
+    (media.id && (media.id === "anilist:anime:21" || media.id.includes("onepiece")))
+  ) {
+    return true;
+  }
+
   const genres = media.genres || [];
   return (
     media.originalLanguage === "ja" &&
-    genres.some((g) => g.toLowerCase() === "animation")
+    genres.some((g) => {
+      const name = typeof g === "string" ? g : (g && g.name) || "";
+      return name.toLowerCase() === "animation";
+    })
   );
 }
 
@@ -5192,4 +5208,180 @@ async function forceSyncNow() {
     }
     lucide.createIcons();
   }
+}
+
+async function checkAnimeServerLatencies(btn) {
+  const container = document.getElementById("anime-latency-results");
+  if (!container) return;
+
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4 animate-spin inline mr-1"></i> Testing...`;
+  if (window.lucide) lucide.createIcons();
+
+  container.classList.remove("hidden");
+  container.innerHTML = `<div class="flex items-center gap-2 text-brandCyan"><i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>📡 Pinging FMHY anime sources & validating One Piece 1088...</span></div>`;
+  if (window.lucide) lucide.createIcons();
+
+  const sites = [
+    { name: "Miruro (Main)", url: "https://www.miruro.com" },
+    { name: "Miruro (TV)", url: "https://miruro.tv" },
+    { name: "All Manga (Main)", url: "https://allmanga.to" },
+    { name: "animepahe (Main)", url: "https://animepahe.pw" },
+    { name: "KickAssAnime", url: "https://kaa.lt" },
+    { name: "Animetsu", url: "https://animetsu.net" },
+    { name: "AnimeX", url: "https://animex.one" },
+    { name: "Anidap", url: "https://anidap.se" },
+    { name: "Yenime", url: "https://yenime.net" },
+    { name: "HiAnime (to)", url: "https://hianime.to" },
+    { name: "HiAnime (tv)", url: "https://hianime.tv" },
+    { name: "HiAnime (bz)", url: "https://hianime.bz" }
+  ];
+
+  let htmlResults = `<div class="space-y-2">`;
+  let fastestHiAnimeDomain = null;
+  let minHiAnimeLatency = Infinity;
+  let fastestGeneralDomain = null;
+  let minGeneralLatency = Infinity;
+
+  for (const s of sites) {
+    const start = Date.now();
+    let isUp = false;
+    let statusText = "Offline";
+    try {
+      const res = await appFetch(s.url);
+      isUp = res.ok;
+      statusText = res.ok ? "Online" : `HTTP ${res.status}`;
+    } catch (_) {}
+
+    const duration = Date.now() - start;
+    if (isUp) {
+      let details = `${duration} ms`;
+      let passes1088 = false;
+      
+      // If it's a HiAnime mirror, check for One Piece 1088 via its specific API
+      if (s.url.includes("hianime")) {
+        try {
+          const watchRes = await appFetch(`${s.url}/watch/one-piece-100`);
+          if (watchRes.ok) {
+            const match = /id=["']ani_detail["'][^>]*data-id=["']([^"']+)["']/i.exec(watchRes.html);
+            const animeId = match ? match[1] : "100";
+            const listRes = await appFetch(`${s.url}/ajax/v2/episode/list/${animeId}`, "GET", { "X-Requested-With": "XMLHttpRequest" });
+            if (listRes.ok && (listRes.html.includes('data-number="1088"') || listRes.html.includes("data-number='1088'") || listRes.html.includes("Episode 1088"))) {
+              details += ` <span class="text-emerald-400 font-bold">(OP 1088 PASS)</span>`;
+              passes1088 = true;
+            } else {
+              details += ` <span class="text-amber-500 font-medium">(OP 1088 MISS)</span>`;
+            }
+          } else {
+            details += ` <span class="text-red-400 font-light">(API Fail)</span>`;
+          }
+        } catch (e) {
+          details += ` <span class="text-red-400 font-light">(Err)</span>`;
+        }
+
+        if (duration < minHiAnimeLatency) {
+          minHiAnimeLatency = duration;
+          fastestHiAnimeDomain = s.url;
+        }
+      } else if (s.url.includes("allmanga") || s.url.includes("miruro") || s.url.includes("animepahe")) {
+        // These platforms dynamically generate or serve lists, we validate their online status
+        details += ` <span class="text-brandCyan font-semibold">(Vetted Source)</span>`;
+        if (duration < minGeneralLatency) {
+          minGeneralLatency = duration;
+          fastestGeneralDomain = s.url;
+        }
+      }
+
+      htmlResults += `<div class="flex justify-between items-center py-1 border-b border-white/[0.02]">
+        <span class="text-gray-300 font-bold">${s.name} <span class="text-[9px] text-gray-500 font-medium">(${s.url.replace("https://", "")})</span></span>
+        <span class="text-emerald-400 font-mono">${details}</span>
+      </div>`;
+    } else {
+      htmlResults += `<div class="flex justify-between items-center py-1 border-b border-white/[0.02]">
+        <span class="text-gray-300 font-bold">${s.name} <span class="text-[9px] text-gray-500 font-medium">(${s.url.replace("https://", "")})</span></span>
+        <span class="text-red-500 font-bold uppercase">${statusText}</span>
+      </div>`;
+    }
+  }
+
+  if (fastestHiAnimeDomain) {
+    localStorage.setItem("omni_fastest_hianime_domain", fastestHiAnimeDomain);
+    htmlResults += `<div class="mt-4 p-2.5 text-center text-xs font-bold text-brandCyan bg-brandCyan/10 border border-brandCyan/20 rounded-lg flex items-center justify-center gap-2 animate-pulse">
+      <i data-lucide="zap" class="w-4 h-4"></i>
+      <span>Auto-configured fastest HiAnime mirror: ${fastestHiAnimeDomain.replace("https://", "")} (${minHiAnimeLatency} ms)</span>
+    </div>`;
+  }
+
+  if (fastestGeneralDomain) {
+    htmlResults += `<div class="mt-2 p-2.5 text-center text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center justify-center gap-2">
+      <i data-lucide="activity" class="w-4 h-4"></i>
+      <span>Fastest overall vetted streaming CDN: ${fastestGeneralDomain.replace("https://", "")} (${minGeneralLatency} ms)</span>
+    </div>`;
+  }
+
+  htmlResults += `</div>`;
+  container.innerHTML = htmlResults;
+  if (window.lucide) lucide.createIcons();
+
+  btn.disabled = false;
+  btn.innerHTML = originalHtml;
+  if (window.lucide) lucide.createIcons();
+}
+
+window.omniLogs = [];
+window.omniLog = function (category, message) {
+  const timestamp = new Date().toISOString().substring(11, 19);
+  const formatted = `[${timestamp}][${category}] ${message}`;
+  window.omniLogs.push(formatted);
+  if (window.omniLogs.length > 500) {
+    window.omniLogs.shift();
+  }
+  console.log(formatted);
+  
+  const logContainer = document.getElementById("debug-log-view");
+  if (logContainer) {
+    // If it contains the placeholder, remove it
+    if (logContainer.querySelector(".italic")) {
+      logContainer.innerHTML = "";
+    }
+    const el = document.createElement("div");
+    el.className = "py-0.5 border-b border-white/[0.01] hover:bg-white/[0.02] break-all font-mono text-[10px]";
+    
+    const lowerCategory = category.toLowerCase();
+    if (lowerCategory.includes("err") || lowerCategory.includes("fail") || lowerCategory.includes("reject")) {
+      el.className += " text-red-400";
+    } else if (lowerCategory.includes("warn")) {
+      el.className += " text-amber-400";
+    } else if (lowerCategory.includes("success") || lowerCategory.includes("ok") || lowerCategory.includes("pass")) {
+      el.className += " text-emerald-400";
+    } else if (lowerCategory.includes("info") || lowerCategory.includes("pinger") || lowerCategory.includes("speed")) {
+      el.className += " text-brandCyan";
+    } else {
+      el.className += " text-gray-300";
+    }
+    
+    el.textContent = formatted;
+    logContainer.appendChild(el);
+    logContainer.scrollTop = logContainer.scrollHeight;
+  }
+};
+
+function clearDebugLogs() {
+  window.omniLogs = [];
+  const logContainer = document.getElementById("debug-log-view");
+  if (logContainer) {
+    logContainer.innerHTML = `<div class="text-gray-500 italic">Console cleared. Waiting for pipeline transactions...</div>`;
+  }
+}
+
+function copyDebugLogs() {
+  const text = window.omniLogs.join("\n");
+  navigator.clipboard.writeText(text).then(() => {
+    if (window.electron && window.electron.showNotification) {
+      window.electron.showNotification("Console Copied", "Debug logs successfully copied to your clipboard!");
+    }
+  }).catch((err) => {
+    console.error("Failed to copy logs to clipboard: ", err);
+  });
 }

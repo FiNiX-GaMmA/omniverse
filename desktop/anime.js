@@ -33,7 +33,7 @@
   };
   const ALLMANGA_HEADERS = { Referer: "https://allmanga.to", Accept: "*/*" };
 
-  const HIANIME_DOMAINS = [
+  let HIANIME_DOMAINS = [
     "https://hianime.to",
     "https://hianime.tv",
     "https://hianime.cv",
@@ -44,6 +44,12 @@
     "https://hianime.cx",
     "https://hianime.do",
   ];
+  try {
+    const saved = localStorage.getItem("omni_fastest_hianime_domain");
+    if (saved) {
+      HIANIME_DOMAINS = [saved, ...HIANIME_DOMAINS.filter((d) => d !== saved)];
+    }
+  } catch (_) {}
   const HIANIME_ONE_PIECE_SLUG = "one-piece-100";
   const HIANIME_ONE_PIECE_MIN_EPISODE = 1020;
 
@@ -2298,47 +2304,93 @@ fragment animeFields on Media {
     const epNum = Number.parseInt(episodeNumber, 10);
     if (!Number.isFinite(epNum) || epNum <= 0) return null;
 
+    if (window.omniLog) {
+      window.omniLog("HiAnime", `Initiating HiAnime resolution for: "${title}" (Ep: ${epNum}, Dub: ${preferDub})`);
+    }
+
     for (const base of HIANIME_DOMAINS) {
+      if (window.omniLog) {
+        window.omniLog("HiAnime", `Probing base domain: ${base}`);
+      }
       try {
         const slug = await discoverAnimeSlug(base, title);
-        if (!slug) continue;
+        if (!slug) {
+          if (window.omniLog) window.omniLog("HiAnime", `[Warn] No slug found for "${title}" on ${base}`);
+          continue;
+        }
+        if (window.omniLog) {
+          window.omniLog("HiAnime", `[Success] Discovered anime slug: "${slug}"`);
+        }
 
         const watchUrl = `${base}/watch/${slug}`;
         const watchRes = await httpText(watchUrl, {
           headers: hianimeHeaders(base),
         });
-        if (!watchRes.ok || !watchRes.body) continue;
+        if (!watchRes.ok || !watchRes.body) {
+          if (window.omniLog) window.omniLog("HiAnime", `[Warn] Watch page load failed on ${base} (Status: ${watchRes.status})`);
+          continue;
+        }
 
         const animeId = extractHianimeAnimeId(watchRes.body, slug);
-        if (!animeId) continue;
+        if (!animeId) {
+          if (window.omniLog) window.omniLog("HiAnime", `[Warn] Failed to extract animeId from watch page HTML on ${base}`);
+          continue;
+        }
+        if (window.omniLog) {
+          window.omniLog("HiAnime", `[Success] Extracted animeId: ${animeId}`);
+        }
 
         const listRes = await httpText(
           `${base}/ajax/v2/episode/list/${encodeURIComponent(animeId)}`,
           { headers: hianimeHeaders(base, true) },
         );
-        if (!listRes.ok || !listRes.body) continue;
+        if (!listRes.ok || !listRes.body) {
+          if (window.omniLog) window.omniLog("HiAnime", `[Warn] Episode list AJAX failed on ${base} (Status: ${listRes.status})`);
+          continue;
+        }
         const listHtml = htmlFromAjaxPayload(listRes.body);
         const episodeId = extractHianimeEpisodeId(listHtml, epNum);
-        if (!episodeId) continue;
+        if (!episodeId) {
+          if (window.omniLog) window.omniLog("HiAnime", `[Warn] Episode ${epNum} is not listed on ${base}`);
+          continue;
+        }
+        if (window.omniLog) {
+          window.omniLog("HiAnime", `[Success] Extracted episodeId: ${episodeId}`);
+        }
 
         const serversRes = await httpText(
           `${base}/ajax/v2/episode/servers?episodeId=${encodeURIComponent(episodeId)}`,
           { headers: hianimeHeaders(base, true) },
         );
-        if (!serversRes.ok || !serversRes.body) continue;
+        if (!serversRes.ok || !serversRes.body) {
+          if (window.omniLog) window.omniLog("HiAnime", `[Warn] Servers list AJAX failed on ${base} (Status: ${serversRes.status})`);
+          continue;
+        }
         const serversHtml = htmlFromAjaxPayload(serversRes.body);
         const serverId = pickHianimeServerId(serversHtml, preferDub);
-        if (!serverId) continue;
+        if (!serverId) {
+          if (window.omniLog) window.omniLog("HiAnime", `[Warn] No suitable serverId found on ${base} (PreferDub: ${preferDub})`);
+          continue;
+        }
+        if (window.omniLog) {
+          window.omniLog("HiAnime", `[Success] Selected serverId: ${serverId}`);
+        }
 
         const sourcesRes = await httpText(
           `${base}/ajax/v2/episode/sources?id=${encodeURIComponent(serverId)}`,
           { headers: hianimeHeaders(base, true) },
         );
-        if (!sourcesRes.ok || !sourcesRes.body) continue;
+        if (!sourcesRes.ok || !sourcesRes.body) {
+          if (window.omniLog) window.omniLog("HiAnime", `[Warn] Sources AJAX failed on ${base} (Status: ${sourcesRes.status})`);
+          continue;
+        }
 
         const sourcesJson = parseJsonSafe(sourcesRes.body) || {};
         const direct = pickHianimeDirectUrl(sourcesJson);
         if (direct) {
+          if (window.omniLog) {
+            window.omniLog("HiAnime", `[OK] Resolved direct stream URL: ${direct.substring(0, 80)}...`);
+          }
           return {
             url: direct,
             resolution: "?",
@@ -2351,6 +2403,9 @@ fragment animeFields on Media {
         const link =
           typeof sourcesJson.link === "string" ? sourcesJson.link.trim() : "";
         if (link.startsWith("http")) {
+          if (window.omniLog) {
+            window.omniLog("HiAnime", `[OK] Resolved embed link: ${link}`);
+          }
           return {
             url: link,
             resolution: "Embed",
@@ -2359,9 +2414,20 @@ fragment animeFields on Media {
             kind: "embed",
           };
         }
-      } catch (_) {
-        // try next domain
+        if (window.omniLog) {
+          window.omniLog("HiAnime", `[Warn] No direct link or embed found in source response for serverId: ${serverId}`);
+        }
+      } catch (err) {
+        if (window.omniLog) {
+          window.omniLog("HiAnime", `[Err] Exception during resolution on ${base}: ${err.message}`);
+        }
       }
+    }
+    if (window.omniLog) {
+      window.omniLog("HiAnime", `[Fail] No HiAnime sources resolved successfully.`);
+    }
+    return null;
+  }
     }
     return null;
   }
@@ -2378,17 +2444,14 @@ fragment animeFields on Media {
     const isMovie = item.episodesTotal === 1 && episodeNumber === 1;
     episodeNeededCaptcha = false;
 
-    // Try HiAnime first for all anime (First preference)
-    try {
-      const hianimeResult = await resolveAnimeFromHianime(
-        item.title,
-        episodeNumber,
-        dub,
-      );
-      if (hianimeResult) return hianimeResult;
-    } catch (_) {}
+    if (window.omniLog) {
+      window.omniLog("AnimePipeline", `Pipeline start: Resolving source for "${item.title}" [Ep: ${episodeNumber}, Season: ${seasonNumber}, Dub: ${dub}]`);
+    }
 
-    // Try AllAnime (AllManga) as fallback
+    // Try AllAnime (AllManga) first (Same as ani-cli, direct HLS/MP4 streams)
+    if (window.omniLog) {
+      window.omniLog("AnimePipeline", `Trying AllAnime first (Direct HLS/MP4 streams, ani-cli mode)...`);
+    }
     let result = await resolveAllmanga(
       item,
       item.title,
@@ -2398,6 +2461,9 @@ fragment animeFields on Media {
       translationType,
     );
     if (!result && translationType === "dub") {
+      if (window.omniLog) {
+        window.omniLog("AnimePipeline", `Dub resolving failed on AllAnime. Re-trying with Sub...`);
+      }
       result = await resolveAllmanga(
         item,
         item.title,
@@ -2407,10 +2473,45 @@ fragment animeFields on Media {
         "sub",
       );
     }
-    if (result) return { ...result, provider: "AllManga", kind: "direct" };
+    if (result) {
+      if (window.omniLog) {
+        window.omniLog("AnimePipeline", `[OK] Resolved successfully via AllAnime! URL: ${result.sourceUrl.substring(0, 80)}...`);
+      }
+      return { ...result, provider: "AllManga", kind: "direct" };
+    }
 
-    if (episodeNeededCaptcha) throw new CaptchaRequiredError(CAPTCHA_URL);
+    // Try HiAnime as fallback (If AllAnime has no sources or fails)
+    if (window.omniLog) {
+      window.omniLog("AnimePipeline", `AllAnime returned no sources. Falling back to HiAnime (embed/iframe)...`);
+    }
+    try {
+      const hianimeResult = await resolveAnimeFromHianime(
+        item.title,
+        episodeNumber,
+        dub,
+      );
+      if (hianimeResult) {
+        if (window.omniLog) {
+          window.omniLog("AnimePipeline", `[OK] Resolved successfully via HiAnime! URL: ${hianimeResult.url.substring(0, 80)}...`);
+        }
+        return hianimeResult;
+      }
+    } catch (e) {
+      if (window.omniLog) {
+        window.omniLog("AnimePipeline", `[Warn] HiAnime resolution failed with exception: ${e.message}`);
+      }
+    }
 
+    if (episodeNeededCaptcha) {
+      if (window.omniLog) {
+        window.omniLog("AnimePipeline", `[Fail] Captcha required by AllAnime.`);
+      }
+      throw new CaptchaRequiredError(CAPTCHA_URL);
+    }
+
+    if (window.omniLog) {
+      window.omniLog("AnimePipeline", `[Fail] No playable source found for "${item.title}".`);
+    }
     throw new Error("No playable anime source found for " + item.title + ".");
   }
 

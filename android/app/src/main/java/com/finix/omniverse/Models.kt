@@ -92,6 +92,7 @@ data class UserSettings(
     val disableVidsrc: Boolean = false,
     val stremioServerUrl: String = "http://localhost:11470",
     val enableStremioService: Boolean = true,
+    val fastestHianimeDomain: String = "",
 ) {
     fun applying(o: PlaybackOverrides) = copy(
         subtitleLanguage = o.subtitleLanguage ?: subtitleLanguage,

@@ -545,31 +545,6 @@ final class AnimeRepository: AnimeRepositoryProtocol {
 
         episodeNeededCaptcha = false
 
-        // Try HiAnime first for all anime (First preference)
-        if let hiAnime = try? await resolveAnimeFromHianime(title: item.title, episodeNumber: episode.episodeNumber, preferDub: dub) {
-            return PlaybackSource(
-                id: "hianime:\(item.id):\(episode.seasonNumber):\(episode.episodeNumber)",
-                title: hiAnime.direct ? "HiAnime \(hiAnime.quality)".trimmed : "HiAnime Embed",
-                url: hiAnime.url,
-                provider: "HiAnime",
-                kind: hiAnime.direct ? .direct : .embed,
-                quality: hiAnime.direct ? hiAnime.quality : "Embed",
-                headers: ["Referer": hiAnime.referer],
-                subtitleUrl: settings.subtitleUrl.trimmed
-            )
-        } else if dub, let hiAnime = try? await resolveAnimeFromHianime(title: item.title, episodeNumber: episode.episodeNumber, preferDub: false) {
-            return PlaybackSource(
-                id: "hianime:\(item.id):\(episode.seasonNumber):\(episode.episodeNumber)",
-                title: hiAnime.direct ? "HiAnime \(hiAnime.quality)".trimmed : "HiAnime Embed",
-                url: hiAnime.url,
-                provider: "HiAnime",
-                kind: hiAnime.direct ? .direct : .embed,
-                quality: hiAnime.direct ? hiAnime.quality : "Embed",
-                headers: ["Referer": hiAnime.referer],
-                subtitleUrl: settings.subtitleUrl.trimmed
-            )
-        }
-
         // AllAnime — primary fallback path. Same path ani-cli uses.
         var result = await resolveAllmanga(
             title: item.title,
@@ -596,6 +571,31 @@ final class AnimeRepository: AnimeRepositoryProtocol {
                 kind: .direct,
                 quality: result.resolution,
                 headers: ["Referer": result.referer],
+                subtitleUrl: settings.subtitleUrl.trimmed
+            )
+        }
+
+        // Try HiAnime (embed/iframe) as fallback
+        if let hiAnime = try? await resolveAnimeFromHianime(title: item.title, episodeNumber: episode.episodeNumber, preferDub: dub) {
+            return PlaybackSource(
+                id: "hianime:\(item.id):\(episode.seasonNumber):\(episode.episodeNumber)",
+                title: hiAnime.direct ? "HiAnime \(hiAnime.quality)".trimmed : "HiAnime Embed",
+                url: hiAnime.url,
+                provider: "HiAnime",
+                kind: hiAnime.direct ? .direct : .embed,
+                quality: hiAnime.direct ? hiAnime.quality : "Embed",
+                headers: ["Referer": hiAnime.referer],
+                subtitleUrl: settings.subtitleUrl.trimmed
+            )
+        } else if dub, let hiAnime = try? await resolveAnimeFromHianime(title: item.title, episodeNumber: episode.episodeNumber, preferDub: false) {
+            return PlaybackSource(
+                id: "hianime:\(item.id):\(episode.seasonNumber):\(episode.episodeNumber)",
+                title: hiAnime.direct ? "HiAnime \(hiAnime.quality)".trimmed : "HiAnime Embed",
+                url: hiAnime.url,
+                provider: "HiAnime",
+                kind: hiAnime.direct ? .direct : .embed,
+                quality: hiAnime.direct ? hiAnime.quality : "Embed",
+                headers: ["Referer": hiAnime.referer],
                 subtitleUrl: settings.subtitleUrl.trimmed
             )
         }

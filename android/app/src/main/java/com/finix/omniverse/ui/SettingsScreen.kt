@@ -332,6 +332,78 @@ fun SettingsScreen() {
                                         ).show()
                                     }
                                 }
+                                Chip("Test Anime Servers") {
+                                    scope.launch {
+                                        Toast.makeText(
+                                            context,
+                                            "📡 Checking Anime Servers & CDNs...",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        val results = ArrayList<String>()
+                                        val domains = listOf(
+                                            "https://hianime.to",
+                                            "https://hianime.tv",
+                                            "https://hianime.bz",
+                                            "https://allmanga.to"
+                                        )
+                                        var fastestDomain = ""
+                                        var minLatency = Long.MAX_VALUE
+                                        for (domain in domains) {
+                                            val start = System.currentTimeMillis()
+                                            val isUp = runCatching {
+                                                val r = com.finix.omniverse.Http.request(domain, timeoutMs = 4000)
+                                                r.ok
+                                            }.getOrDefault(false)
+                                            val duration = System.currentTimeMillis() - start
+                                            if (isUp) {
+                                                var details = "$duration ms"
+                                                if (domain.contains("hianime") && duration < minLatency) {
+                                                    minLatency = duration
+                                                    fastestDomain = domain
+                                                }
+                                                if (domain.contains("hianime")) {
+                                                    val epCheck = runCatching {
+                                                        val watchRes = com.finix.omniverse.Http.request(
+                                                            "$domain/watch/one-piece-100",
+                                                            timeoutMs = 4000
+                                                        )
+                                                        if (watchRes.ok) {
+                                                            val pattern = Regex(
+                                                                "id=[\"']ani_detail[\"'][^>]*data-id=[\"']([^\"']+)[\"']",
+                                                                RegexOption.IGNORE_CASE
+                                                            )
+                                                            val match = pattern.find(watchRes.body)
+                                                            val animeId = match?.groupValues?.getOrNull(1) ?: "100"
+                                                            val listRes = com.finix.omniverse.Http.request(
+                                                                "$domain/ajax/v2/episode/list/$animeId",
+                                                                timeoutMs = 4000
+                                                            )
+                                                            if (listRes.ok && (listRes.body.contains("data-number=\"1088\"") || listRes.body.contains(
+                                                                    "data-number='1088'"
+                                                                ) || listRes.body.contains("Episode 1088"))
+                                                            ) {
+                                                                "1088 PASS"
+                                                            } else {
+                                                                "1088 MISS"
+                                                            }
+                                                        } else "Fail"
+                                                    }.getOrElse { "Err" }
+                                                    details += " ($epCheck)"
+                                                }
+                                                results.add("${domain.substringAfter("://")}: $details")
+                                            } else {
+                                                results.add("${domain.substringAfter("://")}: Offline")
+                                            }
+                                        }
+                                        if (fastestDomain.isNotEmpty()) {
+                                            state.saveSettings(state.settings.copy(fastestHianimeDomain = fastestDomain))
+                                            results.add("\n🚀 Auto-selected fastest: ${fastestDomain.substringAfter("://")}")
+                                        }
+                                        val summary = results.joinToString("\n")
+                                        Toast.makeText(context, "📡 Server Latencies:\n$summary", Toast.LENGTH_LONG)
+                                            .show()
+                                    }
+                                }
                             }
                         }
                     }

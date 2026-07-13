@@ -142,10 +142,6 @@
                                 <img data-provider-id="350" src="https://image.tmdb.org/t/p/w154/SPnB1qiCkYfirS2it3hZORwGVn.jpg" alt="Apple TV Plus logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
                                 <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">APPLE TV+</span>
                             </button>
-                            <button onclick="filterByStudio('appletv')" data-provider-id="2" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Apple TV">
-                                <img data-provider-id="2" alt="Apple TV logo" class="studio-logo hidden w-full h-full object-contain pointer-events-none drop-shadow-md" />
-                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">APPLE TV</span>
-                            </button>
                             <button onclick="filterByStudio('hulu')" data-provider-id="15" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Hulu">
                                 <img data-provider-id="15" src="https://image.tmdb.org/t/p/w154/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg" alt="Hulu logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
                                 <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">HULU</span>
@@ -1020,6 +1016,81 @@
                                     requests and blocks known ad networks,
                                     trackers, popunders, and devtool checkers.
                                 </p>
+                            </div>
+
+                            <!-- Anime Server & CDN Latency Checker -->
+                            <div
+                                class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <i
+                                        data-lucide="zap"
+                                        class="w-5 h-5 text-brandCyan"
+                                    ></i>
+                                    <h3
+                                        class="font-extrabold text-sm uppercase tracking-wider text-white"
+                                    >
+                                        Anime Server Latency Control
+                                    </h3>
+                                </div>
+                                <p class="text-xs text-gray-400 leading-relaxed">
+                                    Ping anime servers and CDNs from FMHY in real-time. This checks latency and validates if the edge-case <strong>One Piece Episode 1088</strong> is actively listed and streamable.
+                                </p>
+                                <button
+                                    onclick="checkAnimeServerLatencies(this)"
+                                    class="btn-action-glow text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg flex items-center gap-2"
+                                >
+                                    <i data-lucide="zap" class="w-4 h-4"></i>
+                                    Test FMHY Sites &amp; One Piece 1088
+                                </button>
+                                <div
+                                    id="anime-latency-results"
+                                    class="hidden space-y-2 text-xs font-semibold text-gray-300 bg-brandDark p-4 rounded-lg border border-white/[0.04]"
+                                >
+                                    <!-- Results injected dynamically -->
+                                </div>
+                            </div>
+
+                            <!-- System Debug Logs Console -->
+                            <div
+                                class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i
+                                            data-lucide="terminal"
+                                            class="w-5 h-5 text-brandCyan"
+                                        ></i>
+                                        <h3
+                                            class="font-extrabold text-sm uppercase tracking-wider text-white"
+                                        >
+                                            System Debug Console
+                                        </h3>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button
+                                            onclick="clearDebugLogs()"
+                                            class="text-[10px] text-gray-400 hover:text-white uppercase font-bold tracking-wider px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition"
+                                        >
+                                            Clear
+                                        </button>
+                                        <button
+                                            onclick="copyDebugLogs()"
+                                            class="text-[10px] text-brandCyan hover:text-cyan-400 uppercase font-bold tracking-wider px-2.5 py-1 rounded-lg bg-brandCyan/10 hover:bg-brandCyan/20 transition"
+                                        >
+                                            Copy Logs
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-400 leading-relaxed">
+                                    Real-time tracking of the media player, scrapers, APIs, and decoders running under the hood. Use this to diagnose any streaming gaps or resolution failures.
+                                </p>
+                                <div
+                                    id="debug-log-view"
+                                    class="h-64 overflow-y-auto bg-black/60 rounded-lg p-3 font-mono text-[10px] text-gray-300 border border-white/[0.04] space-y-1 select-text scrollbar-thin"
+                                >
+                                    <div class="text-gray-500 italic">Console initialized. Waiting for pipeline transactions...</div>
+                                </div>
                             </div>
                         </div>
                     </div>

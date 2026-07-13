@@ -580,25 +580,7 @@ query(${'$'}search: String) {
 
         episodeNeededCaptcha = false
 
-        // Try HiAnime first for all anime (First preference)
-        var hiAnime = runCatching { resolveAnimeFromHianime(item.title, episode.episodeNumber, dub) }.getOrNull()
-        if (hiAnime == null && dub) {
-            hiAnime = runCatching { resolveAnimeFromHianime(item.title, episode.episodeNumber, false) }.getOrNull()
-        }
-        if (hiAnime != null) {
-            return PlaybackSource(
-                id = "hianime:${item.id}:${episode.seasonNumber}:${episode.episodeNumber}",
-                title = if (hiAnime.direct) "HiAnime ${hiAnime.quality}".trim() else "HiAnime Embed",
-                url = hiAnime.url,
-                provider = "HiAnime",
-                kind = if (hiAnime.direct) PlaybackSourceKind.DIRECT else PlaybackSourceKind.EMBED,
-                quality = if (hiAnime.direct) hiAnime.quality else "Embed",
-                headers = mapOf("Referer" to hiAnime.referer),
-                subtitleUrl = settings.subtitleUrl.trim(),
-            )
-        }
-
-        // Try AllAnime (AllManga) as fallback
+        // Try AllAnime (AllManga) first (Same as ani-cli, direct HLS streams)
         var result = resolveAllmanga(
             title = item.title,
             seasonNumber = episode.seasonNumber,
@@ -623,7 +605,25 @@ query(${'$'}search: String) {
                 provider = "AllManga",
                 kind = PlaybackSourceKind.DIRECT,
                 quality = result.resolution,
-                headers = mapOf("Referer" to result.referer),
+                headers = allmangaHeaders,
+                subtitleUrl = settings.subtitleUrl.trim(),
+            )
+        }
+
+        // Try HiAnime (embed/iframe) as fallback
+        var hiAnime = runCatching { resolveAnimeFromHianime(item.title, episode.episodeNumber, dub) }.getOrNull()
+        if (hiAnime == null && dub) {
+            hiAnime = runCatching { resolveAnimeFromHianime(item.title, episode.episodeNumber, false) }.getOrNull()
+        }
+        if (hiAnime != null) {
+            return PlaybackSource(
+                id = "hianime:${item.id}:${episode.seasonNumber}:${episode.episodeNumber}",
+                title = if (hiAnime.direct) "HiAnime ${hiAnime.quality}".trim() else "HiAnime Embed",
+                url = hiAnime.url,
+                provider = "HiAnime",
+                kind = if (hiAnime.direct) PlaybackSourceKind.DIRECT else PlaybackSourceKind.EMBED,
+                quality = if (hiAnime.direct) hiAnime.quality else "Embed",
+                headers = mapOf("Referer" to hiAnime.referer),
                 subtitleUrl = settings.subtitleUrl.trim(),
             )
         }
@@ -670,11 +670,23 @@ query(${'$'}search: String) {
             null
         }
 
+    private fun getSortedHianimeDomains(): List<String> {
+        val saved = try {
+            com.finix.omniverse.AppGraph.appState.settings.fastestHianimeDomain
+        } catch (_: Throwable) {
+            ""
+        }
+        if (saved.isNotEmpty()) {
+            return listOf(saved) + hianimeDomains.filter { it != saved }
+        }
+        return hianimeDomains
+    }
+
     private suspend fun resolveAnimeFromHianime(title: String, episodeNumber: Int, preferDub: Boolean): HianimeSource? {
         val epNum = episodeNumber
         if (epNum <= 0) return null
 
-        for (base in hianimeDomains) {
+        for (base in getSortedHianimeDomains()) {
             val slugs = discoverAnimeSlugs(base, title)
             for (slug in slugs) {
                 try {

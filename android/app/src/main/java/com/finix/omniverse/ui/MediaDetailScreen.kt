@@ -275,7 +275,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Box(Modifier.weight(0.45f)) {
+                        Box(Modifier.weight(0.35f)) {
                             Box(
                                 Modifier.fillMaxWidth().clip(RoundedCornerShape(50))
                                     .background(Color.White.copy(alpha = 0.1f))
@@ -309,14 +309,19 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
                         }
 
                         // Premium Episode Filter input
-                        Box(Modifier.weight(0.55f)) {
+                        Box(Modifier.weight(0.65f)) {
                             OutlinedTextField(
                                 value = episodeQuery,
                                 onValueChange = { episodeQuery = it },
-                                modifier = Modifier.fillMaxWidth().height(42.dp),
+                                modifier = Modifier.fillMaxWidth().height(52.dp),
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    fontSize = 14.sp,
+                                    lineHeight = 14.sp,
+                                    color = Color.White
+                                ),
                                 placeholder = {
                                     Text(
-                                        "Filter by Ep # or title...",
+                                        "Filter episodes...",
                                         color = Color.White.copy(alpha = 0.45f),
                                         fontSize = 12.sp
                                     )
