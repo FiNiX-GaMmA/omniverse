@@ -1309,7 +1309,9 @@ query(${'$'}search:String) {
         }
     }
 
-    private data class HttpResponse(val code: Int, val body: String?)
+    private data class HttpResponse(val code: Int, val body: String?) {
+        val ok: Boolean get() = code in 200..299
+    }
 
     private suspend fun get(
         url: String,
