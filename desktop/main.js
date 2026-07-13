@@ -21,6 +21,7 @@ const fetch = require("cross-fetch");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
+const { once } = require("events");
 
 // RAM / Performance optimization switches
 app.commandLine.appendSwitch(
@@ -310,43 +311,80 @@ ipcMain.handle("get-app-version", () => app.getVersion());
 ipcMain.handle("download-update-file", async (event, url) => {
   try {
     const tempDir = os.tmpdir();
-    const fileName = path.basename(new URL(url).pathname);
+    const parsed = new URL(url);
+    const rawName = path.basename(parsed.pathname || "") || "omniverse-update";
+    const fileName = decodeURIComponent(rawName);
     const downloadPath = path.join(tempDir, fileName);
 
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
+    const body = response.body;
+    if (!body) throw new Error("Empty update response body");
+
     const contentLength =
       parseInt(response.headers.get("content-length"), 10) || 0;
     const fileStream = fs.createWriteStream(downloadPath);
 
-    const reader = response.body.getReader();
     let downloadedBytes = 0;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      downloadedBytes += value.length;
-      fileStream.write(Buffer.from(value));
-
-      if (contentLength > 0) {
-        const pct = Math.round((downloadedBytes / contentLength) * 100);
+    const sendProgress = () => {
+      if (contentLength <= 0) return;
+      const pct = Math.max(
+        0,
+        Math.min(100, Math.round((downloadedBytes / contentLength) * 100)),
+      );
+      try {
         event.sender.send("update-progress", pct);
+      } catch (_) {}
+    };
+
+    const writeChunk = async (chunk) => {
+      const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      downloadedBytes += buf.length;
+      if (!fileStream.write(buf)) {
+        await once(fileStream, "drain");
       }
+      sendProgress();
+    };
+
+    try {
+      if (typeof body.getReader === "function") {
+        const reader = body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) await writeChunk(value);
+        }
+      } else if (typeof body[Symbol.asyncIterator] === "function") {
+        for await (const chunk of body) {
+          if (chunk) await writeChunk(chunk);
+        }
+      } else {
+        throw new Error("Unsupported download stream type");
+      }
+
+      await new Promise((resolve, reject) => {
+        fileStream.once("error", reject);
+        fileStream.end(resolve);
+      });
+    } catch (streamErr) {
+      try {
+        fileStream.destroy();
+      } catch (_) {}
+      try {
+        fs.unlinkSync(downloadPath);
+      } catch (_) {}
+      throw streamErr;
     }
 
-    fileStream.end();
+    try {
+      event.sender.send("update-progress", 100);
+    } catch (_) {}
 
-    // Run the installer and quit the app
-    setTimeout(() => {
-      shell.openPath(downloadPath).then((err) => {
-        if (!err) {
-          app.quit();
-        }
-      });
-    }, 1000);
+    const launchErr = await shell.openPath(downloadPath);
+    if (launchErr) throw new Error(launchErr);
 
+    app.quit();
     return { ok: true, path: downloadPath };
   } catch (err) {
     return { ok: false, error: err.message };
