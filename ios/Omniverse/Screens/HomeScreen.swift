@@ -500,6 +500,7 @@ private struct ResumeSheet: View {
 // ==============================================================================
 struct StudioCard: View {
     let name: String
+    let logoUrl: String
     let gradient: LinearGradient
     let action: () -> Void
 
@@ -507,22 +508,33 @@ struct StudioCard: View {
 
     var body: some View {
         Button(action: action) {
-            Text(name)
-                .font(.system(size: 14, weight: .black, design: .serif))
-                .italic()
-                .foregroundStyle(.white)
-                .frame(width: 140, height: 64)
-                .background(gradient)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
-                .shadow(color: .black.opacity(0.3), radius: 6, y: 4)
-                .scaleEffect(hovered ? 1.04 : 1.0)
-                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovered)
+            HStack(spacing: 10) {
+                AsyncImage(url: URL(string: logoUrl)) { phase in
+                    if let img = phase.image {
+                        img.resizable().aspectRatio(contentMode: .fit)
+                    } else {
+                        Color.white.opacity(0.06)
+                    }
+                }
+                .frame(width: 24, height: 24)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+                Text(name)
+                    .font(.system(size: 13, weight: .black, design: .rounded))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 12)
+            .frame(width: 170, height: 64, alignment: .leading)
+            .background(gradient)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
+            .shadow(color: .black.opacity(0.3), radius: 6, y: 4)
+            .scaleEffect(hovered ? 1.04 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovered)
         }
         .buttonStyle(.plain)
-        .onHover { isHovered in
-            hovered = isHovered
-        }
+        .onHover { hovered = $0 }
     }
 }
 
@@ -539,23 +551,35 @@ struct StudiosRow: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 14) {
-                    StudioCard(name: "Disney+", gradient: LinearGradient(colors: [Color(hex: 0x0d1b3e), Color(hex: 0x15327a)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
-                        onSelected("Disney")
-                    }
-                    StudioCard(name: "NETFLIX", gradient: LinearGradient(colors: [Color(hex: 0x1f0808), Color(hex: 0x7c0e0e)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                    StudioCard(name: "Netflix", logoUrl: "https://image.tmdb.org/t/p/w154/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg", gradient: LinearGradient(colors: [Color(hex: 0x1f0808), Color(hex: 0x7c0e0e)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
                         onSelected("Netflix")
                     }
-                    StudioCard(name: "HBO MAX", gradient: LinearGradient(colors: [Color(hex: 0x18052b), Color(hex: 0x4c0e82)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                    StudioCard(name: "Prime Video", logoUrl: "https://image.tmdb.org/t/p/w154/pvske1MyAoymrs5bguRfVqYiM9a.jpg", gradient: LinearGradient(colors: [Color(hex: 0x1A233A), Color(hex: 0x0D1424)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Prime")
+                    }
+                    StudioCard(name: "Disney+", logoUrl: "https://image.tmdb.org/t/p/w154/97yvRBw1GzX7fXprcF80er19ot.jpg", gradient: LinearGradient(colors: [Color(hex: 0x0d1b3e), Color(hex: 0x15327a)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Disney")
+                    }
+                    StudioCard(name: "Apple TV+", logoUrl: "https://image.tmdb.org/t/p/w154/SPnB1qiCkYfirS2it3hZORwGVn.jpg", gradient: LinearGradient(colors: [Color(hex: 0x0e0e0e), Color(hex: 0x2a2a2a)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Appletvplus")
+                    }
+                    StudioCard(name: "Hulu", logoUrl: "https://image.tmdb.org/t/p/w154/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg", gradient: LinearGradient(colors: [Color(hex: 0x051E14), Color(hex: 0x020905)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Hulu")
+                    }
+                    StudioCard(name: "HBO Max", logoUrl: "https://image.tmdb.org/t/p/w154/jbe4gVSfRlbPTdESXhEKpornsfu.jpg", gradient: LinearGradient(colors: [Color(hex: 0x18052b), Color(hex: 0x4c0e82)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
                         onSelected("Hbo")
                     }
-                    StudioCard(name: " tv+", gradient: LinearGradient(colors: [Color(hex: 0x0e0e0e), Color(hex: 0x2a2a2a)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
-                        onSelected("Apple")
+                    StudioCard(name: "Paramount+", logoUrl: "https://image.tmdb.org/t/p/w154/fts6X10Jn4QT0X6ac3udKEn2tJA.jpg", gradient: LinearGradient(colors: [Color(hex: 0x001D40), Color(hex: 0x000E24)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Paramount")
                     }
-                    StudioCard(name: "MARVEL", gradient: LinearGradient(colors: [Color(hex: 0x2d0406), Color(hex: 0xb81d24)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
-                        onSelected("Marvel")
+                    StudioCard(name: "Peacock", logoUrl: "https://image.tmdb.org/t/p/w154/2aGrp1xw3qhwCYvNGAJZPdjfeeX.jpg", gradient: LinearGradient(colors: [Color(hex: 0x0D0D14), Color(hex: 0x1B1B2A)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Peacock")
                     }
-                    StudioCard(name: "PIXAR", gradient: LinearGradient(colors: [Color(hex: 0x111d2e), Color(hex: 0x30588c)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
-                        onSelected("Pixar")
+                    StudioCard(name: "Crunchyroll", logoUrl: "https://image.tmdb.org/t/p/w154/fzN5Jok5Ig1eJ7gyNGoMhnLSCfh.jpg", gradient: LinearGradient(colors: [Color(hex: 0xF47521), Color(hex: 0x5E2700)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Crunchyroll")
+                    }
+                    StudioCard(name: "AMC+", logoUrl: "https://image.tmdb.org/t/p/w154/ovmu6uot1XVvsemM2dDySXLiX57.jpg", gradient: LinearGradient(colors: [Color(hex: 0x221414), Color(hex: 0x080303)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
+                        onSelected("Amcplus")
                     }
                 }
                 .padding(.horizontal, 28)
@@ -580,25 +604,32 @@ struct StudioDetailsSheet: View {
 
     var displayName: String {
         switch studio.lowercased() {
-        case "disney": return "Disney+"
         case "netflix": return "Netflix"
-        case "hbo": return "HBO Max"
         case "prime": return "Prime Video"
-        case "apple": return "Apple TV+"
-        case "marvel": return "Marvel Studios"
-        case "pixar": return "Pixar Animation"
+        case "disney": return "Disney+"
+        case "appletvplus", "apple": return "Apple TV+"
+        case "hulu": return "Hulu"
+        case "hbo": return "HBO Max"
+        case "paramount": return "Paramount+"
+        case "peacock": return "Peacock Premium"
+        case "crunchyroll": return "Crunchyroll"
+        case "amcplus": return "AMC+"
         default: return studio.capitalized
         }
     }
 
     var logoUrl: String {
         switch studio.lowercased() {
-        case "netflix": return "https://image.tmdb.org/t/p/w500/wwemzKWzjKYJFfCeiB67v84g67V.png"
-        case "disney": return "https://image.tmdb.org/t/p/w500/uzK9u4w6FQm0zJbi9qRmN0R0ppU.png"
-        case "hbo": return "https://image.tmdb.org/t/p/w500/ctv9Hof6Zbe37pZ89zH0pL8gD6C.png"
-        case "prime": return "https://image.tmdb.org/t/p/w500/ifb4g6g7uYlDdfZbyB76xT6LppU.png"
-        case "apple": return "https://image.tmdb.org/t/p/w500/7Lpx6XfT1B7bWj1p4Zg6S6VppU.png"
-        case "marvel": return "https://image.tmdb.org/t/p/w500/420.png"
+        case "netflix": return "https://image.tmdb.org/t/p/w154/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg"
+        case "prime": return "https://image.tmdb.org/t/p/w154/pvske1MyAoymrs5bguRfVqYiM9a.jpg"
+        case "disney": return "https://image.tmdb.org/t/p/w154/97yvRBw1GzX7fXprcF80er19ot.jpg"
+        case "appletvplus", "apple": return "https://image.tmdb.org/t/p/w154/SPnB1qiCkYfirS2it3hZORwGVn.jpg"
+        case "hulu": return "https://image.tmdb.org/t/p/w154/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg"
+        case "hbo": return "https://image.tmdb.org/t/p/w154/jbe4gVSfRlbPTdESXhEKpornsfu.jpg"
+        case "paramount": return "https://image.tmdb.org/t/p/w154/fts6X10Jn4QT0X6ac3udKEn2tJA.jpg"
+        case "peacock": return "https://image.tmdb.org/t/p/w154/2aGrp1xw3qhwCYvNGAJZPdjfeeX.jpg"
+        case "crunchyroll": return "https://image.tmdb.org/t/p/w154/fzN5Jok5Ig1eJ7gyNGoMhnLSCfh.jpg"
+        case "amcplus": return "https://image.tmdb.org/t/p/w154/ovmu6uot1XVvsemM2dDySXLiX57.jpg"
         default: return ""
         }
     }

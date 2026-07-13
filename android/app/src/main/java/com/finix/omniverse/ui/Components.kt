@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
@@ -86,9 +85,10 @@ fun Modifier.tvFocusable(
 fun isTvDevice(): Boolean {
     val context = androidx.compose.ui.platform.LocalContext.current
     return remember(context) {
-        val uiModeManager = context.getSystemService(android.content.Context.UI_MODE_SERVICE) as? android.app.UiModeManager
+        val uiModeManager =
+            context.getSystemService(android.content.Context.UI_MODE_SERVICE) as? android.app.UiModeManager
         uiModeManager?.currentModeType == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION ||
-            context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK)
+                context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK)
     }
 }
 
@@ -114,12 +114,14 @@ fun PosterImage(
                         color = LiquidColors.Cyan,
                         modifier = Modifier.align(Alignment.Center).size(28.dp),
                     )
+
                 is AsyncImagePainter.State.Error ->
                     Icon(
                         Icons.Filled.PlayArrow, null,
                         tint = Color.White.copy(alpha = 0.4f),
                         modifier = Modifier.align(Alignment.Center).size(38.dp),
                     )
+
                 else -> {}
             }
         } else {
@@ -165,8 +167,21 @@ fun MediaPosterCard(item: MediaItem, wide: Boolean = false, onTap: (MediaItem) -
             PosterImage(item.posterUrl ?: item.backdropUrl, Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)))
         }
         Spacer(Modifier.height(8.dp))
-        Text(item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(subtitleFor(item), color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            item.title,
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            subtitleFor(item),
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 11.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -199,7 +214,6 @@ fun CategoryRow(
     wide: Boolean = false,
     onItem: (MediaItem) -> Unit,
 ) {
-    val isTop10 = category.title.lowercase().let { it.contains("top 10") || it.contains("top10") }
     Column(Modifier.padding(top = 18.dp)) {
         Row(Modifier.padding(horizontal = if (wide) 54.dp else 28.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(category.title, color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Black)
@@ -212,17 +226,18 @@ fun CategoryRow(
             )
         }
         category.error?.takeIf { it.isNotEmpty() }?.let {
-            Text(it, color = LiquidColors.Rose.copy(alpha = 0.9f), fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = if (wide) 54.dp else 28.dp))
+            Text(
+                it, color = LiquidColors.Rose.copy(alpha = 0.9f), fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = if (wide) 54.dp else 28.dp)
+            )
         }
         LazyRow(
             modifier = Modifier.padding(top = 8.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = if (wide) 54.dp else 28.dp),
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp),
         ) {
-            itemsIndexed(category.items, key = { _, it -> it.id }) { i, item ->
-                if (isTop10) Top10MediaCard(item, i + 1, wide, onItem)
-                else MediaPosterCard(item, wide, onItem)
+            items(category.items, key = { it.id }) { item ->
+                MediaPosterCard(item, wide, onItem)
             }
         }
     }
@@ -236,8 +251,10 @@ fun ContinueWatchingRow(
 ) {
     if (entries.isEmpty()) return
     Column(Modifier.padding(top = 18.dp)) {
-        Text("Continue Watching", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Black,
-            modifier = Modifier.padding(horizontal = 28.dp))
+        Text(
+            "Continue Watching", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Black,
+            modifier = Modifier.padding(horizontal = 28.dp)
+        )
         LazyRow(
             modifier = Modifier.padding(top = 8.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 28.dp),
@@ -250,7 +267,10 @@ fun ContinueWatchingRow(
                             .width(270.dp).height(152.dp)
                             .tvFocusable(onClick = { onItem(entry) })
                     ) {
-                        PosterImage(entry.backdropUrl ?: entry.posterUrl, Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)))
+                        PosterImage(
+                            entry.backdropUrl ?: entry.posterUrl,
+                            Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
+                        )
                         Box(
                             Modifier
                                 .align(Alignment.BottomStart)
@@ -260,7 +280,14 @@ fun ContinueWatchingRow(
                         )
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text(entry.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        entry.title,
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     val sub = if (entry.seasonNumber != null && entry.episodeNumber != null)
                         "S${entry.seasonNumber}E${entry.episodeNumber}" else entry.type.label
                     Text(sub, color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp, maxLines = 1)

@@ -71,7 +71,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.launch
 
-private val vidsrcEmbedDomains = listOf("vidsrc-embed.ru", "vidsrc-embed.su", "vidsrcme.su", "vsrc.su")
+private val vidsrcEmbedDomains = listOf("vsembed.ru", "vsembed.su", "vidsrcme.ru")
 private val subtitleLanguageOptions = listOf(
     "en" to "English", "es" to "Spanish", "fr" to "French", "de" to "German",
     "it" to "Italian", "pt" to "Portuguese", "ja" to "Japanese", "ko" to "Korean",
@@ -135,6 +135,7 @@ fun SettingsScreen() {
                 Toast.makeText(context, e.localizedMessage ?: "Failed to scan.", Toast.LENGTH_SHORT).show()
             }
     }
+
     fun requestScan() {
         launchScanner()
     }
@@ -145,6 +146,7 @@ fun SettingsScreen() {
                 is UpdateChecker.CheckResult.Available -> updateInfo = r.info
                 is UpdateChecker.CheckResult.UpToDate ->
                     Toast.makeText(context, "You're on the latest version.", Toast.LENGTH_SHORT).show()
+
                 is UpdateChecker.CheckResult.Error ->
                     Toast.makeText(context, r.message, Toast.LENGTH_SHORT).show()
             }
@@ -161,9 +163,15 @@ fun SettingsScreen() {
         val s = state.settings.copy(
             language = language.trim().ifEmpty { "en-US" },
             region = region.trim().ifEmpty { "US" }.uppercase(),
-            includeAdult = includeAdult, tvMode = tvMode, vidsrcDomain = vidsrcDomain,
-            subtitleUrl = subtitleUrl.trim(), subtitleLanguage = subtitleLanguage.trim().ifEmpty { "en" },
-            preferDubbedAnime = preferDubbed, showMoviesTv = showMoviesTv, showAnime = showAnime, showLiveTv = showLiveTv,
+            includeAdult = includeAdult,
+            tvMode = tvMode,
+            vidsrcDomain = vidsrcDomain,
+            subtitleUrl = subtitleUrl.trim(),
+            subtitleLanguage = subtitleLanguage.trim().ifEmpty { "en" },
+            preferDubbedAnime = preferDubbed,
+            showMoviesTv = showMoviesTv,
+            showAnime = showAnime,
+            showLiveTv = showLiveTv,
         )
         state.saveSettings(s)
         state.message = "Saved. Refreshing rows with the new settings."
@@ -184,7 +192,8 @@ fun SettingsScreen() {
                     label = "indicatorColor"
                 )
                 Column(
-                    Modifier.weight(1f).tvFocusable(onClick = { scope.launch { pagerState.animateScrollToPage(i) } }, corner = 4),
+                    Modifier.weight(1f)
+                        .tvFocusable(onClick = { scope.launch { pagerState.animateScrollToPage(i) } }, corner = 4),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(t, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Black)
@@ -194,40 +203,94 @@ fun SettingsScreen() {
             }
         }
         HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-            when (page) {
-                0 -> {
-                    Section("Secret API Credentials") {
-                        SecretField(tmdb, { tmdb = it; tmdbError = false }, "TheMovieDB (TMDB) token", "https://themoviedb.org/favicon.ico", isError = tmdbError)
-                        SecretField(tvdb, { tvdb = it; tvdbError = false }, "TVDB v4 API key", "https://thetvdb.com/favicon.ico", isError = tvdbError)
-                        SecretField(tvdbPin, { tvdbPin = it }, "TVDB Subscriber PIN (optional)", "https://thetvdb.com/favicon.ico")
-                        SecretField(pixeldrain, { pixeldrain = it; pixeldrainError = false }, "Pixeldrain API key", "https://pixeldrain.net/favicon.ico", isError = pixeldrainError)
-                        SecretField(anilist, { anilist = it; anilistError = false }, "AniList Access Token", "https://anilist.co/img/icons/android-chrome-512x512.png", isError = anilistError)
-                    }
-	                    Section("Trakt Developer Client Keys") {
-	                        SecretField(traktId, { traktId = it }, "Trakt Client ID", "https://trakt.tv/favicon.ico")
-	                        SecretField(traktSecret, { traktSecret = it }, "Trakt Client Secret", "https://trakt.tv/favicon.ico")
-	                    }
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                when (page) {
+                    0 -> {
+                        Section("Secret API Credentials") {
+                            SecretField(
+                                tmdb,
+                                { tmdb = it; tmdbError = false },
+                                "TheMovieDB (TMDB) token",
+                                "https://themoviedb.org/favicon.ico",
+                                isError = tmdbError
+                            )
+                            SecretField(
+                                tvdb,
+                                { tvdb = it; tvdbError = false },
+                                "TVDB v4 API key",
+                                "https://thetvdb.com/favicon.ico",
+                                isError = tvdbError
+                            )
+                            SecretField(
+                                tvdbPin,
+                                { tvdbPin = it },
+                                "TVDB Subscriber PIN (optional)",
+                                "https://thetvdb.com/favicon.ico"
+                            )
+                            SecretField(
+                                pixeldrain,
+                                { pixeldrain = it; pixeldrainError = false },
+                                "Pixeldrain API key",
+                                "https://pixeldrain.net/favicon.ico",
+                                isError = pixeldrainError
+                            )
+                            SecretField(
+                                anilist,
+                                { anilist = it; anilistError = false },
+                                "AniList Access Token",
+                                "https://anilist.co/img/icons/android-chrome-512x512.png",
+                                isError = anilistError
+                            )
+                        }
+                        Section("Trakt Developer Client Keys") {
+                            SecretField(traktId, { traktId = it }, "Trakt Client ID", "https://trakt.tv/favicon.ico")
+                            SecretField(
+                                traktSecret,
+                                { traktSecret = it },
+                                "Trakt Client Secret",
+                                "https://trakt.tv/favicon.ico"
+                            )
+                        }
                         Section("API Diagnostics & Verification") {
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
                                 Chip("Test API Keys") {
                                     scope.launch {
                                         // Save current input values temporarily so we test the NEW keys immediately
                                         saveAll()
 
-                                        val tmdbOk = tmdb.trim().isEmpty() || state.repos.tmdb.validate(state.credentials, state.settings)
-                                        val tvdbOk = tvdb.trim().isEmpty() || state.repos.tvdb.validate(state.credentials)
+                                        val tmdbOk = tmdb.trim().isEmpty() || state.repos.tmdb.validate(
+                                            state.credentials,
+                                            state.settings
+                                        )
+                                        val tvdbOk =
+                                            tvdb.trim().isEmpty() || state.repos.tvdb.validate(state.credentials)
 
                                         val pixeldrainOk = pixeldrain.trim().isEmpty() || runCatching {
-                                            val basic = android.util.Base64.encodeToString(":$pixeldrain".toByteArray(), android.util.Base64.NO_WRAP)
-                                            val r = com.finix.omniverse.Http.request("https://pixeldrain.net/api/user/key", headers = mapOf("Authorization" to "Basic $basic"))
+                                            val basic = android.util.Base64.encodeToString(
+                                                ":$pixeldrain".toByteArray(),
+                                                android.util.Base64.NO_WRAP
+                                            )
+                                            val r = com.finix.omniverse.Http.request(
+                                                "https://pixeldrain.net/api/user/key",
+                                                headers = mapOf("Authorization" to "Basic $basic")
+                                            )
                                             r.status == 200
                                         }.getOrDefault(false)
 
                                         val anilistOk = anilist.trim().isEmpty() || runCatching {
                                             val query = "query { Viewer { id name } }"
                                             val payload = org.json.JSONObject().put("query", query)
-                                            val r = com.finix.omniverse.Http.postJson("https://graphql.anilist.co", payload, headers = mapOf("Authorization" to "Bearer $anilist"))
+                                            val r = com.finix.omniverse.Http.postJson(
+                                                "https://graphql.anilist.co",
+                                                payload,
+                                                headers = mapOf("Authorization" to "Bearer $anilist")
+                                            )
                                             r.status == 200
                                         }.getOrDefault(false)
 
@@ -243,10 +306,18 @@ fun SettingsScreen() {
                                         if (anilistError) failedKeys.add("AniList Access Token")
 
                                         if (failedKeys.isEmpty()) {
-                                            Toast.makeText(context, "✅ All entered API keys are working correctly!", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(
+                                                context,
+                                                "✅ All entered API keys are working correctly!",
+                                                Toast.LENGTH_LONG
+                                            ).show()
                                         } else {
                                             val list = failedKeys.joinToString("\n• ")
-                                            Toast.makeText(context, "❌ The following API keys are invalid:\n• $list", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(
+                                                context,
+                                                "❌ The following API keys are invalid:\n• $list",
+                                                Toast.LENGTH_LONG
+                                            ).show()
                                         }
                                     }
                                 }
@@ -254,112 +325,145 @@ fun SettingsScreen() {
                                     scope.launch {
                                         saveAll()
                                         state.refreshAll(isManual = true)
-                                        Toast.makeText(context, "🔄 Full refresh completed with current keys!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            context,
+                                            "🔄 Full refresh completed with current keys!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                 }
                             }
                         }
-                }
-                1 -> {
-                    Section("Discovery preferences") {
-                        LabeledField(language, { language = it }, "Language")
-                        LabeledField(region, { region = it }, "Region")
-                        PickerField("Preferred Vidsrc server", vidsrcDomain, vidsrcEmbedDomains.map { it to it }) { vidsrcDomain = it }
                     }
-                    Section("Subtitle configurations") {
-                        PickerField("Subtitle language", subtitleLanguage, subtitleLanguageOptions) { subtitleLanguage = it }
-                        LabeledField(subtitleUrl, { subtitleUrl = it }, "Default subtitle URL")
-                    }
-                    Section("Display & Content Toggles") {
-                        ToggleRow("Show Movies & TV shows", showMoviesTv) { showMoviesTv = it }
-                        ToggleRow("Show Anime list", showAnime) { showAnime = it }
-                        ToggleRow("Enable Live TV channels", showLiveTv) { showLiveTv = it }
-                        ToggleRow("Include Adult content", includeAdult) { includeAdult = it }
-                        ToggleRow("Enable TV / Landscape Mode", tvMode) { tvMode = it }
-                        ToggleRow("Prefer Dubbed Anime", preferDubbed) { preferDubbed = it }
-                    }
-                }
-                else -> {
-                    SyncCard(
-                        "Trakt.tv Sync Integration", state.credentials.hasTraktUser,
-                        if (state.credentials.hasTraktUser) (if (state.credentials.traktUsername.isEmpty()) "Connected to Trakt" else "Connected as: ${state.credentials.traktUsername}")
-                        else "Trakt disconnected (Sync disabled)",
-                        "https://trakt.tv/favicon.ico",
-                    ) {
-                        Chip(if (state.credentials.hasTraktUser) "Refresh Login" else "Connect Trakt") {
-                            scope.launch { saveAll(); state.startTraktBrowserAuth()?.let { openUrl(it.toString()) } }
+
+                    1 -> {
+                        Section("Discovery preferences") {
+                            LabeledField(language, { language = it }, "Language")
+                            LabeledField(region, { region = it }, "Region")
+                            PickerField(
+                                "Preferred Vidsrc server",
+                                vidsrcDomain,
+                                vidsrcEmbedDomains.map { it to it }) { vidsrcDomain = it }
                         }
-                        if (state.credentials.hasTraktUser) {
-                            Chip("Disconnect") { state.disconnectTrakt() }
+                        Section("Subtitle configurations") {
+                            PickerField(
+                                "Subtitle language",
+                                subtitleLanguage,
+                                subtitleLanguageOptions
+                            ) { subtitleLanguage = it }
+                            LabeledField(subtitleUrl, { subtitleUrl = it }, "Default subtitle URL")
+                        }
+                        Section("Display & Content Toggles") {
+                            ToggleRow("Show Movies & TV shows", showMoviesTv) { showMoviesTv = it }
+                            ToggleRow("Show Anime list", showAnime) { showAnime = it }
+                            ToggleRow("Enable Live TV channels", showLiveTv) { showLiveTv = it }
+                            ToggleRow("Include Adult content", includeAdult) { includeAdult = it }
+                            ToggleRow("Enable TV / Landscape Mode", tvMode) { tvMode = it }
+                            ToggleRow("Prefer Dubbed Anime", preferDubbed) { preferDubbed = it }
                         }
                     }
-                    SyncCard(
-                        "Cross-Device Login", true,
-                        "Move your login, API keys and preferences between devices with a QR code. No server, no re-login.",
-                        null,
-                    ) {
-                        Chip("Show Sync QR") { showSyncQr = true }
-                        Chip("Scan Sync QR") { requestScan() }
-                    }
-                    SyncCard("App Updates", true, "Check for a newer version of Omniverse.", null) {
-                        Chip("Check for updates") { checkForUpdates() }
-                    }
-                    SyncCard(
-                        "AniList Sync Integration", state.credentials.hasAnilist,
-                        if (state.credentials.hasAnilist) "Connected to AniList (Sync Active)" else "AniList disconnected (Sync disabled)",
-                        "https://anilist.co/img/icons/android-chrome-512x512.png",
-                    ) {
-                        Chip(if (state.credentials.hasAnilist) "Refresh Login" else "Connect AniList") {
-                            openUrl("https://anilist.co/api/v2/oauth/authorize?client_id=14187&response_type=token")
-                        }
-                        if (state.credentials.hasAnilist) Chip("Disconnect") { scope.launch { state.saveCredentials(state.credentials.copy(anilistAccessToken = "")) } }
-                    }
-                    SyncCard("Manual Sync", true, "Push or pull your login, API keys and preferences to/from the cloud now.", null) {
-                        Chip("Sync Now") {
-                            scope.launch {
-                                state.syncNow()
-                                state.message = "Sync complete."
-                                Toast.makeText(context, "Sync complete.", Toast.LENGTH_SHORT).show()
+
+                    else -> {
+                        SyncCard(
+                            "Trakt.tv Sync Integration", state.credentials.hasTraktUser,
+                            if (state.credentials.hasTraktUser) (if (state.credentials.traktUsername.isEmpty()) "Connected to Trakt" else "Connected as: ${state.credentials.traktUsername}")
+                            else "Trakt disconnected (Sync disabled)",
+                            "https://trakt.tv/favicon.ico",
+                        ) {
+                            Chip(if (state.credentials.hasTraktUser) "Refresh Login" else "Connect Trakt") {
+                                scope.launch {
+                                    saveAll(); state.startTraktBrowserAuth()?.let { openUrl(it.toString()) }
+                                }
+                            }
+                            if (state.credentials.hasTraktUser) {
+                                Chip("Disconnect") { state.disconnectTrakt() }
                             }
                         }
-                        Chip("Restore from Cloud") {
-                            scope.launch {
-                                runCatching { state.restoreSettingsFromTrakt() }
-                                    .onSuccess {
-                                        // Re-seed the editable fields from the restored state.
-                                        tmdb = state.credentials.tmdbToken
-                                        tvdb = state.credentials.tvdbApiKey
-                                        tvdbPin = state.credentials.tvdbPin
-                                        traktId = state.credentials.traktClientId
-                                        traktSecret = state.credentials.traktClientSecret
-                                        pixeldrain = state.credentials.pixeldrainApiKey
-                                        anilist = state.credentials.anilistAccessToken
-                                        language = state.settings.language
-                                        region = state.settings.region
-                                        subtitleUrl = state.settings.subtitleUrl
-                                        subtitleLanguage = state.settings.subtitleLanguage.ifBlank { "en" }
-                                        vidsrcDomain = if (state.settings.vidsrcDomain in vidsrcEmbedDomains) state.settings.vidsrcDomain else vidsrcEmbedDomains[0]
-                                        includeAdult = state.settings.includeAdult
-                                        tvMode = state.settings.tvMode
-                                        preferDubbed = state.settings.preferDubbedAnime
-                                        showMoviesTv = state.settings.showMoviesTv
-                                        showAnime = state.settings.showAnime
-                                        showLiveTv = state.settings.showLiveTv
-                                        state.message = "Restored from cloud."
-                                        Toast.makeText(context, "Restored from cloud.", Toast.LENGTH_SHORT).show()
-                                    }
-                                    .onFailure {
-                                        Toast.makeText(context, "Restore failed. Connect Trakt and sync first.", Toast.LENGTH_SHORT).show()
-                                    }
+                        SyncCard(
+                            "Cross-Device Login", true,
+                            "Move your login, API keys and preferences between devices with a QR code. No server, no re-login.",
+                            null,
+                        ) {
+                            Chip("Show Sync QR") { showSyncQr = true }
+                            Chip("Scan Sync QR") { requestScan() }
+                        }
+                        SyncCard("App Updates", true, "Check for a newer version of Omniverse.", null) {
+                            Chip("Check for updates") { checkForUpdates() }
+                        }
+                        SyncCard(
+                            "AniList Sync Integration", state.credentials.hasAnilist,
+                            if (state.credentials.hasAnilist) "Connected to AniList (Sync Active)" else "AniList disconnected (Sync disabled)",
+                            "https://anilist.co/img/icons/android-chrome-512x512.png",
+                        ) {
+                            Chip(if (state.credentials.hasAnilist) "Refresh Login" else "Connect AniList") {
+                                openUrl("https://anilist.co/api/v2/oauth/authorize?client_id=14187&response_type=token")
+                            }
+                            if (state.credentials.hasAnilist) Chip("Disconnect") {
+                                scope.launch {
+                                    state.saveCredentials(
+                                        state.credentials.copy(anilistAccessToken = "")
+                                    )
+                                }
                             }
                         }
+                        SyncCard(
+                            "Manual Sync",
+                            true,
+                            "Push or pull your login, API keys and preferences to/from the cloud now.",
+                            null
+                        ) {
+                            Chip("Sync Now") {
+                                scope.launch {
+                                    state.syncNow()
+                                    state.message = "Sync complete."
+                                    Toast.makeText(context, "Sync complete.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                            Chip("Restore from Cloud") {
+                                scope.launch {
+                                    runCatching { state.restoreSettingsFromTrakt() }
+                                        .onSuccess {
+                                            // Re-seed the editable fields from the restored state.
+                                            tmdb = state.credentials.tmdbToken
+                                            tvdb = state.credentials.tvdbApiKey
+                                            tvdbPin = state.credentials.tvdbPin
+                                            traktId = state.credentials.traktClientId
+                                            traktSecret = state.credentials.traktClientSecret
+                                            pixeldrain = state.credentials.pixeldrainApiKey
+                                            anilist = state.credentials.anilistAccessToken
+                                            language = state.settings.language
+                                            region = state.settings.region
+                                            subtitleUrl = state.settings.subtitleUrl
+                                            subtitleLanguage = state.settings.subtitleLanguage.ifBlank { "en" }
+                                            vidsrcDomain =
+                                                if (state.settings.vidsrcDomain in vidsrcEmbedDomains) state.settings.vidsrcDomain else vidsrcEmbedDomains[0]
+                                            includeAdult = state.settings.includeAdult
+                                            tvMode = state.settings.tvMode
+                                            preferDubbed = state.settings.preferDubbedAnime
+                                            showMoviesTv = state.settings.showMoviesTv
+                                            showAnime = state.settings.showAnime
+                                            showLiveTv = state.settings.showLiveTv
+                                            state.message = "Restored from cloud."
+                                            Toast.makeText(context, "Restored from cloud.", Toast.LENGTH_SHORT).show()
+                                        }
+                                        .onFailure {
+                                            Toast.makeText(
+                                                context,
+                                                "Restore failed. Connect Trakt and sync first.",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                }
+                            }
+                        }
+                        Text(
+                            "Trakt Redirect URI: omniplay://trakt/oauth\nAniList Redirect URI: omniplay://anilist/oauth",
+                            color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, modifier = Modifier.fillMaxWidth()
+                        )
+                        if (showSyncQr) SyncQr(state) { showSyncQr = false }
                     }
-                    Text("Trakt Redirect URI: omniplay://trakt/oauth\nAniList Redirect URI: omniplay://anilist/oauth",
-                        color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, modifier = Modifier.fillMaxWidth())
-                    if (showSyncQr) SyncQr(state) { showSyncQr = false }
                 }
             }
-        }
         }
         // Save button. The floating bottom NavigationBar (Shell) overlays content on
         // phones, so reserve space below the button (nav bar height ~88dp) to keep it
@@ -422,7 +526,13 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun SecretField(value: String, onChange: (String) -> Unit, label: String, logoUrl: String? = null, isError: Boolean = false) {
+private fun SecretField(
+    value: String,
+    onChange: (String) -> Unit,
+    label: String,
+    logoUrl: String? = null,
+    isError: Boolean = false
+) {
     var obscure by remember { mutableStateOf(true) }
     Column(Modifier.fillMaxWidth()) {
         Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
@@ -443,7 +553,14 @@ private fun SecretField(value: String, onChange: (String) -> Unit, label: String
                     )
                 }
             },
-            trailingIcon = { Text(if (obscure) "show" else "hide", color = LiquidColors.Cyan, fontSize = 12.sp, modifier = Modifier.tvFocusable(onClick = { obscure = !obscure }, corner = 4).padding(8.dp)) },
+            trailingIcon = {
+                Text(
+                    if (obscure) "show" else "hide",
+                    color = LiquidColors.Cyan,
+                    fontSize = 12.sp,
+                    modifier = Modifier.tvFocusable(onClick = { obscure = !obscure }, corner = 4).padding(8.dp)
+                )
+            },
             colors = textColors(),
         )
     }
@@ -453,18 +570,30 @@ private fun SecretField(value: String, onChange: (String) -> Unit, label: String
 private fun LabeledField(value: String, onChange: (String) -> Unit, label: String) {
     Column(Modifier.fillMaxWidth()) {
         Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-        OutlinedTextField(value = value, onValueChange = onChange, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textColors())
+        OutlinedTextField(
+            value = value,
+            onValueChange = onChange,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            colors = textColors()
+        )
     }
 }
 
 @Composable
-private fun PickerField(label: String, selection: String, options: List<Pair<String, String>>, onSelect: (String) -> Unit) {
+private fun PickerField(
+    label: String,
+    selection: String,
+    options: List<Pair<String, String>>,
+    onSelect: (String) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth()) {
         Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         Box {
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                    .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
                     .tvFocusable(onClick = { expanded = true }, corner = 8).padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -472,7 +601,11 @@ private fun PickerField(label: String, selection: String, options: List<Pair<Str
                 Text("▾", color = Color.White.copy(alpha = 0.6f))
             }
             DropdownMenu(expanded, { expanded = false }) {
-                options.forEach { (v, l) -> DropdownMenuItem(text = { Text(l) }, onClick = { onSelect(v); expanded = false }) }
+                options.forEach { (v, l) ->
+                    DropdownMenuItem(
+                        text = { Text(l) },
+                        onClick = { onSelect(v); expanded = false })
+                }
             }
         }
     }
@@ -482,13 +615,23 @@ private fun PickerField(label: String, selection: String, options: List<Pair<Str
 private fun ToggleRow(title: String, value: Boolean, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(title, color = Color.White, fontSize = 15.sp, modifier = Modifier.weight(1f))
-        Switch(checked = value, onCheckedChange = onChange, colors = SwitchDefaults.colors(checkedTrackColor = LiquidColors.Cyan, checkedThumbColor = Color.White))
+        Switch(
+            checked = value,
+            onCheckedChange = onChange,
+            colors = SwitchDefaults.colors(checkedTrackColor = LiquidColors.Cyan, checkedThumbColor = Color.White)
+        )
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SyncCard(title: String, connected: Boolean, status: String, logoUrl: String? = null, actions: @Composable () -> Unit) {
+private fun SyncCard(
+    title: String,
+    connected: Boolean,
+    status: String,
+    logoUrl: String? = null,
+    actions: @Composable () -> Unit
+) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Color.White.copy(alpha = 0.06f))
             .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp)).padding(16.dp),
@@ -504,8 +647,16 @@ private fun SyncCard(title: String, connected: Boolean, status: String, logoUrl:
             }
             Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black)
         }
-        Text(status, color = if (connected) Color.White else Color.White.copy(alpha = 0.38f), fontSize = 13.sp, fontWeight = if (connected) FontWeight.Bold else FontWeight.Normal)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { actions() }
+        Text(
+            status,
+            color = if (connected) Color.White else Color.White.copy(alpha = 0.38f),
+            fontSize = 13.sp,
+            fontWeight = if (connected) FontWeight.Bold else FontWeight.Normal
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) { actions() }
     }
 }
 
@@ -524,10 +675,16 @@ private fun SyncQr(state: com.finix.omniverse.AppState, onClose: () -> Unit) {
         SyncCenter.buildSyncString(state.credentials, state.settings)
     }
     val bitmap = remember(payload) { qrBitmap(payload, 900) }
-    Column(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        Modifier.fillMaxWidth().padding(top = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         Text("Sync QR", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Text("On your other device, open Omniverse and tap \"Scan Sync QR\" to sign in instantly.",
-            color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+        Text(
+            "On your other device, open Omniverse and tap \"Scan Sync QR\" to sign in instantly.",
+            color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp
+        )
         bitmap?.let {
             Image(
                 it.asImageBitmap(), null,
@@ -639,14 +796,17 @@ private fun parseInlineMarkdown(text: String): AnnotatedString {
                         i += 2
                     }
                 }
+
                 text.startsWith("`", i) -> {
                     val end = text.indexOf("`", i + 1)
                     if (end != -1) {
-                        withStyle(SpanStyle(
-                            fontFamily = FontFamily.Monospace,
-                            color = Color(0xFFE2E2E2),
-                            background = Color.White.copy(alpha = 0.12f)
-                        )) {
+                        withStyle(
+                            SpanStyle(
+                                fontFamily = FontFamily.Monospace,
+                                color = Color(0xFFE2E2E2),
+                                background = Color.White.copy(alpha = 0.12f)
+                            )
+                        ) {
                             append(" " + text.substring(i + 1, end) + " ")
                         }
                         i = end + 1
@@ -655,6 +815,7 @@ private fun parseInlineMarkdown(text: String): AnnotatedString {
                         i += 1
                     }
                 }
+
                 else -> {
                     append(text[i])
                     i++

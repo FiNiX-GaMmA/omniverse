@@ -8,15 +8,18 @@
 // ==============================================================================
 
 const { contextBridge, ipcRenderer } = require("electron");
-const crypto = require("crypto");
 
 const isMainApp =
   window.location.protocol === "file:" ||
   window.location.hostname === "localhost" ||
   window.location.protocol === "chrome-extension:" ||
-  (window.location.protocol !== "http:" && window.location.protocol !== "https:");
+  (window.location.protocol !== "http:" &&
+    window.location.protocol !== "https:");
 
 if (isMainApp) {
+  // crypto is a Node built-in — only available in the main-app preload context,
+  // not in the sandboxed player webview (where requiring it throws).
+  const crypto = require("crypto");
   // Expose secure API to the main application
   contextBridge.exposeInMainWorld("electron", {
     getPlatform: () => ipcRenderer.invoke("get-platform"),
@@ -42,6 +45,7 @@ if (isMainApp) {
       return () => ipcRenderer.removeListener("update-progress", handler);
     },
     getAdblockStats: () => ipcRenderer.invoke("get-adblock-stats"),
+    clearCache: () => ipcRenderer.invoke("clear-cache"),
     showNotification: (title, body) =>
       ipcRenderer.invoke("show-notification", { title, body }),
     onAdBlocked: (cb) => {
@@ -54,6 +58,11 @@ if (isMainApp) {
       ipcRenderer.on("webview-fullscreen", handler);
       return () => ipcRenderer.removeListener("webview-fullscreen", handler);
     },
+    onWebviewLoadFailed: (cb) => {
+      const handler = (_, info) => cb(info);
+      ipcRenderer.on("webview-load-failed", handler);
+      return () => ipcRenderer.removeListener("webview-load-failed", handler);
+    },
     decryptMegacloud: (encrypted, passphrase) => {
       try {
         const cipherBytes = Buffer.from(encrypted, "base64");
@@ -62,9 +71,9 @@ if (isMainApp) {
         if (prefix !== "Salted__") return null;
         const salt = cipherBytes.subarray(8, 16);
         const ciphertext = cipherBytes.subarray(16);
-        
+
         const pass = Buffer.from(passphrase, "utf8");
-        
+
         // OpenSSL EVP_BytesToKey with MD5
         const out = [];
         let prev = Buffer.alloc(0);
@@ -80,7 +89,7 @@ if (isMainApp) {
         const all = Buffer.concat(out);
         const key = all.subarray(0, 32);
         const iv = all.subarray(32, 48);
-        
+
         const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
         let decrypted = decipher.update(ciphertext, null, "utf8");
         decrypted += decipher.final("utf8");
@@ -126,7 +135,77 @@ if (isMainApp) {
       window.confirm = () => true;
       window.prompt = () => "";
 
-      // Intercept and trap aggressive mouse clicks trying to load redirects
+      const trustedPlaybackHosts = [
+        "vidcore.created.app",
+        "vidcore.org",
+        "www.vidcore.org",
+        "little-field-fe85.instafashion662-3d4.workers.dev",
+        "instafashion662-3d4.workers.dev",
+        "workers.dev",
+        "ferocitycandour.com",
+        "cinezo",
+        "notyourtype.dad",
+        "ballerinacappuccinalovestungtungtungsahur.com",
+        "1shows.app",
+        "5-ac2.workers.dev",
+        "solitary-paper",
+        "pinepathcreativecollect",
+        "remoteconsultinggroup",
+        "nextgencloudfabric",
+        "vidsrc.me",
+        "vidsrc.to",
+        "vidsrc.pro",
+        "vidsrc.vip",
+        "vidsrc.net",
+        "vidsrc.cc",
+        "vidsrc.xyz",
+        "vidsrc-embed.ru",
+        "vidsrc-embed.su",
+        "vidsrcme.su",
+        "vsrc.su",
+        "vsembed.ru",
+        "vsembed.su",
+        "vidsrcme.ru",
+        "cloudnestra.com",
+        "cloudorchestranova.com",
+        "2embed.cc",
+        "streamsrcs.2embed.cc",
+        "embed.smashystream.com",
+        "smashystream.com",
+        "autoembed.cc",
+        "multiembed.mov",
+        "rabbitstream.net",
+        "megacloud.tv",
+        "streamtape.com",
+        "streamlare.com",
+        "doodstream.com",
+        "mixdrop.co",
+        "mixdrop.to",
+        "vidplay.site",
+        "filemoon.sx",
+        "upstream.to",
+        "streamwish.to",
+        "voe.sx",
+        "mp4upload.com",
+      ];
+      const hostMatches = (host, rule) =>
+        host === rule || host.endsWith("." + rule) || host.includes(rule);
+      const isTrustedPlaybackUrl = (href) => {
+        try {
+          const u = new URL(href, window.location.href);
+          const host = u.hostname.toLowerCase();
+          return (
+            host === window.location.hostname.toLowerCase() ||
+            trustedPlaybackHosts.some((rule) => hostMatches(host, rule))
+          );
+        } catch (_) {
+          return true;
+        }
+      };
+
+      // Intercept and trap aggressive mouse clicks trying to load redirects,
+      // without blocking legitimate nested stream hosts (2Embed/VidSrc hand off
+      // to domains such as streamsrcs.2embed.cc and cloudorchestranova.com).
       document.addEventListener(
         "click",
         (e) => {
@@ -138,13 +217,7 @@ if (isMainApp) {
                 target.getAttribute("href")?.startsWith("http"))
             ) {
               const href = target.getAttribute("href");
-              // If it's a redirect to an untrusted domain, block it
-              if (
-                href &&
-                !href.includes(window.location.hostname) &&
-                !href.includes("vidsrc") &&
-                !href.includes("vidsrc.to")
-              ) {
+              if (href && !isTrustedPlaybackUrl(href)) {
                 e.preventDefault();
                 e.stopPropagation();
                 console.log(

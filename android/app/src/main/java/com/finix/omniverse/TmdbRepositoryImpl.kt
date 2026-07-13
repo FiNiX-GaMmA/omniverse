@@ -17,7 +17,11 @@ class TmdbNetworkException(message: String) : Exception(message)
 
 // MARK: - MediaItem.fromTmdb (mirrors models.dart MediaItem.fromTmdb)
 
-internal fun mediaItemFromTmdb(json: JSONObject, type: MediaType, genreNames: Map<Int, String> = emptyMap()): MediaItem? {
+internal fun mediaItemFromTmdb(
+    json: JSONObject,
+    type: MediaType,
+    genreNames: Map<Int, String> = emptyMap()
+): MediaItem? {
     val id = json.optIntOrNull("id") ?: return null
     val title = json.optStringOrNull("title") ?: json.optStringOrNull("name") ?: "Untitled"
     val date = json.optStringOrNull("release_date") ?: json.optStringOrNull("first_air_date") ?: ""
@@ -52,50 +56,91 @@ class TmdbRepositoryImpl : TmdbRepository {
 
     // MARK: Landing categories
 
-    override suspend fun fetchLandingCategories(credentials: ApiCredentials, settings: UserSettings): List<MediaCategory> {
+    override suspend fun fetchLandingCategories(
+        credentials: ApiCredentials,
+        settings: UserSettings
+    ): List<MediaCategory> {
         if (!credentials.hasTmdb) return demoCategories
 
         val (movieGenres, tvGenres) = fetchGenres(credentials, settings)
         val categories = ArrayList<MediaCategory>()
-        categories.add(category("trending_movies", "Trending Movies",
-            "What people are watching this week", "trending/movie/week", MediaType.MOVIE,
-            credentials, settings, movieGenres))
-        categories.add(category("now_playing", "Now Playing",
-            "Current theatrical and recent movie releases", "movie/now_playing", MediaType.MOVIE,
-            credentials, settings, movieGenres))
-        categories.add(category("action_movies", "Action Movies",
-            "High-energy movies from TMDB Discover", "discover/movie", MediaType.MOVIE,
-            credentials, settings, movieGenres, mapOf("with_genres" to "28", "sort_by" to "popularity.desc")))
-        categories.add(category("trending_series", "Trending TV Shows",
-            "Series gaining momentum this week", "trending/tv/week", MediaType.SERIES,
-            credentials, settings, tvGenres))
-        categories.add(category("airing_today", "Airing Today",
-            "Episodes scheduled today", "tv/airing_today", MediaType.SERIES,
-            credentials, settings, tvGenres))
-        categories.add(category("top_rated_series", "Top Rated TV",
-            "Well-loved shows with strong audience scores", "tv/top_rated", MediaType.SERIES,
-            credentials, settings, tvGenres))
+        categories.add(
+            category(
+                "trending_movies", "Trending Movies",
+                "What people are watching this week", "trending/movie/week", MediaType.MOVIE,
+                credentials, settings, movieGenres
+            )
+        )
+        categories.add(
+            category(
+                "now_playing", "Now Playing",
+                "Current theatrical and recent movie releases", "movie/now_playing", MediaType.MOVIE,
+                credentials, settings, movieGenres
+            )
+        )
+        categories.add(
+            category(
+                "action_movies", "Action Movies",
+                "High-energy movies from TMDB Discover", "discover/movie", MediaType.MOVIE,
+                credentials, settings, movieGenres, mapOf("with_genres" to "28", "sort_by" to "popularity.desc")
+            )
+        )
+        categories.add(
+            category(
+                "trending_series", "Trending TV Shows",
+                "Series gaining momentum this week", "trending/tv/week", MediaType.SERIES,
+                credentials, settings, tvGenres
+            )
+        )
+        categories.add(
+            category(
+                "airing_today", "Airing Today",
+                "Episodes scheduled today", "tv/airing_today", MediaType.SERIES,
+                credentials, settings, tvGenres
+            )
+        )
+        categories.add(
+            category(
+                "top_rated_series", "Top Rated TV",
+                "Well-loved shows with strong audience scores", "tv/top_rated", MediaType.SERIES,
+                credentials, settings, tvGenres
+            )
+        )
         return categories
     }
 
     // MARK: Details
 
-    override suspend fun fetchDetails(item: MediaItem, credentials: ApiCredentials, settings: UserSettings): MediaItem? {
+    override suspend fun fetchDetails(
+        item: MediaItem,
+        credentials: ApiCredentials,
+        settings: UserSettings
+    ): MediaItem? {
         val tmdbId = item.tmdbId
         if (!credentials.hasTmdb || tmdbId == null) return item
-        val url = uri("${item.type.tmdbPath}/$tmdbId", credentials, settings, mapOf(
-            "append_to_response" to "external_ids,credits,images",
-            "include_image_language" to imageLanguages(settings),
-        ))
-        val response = try { get(url, credentials) } catch (_: Throwable) { return item }
+        val url = uri(
+            "${item.type.tmdbPath}/$tmdbId", credentials, settings, mapOf(
+                "append_to_response" to "external_ids,credits,images",
+                "include_image_language" to imageLanguages(settings),
+            )
+        )
+        val response = try {
+            get(url, credentials)
+        } catch (_: Throwable) {
+            return item
+        }
         if (response.status >= 400) return item
         val json = response.jsonObject()
 
         val images = json.optObjectOrNull("images")
-        val posterPath = bestImagePath(images?.optArrayOrNull("posters"),
-            json.optStringOrNull("poster_path") ?: item.posterPath, 2.0 / 3.0)
-        val backdropPath = bestImagePath(images?.optArrayOrNull("backdrops"),
-            json.optStringOrNull("backdrop_path") ?: item.backdropPath, 16.0 / 9.0)
+        val posterPath = bestImagePath(
+            images?.optArrayOrNull("posters"),
+            json.optStringOrNull("poster_path") ?: item.posterPath, 2.0 / 3.0
+        )
+        val backdropPath = bestImagePath(
+            images?.optArrayOrNull("backdrops"),
+            json.optStringOrNull("backdrop_path") ?: item.backdropPath, 16.0 / 9.0
+        )
 
         val seasons = seasonsFrom(json)
         val firstSeason = seasons.firstOrNull { it.seasonNumber > 0 }
@@ -124,7 +169,8 @@ class TmdbRepositoryImpl : TmdbRepository {
             overview = json.optStringOrNull("overview") ?: item.overview,
             posterPath = posterPath,
             backdropPath = backdropPath,
-            releaseDate = json.optStringOrNull("release_date") ?: json.optStringOrNull("first_air_date") ?: item.releaseDate,
+            releaseDate = json.optStringOrNull("release_date") ?: json.optStringOrNull("first_air_date")
+            ?: item.releaseDate,
             rating = json.optDoubleOrNull("vote_average") ?: item.rating,
             voteCount = json.optIntOrNull("vote_count") ?: item.voteCount,
             genres = genres,
@@ -144,7 +190,11 @@ class TmdbRepositoryImpl : TmdbRepository {
 
     // MARK: Search
 
-    override suspend fun searchMulti(query: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem> = coroutineScope {
+    override suspend fun searchMulti(
+        query: String,
+        credentials: ApiCredentials,
+        settings: UserSettings
+    ): List<MediaItem> = coroutineScope {
         val trimmed = query.trim()
         if (trimmed.isEmpty() || !credentials.hasTmdb) return@coroutineScope emptyList()
 
@@ -177,11 +227,19 @@ class TmdbRepositoryImpl : TmdbRepository {
 
     // MARK: Season episodes
 
-    override suspend fun fetchSeasonEpisodes(item: MediaItem, seasonNumber: Int, credentials: ApiCredentials, settings: UserSettings): List<MediaEpisode> {
+    override suspend fun fetchSeasonEpisodes(
+        item: MediaItem,
+        seasonNumber: Int,
+        credentials: ApiCredentials,
+        settings: UserSettings
+    ): List<MediaEpisode> {
         val tmdbId = item.tmdbId
         if (!credentials.hasTmdb || item.type != MediaType.SERIES || tmdbId == null) return emptyList()
-        val response = try { get(uri("tv/$tmdbId/season/$seasonNumber", credentials, settings), credentials) }
-            catch (_: Throwable) { return emptyList() }
+        val response = try {
+            get(uri("tv/$tmdbId/season/$seasonNumber", credentials, settings), credentials)
+        } catch (_: Throwable) {
+            return emptyList()
+        }
         if (response.status >= 400) return emptyList()
         val json = response.jsonObject()
         return (json.optArrayOrNull("episodes")?.objects() ?: emptyList()).map { episode ->
@@ -199,12 +257,19 @@ class TmdbRepositoryImpl : TmdbRepository {
 
     /// TMDB "more like this" recommendations for a movie/series, powering the
     /// end-of-show recommendation rail when there are no more episodes.
-    override suspend fun fetchRecommendations(item: MediaItem, credentials: ApiCredentials, settings: UserSettings): List<MediaItem> {
+    override suspend fun fetchRecommendations(
+        item: MediaItem,
+        credentials: ApiCredentials,
+        settings: UserSettings
+    ): List<MediaItem> {
         val tmdbId = item.tmdbId
         if (!credentials.hasTmdb || tmdbId == null) return emptyList()
         val type = if (item.type == MediaType.MOVIE) MediaType.MOVIE else MediaType.SERIES
-        val response = try { get(uri("${type.tmdbPath}/$tmdbId/recommendations", credentials, settings), credentials) }
-            catch (_: Throwable) { return emptyList() }
+        val response = try {
+            get(uri("${type.tmdbPath}/$tmdbId/recommendations", credentials, settings), credentials)
+        } catch (_: Throwable) {
+            return emptyList()
+        }
         if (response.status >= 400) return emptyList()
         return (response.jsonObject().optArrayOrNull("results")?.objects() ?: emptyList())
             .filter { it.optStringOrNull("media_type") != "person" }
@@ -215,9 +280,16 @@ class TmdbRepositoryImpl : TmdbRepository {
 
     // MARK: Genres
 
-    private suspend fun fetchGenres(credentials: ApiCredentials, settings: UserSettings): Pair<Map<Int, String>, Map<Int, String>> = coroutineScope {
+    private suspend fun fetchGenres(
+        credentials: ApiCredentials,
+        settings: UserSettings
+    ): Pair<Map<Int, String>, Map<Int, String>> = coroutineScope {
         suspend fun fetch(path: String): Map<Int, String> {
-            val response = try { get(uri(path, credentials, settings), credentials) } catch (_: Throwable) { return emptyMap() }
+            val response = try {
+                get(uri(path, credentials, settings), credentials)
+            } catch (_: Throwable) {
+                return emptyMap()
+            }
             if (response.status >= 400) return emptyMap()
             val map = HashMap<Int, String>()
             for (g in (response.jsonObject().optArrayOrNull("genres")?.objects() ?: emptyList())) {
@@ -227,6 +299,7 @@ class TmdbRepositoryImpl : TmdbRepository {
             }
             return map
         }
+
         val movie = async { fetch("genre/movie/list") }
         val tv = async { fetch("genre/tv/list") }
         Pair(movie.await(), tv.await())
@@ -265,26 +338,49 @@ class TmdbRepositoryImpl : TmdbRepository {
         }
     }
 
-    override suspend fun fetchStudioMovies(studio: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem> {
+    override suspend fun fetchStudioMovies(
+        studio: String,
+        credentials: ApiCredentials,
+        settings: UserSettings
+    ): List<MediaItem> {
         if (!credentials.hasTmdb) return emptyList()
-        val companyId = when (studio.lowercase()) {
-            "disney" -> "2" // Walt Disney Pictures
-            "netflix" -> "178464" // Netflix Movies
-            "hbo" -> "174" // Warner Bros. (HBO Max Movie parent)
-            "prime" -> "20580" // Amazon Studios
-            "apple" -> "194303" // Apple Studios
-            "paramount" -> "4" // Paramount Pictures
-            "hulu" -> "164090" // Hulu Originals
-            "peacock" -> "161044" // Universal/Peacock Movies
-            "marvel" -> "420" // Marvel Studios
-            "warner" -> "174" // Warner Bros. Pictures
-            "universal" -> "33" // Universal Pictures
-            "sony" -> "5" // Columbia Pictures
-            "crunchyroll" -> "11444" // Crunchyroll Movies
+        val key = studio.lowercase()
+
+        val watchProviderId = when (key) {
+            "netflix" -> "8"
+            "prime" -> "9"
+            "disney" -> "337"
+            "appletvplus", "apple" -> "350"
+            "hulu" -> "15"
+            "hbo" -> "1899"
+            "paramount" -> "531"
+            "peacock" -> "386"
+            "crunchyroll" -> "283"
+            "starz" -> "43"
+            "amcplus" -> "526"
             else -> null
-        } ?: return emptyList()
+        }
+
+        val companyId = when (key) {
+            "marvel" -> "420"
+            "warner" -> "174"
+            "universal" -> "33"
+            "sony" -> "5"
+            else -> null
+        }
+
         return try {
-            val url = uri("discover/movie", credentials, settings, mapOf("with_companies" to companyId))
+            val query = when {
+                watchProviderId != null -> mapOf(
+                    "with_watch_providers" to watchProviderId,
+                    "watch_region" to "US",
+                )
+
+                companyId != null -> mapOf("with_companies" to companyId)
+                else -> return emptyList()
+            }
+
+            val url = uri("discover/movie", credentials, settings, query)
             val response = get(url, credentials)
             if (response.status >= 400) return emptyList()
             val (movieGenres, _) = fetchGenres(credentials, settings)
@@ -297,28 +393,54 @@ class TmdbRepositoryImpl : TmdbRepository {
         }
     }
 
-    override suspend fun fetchStudioTVShows(studio: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem> {
+    override suspend fun fetchStudioTVShows(
+        studio: String,
+        credentials: ApiCredentials,
+        settings: UserSettings
+    ): List<MediaItem> {
         if (!credentials.hasTmdb) return emptyList()
-        val networkId = when (studio.lowercase()) {
-            "disney" -> "2739" // Disney+ TV
-            "netflix" -> "213" // Netflix TV
-            "hbo" -> "3186" // HBO Max TV
-            "prime" -> "1024" // Amazon Prime TV
-            "apple" -> "2552" // Apple TV+
-            "paramount" -> "359" // Paramount+ TV
-            "hulu" -> "453" // Hulu TV
-            "peacock" -> "3353" // Peacock TV
-            "marvel" -> "420" // Marvel TV series are tagged under Marvel Company
-            "warner" -> "3186" // Max TV
-            "universal" -> "33" // NBC TV
-            "sony" -> "5" // Sony/Columbia TV
-            "crunchyroll" -> "1112" // Crunchyroll TV
+        val key = studio.lowercase()
+
+        val watchProviderId = when (key) {
+            "netflix" -> "8"
+            "prime" -> "9"
+            "disney" -> "337"
+            "appletvplus", "apple", "appletv" -> "350"
+            "hulu" -> "15"
+            "hbo" -> "1899"
+            "paramount" -> "531"
+            "peacock" -> "386"
+            "crunchyroll" -> "283"
+            "starz" -> "43"
+            "amcplus" -> "526"
             else -> null
-        } ?: return emptyList()
+        }
+
+        val networkId = when (key) {
+            "marvel" -> "420"
+            "warner" -> "3186"
+            "universal" -> "33"
+            "sony" -> "5"
+            "pixar" -> "3"
+            else -> null
+        }
+
         return try {
-            val isCompanyQuery = studio.lowercase() in listOf("marvel", "universal", "sony")
-            val queryKey = if (isCompanyQuery) "with_companies" else "with_networks"
-            val url = uri("discover/tv", credentials, settings, mapOf(queryKey to networkId))
+            val query = when {
+                watchProviderId != null -> mapOf(
+                    "with_watch_providers" to watchProviderId,
+                    "watch_region" to "US",
+                )
+
+                networkId != null -> {
+                    val isCompanyQuery = key in listOf("marvel", "universal", "sony", "pixar")
+                    mapOf((if (isCompanyQuery) "with_companies" else "with_networks") to networkId)
+                }
+
+                else -> return emptyList()
+            }
+
+            val url = uri("discover/tv", credentials, settings, query)
             val response = get(url, credentials)
             if (response.status >= 400) return emptyList()
             val (_, tvGenres) = fetchGenres(credentials, settings)
@@ -333,7 +455,12 @@ class TmdbRepositoryImpl : TmdbRepository {
 
     // MARK: URL + headers
 
-    private fun uri(path: String, credentials: ApiCredentials, settings: UserSettings, query: Map<String, String> = emptyMap()): String {
+    private fun uri(
+        path: String,
+        credentials: ApiCredentials,
+        settings: UserSettings,
+        query: Map<String, String> = emptyMap()
+    ): String {
         val params = LinkedHashMap<String, String>()
         params["language"] = settings.language
         params["region"] = settings.region
@@ -406,9 +533,9 @@ class TmdbRepositoryImpl : TmdbRepository {
         if (error is Http.HttpError.Transport) return true
         val text = error.toString()
         return text.contains("timed out") || text.contains("SocketException") ||
-            text.contains("Connection reset") || text.contains("Failed host lookup") ||
-            text.contains("Network is unreachable") || text.contains("network connection was lost") ||
-            text.contains("offline") || text.contains("Unable to resolve host")
+                text.contains("Connection reset") || text.contains("Failed host lookup") ||
+                text.contains("Network is unreachable") || text.contains("network connection was lost") ||
+                text.contains("offline") || text.contains("Unable to resolve host")
     }
 
     private fun retryDelayMs(attempt: Int): Long = if (attempt == 0) 350 else 900
@@ -544,9 +671,13 @@ val demoCategories: List<MediaCategory> = run {
         )
     }
     listOf(
-        MediaCategory("demo_movies", "Movies", MediaType.MOVIE, movies,
-            "Add your TMDB key to replace these samples with live data"),
-        MediaCategory("demo_series", "TV Shows", MediaType.SERIES, series,
-            "Trending and airing rows appear after TMDB setup"),
+        MediaCategory(
+            "demo_movies", "Movies", MediaType.MOVIE, movies,
+            "Add your TMDB key to replace these samples with live data"
+        ),
+        MediaCategory(
+            "demo_series", "TV Shows", MediaType.SERIES, series,
+            "Trending and airing rows appear after TMDB setup"
+        ),
     )
 }

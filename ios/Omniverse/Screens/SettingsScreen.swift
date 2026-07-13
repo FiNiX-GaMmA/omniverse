@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// Vidsrc embed domains, ported verbatim from `VidsrcRepository.embedDomains`.
-private let vidsrcEmbedDomains = ["vidsrc-embed.ru", "vidsrc-embed.su", "vidsrcme.su", "vsrc.su"]
+private let vidsrcEmbedDomains = ["vsembed.ru", "vsembed.su", "vidsrcme.ru"]
 
 /// Subtitle languages, ported verbatim from `settings_screen.dart`.
 private let subtitleLanguageOptions: [(code: String, name: String)] = [
@@ -42,7 +42,7 @@ struct SettingsScreen: View {
     @State private var region = ""
     @State private var subtitleUrl = ""
     @State private var subtitleLanguage = "en"
-    @State private var vidsrcDomain = "vidsrc-embed.ru"
+    @State private var vidsrcDomain = "vsembed.ru"
     @State private var includeAdult = false
     @State private var tvMode = false
     @State private var preferDubbedAnime = false

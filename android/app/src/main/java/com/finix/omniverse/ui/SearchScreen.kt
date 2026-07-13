@@ -64,13 +64,16 @@ fun SearchScreen(nav: NavController) {
             .distinctUntilChanged()
             .collect { value ->
                 val trimmed = value.trim()
-                if (trimmed.isEmpty()) { currentQuery = ""; results = emptyList(); loading = false; error = null; return@collect }
+                if (trimmed.isEmpty()) {
+                    currentQuery = ""; results = emptyList(); loading = false; error = null; return@collect
+                }
                 requestId++
                 val id = requestId
                 currentQuery = trimmed
                 loading = true; error = null
                 if (!state.credentials.hasTmdb) {
-                    loading = false; error = "Add your TMDB API key in Settings to enable search."; results = emptyList()
+                    loading = false; error = "Add your TMDB API key in Settings to enable search."; results =
+                        emptyList()
                     return@collect
                 }
                 val items = state.searchMedia(trimmed)
@@ -81,11 +84,14 @@ fun SearchScreen(nav: NavController) {
     }
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             OutlinedTextField(
                 value = query, onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search movies and TV shows", color = Color.White.copy(alpha = 0.54f)) },
+                placeholder = { Text("Search movies, TV shows, and anime", color = Color.White.copy(alpha = 0.54f)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null, tint = Color.White.copy(alpha = 0.7f)) },
                 singleLine = true,
                 shape = RoundedCornerShape(50),
@@ -96,23 +102,42 @@ fun SearchScreen(nav: NavController) {
                 ),
             )
         }
-        if (loading) Box(Modifier.fillMaxWidth().padding(24.dp), Alignment.Center) { CircularProgressIndicator(color = LiquidColors.Cyan) }
+        if (loading) Box(
+            Modifier.fillMaxWidth().padding(24.dp),
+            Alignment.Center
+        ) { CircularProgressIndicator(color = LiquidColors.Cyan) }
         if (!loading && error != null && results.isEmpty()) {
-            Text(error!!, color = Color.White.copy(alpha = 0.78f), fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp))
+            Text(
+                error!!, color = Color.White.copy(alpha = 0.78f), fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp)
+            )
         }
         if (results.isEmpty() && currentQuery.isEmpty()) {
             Column(Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) {
-                Text("Search Anything in Omniverse", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Black)
-                Text("Type a movie, TV show, or anime title. We search Omniverse for matches and open the same detail screen as the home rows — sources included.",
-                    color = Color.White.copy(alpha = 0.7f), fontSize = 15.sp)
+                Text(
+                    "Search Anything in Omniverse",
+                    color = Color.White,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Black
+                )
+                Text(
+                    "Type a movie, TV show, or anime title. We search Omniverse for matches and open the same detail screen as the home rows — sources included.",
+                    color = Color.White.copy(alpha = 0.7f), fontSize = 15.sp
+                )
             }
         } else {
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
-                val cols = when { maxWidth >= 1200.dp -> 6; maxWidth >= 900.dp -> 5; maxWidth >= 600.dp -> 4; else -> 3 }
+                val cols = when {
+                    maxWidth >= 1200.dp -> 6; maxWidth >= 900.dp -> 5; maxWidth >= 600.dp -> 4; else -> 3
+                }
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(cols),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 8.dp,
+                        bottom = 32.dp
+                    ),
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                     verticalArrangement = Arrangement.spacedBy(18.dp),
                 ) {
@@ -122,8 +147,21 @@ fun SearchScreen(nav: NavController) {
                                 Modifier.fillMaxWidth().aspectRatio(2f / 3f)
                                     .tvFocusable(onClick = { RouteArgs.detailItem = item; nav.navigate("detail") })
                                     .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                            ) { PosterImage(item.posterUrl ?: item.backdropUrl, Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))) }
-                            Text(item.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
+                            ) {
+                                PosterImage(
+                                    item.posterUrl ?: item.backdropUrl,
+                                    Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
+                                )
+                            }
+                            Text(
+                                item.title,
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
                         }
                     }
                 }

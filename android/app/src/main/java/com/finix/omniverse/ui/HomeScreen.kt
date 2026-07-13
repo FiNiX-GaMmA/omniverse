@@ -87,8 +87,10 @@ fun HomeScreen(nav: NavController) {
 
     fun mediaItemFor(entry: WatchProgress): MediaItem {
         val parts = entry.itemId.split(":")
-        var item = MediaItem(id = entry.itemId, type = entry.type, title = entry.title,
-            posterPath = entry.posterPath, backdropPath = entry.backdropPath)
+        var item = MediaItem(
+            id = entry.itemId, type = entry.type, title = entry.title,
+            posterPath = entry.posterPath, backdropPath = entry.backdropPath
+        )
         if (parts.size >= 3) when (parts[0]) {
             "tmdb" -> item = item.copy(tmdbId = parts[2].toIntOrNull())
             "trakt" -> item = item.copy(traktId = parts[2].toIntOrNull())
@@ -105,22 +107,44 @@ fun HomeScreen(nav: NavController) {
         return try {
             val s = state.playbackSourcesFor(item, episode)
             val src = s.firstOrNull { it.isDirect || it.provider == "VidSrc" } ?: s.firstOrNull()
-            if (src == null) { openDetail(item); return false }
+            if (src == null) {
+                openDetail(item); return false
+            }
             when {
                 src.isEmbed && src.provider == "VidSrc" -> {
-                    val urls = VidsrcExtractor().embedUrlsFor(item, episode, state.settings.vidsrcDomain,
-                        state.settings.subtitleUrl, state.settings.subtitleLanguage)
-                    if (urls.isEmpty()) { RouteArgs.web = WebArgs(src.title, src.url, src.headers); nav.navigate("web") }
-                    else { RouteArgs.vidsrc = VidsrcArgs(item, src.title, urls, episode); nav.navigate("vidsrc") }
+                    val urls = VidsrcExtractor().embedUrlsFor(
+                        item, episode, state.settings.vidsrcDomain,
+                        state.settings.subtitleUrl, state.settings.subtitleLanguage
+                    )
+                    if (urls.isEmpty()) {
+                        RouteArgs.web = WebArgs(src.title, src.url, src.headers); nav.navigate("web")
+                    } else {
+                        RouteArgs.vidsrc = VidsrcArgs(item, src.title, urls, episode); nav.navigate("vidsrc")
+                    }
                 }
-                src.isEmbed -> { RouteArgs.web = WebArgs(src.title, src.url, src.headers); nav.navigate("web") }
+
+                src.isEmbed -> {
+                    RouteArgs.web = WebArgs(src.title, src.url, src.headers); nav.navigate("web")
+                }
+
                 else -> {
-                    RouteArgs.player = PlayerArgs(item.title, src.url, src.headers, item, episode, src.subtitleUrl, startPositionMs, null)
+                    RouteArgs.player = PlayerArgs(
+                        item.title,
+                        src.url,
+                        src.headers,
+                        item,
+                        episode,
+                        src.subtitleUrl,
+                        startPositionMs,
+                        null
+                    )
                     nav.navigate("player")
                 }
             }
             true
-        } catch (t: Throwable) { openDetail(item); false }
+        } catch (t: Throwable) {
+            openDetail(item); false
+        }
     }
 
     // Tapping a Continue Watching card shows an intuitive popup (Resume / Play from
@@ -193,31 +217,25 @@ fun HomeScreen(nav: NavController) {
                         "netflix" -> "Netflix"
                         "hbo" -> "HBO Max"
                         "prime" -> "Prime Video"
-                        "apple" -> "Apple TV+"
+                        "appletvplus", "apple" -> "Apple TV+"
                         "paramount" -> "Paramount+"
                         "hulu" -> "Hulu"
                         "peacock" -> "Peacock"
-                        "marvel" -> "Marvel Studios"
-                        "warner" -> "Warner Bros"
-                        "universal" -> "Universal"
-                        "sony" -> "Sony Pictures"
                         "crunchyroll" -> "Crunchyroll"
+                        "amcplus" -> "AMC+"
                         else -> studio.replaceFirstChar { it.uppercase() }
                     },
                     logoUrl = when (studio.lowercase()) {
-                        "netflix" -> "https://image.tmdb.org/t/p/w500/wwemzKWzjKYJFfCeiB67v84g67V.png"
-                        "disney" -> "https://image.tmdb.org/t/p/w500/uzK9u4w6FQm0zJbi9qRmN0R0ppU.png"
-                        "hbo" -> "https://image.tmdb.org/t/p/w500/aS77vEmdTeE1UdGRZT3lmV3N0KzB.png"
-                        "prime" -> "https://image.tmdb.org/t/p/w500/dqO0T3VGYWxQj1MlEhRpMDZlObC.png"
-                        "apple" -> "https://image.tmdb.org/t/p/w500/4EClm3JjNzdXjVgXoNlM2bTBpTV.png"
-                        "paramount" -> "https://image.tmdb.org/t/p/w500/ge9aWF6Nzm3eWV3cE1IaGNmViB.png"
-                        "hulu" -> "https://image.tmdb.org/t/p/w500/ke60mVEbEw4VlJtLzlZVW12UTNyW.png"
-                        "peacock" -> "https://image.tmdb.org/t/p/w500/8D09aGpmdzIrcjY4UEhET252STd.png"
-                        "marvel" -> "https://image.tmdb.org/t/p/w500/hUze9aWFR6N2kzODAyMG9RVE1wY0Z.png"
-                        "warner" -> "https://image.tmdb.org/t/p/w500/3NBiISDoGNSlKzVFNzhNOT0aGpm.png"
-                        "universal" -> "https://image.tmdb.org/t/p/w500/87XNBeVEH5FTEpoocVJBNDVDb20.png"
-                        "sony" -> "https://image.tmdb.org/t/p/w500/76iXB0ZqUzNDV1RVMQkE5S0QVG.png"
-                        "crunchyroll" -> "https://image.tmdb.org/t/p/w500/yNzSO9lpbWN5NmhyeUtVUzZFY2s.png"
+                        "netflix" -> "https://image.tmdb.org/t/p/w154/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg"
+                        "prime" -> "https://image.tmdb.org/t/p/w154/pvske1MyAoymrs5bguRfVqYiM9a.jpg"
+                        "disney" -> "https://image.tmdb.org/t/p/w154/97yvRBw1GzX7fXprcF80er19ot.jpg"
+                        "appletvplus", "apple" -> "https://image.tmdb.org/t/p/w154/SPnB1qiCkYfirS2it3hZORwGVn.jpg"
+                        "hulu" -> "https://image.tmdb.org/t/p/w154/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg"
+                        "hbo" -> "https://image.tmdb.org/t/p/w154/jbe4gVSfRlbPTdESXhEKpornsfu.jpg"
+                        "paramount" -> "https://image.tmdb.org/t/p/w154/fts6X10Jn4QT0X6ac3udKEn2tJA.jpg"
+                        "peacock" -> "https://image.tmdb.org/t/p/w154/2aGrp1xw3qhwCYvNGAJZPdjfeeX.jpg"
+                        "crunchyroll" -> "https://image.tmdb.org/t/p/w154/fzN5Jok5Ig1eJ7gyNGoMhnLSCfh.jpg"
+                        "amcplus" -> "https://image.tmdb.org/t/p/w154/ovmu6uot1XVvsemM2dDySXLiX57.jpg"
                         else -> ""
                     },
                     onClose = { selectedStudio = null },
@@ -250,23 +268,34 @@ private fun ContinueWatchingSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.width(132.dp).height(74.dp).clip(RoundedCornerShape(10.dp))
-                    .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(10.dp))) {
+                Box(
+                    Modifier.width(132.dp).height(74.dp).clip(RoundedCornerShape(10.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
+                ) {
                     PosterImage(entry.backdropUrl ?: entry.posterUrl, Modifier.fillMaxSize(), ContentScale.Crop)
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
-                    Text(entry.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Black,
-                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        entry.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Black,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis
+                    )
                     val pct = (entry.fraction * 100).toInt()
                     val sub = if (entry.seasonNumber != null && entry.episodeNumber != null)
                         "S${entry.seasonNumber}E${entry.episodeNumber} • $pct% watched"
                     else "$pct% watched"
-                    Text(sub, color = Color.White.copy(alpha = 0.66f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        sub,
+                        color = Color.White.copy(alpha = 0.66f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
             if (resolving) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)
+                ) {
                     CircularProgressIndicator(color = LiquidColors.Cyan, modifier = Modifier.size(22.dp))
                     Text("Resolving…", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
@@ -296,7 +325,13 @@ private fun SheetButton(label: String, primary: Boolean = false, onClick: () -> 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun HeroCarousel(picks: List<MediaItem>, wide: Boolean, height: Dp, portrait: Boolean, onSelect: (MediaItem) -> Unit) {
+private fun HeroCarousel(
+    picks: List<MediaItem>,
+    wide: Boolean,
+    height: Dp,
+    portrait: Boolean,
+    onSelect: (MediaItem) -> Unit
+) {
     val state = AppGraph.appState
     // Capture picks ONCE with a stable identity key (the list of ids). An unrelated
     // Home recomposition that returns a fresh List instance must NOT rebuild the pager
@@ -402,7 +437,7 @@ private fun HeroPage(item: MediaItem, wide: Boolean, portrait: Boolean, onSelect
         )
         val ratingPart = if (item.rating > 0) "★ " + String.format("%.1f", item.rating) + " • " else ""
         val metaText = ratingPart + item.type.label +
-            (if (item.genres.isEmpty()) "" else " • " + item.genres.take(2).joinToString(" • "))
+                (if (item.genres.isEmpty()) "" else " • " + item.genres.take(2).joinToString(" • "))
         // Portrait shows ONLY the metadata, CENTERED on the image; landscape shows
         // the name above it, left-aligned.
         Column(
@@ -466,7 +501,7 @@ private fun rememberHeroTextColor(url: String?): Color {
                     ?: return@runCatching null
                 val palette = androidx.palette.graphics.Palette.from(bmp).generate()
                 (palette.lightVibrantSwatch ?: palette.vibrantSwatch
-                    ?: palette.lightMutedSwatch ?: palette.dominantSwatch)?.rgb
+                ?: palette.lightMutedSwatch ?: palette.dominantSwatch)?.rgb
             }.getOrNull()
         }
         if (rgb != null) {
@@ -487,31 +522,70 @@ private fun displayCategories(): List<MediaCategory> {
     return remember(state.categories.toList(), state.animeCategories.toList()) {
         val movieCat = state.categories.firstOrNull { it.id == "trending_movies" || it.id == "trakt_trending_movies" }
         val seriesCat = state.categories.firstOrNull { it.id == "trending_series" || it.id == "trakt_trending_series" }
-        val animeCat = state.animeCategories.firstOrNull { it.id == "anime_trending" || it.title.lowercase().contains("trending") }
+        val animeCat =
+            state.animeCategories.firstOrNull { it.id == "anime_trending" || it.title.lowercase().contains("trending") }
         val movies = movieCat?.items ?: emptyList()
         val series = seriesCat?.items ?: emptyList()
         val anime = animeCat?.items ?: emptyList()
 
         val out = ArrayList<MediaCategory>()
-        var mi = 0; var si = 0; var ai = 0
+        var mi = 0;
+        var si = 0;
+        var ai = 0
         fun roundRobin(limit: Int): List<MediaItem> {
             val r = ArrayList<MediaItem>()
             while (r.size < limit && (mi < movies.size || si < series.size || ai < anime.size)) {
-                if (mi < movies.size) { r.add(movies[mi]); mi++; if (r.size >= limit) break }
-                if (si < series.size) { r.add(series[si]); si++; if (r.size >= limit) break }
-                if (ai < anime.size) { r.add(anime[ai]); ai++; if (r.size >= limit) break }
+                if (mi < movies.size) {
+                    r.add(movies[mi]); mi++; if (r.size >= limit) break
+                }
+                if (si < series.size) {
+                    r.add(series[si]); si++; if (r.size >= limit) break
+                }
+                if (ai < anime.size) {
+                    r.add(anime[ai]); ai++; if (r.size >= limit) break
+                }
             }
             return r
         }
+
         val top10 = roundRobin(10)
-        if (top10.isNotEmpty()) out.add(MediaCategory("top_10_trending", "Top 10 Trending", MediaType.MOVIE, top10,
-            "The most watched movies, TV shows, and anime this week"))
-        if (movies.isNotEmpty()) out.add(MediaCategory("top_10_trending_movies", "Top 10 Trending Movies", MediaType.MOVIE, movies.take(10)))
-        if (series.isNotEmpty()) out.add(MediaCategory("top_10_trending_series", "Top 10 Trending TV Shows", MediaType.SERIES, series.take(10)))
-        if (anime.isNotEmpty()) out.add(MediaCategory("top_10_trending_anime", "Top 10 Trending Anime", MediaType.ANIME, anime.take(10)))
+        if (top10.isNotEmpty()) out.add(
+            MediaCategory(
+                "top_10_trending", "Top 10 Trending", MediaType.MOVIE, top10,
+                "The most watched movies, TV shows, and anime this week"
+            )
+        )
+        if (movies.isNotEmpty()) out.add(
+            MediaCategory(
+                "top_10_trending_movies",
+                "Top 10 Trending Movies",
+                MediaType.MOVIE,
+                movies.take(10)
+            )
+        )
+        if (series.isNotEmpty()) out.add(
+            MediaCategory(
+                "top_10_trending_series",
+                "Top 10 Trending TV Shows",
+                MediaType.SERIES,
+                series.take(10)
+            )
+        )
+        if (anime.isNotEmpty()) out.add(
+            MediaCategory(
+                "top_10_trending_anime",
+                "Top 10 Trending Anime",
+                MediaType.ANIME,
+                anime.take(10)
+            )
+        )
         val trending = roundRobin(40)
-        if (trending.isNotEmpty()) out.add(MediaCategory("trending_all", "Trending", MediaType.MOVIE, trending,
-            "Popular movies, TV shows, and anime this week"))
+        if (trending.isNotEmpty()) out.add(
+            MediaCategory(
+                "trending_all", "Trending", MediaType.MOVIE, trending,
+                "Popular movies, TV shows, and anime this week"
+            )
+        )
 
         val allItems = movies + anime + series
         for (genre in listOf("Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery")) {
@@ -519,17 +593,24 @@ private fun displayCategories(): List<MediaCategory> {
             val picks = ArrayList<MediaItem>()
             for (item in allItems) if (item.genres.contains(genre) && seen.add(item.id)) picks.add(item)
             if (picks.size >= 4) {
-                out.add(MediaCategory(
-                    "genre_${genre.lowercase().replace(" ", "_")}", "Trending $genre", MediaType.MOVIE,
-                    picks.take(15), "Popular $genre titles to watch this week",
-                ))
+                out.add(
+                    MediaCategory(
+                        "genre_${genre.lowercase().replace(" ", "_")}", "Trending $genre", MediaType.MOVIE,
+                        picks.take(15), "Popular $genre titles to watch this week",
+                    )
+                )
             }
         }
         if (out.isEmpty()) state.categories.toList() else out
     }
 }
 
-private data class StudioInfo(val id: String, val name: String, val logoUrl: String, val background: androidx.compose.ui.graphics.Brush)
+private data class StudioInfo(
+    val id: String,
+    val name: String,
+    val logoUrl: String,
+    val background: androidx.compose.ui.graphics.Brush
+)
 
 @Composable
 private fun StudiosRow(wide: Boolean, onSelect: (String) -> Unit) {
@@ -537,68 +618,59 @@ private fun StudiosRow(wide: Boolean, onSelect: (String) -> Unit) {
         listOf(
             StudioInfo(
                 "netflix", "Netflix",
-                "https://unavatar.io/netflix.com",
-                androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color(0xFF0F1E36), Color(0xFF07090E), Color(0xFF2C080E)))
-            ),
-            StudioInfo(
-                "disney", "Disney+",
-                "https://unavatar.io/disneyplus.com",
-                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF0C1428), Color(0xFF03060E)))
-            ),
-            StudioInfo(
-                "hbo", "HBO Max",
-                "https://unavatar.io/hbo.com",
-                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF090E1F), Color(0xFF001150)))
+                "https://image.tmdb.org/t/p/w154/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+                androidx.compose.ui.graphics.Brush.horizontalGradient(
+                    listOf(
+                        Color(0xFF0F1E36),
+                        Color(0xFF07090E),
+                        Color(0xFF2C080E)
+                    )
+                )
             ),
             StudioInfo(
                 "prime", "Prime Video",
-                "https://unavatar.io/primevideo.com",
+                "https://image.tmdb.org/t/p/w154/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
                 androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF1A233A), Color(0xFF0D1424)))
             ),
             StudioInfo(
-                "apple", "Apple TV+",
-                "https://unavatar.io/apple.com",
+                "disney", "Disney+",
+                "https://image.tmdb.org/t/p/w154/97yvRBw1GzX7fXprcF80er19ot.jpg",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF0C1428), Color(0xFF03060E)))
+            ),
+            StudioInfo(
+                "appletvplus", "Apple TV+",
+                "https://image.tmdb.org/t/p/w154/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
                 androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF1E1E1E), Color(0xFF030303)))
             ),
             StudioInfo(
-                "paramount", "Paramount+",
-                "https://unavatar.io/paramountplus.com",
-                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF001D40), Color(0xFF000E24)))
-            ),
-            StudioInfo(
                 "hulu", "Hulu",
-                "https://unavatar.io/hulu.com",
+                "https://image.tmdb.org/t/p/w154/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg",
                 androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF051E14), Color(0xFF020905)))
             ),
             StudioInfo(
+                "hbo", "HBO Max",
+                "https://image.tmdb.org/t/p/w154/jbe4gVSfRlbPTdESXhEKpornsfu.jpg",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF090E1F), Color(0xFF001150)))
+            ),
+            StudioInfo(
+                "paramount", "Paramount+",
+                "https://image.tmdb.org/t/p/w154/fts6X10Jn4QT0X6ac3udKEn2tJA.jpg",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF001D40), Color(0xFF000E24)))
+            ),
+            StudioInfo(
                 "peacock", "Peacock",
-                "https://unavatar.io/peacocktv.com",
+                "https://image.tmdb.org/t/p/w154/2aGrp1xw3qhwCYvNGAJZPdjfeeX.jpg",
                 androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color(0xFF0D0D14), Color(0xFF1B1B2A)))
             ),
             StudioInfo(
-                "marvel", "Marvel",
-                "https://unavatar.io/marvel.com",
-                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFFE2011A), Color(0xFF330006)))
-            ),
-            StudioInfo(
-                "warner", "Warner Bros",
-                "https://unavatar.io/warnerbros.com",
-                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF011C4A), Color(0xFF050F2B)))
-            ),
-            StudioInfo(
-                "universal", "Universal",
-                "https://unavatar.io/universalpictures.com",
-                androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color(0xFF0E1C38), Color(0xFF030713)))
-            ),
-            StudioInfo(
-                "sony", "Sony Pictures",
-                "https://unavatar.io/sonypictures.com",
-                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF1E325A), Color(0xFF0C162E)))
-            ),
-            StudioInfo(
                 "crunchyroll", "Crunchyroll",
-                "https://unavatar.io/crunchyroll.com",
+                "https://image.tmdb.org/t/p/w154/fzN5Jok5Ig1eJ7gyNGoMhnLSCfh.jpg",
                 androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFFF47521), Color(0xFF5E2700)))
+            ),
+            StudioInfo(
+                "amcplus", "AMC+",
+                "https://image.tmdb.org/t/p/w154/ovmu6uot1XVvsemM2dDySXLiX57.jpg",
+                androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF2A2A2A), Color(0xFF0F0F0F)))
             )
         )
     }

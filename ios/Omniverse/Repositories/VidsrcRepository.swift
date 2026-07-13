@@ -7,13 +7,12 @@ import Foundation
 final class VidsrcRepository: VidsrcRepositoryProtocol {
 
     static let embedDomains = [
-        "vidsrc-embed.ru",
-        "vidsrc-embed.su",
-        "vidsrcme.su",
-        "vsrc.su",
+        "vsembed.ru",
+        "vsembed.su",
+        "vidsrcme.ru",
     ]
 
-    private static let listingDomain = "vidsrc-embed.ru"
+    private static let listingDomain = "vsembed.ru"
 
     func sourcesFor(_ item: MediaItem, settings: UserSettings, episode: MediaEpisode?) -> [PlaybackSource] {
         if item.type == .liveTv || item.type == .anime { return [] }
@@ -262,10 +261,9 @@ private enum VidsrcError: Error, CustomStringConvertible {
 final class VidsrcExtractor {
 
     private static let sourceHosts = [
-        "vidsrc-embed.ru",
-        "vidsrc-embed.su",
-        "vidsrcme.su",
-        "vsrc.su",
+        "vsembed.ru",
+        "vsembed.su",
+        "vidsrcme.ru",
     ]
 
     private static let userAgents = [

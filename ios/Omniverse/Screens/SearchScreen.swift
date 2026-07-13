@@ -61,7 +61,7 @@ struct SearchScreen: View {
             GlassCapsule(padding: EdgeInsets(top: 4, leading: 14, bottom: 4, trailing: 8)) {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass").font(.system(size: 18)).foregroundStyle(.white.opacity(0.7))
-                    TextField("", text: $query, prompt: Text("Search movies and TV shows").foregroundColor(.white.opacity(0.54)))
+                    TextField("", text: $query, prompt: Text("Search movies, TV shows, and anime").foregroundColor(.white.opacity(0.54)))
                         .focused($fieldFocused)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()

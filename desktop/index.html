@@ -23,9 +23,22 @@
                             brandDarker: "#000000",
                             brandSec: "#0E0E0E",
                             brandTert: "#1C1C1C",
-                            brandCyan: "#8b5cf6", // Using purple for Stremio vibe but keeping class names
-                            brandCyanDark: "#7c3aed",
-                            brandGlow: "rgba(139, 92, 246, 0.15)",
+                            brandCyan: "#ff1e27", // Fully ported Lordflix Crimson Red
+                            brandCyanDark: "#b20710",
+                            brandGlow: "rgba(255, 30, 39, 0.15)",
+                            cyan: {
+                                50: "#fff5f5",
+                                100: "#ffe3e3",
+                                200: "#ffc9c9",
+                                300: "#ffa8a8",
+                                400: "#ff8787",
+                                500: "#ff1e27", // Lordflix Red
+                                600: "#e50914",
+                                700: "#c40812",
+                                800: "#9c060e",
+                                900: "#7a050b",
+                                950: "#220204", // Deep rich dark red
+                            },
                         },
                     },
                 },
@@ -38,16 +51,19 @@
         <!-- Fluid Animated Background -->
         <div class="lordflix-bg"></div>
 
-        <!-- TOP NAVBAR (Lordflix Style Pill) -->
-        <nav id="titlebar" class="fixed top-6 right-10 z-40 flex items-center gap-4 transition-all duration-300" style="-webkit-app-region: drag;">
-            <!-- Custom Windows Titlebar Control Buttons -->
-            <div id="window-controls" class="hidden items-center gap-2 mr-4 bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5 border border-white/10" style="-webkit-app-region: no-drag;">
-                <button class="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition shadow-lg" onclick="window.electron.close()"></button>
-                <button class="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition shadow-lg" onclick="window.electron.minimize()"></button>
-                <button class="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition shadow-lg" onclick="window.electron.maximize()"></button>
-            </div>
+        <!-- TOP DRAG STRIP (frameless window move handle) -->
+        <div class="fixed top-0 left-0 right-0 h-9 z-30" style="-webkit-app-region: drag;"></div>
 
-            <div class="flex items-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-full px-6 py-2 shadow-2xl gap-6" style="-webkit-app-region: no-drag;">
+        <!-- WINDOW CONTROLS (top-right traffic lights, shown on Windows/Linux) -->
+        <div id="window-controls" class="hidden fixed top-4 right-6 z-50 flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5 border border-white/10" style="-webkit-app-region: no-drag;">
+            <button class="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition shadow-lg" onclick="window.electron.close()"></button>
+            <button class="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition shadow-lg" onclick="window.electron.minimize()"></button>
+            <button class="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition shadow-lg" onclick="window.electron.maximize()"></button>
+        </div>
+
+        <!-- BOTTOM-DOCKED NAV PILL (Lordflix Style) -->
+        <nav id="titlebar" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 transition-all duration-300">
+            <div class="flex items-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-full px-6 py-2.5 shadow-2xl gap-6" style="-webkit-app-region: no-drag;">
                 <button onclick="switchScreen('home')" id="nav-home" class="text-sm font-semibold text-white/70 hover:text-white transition">Home</button>
                 <button onclick="switchScreen('movies')" id="nav-movies" class="text-sm font-semibold text-white/70 hover:text-white transition">Movies</button>
                 <button onclick="switchScreen('tv')" id="nav-tv" class="text-sm font-semibold text-white/70 hover:text-white transition">Shows</button>
@@ -67,12 +83,12 @@
         </nav>
 
         <!-- MAIN APP CONTAINER -->
-        <main id="content-viewport" class="h-screen w-full overflow-y-auto relative hide-scroll">
+        <main id="content-viewport" class="h-screen w-full overflow-y-auto relative hide-scroll pb-28">
 
-            <!-- BRAND LOGO TOP LEFT -->
+            <!-- BRAND LOGO TOP LEFT (Lordflix Style) -->
             <div class="fixed top-8 left-10 z-40 flex items-center gap-2 pointer-events-none drop-shadow-xl">
-                <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
-                <span class="font-black text-white text-xl tracking-widest italic">OMNIVERSE</span>
+                <img src="logo.png" alt="Omniverse" class="h-8 w-8 object-contain drop-shadow-[0_0_10px_rgba(255,30,39,0.45)]" />
+                <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-gray-400 text-xl tracking-widest italic">OMNI<span class="text-brandCyan drop-shadow-[0_0_8px_rgba(255,30,39,0.4)]">VERSE</span></span>
             </div>
 
             <!-- SCREEN: HOME DASHBOARD -->
@@ -81,64 +97,82 @@
                 <div id="hero-banner" class="relative w-full h-[85vh] bg-cover bg-center transition-all duration-700">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#000000] via-transparent to-transparent z-0"></div>
                     <div class="absolute inset-0 bg-gradient-to-r from-[#000000] via-black/50 to-transparent z-0"></div>
-                    <div class="absolute bottom-20 left-16 max-w-3xl z-10 space-y-5">
-                        <h1 id="hero-title" class="text-6xl font-black text-white drop-shadow-2xl tracking-tight">One Piece</h1>
+                    <div id="hero-content" class="absolute bottom-20 left-16 max-w-3xl z-10 space-y-5">
+                        <h1 id="hero-title" class="text-6xl font-black text-white drop-shadow-2xl tracking-tight">Syncing latest releases…</h1>
                         <p id="hero-overview" class="text-lg text-gray-300 line-clamp-3 drop-shadow-md max-w-2xl leading-relaxed">
-                            Monkey D. Luffy refuses to let anyone or anything stand in the way of his quest to become the king of all pirates...
+                            Pulling fresh movie, TV, and anime discovery data from live sources. Add your TMDB key in Settings to unlock movie and TV rails.
                         </p>
                         <div class="flex items-center gap-4 pt-4">
-                            <button id="hero-play-btn" class="bg-white text-black hover:scale-105 transition-transform duration-300 font-bold px-8 py-3 rounded-full flex items-center gap-2 shadow-lg shadow-white/20">
-                                <i data-lucide="play" class="w-5 h-5 fill-black"></i> Play
+                            <button id="hero-play-btn" class="bg-white text-black hover:bg-white/90 hover:scale-105 transition-transform duration-300 font-bold px-9 py-3 rounded-full flex items-center gap-2 shadow-lg tracking-wide">
+                                <i data-lucide="play" class="w-5 h-5 fill-black text-black"></i> PLAY
                             </button>
-                            <button id="hero-detail-btn" class="bg-white/20 hover:bg-white/30 hover:scale-105 transition-transform duration-300 backdrop-blur-md text-white font-bold px-8 py-3 rounded-full flex items-center gap-2">
-                                <i data-lucide="info" class="w-5 h-5"></i> More Info
+                            <button id="hero-add-btn" title="Add to My List" class="w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:scale-105 transition-transform duration-300">
+                                <i data-lucide="plus" class="w-5 h-5"></i>
+                            </button>
+                            <button id="hero-detail-btn" title="More Info" class="w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:scale-105 transition-transform duration-300">
+                                <i data-lucide="info" class="w-5 h-5"></i>
                             </button>
                         </div>
+
+                        <!-- Hero carousel slide dots -->
+                        <div id="hero-dots" class="flex items-center gap-2 pt-6"></div>
                     </div>
                 </div>
 
                 <!-- CONTENT RAILS -->
-                <div class="px-12 -mt-32 relative z-20 space-y-12">
+                <div class="px-12 -mt-16 relative z-20 space-y-12">
 
-                    <!-- PREMIUM STUDIOS -->
+                    <!-- BROWSE BY PROVIDER -->
                     <div class="space-y-4">
-                        <h2 class="text-xl font-bold text-white tracking-wide">Networks & Studios</h2>
+                        <h2 class="text-xl font-bold text-white tracking-wide">Browse by Provider</h2>
                         <div class="horizontal-rail flex overflow-x-auto gap-6 pb-6 hide-scroll">
-                            <!-- Disney+ -->
-                            <button onclick="filterByStudio('disney')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Disney%2B_logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
+                            <button onclick="filterByStudio('netflix')" data-provider-id="8" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Netflix">
+                                <img data-provider-id="8" src="https://image.tmdb.org/t/p/w154/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg" alt="Netflix logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">NETFLIX</span>
                             </button>
-                            <!-- Netflix -->
-                            <button onclick="filterByStudio('netflix')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
+                            <button onclick="filterByStudio('prime')" data-provider-id="9" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Amazon Prime Video">
+                                <img data-provider-id="9" src="https://image.tmdb.org/t/p/w154/pvske1MyAoymrs5bguRfVqYiM9a.jpg" alt="Amazon Prime Video logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">PRIME</span>
                             </button>
-                            <!-- HBO Max -->
-                            <button onclick="filterByStudio('hbo')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/1/17/HBO_Max_Logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
+                            <button onclick="filterByStudio('disney')" data-provider-id="337" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Disney Plus">
+                                <img data-provider-id="337" src="https://image.tmdb.org/t/p/w154/97yvRBw1GzX7fXprcF80er19ot.jpg" alt="Disney Plus logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">DISNEY+</span>
                             </button>
-                            <!-- Apple TV+ -->
-                            <button onclick="filterByStudio('apple')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/28/Apple_TV_Plus_Logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
+                            <button onclick="filterByStudio('appletvplus')" data-provider-id="350" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Apple TV Plus">
+                                <img data-provider-id="350" src="https://image.tmdb.org/t/p/w154/SPnB1qiCkYfirS2it3hZORwGVn.jpg" alt="Apple TV Plus logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">APPLE TV+</span>
                             </button>
-                            <!-- Prime Video -->
-                            <button onclick="filterByStudio('prime')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/1/11/Amazon_Prime_Video_logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
+                            <button onclick="filterByStudio('appletv')" data-provider-id="2" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Apple TV">
+                                <img data-provider-id="2" alt="Apple TV logo" class="studio-logo hidden w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">APPLE TV</span>
                             </button>
-                            <!-- Marvel -->
-                            <button onclick="filterByStudio('marvel')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b9/Marvel_Logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
+                            <button onclick="filterByStudio('hulu')" data-provider-id="15" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Hulu">
+                                <img data-provider-id="15" src="https://image.tmdb.org/t/p/w154/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg" alt="Hulu logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">HULU</span>
                             </button>
-                            <!-- Pixar -->
-                            <button onclick="filterByStudio('pixar')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/4/40/Pixar_logo.svg" class="h-full object-contain pointer-events-none brightness-0 invert drop-shadow-md" />
+                            <button onclick="filterByStudio('hbo')" data-provider-id="1899" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="HBO Max">
+                                <img data-provider-id="1899" src="https://image.tmdb.org/t/p/w154/jbe4gVSfRlbPTdESXhEKpornsfu.jpg" alt="HBO Max logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="hidden text-[10px] font-extrabold tracking-wide text-white/80 text-center">HBO MAX</span>
                             </button>
-                            <!-- A24 -->
-                            <button onclick="filterByStudio('a24')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/a/ae/A24_logo.svg" class="h-full object-contain pointer-events-none brightness-0 invert drop-shadow-md" />
+                            <button onclick="filterByStudio('paramount')" data-provider-id="531" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Paramount Plus">
+                                <img data-provider-id="531" src="https://image.tmdb.org/t/p/w154/fts6X10Jn4QT0X6ac3udKEn2tJA.jpg" alt="Paramount Plus logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">PARAMOUNT+</span>
                             </button>
-                            <!-- Warner Bros -->
-                            <button onclick="filterByStudio('warner')" class="tvos-card shrink-0 w-40 bg-white/5 backdrop-blur-md h-24 rounded-2xl flex items-center justify-center p-4">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/6/64/Warner_Bros_logo.svg" class="h-full object-contain pointer-events-none drop-shadow-md" />
+                            <button onclick="filterByStudio('peacock')" data-provider-id="386" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Peacock Premium">
+                                <img data-provider-id="386" src="https://image.tmdb.org/t/p/w154/2aGrp1xw3qhwCYvNGAJZPdjfeeX.jpg" alt="Peacock logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">PEACOCK</span>
+                            </button>
+                            <button onclick="filterByStudio('crunchyroll')" data-provider-id="283" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Crunchyroll">
+                                <img data-provider-id="283" src="https://image.tmdb.org/t/p/w154/fzN5Jok5Ig1eJ7gyNGoMhnLSCfh.jpg" alt="Crunchyroll logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">CRUNCHYROLL</span>
+                            </button>
+                            <button onclick="filterByStudio('starz')" data-provider-id="43" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="Starz">
+                                <img data-provider-id="43" alt="Starz logo" class="studio-logo hidden w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">STARZ</span>
+                            </button>
+                            <button onclick="filterByStudio('amcplus')" data-provider-id="526" class="tvos-card shrink-0 w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center p-4" title="AMC Plus">
+                                <img data-provider-id="526" src="https://image.tmdb.org/t/p/w154/ovmu6uot1XVvsemM2dDySXLiX57.jpg" alt="AMC Plus logo" class="studio-logo w-full h-full object-contain pointer-events-none drop-shadow-md" />
+                                <span data-provider-fallback class="text-[10px] font-extrabold tracking-wide text-white/80 text-center">AMC+</span>
                             </button>
                         </div>
                     </div>
@@ -172,7 +206,7 @@
                                 type="text"
                                 id="search-input"
                                 placeholder="Search for movies & TV shows..."
-                                class="w-full bg-white/10 backdrop-blur-xl border border-white/20 hover:border-white/40 rounded-full py-4 pl-12 pr-6 text-base font-semibold text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                                class="w-full bg-white/10 backdrop-blur-xl border border-white/20 hover:border-white/40 rounded-full py-4 pl-12 pr-6 text-base font-semibold text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brandCyan transition-all duration-300"
                             />
                             <i data-lucide="search" class="absolute left-5 top-5 w-5 h-5 text-gray-400"></i>
                         </div>
@@ -188,9 +222,10 @@
                 <!-- ========================================== -->
                 <section
                     id="screen-movies"
-                    class="hidden animate-fade-in space-y-6"
+                    class="hidden animate-fade-in space-y-6 pt-24 px-12"
                 >
                     <div
+                        id="movies-default-header"
                         class="flex items-center justify-between border-b border-white/[0.04] pb-4"
                     >
                         <div>
@@ -201,6 +236,21 @@
                                 Explore and stream the newest releases
                             </p>
                         </div>
+                    </div>
+                    <div id="provider-browser" class="hidden space-y-5 pb-2">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-16 h-16 rounded-2xl bg-black/45 border border-white/10 flex items-center justify-center p-2">
+                                    <img id="provider-hero-logo" src="" alt="Provider logo" class="w-full h-full object-contain" />
+                                </div>
+                                <h1 id="provider-hero-name" class="text-5xl font-black text-white tracking-tight">Provider</h1>
+                            </div>
+                        </div>
+                        <div class="inline-flex items-center rounded-full bg-white/10 border border-white/10 p-1">
+                            <button id="provider-tab-movies" onclick="switchProviderSection('movie')" class="rounded-full px-6 py-2 text-sm font-bold transition-all bg-white text-black">Movies</button>
+                            <button id="provider-tab-tv" onclick="switchProviderSection('tv')" class="rounded-full px-6 py-2 text-sm font-bold text-white/70 hover:text-white">Series</button>
+                        </div>
+                        <h2 id="provider-active-heading" class="text-3xl font-black text-white tracking-tight">Movies</h2>
                     </div>
                     <div
                         id="grid-all-movies"
@@ -215,7 +265,7 @@
                 <!-- ========================================== -->
                 <section
                     id="screen-tv"
-                    class="hidden animate-fade-in space-y-6"
+                    class="hidden animate-fade-in space-y-6 pt-24 px-12"
                 >
                     <div
                         class="flex items-center justify-between border-b border-white/[0.04] pb-4"
@@ -242,7 +292,7 @@
                 <!-- ========================================== -->
                 <section
                     id="screen-anime"
-                    class="hidden animate-fade-in space-y-6"
+                    class="hidden animate-fade-in space-y-6 pt-24 px-12"
                 >
                     <div
                         class="flex items-center justify-between border-b border-white/[0.04] pb-4"
@@ -269,7 +319,7 @@
                 <!-- ========================================== -->
                 <section
                     id="screen-livetv"
-                    class="hidden animate-fade-in space-y-6"
+                    class="hidden animate-fade-in space-y-6 pt-24 px-12"
                 >
                     <div
                         class="flex items-center justify-between border-b border-white/[0.04] pb-4"
@@ -394,15 +444,42 @@
                 <!-- ========================================== -->
                 <section
                     id="screen-settings"
-                    class="hidden animate-fade-in space-y-8"
+                    class="hidden animate-fade-in space-y-7 pt-24 px-8 lg:px-12"
                 >
-                    <div>
-                        <h1 class="text-xl font-black uppercase text-white">
-                            Settings & Synchronization
-                        </h1>
-                        <p class="text-xs text-gray-500">
-                            Configure your API credentials and sync setup
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black uppercase tracking-[0.28em] text-brandCyan">Live source control</span>
+                            <h1 class="text-3xl font-black text-white tracking-tight">
+                                Settings & Synchronization
+                            </h1>
+                            <p class="text-sm text-gray-500 font-medium max-w-2xl">
+                                Manage API credentials, sync state, streaming domains, and fresh live catalogue pulls.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Data & Cache -->
+                    <div
+                        class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
+                    >
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="refresh-cw" class="w-5 h-5 text-brandCyan"></i>
+                            <h3 class="font-extrabold text-sm uppercase tracking-wider text-white">
+                                Data &amp; Cache
+                            </h3>
+                        </div>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            Clears cached network data and pulls the latest
+                            live catalogue from TMDB and AniList. Use this if the
+                            homepage, trending rails, or posters look stale.
                         </p>
+                        <button
+                            onclick="refreshCatalog(this)"
+                            class="btn-action-glow text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg flex items-center gap-2"
+                        >
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            Fresh Pull &amp; Clear Cache
+                        </button>
                     </div>
 
                     <!-- macOS Gatekeeper Notice -->
@@ -869,25 +946,24 @@
                                     <div class="space-y-1.5">
                                         <label
                                             class="text-xs text-gray-400 font-semibold block"
-                                            >Preferred VidSrc Embed
-                                            Domain</label
+                                            >Preferred Embed Provider</label
                                         >
                                         <select
                                             id="vidsrc-domain-select"
                                             onchange="savePlaybackSettings()"
                                             class="w-full bg-brandTert border border-white/[0.06] rounded-lg p-2.5 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition"
                                         >
-                                            <option value="vidsrc.me">
-                                                vidsrc.me (Extremely Stable)
+                                            <option value="vidcore.created.app">
+                                                VidCore (Recommended)
                                             </option>
-                                            <option value="vidsrc.to">
-                                                vidsrc.to (Fast CDN)
+                                            <option value="vsembed.ru">
+                                                vsembed.ru (VidSrc API)
                                             </option>
-                                            <option value="vidsrc.xyz">
-                                                vidsrc.xyz (Minimal Overhead)
+                                            <option value="vsembed.su">
+                                                vsembed.su (Mirror)
                                             </option>
-                                            <option value="vidsrc.pro">
-                                                vidsrc.pro
+                                            <option value="vidsrcme.ru">
+                                                vidsrcme.ru (Mirror)
                                             </option>
                                         </select>
                                     </div>
@@ -951,10 +1027,10 @@
             </main>
         </div>
 
-        t the<!-- DETAILS OVERLAY MODAL -->
+        <!-- DETAILS OVERLAY MODAL -->
         <div
             id="detail-modal"
-            class="hidden fixed inset-0 z-50 bg-[#070707] overflow-y-auto animate-fade-in"
+            class="hidden fixed inset-0 z-50 bg-[#070707] overflow-y-auto overflow-x-hidden animate-fade-in"
         >
             <!-- Background Backdrop with Fades -->
             <div
@@ -1012,15 +1088,24 @@
 
                     <!-- Overview & Details Grid -->
                     <div class="flex flex-col xl:flex-row gap-12">
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             <p id="modal-overview" class="text-gray-300 leading-relaxed text-base max-w-4xl drop-shadow-md"></p>
 
                             <!-- Episodes Section -->
-                            <div id="modal-episodes-section" class="mt-12 hidden">
-                                <div class="flex items-center justify-between mb-6 max-w-4xl">
+                            <div id="modal-episodes-section" class="mt-12 hidden overflow-hidden">
+                                <div class="flex items-center justify-between mb-6 max-w-6xl">
+                                    <h3 class="text-3xl font-black text-white tracking-tight">Episodes</h3>
                                     <select id="season-selector" onchange="loadSeasonEpisodes()" class="bg-white/10 backdrop-blur-md border border-white/10 rounded-lg px-4 py-2 text-base font-bold text-white focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"></select>
                                 </div>
-                                <div id="episodes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl"></div>
+                                <div class="relative">
+                                    <button class="rail-scroll-btn left-2" onclick="scrollEpisodesRail(-1)" aria-label="Scroll episodes left">
+                                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                                    </button>
+                                    <button class="rail-scroll-btn right-2" onclick="scrollEpisodesRail(1)" aria-label="Scroll episodes right">
+                                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                    </button>
+                                    <div id="episodes-grid" class="horizontal-rail flex w-full min-w-0 gap-4 overflow-x-auto hide-scroll pb-3 pr-12"></div>
+                                </div>
                             </div>
                         </div>
 
@@ -1054,8 +1139,16 @@
                     <!-- Cast Section -->
                     <div class="mt-12 pb-16">
                         <h3 class="text-xl font-bold text-white mb-6">Cast</h3>
-                        <div id="modal-cast-rail" class="horizontal-rail flex overflow-x-auto gap-6 hide-scroll pb-4">
-                            <!-- Cast cards injected here -->
+                        <div class="relative">
+                            <button class="rail-scroll-btn left-2" onclick="scrollCastRail(-1)" aria-label="Scroll cast left">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            <button class="rail-scroll-btn right-2" onclick="scrollCastRail(1)" aria-label="Scroll cast right">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                            <div id="modal-cast-rail" class="horizontal-rail flex overflow-x-auto gap-6 hide-scroll pb-4 pr-12">
+                                <!-- Cast cards injected here -->
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -35,33 +35,45 @@ class VidsrcRepositoryImpl : VidsrcRepository {
     suspend fun fetchLatestMovies(page: Int = 1): MediaCategory {
         return try {
             val items = fetchLatest("movies/latest/page-$page.json").mapNotNull { movieFromLatest(it) }.take(18)
-            MediaCategory("vidsrc_latest_movies", "Latest Movies on Vidsrc", MediaType.MOVIE, items,
-                "Recently added movie embeds from Vidsrc")
+            MediaCategory(
+                "vidsrc_latest_movies", "Latest Movies on Vidsrc", MediaType.MOVIE, items,
+                "Recently added movie embeds from Vidsrc"
+            )
         } catch (t: Throwable) {
-            MediaCategory("vidsrc_latest_movies", "Latest Movies on Vidsrc", MediaType.MOVIE, emptyList(),
-                "Recently added movie embeds from Vidsrc", "Vidsrc movies could not load: $t")
+            MediaCategory(
+                "vidsrc_latest_movies", "Latest Movies on Vidsrc", MediaType.MOVIE, emptyList(),
+                "Recently added movie embeds from Vidsrc", "Vidsrc movies could not load: $t"
+            )
         }
     }
 
     suspend fun fetchLatestTvShows(page: Int = 1): MediaCategory {
         return try {
             val items = fetchLatest("tvshows/latest/page-$page.json").mapNotNull { seriesFromLatest(it) }.take(18)
-            MediaCategory("vidsrc_latest_tv", "Latest TV Shows on Vidsrc", MediaType.SERIES, items,
-                "Recently added TV show embeds from Vidsrc")
+            MediaCategory(
+                "vidsrc_latest_tv", "Latest TV Shows on Vidsrc", MediaType.SERIES, items,
+                "Recently added TV show embeds from Vidsrc"
+            )
         } catch (t: Throwable) {
-            MediaCategory("vidsrc_latest_tv", "Latest TV Shows on Vidsrc", MediaType.SERIES, emptyList(),
-                "Recently added TV show embeds from Vidsrc", "Vidsrc TV shows could not load: $t")
+            MediaCategory(
+                "vidsrc_latest_tv", "Latest TV Shows on Vidsrc", MediaType.SERIES, emptyList(),
+                "Recently added TV show embeds from Vidsrc", "Vidsrc TV shows could not load: $t"
+            )
         }
     }
 
     suspend fun fetchLatestEpisodes(page: Int = 1): MediaCategory {
         return try {
             val items = fetchLatest("episodes/latest/page-$page.json").mapNotNull { episodeFromLatest(it) }.take(18)
-            MediaCategory("vidsrc_latest_episodes", "Latest Episodes on Vidsrc", MediaType.SERIES, items,
-                "Episode-specific Vidsrc entries, newest first")
+            MediaCategory(
+                "vidsrc_latest_episodes", "Latest Episodes on Vidsrc", MediaType.SERIES, items,
+                "Episode-specific Vidsrc entries, newest first"
+            )
         } catch (t: Throwable) {
-            MediaCategory("vidsrc_latest_episodes", "Latest Episodes on Vidsrc", MediaType.SERIES, emptyList(),
-                "Episode-specific Vidsrc entries, newest first", "Vidsrc episodes could not load: $t")
+            MediaCategory(
+                "vidsrc_latest_episodes", "Latest Episodes on Vidsrc", MediaType.SERIES, emptyList(),
+                "Episode-specific Vidsrc entries, newest first", "Vidsrc episodes could not load: $t"
+            )
         }
     }
 
@@ -183,7 +195,7 @@ class VidsrcRepositoryImpl : VidsrcRepository {
     private fun enc(value: String): String = URLEncoder.encode(value, "UTF-8")
 
     companion object {
-        val EMBED_DOMAINS = listOf("vidsrc-embed.ru", "vidsrc-embed.su", "vidsrcme.su", "vsrc.su")
-        private const val LISTING_DOMAIN = "vidsrc-embed.ru"
+        val EMBED_DOMAINS = listOf("vsembed.ru", "vsembed.su", "vidsrcme.ru")
+        private const val LISTING_DOMAIN = "vsembed.ru"
     }
 }

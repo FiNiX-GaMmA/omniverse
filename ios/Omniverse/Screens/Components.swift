@@ -94,9 +94,7 @@ struct CategoryRow: View {
     var onItem: (MediaItem) -> Void
     var onHeader: ((MediaCategory) -> Void)? = nil
 
-    private var isTop10: Bool {
-        let t = category.title.lowercased(); return t.contains("top 10") || t.contains("top10")
-    }
+
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -115,12 +113,8 @@ struct CategoryRow: View {
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 14) {
-                    ForEach(Array(category.items.enumerated()), id: \.element.id) { i, item in
-                        if isTop10 {
-                            Top10MediaCard(item: item, rank: i + 1, wide: wide, onTap: onItem)
-                        } else {
-                            MediaPosterCard(item: item, wide: wide, onTap: onItem)
-                        }
+                    ForEach(category.items) { item in
+                        MediaPosterCard(item: item, wide: wide, onTap: onItem)
                     }
                 }
                 .padding(.horizontal, wide ? 54 : 28)

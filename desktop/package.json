@@ -98,6 +98,7 @@
   },
   "dependencies": {
     "@ghostery/adblocker-electron": "^2.18.1",
-    "cross-fetch": "^4.1.0"
+    "cross-fetch": "^4.1.0",
+    "playwright": "^1.61.1"
   }
 }

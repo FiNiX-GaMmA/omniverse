@@ -75,30 +75,44 @@ struct GlassTabBar: View {
     @Binding var selection: Int
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(Array(tabs.enumerated()), id: \.element.id) { i, tab in
-                Button { withAnimation(.spring(response: 0.32, dampingFraction: 0.8)) { selection = i } } label: {
-                    VStack(spacing: 3) {
-                        Image(systemName: i == selection ? tab.selectedIcon : tab.icon)
-                            .font(.system(size: 20, weight: .semibold))
-                        Text(tab.title).font(.system(size: 10, weight: .bold))
-                    }
-                    .foregroundStyle(i == selection ? LiquidColors.cyan : Color.white.opacity(0.62))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background {
-                        if i == selection {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(LiquidColors.cyan.opacity(0.16))
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(Array(tabs.enumerated()), id: \.element.id) { i, tab in
+                    let selected = i == selection
+                    Button {
+                        withAnimation(.spring(response: 0.42, dampingFraction: 0.78)) { selection = i }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: selected ? tab.selectedIcon : tab.icon)
+                                .font(.system(size: 18, weight: .semibold))
+                                .frame(width: 20)
+                            if selected {
+                                Text(tab.title)
+                                    .font(.system(size: 13, weight: .heavy))
+                                    .fixedSize()
+                                    .transition(.opacity.combined(with: .scale))
+                            }
+                        }
+                        .foregroundStyle(selected ? LiquidColors.ink : Color.white.opacity(0.74))
+                        .padding(.horizontal, selected ? 16 : 12)
+                        .frame(height: 44)
+                        .background {
+                            if selected {
+                                Capsule()
+                                    .fill(LiquidColors.cyan)
+                                    .shadow(color: LiquidColors.cyan.opacity(0.38), radius: 10, y: 3)
+                            }
                         }
                     }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
+            .padding(.horizontal, 8)
         }
-        .padding(6)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous).strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
+        .scrollIndicators(.hidden)
+        .padding(.vertical, 6)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
         .shadow(color: .black.opacity(0.35), radius: 22, y: 10)
     }
 }

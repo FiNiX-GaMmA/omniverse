@@ -34,11 +34,16 @@ app.commandLine.appendSwitch(
 app.commandLine.appendSwitch("disk-cache-size", String(100 * 1024 * 1024)); // 100MB cache limit
 app.commandLine.appendSwitch("renderer-process-limit", "3");
 
+// [DEBUG] Toggle verbose player-webview diagnostics to stdout.
+const DEBUG_PLAYER = true;
+
 // Global handles
 let mainWindow = null;
 let pipWindow = null;
 let adBlockStats = { adsBlocked: 0 };
 let mainBlocker = null;
+const blockerAttachedSessions = new WeakSet();
+let blockerEventsBound = false;
 // Hosts of resolved anime direct streams that need a Referer. Scoped so Live TV
 // and other media are untouched. Populated by the renderer before playback.
 const animeRefererHosts = new Set();
@@ -78,6 +83,34 @@ const BLOCKED_KEYWORDS = [
   "disable-devtool",
 ];
 
+function bindBlockerEventsOnce() {
+  if (!mainBlocker || blockerEventsBound) return;
+  mainBlocker.on("request-blocked", (request) => {
+    adBlockStats.adsBlocked++;
+    if (DEBUG_PLAYER && request && request.url) {
+      console.log("[player-debug][adblock-blocked]", request.url);
+    }
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
+    }
+  });
+  blockerEventsBound = true;
+}
+
+function attachBlockerToSession(sess, contextLabel = "session") {
+  if (!mainBlocker || !sess || blockerAttachedSessions.has(sess)) return;
+  try {
+    mainBlocker.enableBlockingInSession(sess);
+    blockerAttachedSessions.add(sess);
+    bindBlockerEventsOnce();
+  } catch (err) {
+    console.warn(
+      `[Omniverse] Ad-blocker could not attach to ${contextLabel}; continuing without it:`,
+      err && err.message ? err.message : err,
+    );
+  }
+}
+
 // Reusable session setup for custom partitions (e.g. video player webview)
 async function setupPlaybackSession(playSession) {
   const UA =
@@ -103,15 +136,8 @@ async function setupPlaybackSession(playSession) {
     },
   );
 
-  if (mainBlocker) {
-    mainBlocker.enableBlockingInSession(playSession);
-    mainBlocker.on("request-blocked", (request) => {
-      adBlockStats.adsBlocked++;
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
-      }
-    });
-  }
+  // Keep in-player blocking active for all webview-based sources.
+  attachBlockerToSession(playSession, "player session");
 
   // Inject a script into the webview to proactively disable standard redirects and alert-hijacks
   playSession.setPreloads([path.join(__dirname, "preload.js")]);
@@ -141,6 +167,10 @@ async function createWindow() {
   // Setup the default app session
   const defaultSession = session.defaultSession;
 
+  // Attach blocker to default session as well, so iframe-based player embeds
+  // (e.g. VidCore path) still get popup/ad request filtering.
+  attachBlockerToSession(defaultSession, "default session");
+
   // Anime direct streams (AllAnime CDNs) require a Referer. Inject it only for
   // the exact stream host(s) the renderer registers, leaving Live TV/others alone.
   defaultSession.webRequest.onBeforeSendHeaders(
@@ -157,16 +187,44 @@ async function createWindow() {
     },
   );
 
+  // Block popup/new-window attempts from the main frame too (iframe path).
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    adBlockStats.adsBlocked++;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
+    }
+    if (DEBUG_PLAYER) {
+      console.log("[player-debug][popup-blocked][main-frame]", url);
+    }
+    return { action: "deny" };
+  });
+
+  // Prevent top-level navigation hijacks away from our app shell.
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    if (!url || url.startsWith("file://")) return;
+    event.preventDefault();
+    adBlockStats.adsBlocked++;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
+    }
+    if (DEBUG_PLAYER) {
+      console.log("[player-debug][nav-blocked][main-frame]", url);
+    }
+  });
+
   // Configure custom webview permissions and block window redirection popup actions
   mainWindow.webContents.on("did-attach-webview", async (_, wc) => {
     const webviewSession = wc.session;
     await setupPlaybackSession(webviewSession);
 
     // Completely deny permission to open popup windows / new tabs
-    wc.setWindowOpenHandler(() => {
+    wc.setWindowOpenHandler(({ url }) => {
       adBlockStats.adsBlocked++;
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
+      }
+      if (DEBUG_PLAYER) {
+        console.log("[player-debug][popup-blocked][webview]", url);
       }
       return { action: "deny" };
     });
@@ -177,6 +235,46 @@ async function createWindow() {
     wc.on("leave-html-full-screen", () => {
       mainWindow.webContents.send("webview-fullscreen", false);
     });
+
+    // Surface hard load failures (dead/unreachable source hosts) so the renderer
+    // can auto-fall back to the next server instead of showing a black screen.
+    wc.on(
+      "did-fail-load",
+      (event, errorCode, errorDesc, validatedURL, isMainFrame) => {
+        // -3 = ERR_ABORTED, fires normally when we swap the src / navigate away.
+        if (DEBUG_PLAYER)
+          console.log(
+            `[player-debug] did-fail-load code=${errorCode} main=${isMainFrame} desc="${errorDesc}" url=${validatedURL}`,
+          );
+        if (!isMainFrame || errorCode === -3) return;
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send("webview-load-failed", {
+            errorCode,
+            errorDesc,
+            url: validatedURL,
+          });
+        }
+      },
+    );
+
+    // [DEBUG] player webview load lifecycle — remove once playback is confirmed.
+    if (DEBUG_PLAYER) {
+      wc.on("did-start-loading", () =>
+        console.log("[player-debug] start-loading", wc.getURL()),
+      );
+      wc.on("dom-ready", () =>
+        console.log("[player-debug] dom-ready", wc.getURL()),
+      );
+      wc.on("did-finish-load", () =>
+        console.log("[player-debug] finish-load", wc.getURL()),
+      );
+      wc.on("did-navigate", (_e, url) =>
+        console.log("[player-debug] navigate", url),
+      );
+      wc.on("console-message", (_e, level, message) =>
+        console.log("[player-debug][webview-console]", message),
+      );
+    }
   });
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
@@ -190,6 +288,20 @@ async function createWindow() {
 // IPC Handlers
 ipcMain.handle("get-platform", () => process.platform);
 ipcMain.handle("get-arch", () => process.arch);
+
+// Clear the HTTP cache for the app + player sessions so a fresh pull re-fetches
+// catalogue data and posters. Leaves cookies/localStorage (logins) intact.
+ipcMain.handle("clear-cache", async () => {
+  try {
+    await session.defaultSession.clearCache();
+    try {
+      await session.fromPartition("persist:player").clearCache();
+    } catch (_) {}
+    return true;
+  } catch (e) {
+    return false;
+  }
+});
 
 // The installed build's version (from package.json, stamped at release time).
 // The updater compares this against the latest GitHub release.
@@ -420,6 +532,22 @@ if (!gotTheLock) {
 
     // Whitelist critical source domains to prevent the adblocker from breaking streams
     const whitelistedDomains = [
+      "vidcore.created.app",
+      "vidcore.org",
+      "www.vidcore.org",
+      "little-field-fe85.instafashion662-3d4.workers.dev",
+      "instafashion662-3d4.workers.dev",
+      "workers.dev",
+      "ferocitycandour.com",
+      "cinezo",
+      "notyourtype.dad",
+      "ballerinacappuccinalovestungtungtungsahur.com",
+      "1shows.app",
+      "5-ac2.workers.dev",
+      "solitary-paper",
+      "pinepathcreativecollect",
+      "remoteconsultinggroup",
+      "nextgencloudfabric",
       "vidsrc.me",
       "vidsrc.to",
       "vidsrc.pro",
@@ -427,10 +555,21 @@ if (!gotTheLock) {
       "vidsrc.net",
       "vidsrc.cc",
       "vidsrc.xyz",
+      "vidsrc-embed.ru",
+      "vidsrc-embed.su",
+      "vidsrcme.su",
+      "vsrc.su",
+      "vsembed.ru",
+      "vsembed.su",
+      "vidsrcme.ru",
+      "cloudnestra.com",
+      "cloudorchestranova.com",
       "multiembed.mov",
       "autoembed.cc",
       "2embed.cc",
+      "streamsrcs.2embed.cc",
       "embed.smashystream.com",
+      "smashystream.com",
       "allanime.day",
       "allmanga.to",
       "megacloud.tv",
@@ -440,11 +579,13 @@ if (!gotTheLock) {
       "api.trakt.tv",
       "graphql.anilist.co",
     ];
-    const exceptions = whitelistedDomains.map((d) =>
-      NetworkFilter.parse(
-        `@@||${d}^$important,document,subdocument,script,xmlhttprequest`,
-      ),
-    );
+    const exceptions = whitelistedDomains
+      .map((d) =>
+        NetworkFilter.parse(
+          `@@||${d}^$important,document,subdocument,script,xmlhttprequest,media,stylesheet,image,font`,
+        ),
+      )
+      .filter(Boolean);
     mainBlocker.update({ newNetworkFilters: exceptions });
 
     await createWindow();

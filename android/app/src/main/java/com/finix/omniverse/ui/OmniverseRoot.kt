@@ -165,7 +165,12 @@ fun OmniverseRoot() {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { state.cancelPairing() },
                 title = { Text("Pairing Request", color = Color.White, fontWeight = FontWeight.Bold) },
-                text = { Text("Do you want to pair and sync your settings with this device (ID: ${state.pendingPairingId})?", color = Color.White.copy(alpha = 0.7f)) },
+                text = {
+                    Text(
+                        "Do you want to pair and sync your settings with this device (ID: ${state.pendingPairingId})?",
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                },
                 confirmButton = {
                     androidx.compose.material3.TextButton(onClick = { state.confirmPairing() }) {
                         Text("Confirm", color = LiquidColors.Cyan, fontWeight = FontWeight.Bold)
@@ -223,44 +228,84 @@ private fun Shell(nav: androidx.navigation.NavController) {
                 }
             }
             if (wide) {
-                GlassRail(tabs, idx, navFocus, Modifier.align(Alignment.CenterStart).padding(start = 16.dp, top = 24.dp, bottom = 24.dp)) { selection = it }
+                GlassRail(
+                    tabs,
+                    idx,
+                    navFocus,
+                    Modifier.align(Alignment.CenterStart).padding(start = 16.dp, top = 24.dp, bottom = 24.dp)
+                ) { selection = it }
             } else {
-                GlassTabBar(tabs, idx, navFocus, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(horizontal = 18.dp, vertical = 8.dp)) { selection = it }
+                GlassTabBar(
+                    tabs,
+                    idx,
+                    navFocus,
+                    Modifier.align(Alignment.BottomCenter).navigationBarsPadding()
+                        .padding(horizontal = 18.dp, vertical = 8.dp)
+                ) { selection = it }
             }
         }
     }
 }
 
 @Composable
-private fun GlassTabBar(tabs: List<ShellTab>, selected: Int, focusRequester: FocusRequester, modifier: Modifier, onSelect: (Int) -> Unit) {
+private fun GlassTabBar(
+    tabs: List<ShellTab>,
+    selected: Int,
+    focusRequester: FocusRequester,
+    modifier: Modifier,
+    onSelect: (Int) -> Unit
+) {
     Row(
         modifier
             .clip(RoundedCornerShape(26.dp))
             .background(Color.Black.copy(alpha = 0.55f))
             .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(26.dp))
-            .padding(6.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         tabs.forEachIndexed { i, tab ->
             val active = i == selected
-            Column(
+            Row(
                 Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(16.dp))
-                    .then(if (active) Modifier.background(LiquidColors.Cyan.copy(alpha = 0.16f)) else Modifier)
-                    .tvFocusable(onClick = { onSelect(i) }, corner = 16, focusRequester = if (active) focusRequester else null)
-                    .padding(vertical = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .clip(RoundedCornerShape(22.dp))
+                    .then(if (active) Modifier.background(LiquidColors.Cyan) else Modifier)
+                    .tvFocusable(
+                        onClick = { onSelect(i) },
+                        corner = 22,
+                        focusRequester = if (active) focusRequester else null
+                    )
+                    .padding(horizontal = if (active) 16.dp else 12.dp, vertical = 11.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(tab.icon, tab.title, tint = if (active) LiquidColors.Cyan else Color.White.copy(alpha = 0.62f), modifier = Modifier.size(22.dp))
-                Text(tab.title, color = if (active) LiquidColors.Cyan else Color.White.copy(alpha = 0.62f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Icon(
+                    tab.icon,
+                    tab.title,
+                    tint = if (active) LiquidColors.Ink else Color.White.copy(alpha = 0.74f),
+                    modifier = Modifier.size(20.dp),
+                )
+                AnimatedVisibility(visible = active) {
+                    Text(
+                        tab.title,
+                        color = LiquidColors.Ink,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun GlassRail(tabs: List<ShellTab>, selected: Int, focusRequester: FocusRequester, modifier: Modifier, onSelect: (Int) -> Unit) {
+private fun GlassRail(
+    tabs: List<ShellTab>,
+    selected: Int,
+    focusRequester: FocusRequester,
+    modifier: Modifier,
+    onSelect: (Int) -> Unit
+) {
     Column(
         modifier
             .fillMaxHeight()
@@ -272,7 +317,12 @@ private fun GlassRail(tabs: List<ShellTab>, selected: Int, focusRequester: Focus
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Icon(Icons.Filled.PlayCircle, null, tint = LiquidColors.Cyan, modifier = Modifier.size(30.dp).padding(bottom = 8.dp))
+        Icon(
+            Icons.Filled.PlayCircle,
+            null,
+            tint = LiquidColors.Cyan,
+            modifier = Modifier.size(30.dp).padding(bottom = 8.dp)
+        )
         tabs.forEachIndexed { i, tab ->
             val active = i == selected
             Box(
@@ -280,10 +330,19 @@ private fun GlassRail(tabs: List<ShellTab>, selected: Int, focusRequester: Focus
                     .size(52.dp)
                     .clip(CircleShape)
                     .then(if (active) Modifier.background(LiquidColors.Cyan) else Modifier)
-                    .tvFocusable(onClick = { onSelect(i) }, corner = 26, focusRequester = if (active) focusRequester else null),
+                    .tvFocusable(
+                        onClick = { onSelect(i) },
+                        corner = 26,
+                        focusRequester = if (active) focusRequester else null
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(tab.icon, tab.title, tint = if (active) LiquidColors.Ink else Color.White.copy(alpha = 0.7f), modifier = Modifier.size(21.dp))
+                Icon(
+                    tab.icon,
+                    tab.title,
+                    tint = if (active) LiquidColors.Ink else Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.size(21.dp)
+                )
             }
         }
     }
@@ -294,7 +353,9 @@ private fun MessageBanner() {
     val state = AppGraph.appState
     val msg = state.message
     LaunchedEffect(msg) {
-        if (!msg.isNullOrEmpty()) { delay(3000); state.message = null }
+        if (!msg.isNullOrEmpty()) {
+            delay(3000); state.message = null
+        }
     }
     AnimatedVisibility(visible = !msg.isNullOrEmpty(), modifier = Modifier.fillMaxWidth().statusBarsPadding()) {
         Box(Modifier.fillMaxWidth().padding(top = 12.dp), contentAlignment = Alignment.TopCenter) {

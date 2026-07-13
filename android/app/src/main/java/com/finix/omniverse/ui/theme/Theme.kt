@@ -15,14 +15,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-/// Palette ported from the Flutter LiquidColors.
+/// Palette aligned with the desktop (Lordflix) crimson-on-black visual system.
 object LiquidColors {
-    val Ink = Color(0xFF0B0A12)
-    val Dusk = Color(0xFF24152B)
-    val DeepTeal = Color(0xFF082C2E)
-    val Cyan = Color(0xFF8DEBE6)
-    val Rose = Color(0xFFFF8EA8)
-    val Gold = Color(0xFFFFD36E)
+    val Ink = Color(0xFF070707)
+    val Dusk = Color(0xFF141414)
+    val DeepTeal = Color(0xFF1C0B0D)
+    val Cyan = Color(0xFFFF1E27)
+    val Rose = Color(0xFFB20710)
+    val Gold = Color(0xFFFF6A72)
 }
 
 private val OmniverseColorScheme = darkColorScheme(
@@ -54,9 +54,9 @@ fun LiquidBackdrop(modifier: Modifier = Modifier) {
             .background(
                 Brush.linearGradient(
                     0f to Color.Black,
-                    0.38f to LiquidColors.Ink,
-                    0.68f to Color(0xFF050A0B),
-                    1f to Color(0xFF061715),
+                    0.38f to Color(0xFF0B0B0B),
+                    0.68f to Color(0xFF140708),
+                    1f to Color(0xFF24090D),
                 )
             )
     )

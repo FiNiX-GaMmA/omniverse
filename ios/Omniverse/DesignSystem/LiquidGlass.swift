@@ -1,14 +1,13 @@
 import SwiftUI
 
-/// Core palette ported 1:1 from the Flutter `LiquidColors`.
-/// Apple-TV inspired, dark-first, with a cyan/rose/gold accent triad.
+/// Core palette aligned with desktop's Lordflix crimson-on-black styling.
 enum LiquidColors {
-    static let ink = Color(hex: 0x0B0A12)
-    static let dusk = Color(hex: 0x24152B)
-    static let deepTeal = Color(hex: 0x082C2E)
-    static let cyan = Color(hex: 0x8DEBE6)
-    static let rose = Color(hex: 0xFF8EA8)
-    static let gold = Color(hex: 0xFFD36E)
+    static let ink = Color(hex: 0x070707)
+    static let dusk = Color(hex: 0x141414)
+    static let deepTeal = Color(hex: 0x1C0B0D)
+    static let cyan = Color(hex: 0xFF1E27)
+    static let rose = Color(hex: 0xB20710)
+    static let gold = Color(hex: 0xFF6A72)
 }
 
 extension Color {
@@ -29,9 +28,9 @@ struct LiquidBackdrop: View {
             LinearGradient(
                 colors: [
                     Color.black,
-                    LiquidColors.ink,
-                    Color(hex: 0x050A0B),
-                    Color(hex: 0x061715),
+                    Color(hex: 0x0B0B0B),
+                    Color(hex: 0x140708),
+                    Color(hex: 0x24090D),
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -68,7 +67,7 @@ struct LiquidBackdrop: View {
 }
 
 /// Vivid frosted-glass panel. Uses a real system material for the live blur,
-/// then layers a white gradient sheen, a hairline border, and a cyan glow —
+/// then layers a white gradient sheen, a hairline border, and a crimson glow —
 /// matching the Flutter `GlassPanel` but pushing the glassmorphism further.
 struct GlassPanel<Content: View>: View {
     var cornerRadius: CGFloat = 24
@@ -148,7 +147,7 @@ struct GlassIconButton: View {
     }
 }
 
-/// Primary accent (cyan) capsule button — the "Play" call to action.
+/// Primary accent (crimson) capsule button — the "Play" call to action.
 struct AccentButtonStyle: ButtonStyle {
     var filled: Bool = true
     func makeBody(configuration: Configuration) -> some View {

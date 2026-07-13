@@ -8,23 +8,39 @@
     --bg-primary: #000000;
     --bg-secondary: #0e0e0e;
     --bg-tertiary: #1c1c1c;
-    --accent-cyan: #8b5cf6;
-    --accent-blue: #7c3aed;
-    --accent-purple: #8b5cf6;
-    --accent-neon: #10b981;
+    --accent-cyan: #ff1e27;
+    --accent-blue: #b20710;
+    --accent-purple: #ff1e27;
+    --accent-neon: #ff1e27;
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --border-color: rgba(255, 255, 255, 0.05);
-    --border-hover: rgba(139, 92, 246, 0.3);
-    --card-glow: rgba(139, 92, 246, 0.15);
+    --border-hover: rgba(255, 30, 39, 0.3);
+    --card-glow: rgba(255, 30, 39, 0.15);
 }
 
 body {
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
     background-color: #050505;
     background-image:
-        radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 50%),
-        radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 50%);
+        radial-gradient(
+            circle at 15% 50%,
+            rgba(255, 30, 39, 0.08),
+            transparent 50%
+        ),
+        radial-gradient(
+            circle at 85% 30%,
+            rgba(178, 7, 16, 0.05),
+            transparent 50%
+        );
     background-attachment: fixed;
     color: var(--text-primary);
     margin: 0;
@@ -34,7 +50,7 @@ body {
     letter-spacing: -0.01em;
 }
 
-/* Fluid Animated Background (Lordflix Style) */
+/* Ambient Drifting Aurora Background (Lordflix light-bar style) */
 .lordflix-bg {
     position: fixed;
     top: 0;
@@ -42,27 +58,64 @@ body {
     width: 100vw;
     height: 100vh;
     z-index: -1;
-    background: linear-gradient(125deg, #0f0c29, #302b63, #24243e);
-    background-size: 400% 400%;
-    animation: fluidGradient 15s ease infinite;
+    background: #050505;
+    overflow: hidden;
+}
+/* Two large soft glows that slowly drift across the screen like an aurora */
+.lordflix-bg::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background:
+        radial-gradient(
+            40% 45% at 20% 25%,
+            rgba(255, 30, 39, 0.18),
+            transparent 60%
+        ),
+        radial-gradient(
+            45% 50% at 80% 70%,
+            rgba(178, 7, 16, 0.16),
+            transparent 60%
+        ),
+        radial-gradient(
+            35% 40% at 60% 15%,
+            rgba(120, 4, 10, 0.12),
+            transparent 60%
+        );
+    filter: blur(40px);
+    animation: auroraDrift 22s ease-in-out infinite alternate;
+    will-change: transform, opacity;
 }
 .lordflix-bg::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>');
     opacity: 0.03;
     pointer-events: none;
 }
-@keyframes fluidGradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+@keyframes auroraDrift {
+    0% {
+        transform: translate3d(-4%, -2%, 0) scale(1.05) rotate(0deg);
+        opacity: 0.85;
+    }
+    50% {
+        transform: translate3d(3%, 4%, 0) scale(1.15) rotate(4deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(5%, -3%, 0) scale(1.08) rotate(-3deg);
+        opacity: 0.9;
+    }
 }
 
 /* Apple TV (tvOS) / Lordflix Poster Styles */
 .tvos-card {
-    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.4s ease, filter 0.4s ease;
+    transition:
+        transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+        box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+        border-color 0.4s ease,
+        filter 0.4s ease;
     transform-origin: center center;
     will-change: transform, box-shadow;
     background: transparent;
@@ -72,8 +125,11 @@ body {
 }
 
 .tvos-card:hover {
-    transform: scale(1.05) translateY(-5px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.6);
+    transform: scale(1.06) translateY(-5px);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(255, 30, 39, 0.4);
+    border-color: rgba(255, 30, 39, 0.8);
     z-index: 20;
 }
 
@@ -82,6 +138,96 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Studio/network logos must fit whole (contain), not crop like poster art.
+   Higher specificity than `.tvos-card img` so it wins over object-fit: cover. */
+.tvos-card img.studio-logo {
+    object-fit: contain;
+    border-radius: 0;
+}
+
+/* Omniverse Media Poster Card and Overlay Styles — clean, borderless posters */
+@keyframes stagger-card-in {
+    0% {
+        opacity: 0;
+        transform: translateY(22px) scale(0.92);
+    }
+    68% {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.03);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.stagger-card-pending {
+    opacity: 0;
+    transform: translateY(22px) scale(0.92);
+}
+
+.stagger-card-enter {
+    animation: stagger-card-in 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--stagger-index, 0) * 55ms);
+    transform-origin: 50% 80%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stagger-card-pending {
+        opacity: 1;
+        transform: none;
+    }
+    .stagger-card-enter {
+        animation: none !important;
+    }
+}
+
+.media-poster-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+    transition:
+        transform 0.5s cubic-bezier(0.25, 1, 0.5, 1),
+        box-shadow 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-origin: center center;
+    will-change: transform;
+}
+
+.media-poster-card img {
+    border-radius: 12px;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.media-poster-card:hover {
+    transform: scale(1.05);
+    z-index: 50;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.7);
+}
+
+.media-overlay-glass {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.92) 0%,
+        rgba(0, 0, 0, 0.35) 45%,
+        transparent 100%
+    );
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 14px;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    border-radius: 12px;
+}
+
+.media-poster-card:hover .media-overlay-glass {
+    opacity: 1;
 }
 
 /* Glassmorphism Settings Cards */
@@ -99,19 +245,113 @@ body {
     background: rgba(30, 30, 35, 0.7);
 }
 
+/* Modern Settings Center */
+#screen-settings {
+    max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 150px !important;
+}
+
+#screen-settings > div:first-child {
+    padding: 22px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 28px;
+    background:
+        linear-gradient(135deg, rgba(255, 30, 39, 0.12), transparent 38%),
+        rgba(255, 255, 255, 0.025);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+}
+
+#screen-settings .bg-brandSec,
+#screen-settings .settings-glass-card {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.055),
+            rgba(255, 255, 255, 0.018)
+        ),
+        rgba(10, 10, 12, 0.72) !important;
+    border: 1px solid rgba(255, 255, 255, 0.075) !important;
+    border-radius: 24px !important;
+    padding: 24px !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.045),
+        0 20px 55px rgba(0, 0, 0, 0.34) !important;
+    backdrop-filter: blur(28px) saturate(150%);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
+}
+
+#screen-settings .bg-brandSec:hover {
+    border-color: rgba(255, 30, 39, 0.22) !important;
+    transform: translateY(-1px);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#screen-settings h3 {
+    letter-spacing: 0.08em !important;
+}
+
+#screen-settings p {
+    color: rgba(148, 163, 184, 0.88) !important;
+}
+
+#screen-settings label {
+    margin-bottom: 8px;
+    color: rgba(203, 213, 225, 0.72) !important;
+}
+
+#screen-settings input,
+#screen-settings textarea,
+#screen-settings select {
+    min-height: 42px;
+    border-radius: 14px !important;
+    background: rgba(0, 0, 0, 0.38) !important;
+    border: 1px solid rgba(255, 255, 255, 0.075) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+#screen-settings textarea {
+    min-height: 96px;
+    resize: vertical;
+}
+
+#screen-settings input:focus,
+#screen-settings textarea:focus,
+#screen-settings select:focus {
+    border-color: rgba(255, 30, 39, 0.7) !important;
+    box-shadow:
+        0 0 0 1px rgba(255, 30, 39, 0.55),
+        0 0 28px rgba(255, 30, 39, 0.16) !important;
+}
+
+#screen-settings button {
+    border-radius: 14px !important;
+}
+
+#screen-settings .bg-brandDark {
+    background: rgba(0, 0, 0, 0.36) !important;
+    border-color: rgba(255, 255, 255, 0.075) !important;
+    border-radius: 16px !important;
+}
+
+#screen-settings .grid.grid-cols-2 {
+    gap: 16px !important;
+}
+
 .tvos-nav-item {
     position: relative;
     padding-bottom: 4px;
 }
 
 .tvos-nav-item::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 50%;
     width: 0;
     height: 2px;
-    background: white;
+    background: #ff1e27;
     transition: all 0.3s ease;
     transform: translateX(-50%);
 }
@@ -127,22 +367,6 @@ body {
 .hide-scroll {
     -ms-overflow-style: none;
     scrollbar-width: none;
-}
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 48px;
-    background-color: rgba(7, 8, 10, 0.8);
-    border-bottom: 1px solid var(--border-color);
-    -webkit-app-region: drag;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 9999;
-    padding: 0 20px;
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
 }
 
 .titlebar-controls {
@@ -206,7 +430,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(6, 182, 212, 0.3);
+    background: rgba(255, 30, 39, 0.3);
 }
 
 .no-drag {
@@ -281,7 +505,7 @@ body {
 .studio-disney:hover {
     box-shadow:
         0 12px 30px rgba(6, 17, 48, 0.8),
-        0 0 15px rgba(6, 182, 212, 0.25);
+        0 0 15px rgba(255, 30, 39, 0.25);
 }
 
 .studio-netflix {
@@ -347,9 +571,14 @@ body {
 
 /* Premium Sidebar Active Indicator (Sleek Glassmorphism Highlight) */
 .nav-active {
-    background: #1c1c1c !important;
-    border-left: 3px solid var(--accent-purple) !important;
-    color: #fff !important;
+    color: #ff1e27 !important;
+    text-shadow: 0 0 10px rgba(255, 30, 39, 0.4);
+    font-weight: 800 !important;
+}
+
+#titlebar button:hover {
+    color: #ff1e27 !important;
+    text-shadow: 0 0 8px rgba(255, 30, 39, 0.3);
 }
 
 /* Ad Shield pulsing glowing meter */
@@ -359,15 +588,15 @@ body {
 
 @keyframes adPulseGlow {
     0% {
-        box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.3);
-        border-color: rgba(6, 182, 212, 0.2);
+        box-shadow: 0 0 0 0 rgba(255, 30, 39, 0.3);
+        border-color: rgba(255, 30, 39, 0.2);
     }
     50% {
-        border-color: rgba(6, 182, 212, 0.5);
+        border-color: rgba(255, 30, 39, 0.5);
     }
     100% {
-        box-shadow: 0 0 0 10px rgba(6, 182, 212, 0);
-        border-color: rgba(6, 182, 212, 0.2);
+        box-shadow: 0 0 0 10px rgba(255, 30, 39, 0);
+        border-color: rgba(255, 30, 39, 0.2);
     }
 }
 
@@ -382,8 +611,8 @@ body {
     transform: scale(1.006);
     box-shadow:
         0 30px 60px rgba(0, 0, 0, 0.95),
-        0 0 35px rgba(6, 182, 212, 0.1);
-    border-color: rgba(6, 182, 212, 0.2);
+        0 0 35px rgba(255, 30, 39, 0.15);
+    border-color: rgba(255, 30, 39, 0.2);
 }
 
 /* Premium Action Buttons Glow */
@@ -393,15 +622,31 @@ body {
         var(--accent-cyan) 0%,
         var(--accent-blue) 100%
     );
-    box-shadow: 0 4px 18px rgba(6, 182, 212, 0.3);
+    box-shadow: 0 4px 18px rgba(255, 30, 39, 0.3);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-action-glow:hover {
     transform: scale(1.04);
     box-shadow:
-        0 6px 25px rgba(6, 182, 212, 0.55),
-        0 0 15px rgba(6, 182, 212, 0.35);
+        0 6px 25px rgba(255, 30, 39, 0.55),
+        0 0 15px rgba(255, 30, 39, 0.35);
+}
+
+/* Native <select> dropdowns — render the OS popup dark instead of white/blue */
+select {
+    color-scheme: dark;
+}
+#season-selector option,
+#vidsrc-domain-select option,
+select option {
+    background-color: #14141a;
+    color: #ffffff;
+}
+#season-selector option:checked,
+select option:checked {
+    background: #ff1e27;
+    color: #ffffff;
 }
 
 /* Premium Glass Cards / Inputs */
@@ -415,7 +660,7 @@ body {
     border-color: var(--accent-cyan) !important;
     box-shadow:
         0 0 0 1px var(--accent-cyan),
-        0 0 15px rgba(6, 182, 212, 0.1) !important;
+        0 0 15px rgba(255, 30, 39, 0.15) !important;
 }
 
 /* Immersive Details Modal Cinema Design */
@@ -441,8 +686,8 @@ body {
 }
 
 .list-item-glass:hover {
-    background-color: rgba(6, 182, 212, 0.05);
-    border-color: rgba(6, 182, 212, 0.15);
+    background-color: rgba(255, 30, 39, 0.05);
+    border-color: rgba(255, 30, 39, 0.15);
     transform: translateX(4px);
 }
 
@@ -483,6 +728,30 @@ body {
     background: var(--accent-cyan);
 }
 
+.rail-scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(0, 0, 0, 0.55);
+    color: rgba(255, 255, 255, 0.92);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 8;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: all 0.2s ease;
+}
+
+.rail-scroll-btn:hover {
+    background: rgba(255, 30, 39, 0.28);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
 /* Hide scrollbars on modern elements if needed */
 .scrollbar-none::-webkit-scrollbar {
     display: none;
@@ -494,11 +763,31 @@ body {
 
 /* Dynamic Webview Player Immersive Overhaul */
 .webview-player {
+    position: absolute !important;
+    inset: 0 !important;
     width: 100% !important;
     height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
     border: none !important;
     display: block !important;
     background: #000000 !important;
+}
+
+#webview-container > webview,
+#webview-container > iframe,
+#webview-container > video {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    min-width: 100vw !important;
+    min-height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
 }
 
 #webview-container {
@@ -509,4 +798,79 @@ body {
     z-index: 10 !important;
     background: #000000 !important;
     overflow: hidden !important;
+}
+
+/* ==========================================================================
+   Lordflix motion language — springy nav, hero entrance, dot pulse
+   Curves lifted from lordflix: nav .4s cubic-bezier(.34,1.56,.64,1),
+   hover .4s cubic-bezier(.25,1,.5,1)
+   ========================================================================== */
+
+/* Bottom nav pill: springy hover lift on each item */
+#titlebar button {
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        color 0.3s ease,
+        text-shadow 0.3s ease,
+        background-color 0.3s ease;
+}
+#titlebar button:hover {
+    transform: translateY(-2px) scale(1.05);
+}
+/* Whole pill gently rises on hover, matching lordflix's floating dock feel */
+#titlebar > div {
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.4s ease;
+}
+#titlebar:hover > div {
+    transform: translateY(-3px);
+    box-shadow:
+        0 20px 45px rgba(0, 0, 0, 0.6),
+        0 0 25px rgba(255, 30, 39, 0.15);
+}
+
+/* Hero content entrance — replayed on every carousel slide change */
+@keyframes heroContentIn {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+        filter: blur(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+.hero-content-anim > * {
+    animation: heroContentIn 0.7s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+/* Stagger the title, overview, buttons and dots */
+.hero-content-anim > *:nth-child(1) {
+    animation-delay: 0.02s;
+}
+.hero-content-anim > *:nth-child(2) {
+    animation-delay: 0.1s;
+}
+.hero-content-anim > *:nth-child(3) {
+    animation-delay: 0.18s;
+}
+.hero-content-anim > *:nth-child(4) {
+    animation-delay: 0.26s;
+}
+
+/* Active hero slide dot subtle glow */
+#hero-dots button.w-6 {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .lordflix-bg::before,
+    .hero-content-anim > *,
+    #hero-banner {
+        animation: none !important;
+        transition: none !important;
+    }
 }

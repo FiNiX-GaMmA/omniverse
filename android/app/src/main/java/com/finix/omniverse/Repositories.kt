@@ -10,8 +10,19 @@ interface TmdbRepository {
     suspend fun fetchLandingCategories(credentials: ApiCredentials, settings: UserSettings): List<MediaCategory>
     suspend fun fetchDetails(item: MediaItem, credentials: ApiCredentials, settings: UserSettings): MediaItem?
     suspend fun searchMulti(query: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem>
-    suspend fun fetchSeasonEpisodes(item: MediaItem, seasonNumber: Int, credentials: ApiCredentials, settings: UserSettings): List<MediaEpisode>
-    suspend fun fetchRecommendations(item: MediaItem, credentials: ApiCredentials, settings: UserSettings): List<MediaItem>
+    suspend fun fetchSeasonEpisodes(
+        item: MediaItem,
+        seasonNumber: Int,
+        credentials: ApiCredentials,
+        settings: UserSettings
+    ): List<MediaEpisode>
+
+    suspend fun fetchRecommendations(
+        item: MediaItem,
+        credentials: ApiCredentials,
+        settings: UserSettings
+    ): List<MediaItem>
+
     suspend fun validate(credentials: ApiCredentials, settings: UserSettings): Boolean
     suspend fun fetchStudioMovies(studio: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem>
     suspend fun fetchStudioTVShows(studio: String, credentials: ApiCredentials, settings: UserSettings): List<MediaItem>
@@ -173,7 +184,8 @@ class VidsrcExtractor {
             try {
                 val ua = randomUserAgent()
                 val embedUri = embedUri(domain, item, episode, id)
-                val embedResponse = Http.request(embedUri, headers = headers(ua, "https://$domain/"), timeoutMs = 18_000)
+                val embedResponse =
+                    Http.request(embedUri, headers = headers(ua, "https://$domain/"), timeoutMs = 18_000)
                 if (embedResponse.status >= 400) {
                     throw VidsrcExtractorException("$domain returned HTTP ${embedResponse.status}")
                 }
@@ -188,7 +200,13 @@ class VidsrcExtractor {
     }
 
     /// Public variant used by a WebView resolver which already has base + dataHash.
-    suspend fun resolveServer(base: String, dataHash: String, name: String, title: String, userAgent: String): VidsrcStream =
+    suspend fun resolveServer(
+        base: String,
+        dataHash: String,
+        name: String,
+        title: String,
+        userAgent: String
+    ): VidsrcStream =
         resolveServer(Server(name, dataHash), URI(base), userAgent, title)
 
     private suspend fun resolveServer(server: Server, base: URI, ua: String, title: String): VidsrcStream {
@@ -306,10 +324,9 @@ class VidsrcExtractor {
 
     companion object {
         private val sourceHosts = listOf(
-            "vidsrc-embed.ru",
-            "vidsrc-embed.su",
-            "vidsrcme.su",
-            "vsrc.su",
+            "vsembed.ru",
+            "vsembed.su",
+            "vidsrcme.ru",
         )
         private val userAgents = listOf(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",

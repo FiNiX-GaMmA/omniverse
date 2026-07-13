@@ -5,18 +5,25 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class MediaType {
-    @SerialName("movie") MOVIE,
-    @SerialName("series") SERIES,
-    @SerialName("anime") ANIME,
-    @SerialName("liveTv") LIVE_TV;
+    @SerialName("movie")
+    MOVIE,
+    @SerialName("series")
+    SERIES,
+    @SerialName("anime")
+    ANIME,
+    @SerialName("liveTv")
+    LIVE_TV;
 
-    val label: String get() = when (this) {
-        MOVIE -> "Movie"; SERIES -> "TV Show"; ANIME -> "Anime"; LIVE_TV -> "Live TV"
-    }
+    val label: String
+        get() = when (this) {
+            MOVIE -> "Movie"; SERIES -> "TV Show"; ANIME -> "Anime"; LIVE_TV -> "Live TV"
+        }
     val tmdbPath: String get() = if (this == MOVIE) "movie" else "tv"
-    val wire: String get() = when (this) {
-        MOVIE -> "movie"; SERIES -> "series"; ANIME -> "anime"; LIVE_TV -> "liveTv"
-    }
+    val wire: String
+        get() = when (this) {
+            MOVIE -> "movie"; SERIES -> "series"; ANIME -> "anime"; LIVE_TV -> "liveTv"
+        }
+
     companion object {
         fun fromWire(s: String?) = when (s) {
             "series" -> SERIES; "anime" -> ANIME; "liveTv" -> LIVE_TV; else -> MOVIE
@@ -69,7 +76,7 @@ data class UserSettings(
     val region: String = "US",
     val includeAdult: Boolean = false,
     val tvMode: Boolean = false,
-    val vidsrcDomain: String = "vidsrc-embed.ru",
+    val vidsrcDomain: String = "vsembed.ru",
     val subtitleUrl: String = "",
     val subtitleLanguage: String = "en",
     val preferDubbedAnime: Boolean = false,
@@ -182,11 +189,12 @@ data class LiveTvEntry(
     val headers: Map<String, String> = emptyMap(),
 ) {
     val isDirectStream get() = directStream(url)
+
     companion object {
         fun directStream(url: String): Boolean {
             val lower = url.lowercase()
             return lower.endsWith(".m3u8") || lower.endsWith(".mpd") || lower.endsWith(".mp4") ||
-                lower.contains(".m3u8?") || lower.contains(".mpd?") || lower.contains(".mp4?")
+                    lower.contains(".m3u8?") || lower.contains(".mpd?") || lower.contains(".mp4?")
         }
     }
 }
@@ -197,7 +205,9 @@ data class LiveTvSource(
     val name: String = "Live TV Source",
     val url: String,
     val enabled: Boolean = true,
-) { val isDirectStream get() = LiveTvEntry.directStream(url) }
+) {
+    val isDirectStream get() = LiveTvEntry.directStream(url)
+}
 
 enum class PlaybackSourceKind { EMBED, DIRECT }
 

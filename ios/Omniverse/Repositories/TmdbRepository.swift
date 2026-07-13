@@ -280,27 +280,44 @@ final class TmdbRepository: TmdbRepositoryProtocol {
 
     func fetchStudioMovies(_ studio: String, credentials: ApiCredentials, settings: UserSettings) async -> [MediaItem] {
         guard credentials.hasTmdb else { return [] }
+        let key = studio.lowercased()
+
+        let watchProviderId: String?
+        switch key {
+        case "netflix": watchProviderId = "8"
+        case "prime": watchProviderId = "9"
+        case "disney": watchProviderId = "337"
+        case "appletvplus", "apple", "appletv": watchProviderId = "350"
+        case "hulu": watchProviderId = "15"
+        case "hbo": watchProviderId = "1899"
+        case "paramount": watchProviderId = "531"
+        case "peacock": watchProviderId = "386"
+        case "crunchyroll": watchProviderId = "283"
+        case "starz": watchProviderId = "43"
+        case "amcplus": watchProviderId = "526"
+        default: watchProviderId = nil
+        }
+
         let companyId: String?
-        switch studio.lowercased() {
-        case "disney": companyId = "2"
-        case "netflix": companyId = "178464"
-        case "hbo": companyId = "174"
-        case "prime": companyId = "20580"
-        case "apple": companyId = "194303"
-        case "paramount": companyId = "4"
-        case "hulu": companyId = "164090"
-        case "peacock": companyId = "161044"
+        switch key {
         case "marvel": companyId = "420"
         case "warner": companyId = "174"
         case "universal": companyId = "33"
         case "sony": companyId = "5"
-        case "crunchyroll": companyId = "11444"
         case "pixar": companyId = "3"
         default: companyId = nil
         }
 
-        guard let companyId = companyId else { return [] }
-        let url = uri("discover/movie", credentials, settings, ["with_companies": companyId])
+        let query: [String: String]
+        if let watchProviderId {
+            query = ["with_watch_providers": watchProviderId, "watch_region": "US"]
+        } else if let companyId {
+            query = ["with_companies": companyId]
+        } else {
+            return []
+        }
+
+        let url = uri("discover/movie", credentials, settings, query)
         guard let response = try? await get(url, credentials), response.status == 200 else { return [] }
 
         let (movieGenres, _) = await fetchGenres(credentials, settings)
@@ -315,30 +332,45 @@ final class TmdbRepository: TmdbRepositoryProtocol {
 
     func fetchStudioTVShows(_ studio: String, credentials: ApiCredentials, settings: UserSettings) async -> [MediaItem] {
         guard credentials.hasTmdb else { return [] }
+        let key = studio.lowercased()
+
+        let watchProviderId: String?
+        switch key {
+        case "netflix": watchProviderId = "8"
+        case "prime": watchProviderId = "9"
+        case "disney": watchProviderId = "337"
+        case "appletvplus", "apple", "appletv": watchProviderId = "350"
+        case "hulu": watchProviderId = "15"
+        case "hbo": watchProviderId = "1899"
+        case "paramount": watchProviderId = "531"
+        case "peacock": watchProviderId = "386"
+        case "crunchyroll": watchProviderId = "283"
+        case "starz": watchProviderId = "43"
+        case "amcplus": watchProviderId = "526"
+        default: watchProviderId = nil
+        }
+
         let networkId: String?
-        switch studio.lowercased() {
-        case "disney": networkId = "2739"
-        case "netflix": networkId = "213"
-        case "hbo": networkId = "3186"
-        case "prime": networkId = "1024"
-        case "apple": networkId = "2552"
-        case "paramount": networkId = "359"
-        case "hulu": networkId = "453"
-        case "peacock": networkId = "3353"
+        switch key {
         case "marvel": networkId = "420"
         case "warner": networkId = "3186"
         case "universal": networkId = "33"
         case "sony": networkId = "5"
-        case "crunchyroll": networkId = "1112"
         case "pixar": networkId = "3"
         default: networkId = nil
         }
 
-        guard let networkId = networkId else { return [] }
-        let isCompanyQuery = ["marvel", "universal", "sony", "pixar"].contains(studio.lowercased())
-        let queryKey = isCompanyQuery ? "with_companies" : "with_networks"
+        let query: [String: String]
+        if let watchProviderId {
+            query = ["with_watch_providers": watchProviderId, "watch_region": "US"]
+        } else if let networkId {
+            let isCompanyQuery = ["marvel", "universal", "sony", "pixar"].contains(key)
+            query = [isCompanyQuery ? "with_companies" : "with_networks": networkId]
+        } else {
+            return []
+        }
 
-        let url = uri("discover/tv", credentials, settings, [queryKey: networkId])
+        let url = uri("discover/tv", credentials, settings, query)
         guard let response = try? await get(url, credentials), response.status == 200 else { return [] }
 
         let (_, tvGenres) = await fetchGenres(credentials, settings)

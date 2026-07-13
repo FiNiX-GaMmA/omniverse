@@ -2,10 +2,38 @@
 // Omniverse Desktop — Core Renderer Controller
 // ==============================================================================
 
+// Domains observed to be DNS-sinkholed by some ISPs (e.g. Airtel RPZ). The
+// mobile apps use the vidsrc-embed.* / *.su domains, which stay reachable.
+const BLOCKED_VIDSRC_DOMAINS = ["vidsrc.me", "vidsrc.to", "vidsrc.xyz"];
+const DEFAULT_EMBED_PROVIDER = "vidcore.created.app";
+const DEFAULT_VIDSRC_DOMAIN = DEFAULT_EMBED_PROVIDER;
+function resolveSavedVidsrcDomain() {
+  const saved = localStorage.getItem("omni_vidsrc_domain");
+  const legacyVidsrcDefaults = [
+    ...BLOCKED_VIDSRC_DOMAINS,
+    "vidsrc-embed.ru",
+    "vidsrc-embed.su",
+    "vidsrcme.su",
+    "vsrc.su",
+    "vidsrc.net",
+    "vidcore.org",
+    "www.vidcore.org",
+  ];
+  // VidCore is now the primary provider. Migrate old VidSrc defaults so the
+  // first startup after update does not keep trying VidSrc before VidCore.
+  if (!saved || legacyVidsrcDefaults.includes(saved)) {
+    localStorage.setItem("omni_vidsrc_domain", DEFAULT_EMBED_PROVIDER);
+    return DEFAULT_EMBED_PROVIDER;
+  }
+  return saved;
+}
+
 // Global Application State
+let detailModalRequestToken = 0;
+
 let state = {
   tmdbToken: localStorage.getItem("omni_tmdb_token") || "",
-  vidsrcDomain: localStorage.getItem("omni_vidsrc_domain") || "vidsrc.me",
+  vidsrcDomain: resolveSavedVidsrcDomain(),
   currentScreen: "home",
   activeStudio: "",
   selectedMedia: null,
@@ -33,196 +61,112 @@ let state = {
   watchHistory: JSON.parse(localStorage.getItem("omni_watch_history") || "[]"),
 };
 
-// Curated high-fidelity backup database (ensures app is populated before TMDB token entry)
-const FALLBACK_DB = {
-  movies: [
-    {
-      id: "m1",
-      title: "Dune: Part Two",
-      type: "movie",
-      year: 2024,
-      rating: "8.3",
-      tmdbId: 823464,
-      poster: "https://image.tmdb.org/t/p/w500/1pdf3ZzY7S7VRL37vIgz7JK0p0y.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/x887Of99v489rSgIY6M69id9982.jpg",
-      overview:
-        "Follow the mythic journey of Paul Atreides as he unites with Chani and the Fremen while on a path of revenge against the conspirators who destroyed his family.",
-    },
-    {
-      id: "m2",
-      title: "Deadpool & Wolverine",
-      type: "movie",
-      year: 2024,
-      rating: "7.8",
-      tmdbId: 533535,
-      poster: "https://image.tmdb.org/t/p/w500/8cdWv6Z79h2Y9C6_-9v_D69f7Of.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/yD1b09b57Of9d7h7M69e06yY0E.jpg",
-      overview:
-        "A listless Wade Wilson toils in civilian life. His days as the morally flexible mercenary, Deadpool, behind him. When his homeworld faces an existential threat, he must reluctantly suit-up.",
-    },
-    {
-      id: "m3",
-      title: "Oppenheimer",
-      type: "movie",
-      year: 2023,
-      rating: "8.1",
-      tmdbId: 872585,
-      poster: "https://image.tmdb.org/t/p/w500/8Gxv2gSj0u06st26sh6fC69fOf.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/fm6Of99v289rSgIY6M69id9982.jpg",
-      overview:
-        "The story of J. Robert Oppenheimer's role in the development of the atomic bomb during World War II.",
-    },
-    {
-      id: "m4",
-      title: "Interstellar",
-      type: "movie",
-      year: 2014,
-      rating: "8.4",
-      tmdbId: 157336,
-      poster:
-        "https://image.tmdb.org/t/p/w500/gEU2Qv6IL7hO6m2gSj0u06st26sh.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/rAiO3fO99v489rSgIY6M69id9982.jpg",
-      overview:
-        "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel.",
-    },
-    {
-      id: "m5",
-      title: "Spider-Man: Across the Spider-Verse",
-      type: "movie",
-      year: 2023,
-      rating: "8.4",
-      tmdbId: 569094,
-      poster: "https://image.tmdb.org/t/p/w500/8Gxv2gSj0u06st26sh6fC6.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/nG6O3fO99v489rSgIY6M69id9982.jpg",
-      overview:
-        "Miles Morales catapults across the Multiverse, where he encounters a team of Spider-People charged with protecting its very existence.",
-    },
-  ],
-  tv: [
-    {
-      id: "s1",
-      title: "Breaking Bad",
-      type: "tv",
-      year: 2008,
-      rating: "9.5",
-      tmdbId: 1396,
-      poster: "https://image.tmdb.org/t/p/w500/ztk6Of99v489rSgIY6M69id9982.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/tsG6O3fO99v489rSgIY6M69id9982.jpg",
-      overview:
-        "A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine.",
-      seasons: 5,
-      episodesPerSeason: [7, 13, 13, 13, 16],
-    },
-    {
-      id: "s2",
-      title: "Wednesday",
-      type: "tv",
-      year: 2022,
-      rating: "8.0",
-      tmdbId: 119051,
-      poster: "https://image.tmdb.org/t/p/w500/bxi78zSj0u06st26sh6fC69fOf.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/iD1b09b57Of9d7h7M69e06yY0E.jpg",
-      overview:
-        "A sleuthing, supernaturally infused mystery charting Wednesday Addams' years as a student at Nevermore Academy.",
-      seasons: 1,
-      episodesPerSeason: [8],
-    },
-    {
-      id: "s3",
-      title: "Stranger Things",
-      type: "tv",
-      year: 2016,
-      rating: "8.6",
-      tmdbId: 66732,
-      poster: "https://image.tmdb.org/t/p/w500/x27Of99v489rSgIY6M69id9982.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/pG6O3fO99v489rSgIY6M69id9982.jpg",
-      overview:
-        "When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.",
-      seasons: 4,
-      episodesPerSeason: [8, 9, 8, 9],
-    },
-    {
-      id: "s4",
-      title: "Shōgun",
-      type: "tv",
-      year: 2024,
-      rating: "8.5",
-      tmdbId: 79242,
-      poster: "https://image.tmdb.org/t/p/w500/7cdWv6Z79h2Y9C6_-9v_D69f7Of.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/zG6O3fO99v489rSgIY6M69id9982.jpg",
-      overview:
-        "In Japan in the year 1600, Lord Yoshii Toranaga is fighting for his life as his enemies on the Council of Regents unite against him.",
-      seasons: 1,
-      episodesPerSeason: [10],
-    },
-  ],
-  anime: [
-    {
-      id: "a1",
-      title: "One Piece",
-      type: "tv",
-      year: 1999,
-      rating: "8.7",
-      tmdbId: 37854,
-      poster: "https://image.tmdb.org/t/p/w500/c3Of99v489rSgIY6M69id9982.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/4g6O3fO99v489rSgIY6M69id9982.jpg",
-      overview:
-        "Monkey D. Luffy and his pirate crew explore a fantastical world of endless oceans and exotic islands in search of the world's ultimate treasure.",
-      seasons: 1,
-      episodesPerSeason: [1110],
-    },
-    {
-      id: "a2",
-      title: "Demon Slayer: Kimetsu no Yaiba",
-      type: "tv",
-      year: 2019,
-      rating: "8.7",
-      tmdbId: 85937,
-      poster: "https://image.tmdb.org/t/p/w500/hcdWv6Z79h2Y9C6_-9v_D69f7Of.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/vG6O3fO99v489rSgIY6M69id9982.jpg",
-      overview:
-        "It is the Taisho Period in Japan. Tanjiro, a kindhearted boy who sells charcoal for a living, finds his family slaughtered by a demon.",
-      seasons: 4,
-      episodesPerSeason: [26, 18, 11, 8],
-    },
-    {
-      id: "a3",
-      title: "Jujutsu Kaisen",
-      type: "tv",
-      year: 2020,
-      rating: "8.6",
-      tmdbId: 95479,
-      poster: "https://image.tmdb.org/t/p/w500/ycdWv6Z79h2Y9C6_-9v_D69f7Of.jpg",
-      backdrop:
-        "https://image.tmdb.org/t/p/original/uG6O3fO99v489rSgIY6M69id9982.jpg",
-      overview:
-        "Yuji Itadori is a boy with tremendous physical strength, though he lives a completely ordinary high school life. One day, to save a classmate who has been attacked by curses, he eats the finger of Ryomen Sukuna, taking the curse into his own soul.",
-      seasons: 2,
-      episodesPerSeason: [24, 23],
-    },
-  ],
+const STUDIO_PROVIDER_MAP = {
+  netflix: { provider: "8", label: "Netflix" },
+  prime: { provider: "9", label: "Amazon Prime Video" },
+  disney: { provider: "337", label: "Disney Plus" },
+  appletvplus: { provider: "350", label: "Apple TV Plus" },
+  appletv: { provider: "2", label: "Apple TV" },
+  hulu: { provider: "15", label: "Hulu" },
+  hbo: { provider: "1899", label: "HBO Max" },
+  paramount: { provider: "531", label: "Paramount Plus" },
+  peacock: { provider: "386", label: "Peacock Premium" },
+  crunchyroll: { provider: "283", label: "Crunchyroll" },
+  starz: { provider: "43", label: "Starz" },
+  amcplus: { provider: "526", label: "AMC Plus" },
+
+  // Legacy aliases
+  apple: { provider: "350", label: "Apple TV Plus" },
+  marvel: { company: "420", label: "Marvel" },
+  pixar: { company: "3", label: "Pixar" },
+  a24: { company: "41077", label: "A24" },
+  warner: { company: "174", label: "Warner Bros" },
+  universal: { company: "33", label: "Universal" },
+  sony: { company: "5", label: "Sony" },
 };
+
+const TMDB_PROVIDER_LOGO_OVERRIDES = {
+  526: "https://image.tmdb.org/t/p/w154/ovmu6uot1XVvsemM2dDySXLiX57.jpg",
+  8: "https://image.tmdb.org/t/p/w154/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+  9: "https://image.tmdb.org/t/p/w154/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+  337: "https://image.tmdb.org/t/p/w154/97yvRBw1GzX7fXprcF80er19ot.jpg",
+  350: "https://image.tmdb.org/t/p/w154/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+  15: "https://image.tmdb.org/t/p/w154/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg",
+  1899: "https://image.tmdb.org/t/p/w154/jbe4gVSfRlbPTdESXhEKpornsfu.jpg",
+  531: "https://image.tmdb.org/t/p/w154/fts6X10Jn4QT0X6ac3udKEn2tJA.jpg",
+  386: "https://image.tmdb.org/t/p/w154/2aGrp1xw3qhwCYvNGAJZPdjfeeX.jpg",
+  283: "https://image.tmdb.org/t/p/w154/fzN5Jok5Ig1eJ7gyNGoMhnLSCfh.jpg",
+};
+
+const ANILIST_GRAPHQL = "https://graphql.anilist.co";
+
+const screenScrollPositions = {
+  home: 0,
+  movies: 0,
+  tv: 0,
+  anime: 0,
+  onepace: 0,
+  livetv: 0,
+  settings: 0,
+  search: 0,
+};
+
+const infiniteState = {
+  movies: {
+    page: 1,
+    totalPages: 1,
+    loading: false,
+    hasMore: true,
+    seen: new Set(),
+  },
+  tv: {
+    page: 1,
+    totalPages: 1,
+    loading: false,
+    hasMore: true,
+    seen: new Set(),
+  },
+  anime: {
+    page: 1,
+    loading: false,
+    hasMore: true,
+    seen: new Set(),
+  },
+  provider: {
+    active: false,
+    key: "",
+    cfg: null,
+    activeType: "movie",
+    movie: {
+      page: 0,
+      totalPages: 1,
+      loading: false,
+      hasMore: true,
+      seen: new Set(),
+    },
+    tv: {
+      page: 0,
+      totalPages: 1,
+      loading: false,
+      hasMore: true,
+      seen: new Set(),
+    },
+  },
+};
+
 // Initialize UI on startup
 document.addEventListener("DOMContentLoaded", async () => {
   setupPlatformWindowDecorations();
   loadSavedPreferences();
+  await hydrateProviderRailLogos();
   switchScreen("home");
   renderCatalogFeeds();
   setupSearchInput();
   setupLiveTvCenter();
+  setupInfiniteScrollLoading();
   renderContinueWatching(); // Initial local history render
   setupAdblockObserver();
+  setupWebviewFailObserver();
   lucide.createIcons();
 
   // Dynamically resolve and display installed version in settings
@@ -307,6 +251,55 @@ function loadSavedPreferences() {
       state.anilistAccessToken;
 }
 
+async function hydrateProviderRailLogos() {
+  const logoNodes = Array.from(
+    document.querySelectorAll("img.studio-logo[data-provider-id]"),
+  );
+  if (!logoNodes.length) return;
+
+  let providersById = new Map();
+  if (state.tmdbToken && state.tmdbToken.trim()) {
+    const providersResponse = await fetchTmdb("watch/providers/movie", {
+      watch_region: "US",
+    });
+    const providers = (providersResponse && providersResponse.results) || [];
+    providersById = new Map(
+      providers.map((provider) => [String(provider.provider_id), provider]),
+    );
+  }
+
+  logoNodes.forEach((img) => {
+    const providerId = String(img.dataset.providerId || "");
+    const provider = providersById.get(providerId);
+    const overrideSrc = TMDB_PROVIDER_LOGO_OVERRIDES[providerId] || "";
+    const tmdbSrc =
+      provider && provider.logo_path
+        ? `https://image.tmdb.org/t/p/w154${provider.logo_path}`
+        : "";
+    const src = overrideSrc || tmdbSrc || img.getAttribute("src") || "";
+
+    const tile = img.closest("button");
+    const fallbackLabel = tile
+      ? tile.querySelector("[data-provider-fallback]")
+      : null;
+
+    if (!src) {
+      img.removeAttribute("src");
+      img.classList.add("hidden");
+      if (fallbackLabel) fallbackLabel.classList.remove("hidden");
+      return;
+    }
+
+    img.src = src;
+    if (provider && provider.provider_name) {
+      img.alt = `${provider.provider_name} logo`;
+      if (tile) tile.title = provider.provider_name;
+    }
+    img.classList.remove("hidden");
+    if (fallbackLabel) fallbackLabel.classList.add("hidden");
+  });
+}
+
 // Cross-platform fetch helper (Electron IPC -> fallback to native fetch)
 async function appFetch(url, method = "GET", headers = {}, body = null) {
   if (window.electron && window.electron.iptvFetch) {
@@ -335,13 +328,20 @@ async function fetchTmdb(path, params = {}) {
     include_adult: "false",
     ...params,
   });
+  // Force a fresh pull on app start/refresh instead of relying on cached API
+  // responses. TMDB ignores unknown params, but the cache key stays unique.
+  urlParams.set("_ts", String(Date.now()));
 
   if (!token.startsWith("ey")) {
     urlParams.set("api_key", token);
   }
 
   const url = `https://api.themoviedb.org/3/${path}?${urlParams.toString()}`;
-  const headers = { Accept: "application/json" };
+  const headers = {
+    Accept: "application/json",
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
+  };
   if (token.startsWith("ey")) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -386,23 +386,33 @@ const TMDB_GENRES = {
   10768: "War",
 };
 
-function mapTmdbItem(item, type) {
-  const fallbackImg =
+function mediaPlaceholder(title) {
+  return (
     "https://ui-avatars.com/api/?background=111&color=fff&size=500&name=" +
-    encodeURIComponent(item.title || item.name || "Unknown");
+    encodeURIComponent(title || "Media")
+  );
+}
+
+function mapTmdbItem(item, type) {
+  const title = item.title || item.name || "Untitled";
+  const placeholder = mediaPlaceholder(title);
   const posterPath = item.poster_path
     ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-    : fallbackImg;
+    : item.backdrop_path
+      ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
+      : placeholder;
   const backdropPath = item.backdrop_path
     ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
-    : fallbackImg;
+    : item.poster_path
+      ? `https://image.tmdb.org/t/p/original${item.poster_path}`
+      : placeholder;
   const releaseDate = item.release_date || item.first_air_date || "";
   const year = releaseDate ? new Date(releaseDate).getFullYear() : "—";
   const genreIds = item.genre_ids || [];
   const genres = genreIds.map((id) => TMDB_GENRES[id]).filter(Boolean);
   return {
     id: `tmdb:${type}:${item.id}`,
-    title: item.title || item.name || "Untitled",
+    title: title,
     type: type,
     year: year,
     rating: item.vote_average ? item.vote_average.toFixed(1) : "—",
@@ -411,18 +421,346 @@ function mapTmdbItem(item, type) {
     backdrop: backdropPath,
     overview: item.overview || "No description available.",
     genres: genres,
+    originalLanguage: item.original_language || "",
   };
 }
 
-function showGridLoading(containerId) {
+// Heuristic: a TMDB title that is Japanese + Animation is almost certainly
+// anime, so it should play via the AllAnime path rather than a vidsrc embed.
+function isLikelyAnime(media) {
+  if (!media) return false;
+  if (media.type === "anime") return true;
+  const genres = media.genres || [];
+  return (
+    media.originalLanguage === "ja" &&
+    genres.some((g) => g.toLowerCase() === "animation")
+  );
+}
+
+function showGridLoading(containerId, label = "Pulling latest titles…") {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = `
-    <div class="col-span-full flex flex-col items-center justify-center py-8 gap-2 text-gray-500">
-      <div class="w-5 h-5 rounded-full border-2 border-brandCyan border-t-transparent animate-spin"></div>
-      <span class="text-[10px] font-bold uppercase tracking-wider text-brandCyan">Loading...</span>
+    <div class="col-span-full flex flex-col items-center justify-center py-10 gap-3 text-gray-500 min-h-[180px]">
+      <div class="w-6 h-6 rounded-full border-2 border-brandCyan border-t-transparent animate-spin"></div>
+      <span class="text-[10px] font-bold uppercase tracking-[0.24em] text-brandCyan">${label}</span>
     </div>
   `;
+}
+
+function showGridMessage(containerId, title, body, icon = "satellite") {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = `
+    <div class="col-span-full w-full min-h-[190px] rounded-2xl border border-white/[0.06] bg-white/[0.025] flex flex-col items-center justify-center text-center gap-3 p-8">
+      <div class="w-12 h-12 rounded-2xl bg-brandCyan/10 border border-brandCyan/20 flex items-center justify-center text-brandCyan">
+        <i data-lucide="${icon}" class="w-5 h-5"></i>
+      </div>
+      <div class="space-y-1 max-w-md">
+        <h3 class="text-sm font-black text-white tracking-wide">${title}</h3>
+        <p class="text-xs text-gray-500 leading-relaxed">${body}</p>
+      </div>
+    </div>
+  `;
+  if (window.lucide) lucide.createIcons();
+}
+
+function setHeroMessage(title, overview) {
+  if (heroTimer) clearInterval(heroTimer);
+  heroTimer = null;
+  heroSlides = [];
+  const heroBanner = document.getElementById("hero-banner");
+  const heroTitle = document.getElementById("hero-title");
+  const heroOverview = document.getElementById("hero-overview");
+  const heroDots = document.getElementById("hero-dots");
+  const heroPlayBtn = document.getElementById("hero-play-btn");
+  const heroDetailBtn = document.getElementById("hero-detail-btn");
+  if (heroBanner) heroBanner.style.backgroundImage = "";
+  if (heroTitle) heroTitle.textContent = title;
+  if (heroOverview) heroOverview.textContent = overview;
+  if (heroDots) heroDots.innerHTML = "";
+  if (heroPlayBtn) heroPlayBtn.onclick = () => switchScreen("settings");
+  if (heroDetailBtn) heroDetailBtn.onclick = () => switchScreen("settings");
+}
+
+function mapTmdbResults(data, type) {
+  return ((data && data.results) || [])
+    .filter((item) => item && (item.poster_path || item.backdrop_path))
+    .map((item) => mapTmdbItem(item, type));
+}
+
+function uniqueByMediaId(items, seenSet) {
+  const out = [];
+  (items || []).forEach((item) => {
+    if (!item || !item.id || seenSet.has(item.id)) return;
+    seenSet.add(item.id);
+    out.push(item);
+  });
+  return out;
+}
+
+function createMediaPosterCard(item, isRail = false) {
+  const card = document.createElement("div");
+  card.onclick = () => openDetailModal(item);
+  card.className =
+    "media-poster-card cursor-pointer group" +
+    (isRail ? " w-[180px] shrink-0" : "");
+  card.innerHTML = `
+    <div class="relative aspect-[2/3] w-full">
+      <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
+      <div class="media-overlay-glass">
+        <h4 class="text-white font-bold text-sm leading-tight drop-shadow-md mb-1 line-clamp-2">${item.title}</h4>
+        <div class="flex items-center justify-between text-gray-300 text-[10px] font-semibold tracking-wide">
+          <span>${item.year || "—"}</span>
+          <span class="flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i> ${item.rating || "—"}</span>
+        </div>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function appendMediaCards(container, items, startIndex = 0, isRail = false) {
+  if (!container) return;
+  (items || []).forEach((item, idx) => {
+    const card = createMediaPosterCard(item, isRail);
+    applyCardStaggerAnimation(card, startIndex + idx);
+    container.appendChild(card);
+  });
+  if (window.lucide) lucide.createIcons();
+}
+
+function setupInfiniteScrollLoading() {
+  const viewport = document.getElementById("content-viewport");
+  if (!viewport || viewport.dataset.infiniteBound === "1") return;
+
+  let ticking = false;
+  viewport.addEventListener("scroll", () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(async () => {
+      ticking = false;
+      const nearBottom =
+        viewport.scrollTop + viewport.clientHeight >=
+        viewport.scrollHeight - 520;
+      if (!nearBottom) return;
+
+      if (state.currentScreen === "movies") {
+        const providerBrowser = document.getElementById("provider-browser");
+        const providerActive =
+          providerBrowser && !providerBrowser.classList.contains("hidden");
+        if (providerActive) {
+          await loadProviderSection(
+            infiniteState.provider.activeType || "movie",
+            true,
+          );
+        } else {
+          await loadMoreTmdbGrid("movie");
+        }
+      } else if (state.currentScreen === "tv") {
+        await loadMoreTmdbGrid("tv");
+      } else if (state.currentScreen === "anime") {
+        await loadMoreAnimeGrid();
+      }
+    });
+  });
+
+  viewport.dataset.infiniteBound = "1";
+}
+
+function resetTmdbInfinite(type, items) {
+  const key = type === "tv" ? "tv" : "movies";
+  const st = infiniteState[key];
+  st.page = 1;
+  st.totalPages = 500;
+  st.loading = false;
+  st.hasMore = true;
+  st.seen = new Set((items || []).map((i) => i && i.id).filter(Boolean));
+}
+
+async function loadMoreTmdbGrid(type = "movie") {
+  if (!state.tmdbToken) return;
+  const key = type === "tv" ? "tv" : "movies";
+  const containerId = type === "tv" ? "grid-all-tv" : "grid-all-movies";
+  const st = infiniteState[key];
+  if (!st || st.loading || !st.hasMore) return;
+
+  st.loading = true;
+  try {
+    const nextPage = st.page + 1;
+    const data = await fetchTmdbDiscover(type, nextPage);
+    st.totalPages = data && data.total_pages ? data.total_pages : st.totalPages;
+    const fresh = uniqueByMediaId(mapTmdbResults(data, type), st.seen);
+
+    if (!fresh.length) {
+      st.hasMore = nextPage < st.totalPages;
+      st.page = nextPage;
+      return;
+    }
+
+    const container = document.getElementById(containerId);
+    const startIndex = container ? container.children.length : 0;
+    appendMediaCards(container, fresh, startIndex, false);
+    st.page = nextPage;
+    st.hasMore = st.page < st.totalPages;
+  } finally {
+    st.loading = false;
+  }
+}
+
+function mapAniListItem(item) {
+  if (!item) return null;
+  const titleObj = item.title || {};
+  const title =
+    titleObj.english || titleObj.romaji || titleObj.native || "Anime";
+  const cover = item.coverImage || {};
+  const poster = cover.extraLarge || cover.large || mediaPlaceholder(title);
+  const releaseYear =
+    (item.startDate && item.startDate.year) || item.seasonYear || "—";
+  return {
+    id: `anilist:anime:${item.id}`,
+    anilistId: item.id,
+    type: "anime",
+    title,
+    overview: (item.description || "").replace(/<[^>]*>/g, "").trim(),
+    poster,
+    backdrop: item.bannerImage || poster,
+    year: String(releaseYear),
+    rating: ((item.averageScore || 0) / 10 || 0).toFixed(1),
+    genres: item.genres || [],
+    originalLanguage: "ja",
+  };
+}
+
+async function fetchAniListDiscoverPage(page = 1) {
+  const query = `
+    query($page:Int!, $perPage:Int!) {
+      Page(page: $page, perPage: $perPage) {
+        pageInfo { currentPage hasNextPage }
+        media(type: ANIME, sort: [TRENDING_DESC, POPULARITY_DESC], isAdult: false) {
+          id
+          title { romaji english native }
+          description(asHtml: false)
+          coverImage { extraLarge large }
+          bannerImage
+          genres
+          averageScore
+          seasonYear
+          startDate { year }
+        }
+      }
+    }
+  `;
+
+  const res = await appFetch(
+    ANILIST_GRAPHQL,
+    "POST",
+    { "Content-Type": "application/json", Accept: "application/json" },
+    JSON.stringify({ query, variables: { page, perPage: 24 } }),
+  );
+
+  if (!res || !res.ok || !res.html) return null;
+
+  try {
+    const parsed = JSON.parse(res.html);
+    return parsed && parsed.data && parsed.data.Page ? parsed.data.Page : null;
+  } catch {
+    return null;
+  }
+}
+
+function resetAnimeInfinite(items) {
+  infiniteState.anime.page = 1;
+  infiniteState.anime.loading = false;
+  infiniteState.anime.hasMore = true;
+  infiniteState.anime.seen = new Set(
+    (items || []).map((i) => i && i.id).filter(Boolean),
+  );
+}
+
+async function loadMoreAnimeGrid() {
+  const st = infiniteState.anime;
+  if (st.loading || !st.hasMore) return;
+
+  st.loading = true;
+  try {
+    const nextPage = st.page + 1;
+    const page = await fetchAniListDiscoverPage(nextPage);
+    const raw = (page && page.media) || [];
+    const mapped = raw.map(mapAniListItem).filter(Boolean);
+    const fresh = uniqueByMediaId(mapped, st.seen);
+
+    if (!fresh.length) {
+      st.page = nextPage;
+      st.hasMore = Boolean(page && page.pageInfo && page.pageInfo.hasNextPage);
+      return;
+    }
+
+    state.animeCatalog = [...(state.animeCatalog || []), ...fresh];
+    const grid = document.getElementById("grid-all-anime");
+    const startIndex = grid ? grid.children.length : 0;
+    appendMediaCards(grid, fresh, startIndex, false);
+
+    st.page = nextPage;
+    st.hasMore = Boolean(page && page.pageInfo && page.pageInfo.hasNextPage);
+  } finally {
+    st.loading = false;
+  }
+}
+
+async function fetchTmdbDiscover(type, page = 1, extraParams = {}) {
+  const endpoint = type === "tv" ? "discover/tv" : "discover/movie";
+  const params = {
+    sort_by: "popularity.desc",
+    "vote_count.gte": type === "tv" ? "25" : "40",
+    page: String(page),
+    ...extraParams,
+  };
+  return await fetchTmdb(endpoint, params);
+}
+
+// Lordflix-style rotating hero carousel state
+let heroSlides = [];
+let heroIndex = 0;
+let heroTimer = null;
+
+function initHeroCarousel(items) {
+  heroSlides = (items || [])
+    .filter((m) => m && (m.backdrop || m.poster))
+    .slice(0, 7);
+  if (!heroSlides.length) return;
+  heroIndex = 0;
+  showHeroSlide(0);
+  if (heroTimer) clearInterval(heroTimer);
+  heroTimer = setInterval(() => {
+    showHeroSlide((heroIndex + 1) % heroSlides.length);
+  }, 8000);
+}
+
+function showHeroSlide(i) {
+  if (!heroSlides.length) return;
+  heroIndex = i;
+  updateHeroBanner(heroSlides[i]);
+  renderHeroDots();
+}
+
+function renderHeroDots() {
+  const dots = document.getElementById("hero-dots");
+  if (!dots) return;
+  dots.innerHTML = "";
+  heroSlides.forEach((_, i) => {
+    const dot = document.createElement("button");
+    dot.className =
+      "h-1.5 rounded-full transition-all duration-300 " +
+      (i === heroIndex
+        ? "w-6 bg-white"
+        : "w-1.5 bg-white/40 hover:bg-white/70");
+    dot.onclick = () => {
+      showHeroSlide(i);
+      if (heroTimer) clearInterval(heroTimer);
+    };
+    dots.appendChild(dot);
+  });
 }
 
 function updateHeroBanner(media) {
@@ -430,6 +768,7 @@ function updateHeroBanner(media) {
   const heroTitle = document.getElementById("hero-title");
   const heroOverview = document.getElementById("hero-overview");
   const heroPlayBtn = document.getElementById("hero-play-btn");
+  const heroAddBtn = document.getElementById("hero-add-btn");
   const heroDetailBtn = document.getElementById("hero-detail-btn");
 
   if (!heroBanner || !media) return;
@@ -440,6 +779,14 @@ function updateHeroBanner(media) {
     if (heroTitle) heroTitle.textContent = media.title;
     if (heroOverview) heroOverview.textContent = media.overview;
     heroBanner.style.opacity = "1";
+
+    // Replay the staggered entrance animation on the hero content block
+    const heroContent = document.getElementById("hero-content");
+    if (heroContent) {
+      heroContent.classList.remove("hero-content-anim");
+      void heroContent.offsetWidth; // force reflow to restart the animation
+      heroContent.classList.add("hero-content-anim");
+    }
   }, 150);
 
   if (heroPlayBtn) {
@@ -452,72 +799,117 @@ function updateHeroBanner(media) {
     };
   }
 
+  if (heroAddBtn) {
+    heroAddBtn.onclick = () => {
+      if (window.electron && window.electron.showNotification) {
+        window.electron.showNotification("My List", `${media.title} added`);
+      }
+    };
+  }
+
   if (heroDetailBtn) {
     heroDetailBtn.onclick = () => openDetailModal(media);
   }
 }
 
-// Render dynamic elements
+// Render dynamic elements from live sources only. No bundled catalogue is used.
 async function renderCatalogFeeds(skipAnimeLoad = false) {
   let trendingMovies = [];
   let trendingTv = [];
+  let popularMovies = [];
+  let tvGridItems = [];
 
-  if (state.tmdbToken) {
-    showGridLoading("grid-all-movies");
-    showGridLoading("grid-all-tv");
-
-    const trendingMoviesData = await fetchTmdb("trending/movie/week");
-    trendingMovies =
-      trendingMoviesData && trendingMoviesData.results
-        ? trendingMoviesData.results.map((item) => mapTmdbItem(item, "movie"))
-        : FALLBACK_DB.movies;
-
-    const trendingTvData = await fetchTmdb("trending/tv/week");
-    trendingTv =
-      trendingTvData && trendingTvData.results
-        ? trendingTvData.results.map((item) => mapTmdbItem(item, "tv"))
-        : FALLBACK_DB.tv;
-
-    const popularMoviesData = await fetchTmdb("movie/now_playing");
-    const popularMovies =
-      popularMoviesData && popularMoviesData.results
-        ? popularMoviesData.results.map((item) => mapTmdbItem(item, "movie"))
-        : FALLBACK_DB.movies;
-
-    const topRatedTvData = await fetchTmdb("tv/top_rated");
-    const topRatedTv =
-      topRatedTvData && topRatedTvData.results
-        ? topRatedTvData.results.map((item) => mapTmdbItem(item, "tv"))
-        : FALLBACK_DB.tv;
-
-    renderGrid("grid-all-movies", popularMovies.slice(0, 18));
-    renderGrid("grid-all-tv", topRatedTv.slice(0, 18));
-
-    const heroMedia =
-      trendingMovies[0] || trendingTv[0] || FALLBACK_DB.movies[0];
-    updateHeroBanner(heroMedia);
-  } else {
-    trendingMovies = FALLBACK_DB.movies;
-    trendingTv = FALLBACK_DB.tv;
-
-    renderGrid("grid-all-movies", FALLBACK_DB.movies);
-    renderGrid("grid-all-tv", FALLBACK_DB.tv);
-    updateHeroBanner(FALLBACK_DB.movies[0]);
+  if (!skipAnimeLoad) {
+    showGridLoading("grid-all-anime", "Syncing AniList…");
+    loadAnimeCatalog();
   }
 
-  // Define and build high-fidelity categories list exactly like the mobile apps (paritied with Kotlin/Swift lists)
-  const categories = [];
+  if (state.tmdbToken) {
+    showGridLoading("grid-all-movies", "Syncing TMDB movies…");
+    showGridLoading("grid-all-tv", "Syncing TMDB shows…");
+    setHeroMessage(
+      "Syncing latest releases…",
+      "Pulling fresh trending movies, TV shows, and anime from live sources.",
+    );
 
-  // Blend movies, tv, and anime for top 10 trending
+    const [
+      trendingMoviesData,
+      trendingTvData,
+      popularMoviesData,
+      topRatedTvData,
+      onAirTvData,
+    ] = await Promise.all([
+      fetchTmdb("trending/movie/week"),
+      fetchTmdb("trending/tv/week"),
+      fetchTmdb("movie/now_playing"),
+      fetchTmdb("tv/top_rated"),
+      fetchTmdb("tv/on_the_air"),
+    ]);
+
+    trendingMovies = mapTmdbResults(trendingMoviesData, "movie");
+    trendingTv = mapTmdbResults(trendingTvData, "tv");
+    popularMovies = mapTmdbResults(popularMoviesData, "movie");
+    tvGridItems = [
+      ...mapTmdbResults(onAirTvData, "tv"),
+      ...mapTmdbResults(topRatedTvData, "tv"),
+    ];
+
+    const movieInitial = (
+      popularMovies.length ? popularMovies : trendingMovies
+    ).slice(0, 24);
+    const tvInitial = (tvGridItems.length ? tvGridItems : trendingTv).slice(
+      0,
+      24,
+    );
+
+    renderGrid("grid-all-movies", movieInitial, true);
+    renderGrid("grid-all-tv", tvInitial, true);
+
+    resetTmdbInfinite("movie", movieInitial);
+    resetTmdbInfinite("tv", tvInitial);
+  } else {
+    showGridMessage(
+      "grid-all-movies",
+      "Connect TMDB to load live movies",
+      "Omniverse no longer ships a bundled movie catalogue. Add your TMDB key in Settings to pull the latest trending and now-playing movies on startup.",
+      "key-round",
+    );
+    showGridMessage(
+      "grid-all-tv",
+      "Connect TMDB to load live TV",
+      "Add your TMDB key in Settings and this rail will populate from fresh trending, on-air, and top-rated TV data.",
+      "key-round",
+    );
+    infiniteState.movies.hasMore = false;
+    infiniteState.tv.hasMore = false;
+  }
+
+  const dynamicAnimeList = state.animeCatalog || [];
+  const heroFeed = [
+    ...trendingMovies,
+    ...trendingTv,
+    ...dynamicAnimeList,
+  ].filter((m) => m && (m.backdrop || m.poster));
+  if (heroFeed.length) {
+    initHeroCarousel(heroFeed);
+  } else if (!state.tmdbToken) {
+    setHeroMessage(
+      "Live catalogue only",
+      "Anime will sync from AniList automatically. Add TMDB in Settings to unlock fresh movie and TV discovery.",
+    );
+  } else {
+    setHeroMessage(
+      "No live catalogue returned",
+      "TMDB did not return usable image-backed results. Check your token or network and refresh again.",
+    );
+  }
+
+  const categories = [];
   const blendTop10 = [];
   let mi = 0,
     si = 0,
     ai = 0;
   const maxLimit = 10;
-  const dynamicAnimeList =
-    state.animeCatalog && state.animeCatalog.length
-      ? state.animeCatalog
-      : FALLBACK_DB.anime;
 
   while (
     blendTop10.length < maxLimit &&
@@ -553,7 +945,7 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
     categories.push({
       id: "top_10_movies",
       title: "Top 10 Trending Movies",
-      description: "Popular theatrical and digital releases",
+      description: "Fresh theatrical and digital momentum from TMDB",
       items: trendingMovies.slice(0, 10),
       isTop10: true,
     });
@@ -573,13 +965,12 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
     categories.push({
       id: "top_10_anime",
       title: "Top 10 Trending Anime",
-      description: "What everyone is watching right now",
+      description: "Fresh AniList discovery picks",
       items: dynamicAnimeList.slice(0, 10),
       isTop10: true,
     });
   }
 
-  // Genre Categories
   const allItems = [...trendingMovies, ...trendingTv, ...dynamicAnimeList];
   const genresToRender = [
     "Action",
@@ -612,7 +1003,7 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
       categories.push({
         id: `genre_${genre.toLowerCase().replace(/\s+/g, "_")}`,
         title: `Trending ${genre}`,
-        description: `Popular ${genre} titles to watch this week`,
+        description: `Live ${genre} titles refreshed from remote sources`,
         items: picks.slice(0, 15),
         isTop10: false,
       });
@@ -622,95 +1013,117 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
   const homeCatalogs = document.getElementById("home-catalogs");
   if (homeCatalogs) {
     homeCatalogs.innerHTML = "";
-    categories.forEach((cat) => {
-      const catSection = document.createElement("div");
-      catSection.className = "space-y-3";
+    if (!categories.length) {
+      homeCatalogs.innerHTML = `
+        <div class="rounded-3xl border border-white/[0.06] bg-white/[0.025] p-10 flex flex-col items-center justify-center text-center gap-3 min-h-[240px]">
+          <div class="w-14 h-14 rounded-2xl bg-brandCyan/10 border border-brandCyan/20 flex items-center justify-center text-brandCyan">
+            <i data-lucide="radar" class="w-6 h-6"></i>
+          </div>
+          <h2 class="text-xl font-black text-white">Waiting for live catalogue data</h2>
+          <p class="text-sm text-gray-500 max-w-xl leading-relaxed">No bundled catalogue is used. Add a TMDB key for movies and shows; AniList anime will appear as soon as the live request completes.</p>
+        </div>`;
+    } else {
+      categories.forEach((cat) => {
+        const catSection = document.createElement("div");
+        catSection.className = "space-y-3";
 
-      const header = document.createElement("div");
-      header.className = "flex items-center justify-between";
-      header.innerHTML = `
-        <div class="flex flex-col">
-          <h2 class="text-sm font-black text-white uppercase tracking-wider">${cat.title}</h2>
-          <p class="text-[10px] text-gray-500 font-semibold">${cat.description}</p>
-        </div>
-      `;
-
-      const rail = document.createElement("div");
-      rail.className =
-        "horizontal-rail flex overflow-x-auto gap-4 pb-4 scrollbar-none no-drag";
-
-      cat.items.forEach((item, index) => {
-        if (cat.isTop10) {
-          const card = document.createElement("div");
-          card.className =
-            "relative flex items-end h-[220px] min-w-[180px] select-none shrink-0";
-          card.onclick = () => openDetailModal(item);
-          const rank = index + 1;
-          card.innerHTML = `
-            <span class="absolute bottom-[-10px] left-0 text-[130px] font-black leading-none text-white/[0.08] select-none pointer-events-none font-sans z-0">
-              ${rank}
-            </span>
-            <div class="media-card ml-auto w-[130px] h-[195px] rounded-lg p-0 cursor-pointer text-left bg-transparent relative z-10">
-              <div class="group relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-1.5 shadow-lg">
-                <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-50" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
-                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
-                  <i data-lucide="play-circle" class="w-10 h-10 text-white drop-shadow-lg"></i>
-                </div>
-                <span class="absolute top-1 right-1 bg-black/80 text-white font-bold text-[9px] px-1.5 py-0.5 rounded flex items-center gap-0.5 z-20">
-                  ★ ${item.rating || "—"}
-                </span>
-              </div>
-              <div class="px-0.5 space-y-0.5">
-                <h4 class="text-[11px] font-semibold text-gray-200 truncate leading-snug">${item.title}</h4>
-                <div class="flex items-center justify-between text-[9px] text-gray-500 font-medium">
-                  <span>${item.year || "—"}</span>
-                  <span class="uppercase text-[8px] tracking-wider text-brandCyan">${item.type}</span>
-                </div>
-              </div>
-            </div>
-          `;
-          rail.appendChild(card);
-        } else {
-          const card = document.createElement("div");
-          card.onclick = () => openDetailModal(item);
-          card.className =
-            "media-poster-card cursor-pointer group w-[180px] shrink-0";
-          card.innerHTML = `
-            <div class="relative aspect-[2/3] w-full">
-              <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
-              <div class="play-fab"><i data-lucide="play" class="w-8 h-8 fill-current"></i></div>
-              <div class="media-overlay-glass">
-                <h4 class="text-white font-bold text-sm leading-tight drop-shadow-md mb-1 line-clamp-2">${item.title}</h4>
-                <div class="flex items-center justify-between text-gray-300 text-[10px] font-semibold tracking-wide">
-                  <span>${item.year || "—"}</span>
-                  <span class="flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i> ${item.rating || "—"}</span>
-                </div>
-              </div>
-            </div>
-          `;
-          rail.appendChild(card);
+        const header = document.createElement("div");
+        header.className = "flex items-end justify-between";
+        header.innerHTML = `
+          <h2 class="text-xl font-semibold text-white/90 tracking-wide drop-shadow-md">${cat.title}</h2>
+          <button class="view-all-link flex items-center gap-1 text-sm font-medium text-white/50 hover:text-white transition">
+            View All <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        `;
+        const viewAllBtn = header.querySelector(".view-all-link");
+        if (viewAllBtn) {
+          viewAllBtn.onclick = () => {
+            if (cat.id.includes("anime")) switchScreen("anime");
+            else if (cat.id.includes("tv")) switchScreen("tv");
+            else switchScreen("movies");
+          };
         }
+
+        const rail = document.createElement("div");
+        rail.className =
+          "horizontal-rail flex overflow-x-auto gap-4 pb-4 scrollbar-none no-drag";
+
+        cat.items.forEach((item, index) => {
+          if (cat.isTop10) {
+            const card = document.createElement("div");
+            card.className =
+              "relative flex items-end h-[220px] min-w-[210px] select-none shrink-0";
+            card.onclick = () => openDetailModal(item);
+            const rank = index + 1;
+            card.innerHTML = `
+              <span class="absolute bottom-[-10px] left-0 text-[130px] font-black leading-none text-white/[0.08] select-none pointer-events-none font-sans z-0">
+                ${rank}
+              </span>
+              <div class="media-poster-card ml-auto w-[140px] h-[210px] cursor-pointer text-left bg-transparent relative z-10">
+                <div class="relative aspect-[2/3] w-full">
+                  <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
+                  <div class="media-overlay-glass">
+                    <h4 class="text-white font-bold text-xs leading-tight drop-shadow-md mb-1 line-clamp-1">${item.title}</h4>
+                    <div class="flex items-center justify-between text-gray-300 text-[10px] font-semibold tracking-wide">
+                      <span>${item.year || "—"}</span>
+                      <span class="flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i> ${item.rating || "—"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+            applyCardStaggerAnimation(card, index);
+            rail.appendChild(card);
+          } else {
+            const card = document.createElement("div");
+            card.onclick = () => openDetailModal(item);
+            card.className =
+              "media-poster-card cursor-pointer group w-[180px] shrink-0";
+            card.innerHTML = `
+              <div class="relative aspect-[2/3] w-full">
+                <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
+                <div class="media-overlay-glass">
+                  <h4 class="text-white font-bold text-sm leading-tight drop-shadow-md mb-1 line-clamp-2">${item.title}</h4>
+                  <div class="flex items-center justify-between text-gray-300 text-[10px] font-semibold tracking-wide">
+                    <span>${item.year || "—"}</span>
+                    <span class="flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i> ${item.rating || "—"}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+            applyCardStaggerAnimation(card, index);
+            rail.appendChild(card);
+          }
+        });
+
+        catSection.appendChild(header);
+        catSection.appendChild(rail);
+        homeCatalogs.appendChild(catSection);
       });
-
-      catSection.appendChild(header);
-      catSection.appendChild(rail);
-      homeCatalogs.appendChild(catSection);
-    });
+    }
   }
 
-  renderGrid("grid-all-anime", dynamicAnimeList);
-  if (!skipAnimeLoad) {
-    loadAnimeCatalog();
+  if (skipAnimeLoad || dynamicAnimeList.length) {
+    renderGrid("grid-all-anime", dynamicAnimeList, true);
+    resetAnimeInfinite(dynamicAnimeList);
   }
-  lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 }
 
 // Populate the anime grid from AniList — parity with the mobile anime discovery.
 async function loadAnimeCatalog() {
-  if (!window.OmniAnime) return;
+  if (!window.OmniAnime) {
+    showGridMessage(
+      "grid-all-anime",
+      "Anime source unavailable",
+      "The AniList/AllAnime module did not load, so no anime catalogue can be pulled yet.",
+      "wifi-off",
+    );
+    return;
+  }
   try {
     const cats = await window.OmniAnime.fetchAnimeCategories();
-    // Merge de-duplicated items across categories into the anime grid.
+    // Merge de-duplicated items across live AniList categories into the anime grid.
     const seen = new Set();
     const items = [];
     for (const c of cats) {
@@ -721,75 +1134,262 @@ async function loadAnimeCatalog() {
         }
       }
     }
+    state.animeCatalog = items;
     if (items.length) {
-      state.animeCatalog = items;
-      renderGrid("grid-all-anime", items);
-      // Seamlessly trigger updated categories rail blend
+      renderGrid("grid-all-anime", items, true);
       renderCatalogFeeds(true);
+    } else {
+      showGridMessage(
+        "grid-all-anime",
+        "No live anime returned",
+        "AniList responded, but did not return image-backed anime entries for this request.",
+        "radar",
+      );
     }
   } catch (e) {
-    console.warn(
-      "[Omniverse] AniList anime catalog failed, using fallback:",
-      e,
+    console.warn("[Omniverse] AniList anime catalog failed:", e);
+    showGridMessage(
+      "grid-all-anime",
+      "Anime sync failed",
+      "Could not reach AniList right now. Refresh once the network is available.",
+      "wifi-off",
     );
   }
 }
 
-function renderGrid(containerId, items, isLordflix = false) {
+let cardRevealObserver = null;
+
+function shouldReduceMotion() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+function ensureCardRevealObserver() {
+  if (cardRevealObserver || typeof IntersectionObserver === "undefined") {
+    return cardRevealObserver;
+  }
+
+  cardRevealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const target = entry.target;
+        target.classList.remove("stagger-card-pending");
+        target.classList.add("stagger-card-enter");
+        cardRevealObserver.unobserve(target);
+      });
+    },
+    {
+      root: null,
+      threshold: 0.18,
+      rootMargin: "0px 0px -6% 0px",
+    },
+  );
+
+  return cardRevealObserver;
+}
+
+function applyCardStaggerAnimation(card, index) {
+  card.style.setProperty("--stagger-index", String(index % 8));
+
+  if (shouldReduceMotion()) {
+    card.classList.remove("stagger-card-pending");
+    card.classList.add("stagger-card-enter");
+    return;
+  }
+
+  card.classList.add("stagger-card-pending");
+  const observer = ensureCardRevealObserver();
+
+  if (!observer) {
+    card.classList.remove("stagger-card-pending");
+    card.classList.add("stagger-card-enter");
+    return;
+  }
+
+  observer.observe(card);
+}
+
+function renderGrid(containerId, items, isLordflix = true) {
   const container = document.getElementById(containerId);
   if (!container) return;
+  const safeItems = (items || []).filter(Boolean);
   container.innerHTML = "";
 
-  items.forEach((item) => {
+  if (!safeItems.length) {
+    showGridMessage(
+      containerId,
+      "No live results yet",
+      "This section only displays remote catalogue data. Try refreshing or check the related API connection.",
+      "radar",
+    );
+    return;
+  }
+
+  if (isLordflix) {
+    appendMediaCards(container, safeItems, 0, false);
+    return;
+  }
+
+  safeItems.forEach((item, index) => {
     const card = document.createElement("div");
     card.onclick = () => openDetailModal(item);
-
-    if (isLordflix) {
-      card.className = "media-poster-card cursor-pointer group";
-      card.innerHTML = `
-        <div class="relative aspect-[2/3] w-full">
-          <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
-          <div class="play-fab"><i data-lucide="play" class="w-8 h-8 fill-current"></i></div>
-          <div class="media-overlay-glass">
-            <h4 class="text-white font-bold text-sm leading-tight drop-shadow-md mb-1">${item.title}</h4>
-            <div class="flex items-center justify-between text-gray-300 text-[10px] font-semibold tracking-wide">
-              <span>${item.year}</span>
-              <span class="flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i> ${item.rating}</span>
-            </div>
-          </div>
+    card.className =
+      "media-card bg-transparent rounded-lg p-0 cursor-pointer text-left";
+    card.innerHTML = `
+      <div class="group relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-2 shadow-lg">
+        <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-50" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
+        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+          <i data-lucide="play-circle" class="w-10 h-10 text-white drop-shadow-lg"></i>
         </div>
-      `;
-    } else {
-      card.className =
-        "media-card bg-transparent rounded-lg p-0 cursor-pointer text-left";
-      card.innerHTML = `
-        <div class="group relative aspect-[2/3] rounded-lg overflow-hidden bg-brandTert mb-2 shadow-lg">
-          <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-50" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Media'">
-          <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
-            <i data-lucide="play-circle" class="w-10 h-10 text-white drop-shadow-lg"></i>
-          </div>
-          <span class="absolute top-1.5 right-1.5 bg-black/80 text-white font-bold text-[9px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
-            ★ ${item.rating}
-          </span>
+        <span class="absolute top-1.5 right-1.5 bg-black/80 text-white font-bold text-[9px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
+          ★ ${item.rating}
+        </span>
+      </div>
+      <div class="px-1 space-y-0.5">
+        <h4 class="text-xs font-semibold text-gray-200 truncate leading-snug">${item.title}</h4>
+        <div class="flex items-center justify-between text-[10px] text-gray-500 font-medium">
+          <span>${item.year}</span>
+          <span class="uppercase text-[9px] tracking-wider text-brandCyan">${item.type}</span>
         </div>
-        <div class="px-1 space-y-0.5">
-          <h4 class="text-xs font-semibold text-gray-200 truncate leading-snug">${item.title}</h4>
-          <div class="flex items-center justify-between text-[10px] text-gray-500 font-medium">
-            <span>${item.year}</span>
-            <span class="uppercase text-[9px] tracking-wider text-brandCyan">${item.type}</span>
-          </div>
-        </div>
-      `;
-    }
-
+      </div>
+    `;
+    applyCardStaggerAnimation(card, index);
     container.appendChild(card);
   });
+}
+
+function setMoviesProviderMode(enabled) {
+  const providerBrowser = document.getElementById("provider-browser");
+  const defaultHeader = document.getElementById("movies-default-header");
+
+  if (providerBrowser)
+    providerBrowser.classList.toggle("hidden", !Boolean(enabled));
+  if (defaultHeader) defaultHeader.classList.toggle("hidden", Boolean(enabled));
+}
+
+function setProviderTabUi(type) {
+  const moviesBtn = document.getElementById("provider-tab-movies");
+  const tvBtn = document.getElementById("provider-tab-tv");
+  const heading = document.getElementById("provider-active-heading");
+  const isMovie = type !== "tv";
+
+  if (moviesBtn) {
+    moviesBtn.className =
+      "rounded-full px-6 py-2 text-sm font-bold transition-all " +
+      (isMovie ? "bg-white text-black" : "text-white/70 hover:text-white");
+  }
+  if (tvBtn) {
+    tvBtn.className =
+      "rounded-full px-6 py-2 text-sm font-bold transition-all " +
+      (!isMovie ? "bg-white text-black" : "text-white/70 hover:text-white");
+  }
+  if (heading) heading.textContent = isMovie ? "Movies" : "Series";
+}
+
+function renderProviderHero(cfg) {
+  const logoEl = document.getElementById("provider-hero-logo");
+  const nameEl = document.getElementById("provider-hero-name");
+
+  if (nameEl) nameEl.textContent = cfg.label || "Provider";
+  if (logoEl) {
+    const logoFromOverrides = cfg.provider
+      ? TMDB_PROVIDER_LOGO_OVERRIDES[String(cfg.provider)]
+      : "";
+    logoEl.src = logoFromOverrides || logoEl.src || "";
+  }
+}
+
+async function loadProviderSection(type = "movie", append = false) {
+  const studioKey = (state.activeStudio || "").toLowerCase();
+  const cfg = STUDIO_PROVIDER_MAP[studioKey];
+  const container = document.getElementById("grid-all-movies");
+  if (!container || !cfg) return;
+
+  const providerState = infiniteState.provider[type === "tv" ? "tv" : "movie"];
+  if (
+    !providerState ||
+    providerState.loading ||
+    (append && !providerState.hasMore)
+  ) {
+    return;
+  }
+
+  const nextPage = append ? providerState.page + 1 : 1;
+  providerState.loading = true;
+
+  try {
+    if (!append) {
+      providerState.page = 0;
+      providerState.totalPages = 1;
+      providerState.hasMore = true;
+      providerState.seen = new Set();
+      showGridLoading("grid-all-movies", "Loading provider titles…");
+    }
+
+    const params = { sort_by: "popularity.desc" };
+    if (cfg.provider) {
+      params.with_watch_providers = cfg.provider;
+      params.watch_region = "US";
+    } else {
+      params.with_companies = cfg.company;
+    }
+
+    if (type === "tv") params["vote_count.gte"] = "25";
+    else params["vote_count.gte"] = "40";
+
+    const data = await fetchTmdbDiscover(type, nextPage, params);
+    providerState.totalPages =
+      data && data.total_pages ? data.total_pages : providerState.totalPages;
+
+    const mapped = mapTmdbResults(data, type).filter((i) => i.poster);
+    const items = uniqueByMediaId(mapped, providerState.seen);
+
+    if (!items.length) {
+      providerState.page = nextPage;
+      providerState.hasMore = providerState.page < providerState.totalPages;
+      if (!append) {
+        showGridMessage(
+          "grid-all-movies",
+          "No titles available",
+          "No titles are available right now for this provider section.",
+          "radar",
+        );
+      }
+      return;
+    }
+
+    if (!append) {
+      renderGrid("grid-all-movies", items, true);
+    } else {
+      const startIndex = container.children.length;
+      appendMediaCards(container, items, startIndex, false);
+    }
+
+    providerState.page = nextPage;
+    providerState.hasMore = providerState.page < providerState.totalPages;
+  } finally {
+    providerState.loading = false;
+  }
+}
+
+async function switchProviderSection(type = "movie") {
+  if (!state.activeStudio) return;
+  infiniteState.provider.activeType = type === "tv" ? "tv" : "movie";
+  setProviderTabUi(type);
+  await loadProviderSection(infiniteState.provider.activeType, false);
 }
 
 // Single Page Screen Routing
 function switchScreen(screenName) {
   state.currentScreen = screenName;
-  state.activeStudio = "";
+  if (screenName !== "movies") {
+    state.activeStudio = "";
+    infiniteState.provider.active = false;
+  }
 
   // Hide all screens
   const screens = [
@@ -816,6 +1416,10 @@ function switchScreen(screenName) {
   const activeBtn = document.getElementById(`nav-${screenName}`);
   if (activeBtn) activeBtn.classList.add("nav-active");
 
+  if (screenName === "movies") {
+    setMoviesProviderMode(false);
+  }
+
   // Pause Live TV player if leaving Live TV screen
   if (screenName !== "livetv") {
     const player = document.getElementById("livetv-player");
@@ -831,99 +1435,52 @@ function switchScreen(screenName) {
 
 // Studio Filtering logic
 async function filterByStudio(studio) {
-  state.activeStudio = studio;
   switchScreen("movies");
+  state.activeStudio = (studio || "").toLowerCase();
 
-  const headline = document.querySelector("#screen-movies h1");
-  headline.textContent = `${studio.toUpperCase()} NETWORKS`;
-
-  showGridLoading("grid-all-movies");
-
-  window.electron.showNotification(
-    "Network Filtering",
-    `Fetching ${studio.toUpperCase()} films from TMDB...`,
-  );
-
-  let companyId = null;
-  let networkId = null;
-  switch (studio.toLowerCase()) {
-    case "disney":
-      companyId = "2";
-      networkId = "2739";
-      break;
-    case "netflix":
-      companyId = "178464";
-      networkId = "213";
-      break;
-    case "hbo":
-      companyId = "174";
-      networkId = "3186";
-      break;
-    case "prime":
-      companyId = "20580";
-      networkId = "1024";
-      break;
-    case "apple":
-      companyId = "194303";
-      networkId = "2552";
-      break;
-    case "paramount":
-      companyId = "4";
-      networkId = "359";
-      break;
-    case "marvel":
-      companyId = "420";
-      break;
-    case "pixar":
-      companyId = "3";
-      break;
-    case "warner":
-      companyId = "174"; // WB
-      break;
-    case "universal":
-      companyId = "33"; // Universal
-      break;
-    case "paramount":
-      companyId = "4"; // Paramount
-      break;
-    case "sony":
-      companyId = "5"; // Sony/Columbia is usually 5
-      break;
-    case "a24":
-      companyId = "41077"; // A24 company ID is 41077
-      break;
+  const cfg = STUDIO_PROVIDER_MAP[state.activeStudio];
+  if (!state.tmdbToken) {
+    setMoviesProviderMode(false);
+    showGridMessage(
+      "grid-all-movies",
+      "Connect TMDB for live network filtering",
+      "Studio and platform rails are now pulled only from TMDB. Add your key in Settings to load this live catalogue.",
+      "key-round",
+    );
+    return;
   }
 
-  if (state.tmdbToken && (companyId || networkId)) {
-    const params = companyId
-      ? { with_companies: companyId }
-      : { with_networks: networkId };
-    const movieData = await fetchTmdb("discover/movie", params);
-
-    if (movieData && movieData.results && movieData.results.length > 0) {
-      const items = movieData.results.map((item) => mapTmdbItem(item, "movie"));
-      renderGrid("grid-all-movies", items);
-      lucide.createIcons();
-      return;
-    }
+  if (!cfg) {
+    setMoviesProviderMode(false);
+    showGridMessage(
+      "grid-all-movies",
+      "No live provider mapping",
+      `No TMDB provider/company mapping is configured for ${studio.toUpperCase()}.`,
+      "radar",
+    );
+    return;
   }
 
-  // Fallback if TMDB not configured or fetch failed
-  const filteredMovies = FALLBACK_DB.movies.filter(
-    (m) =>
-      m.overview.toLowerCase().includes(studio.toLowerCase()) ||
-      studio === "disney",
-  );
-  renderGrid(
-    "grid-all-movies",
-    filteredMovies.length > 0 ? filteredMovies : FALLBACK_DB.movies,
-  );
-  lucide.createIcons();
+  infiniteState.provider.active = true;
+  infiniteState.provider.key = state.activeStudio;
+  infiniteState.provider.cfg = cfg;
+  setMoviesProviderMode(true);
+  renderProviderHero(cfg);
+  await switchProviderSection("movie");
+
+  if (window.electron && window.electron.showNotification) {
+    window.electron.showNotification(
+      "Provider Loaded",
+      `Browsing ${cfg.label} movies and series`,
+    );
+  }
 }
 
 // Detail Sheet Overlay Manager
 async function openDetailModal(media) {
-  state.selectedMedia = media;
+  const reqToken = ++detailModalRequestToken;
+  // Clone so async enrichment never mutates source grid objects or old selection.
+  state.selectedMedia = { ...(media || {}) };
 
   const modalPoster = document.getElementById("modal-poster");
   const modalBackdrop = document.getElementById("modal-backdrop-bg");
@@ -934,19 +1491,31 @@ async function openDetailModal(media) {
   const typeChip = document.getElementById("modal-type-chip");
   const episodeSection = document.getElementById("modal-episodes-section");
   const playBtn = document.getElementById("modal-play-btn");
+  const seasonSelector = document.getElementById("season-selector");
+  const episodesGrid = document.getElementById("episodes-grid");
 
-  // Load initial fallback/passed data
-  modalPoster.src = media.poster;
+  media = state.selectedMedia;
+
+  // Reset stale modal content immediately.
+  const modalLogo = document.getElementById("modal-logo");
+  if (modalLogo) modalLogo.classList.add("hidden");
+  if (modalTitle) modalTitle.classList.remove("hidden");
+  if (seasonSelector) seasonSelector.innerHTML = "";
+  if (episodesGrid) episodesGrid.innerHTML = "";
+
+  // Load initial fallback/passed data defensively
+  if (modalPoster) modalPoster.src = media.poster;
   if (modalBackdrop)
     modalBackdrop.style.backgroundImage = `url('${media.backdrop || media.poster}')`;
-  modalTitle.textContent = media.title;
-  modalOverview.textContent = media.overview;
-  modalYearChip.textContent = media.year;
-  modalRatingChip.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i> ${media.rating}`;
-  typeChip.textContent = media.type.toUpperCase();
+  if (modalTitle) modalTitle.textContent = media.title;
+  if (modalOverview) modalOverview.textContent = media.overview;
+  if (modalYearChip) modalYearChip.textContent = media.year;
+  if (modalRatingChip)
+    modalRatingChip.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i> ${media.rating}`;
+  if (typeChip) typeChip.textContent = media.type.toUpperCase();
 
-  // If TMDB is active, let's fetch deeper details dynamically to replace the fallbacks!
-  // Anime can use TMDB details too if it has a tmdbId (which mapped items like One Piece do).
+  // If TMDB is active, fetch deeper details dynamically from the live API.
+  // Anime can use TMDB details too when it has a tmdbId.
   if (state.tmdbToken && media.tmdbId && media.title !== "One Pace") {
     const tmdbEndpoint = media.type === "movie" ? "movie" : "tv";
 
@@ -962,6 +1531,8 @@ async function openDetailModal(media) {
         "external_ids,credits,images,release_dates,content_ratings",
     });
 
+    if (reqToken !== detailModalRequestToken) return;
+
     if (details) {
       const posterUrl = details.poster_path
         ? `https://image.tmdb.org/t/p/w500${details.poster_path}`
@@ -970,21 +1541,30 @@ async function openDetailModal(media) {
         ? `https://image.tmdb.org/t/p/original${details.backdrop_path}`
         : media.backdrop;
 
-      modalPoster.src = posterUrl;
+      if (modalPoster) modalPoster.src = posterUrl;
       if (modalBackdrop)
         modalBackdrop.style.backgroundImage = `url('${backdropUrl}')`;
       state.selectedMedia.poster = posterUrl;
       state.selectedMedia.backdrop = backdropUrl;
+      if (details.external_ids) {
+        state.selectedMedia.imdbId =
+          details.external_ids.imdb_id || state.selectedMedia.imdbId || "";
+        state.selectedMedia.tvdbId =
+          details.external_ids.tvdb_id || state.selectedMedia.tvdbId || "";
+        state.selectedMedia._playbackIdsChecked = true;
+      }
 
-      modalTitle.textContent = details.title || details.name || media.title;
-      modalOverview.textContent =
-        details.overview || "No description available.";
+      if (modalTitle)
+        modalTitle.textContent = details.title || details.name || media.title;
+      if (modalOverview)
+        modalOverview.textContent =
+          details.overview || "No description available.";
 
       const releaseDate = details.release_date || details.first_air_date || "";
       const year = releaseDate
         ? new Date(releaseDate).getFullYear()
         : media.year;
-      modalYearChip.textContent = year;
+      if (modalYearChip) modalYearChip.textContent = year;
       state.selectedMedia.year = year;
 
       const runtime =
@@ -993,29 +1573,35 @@ async function openDetailModal(media) {
         0;
       const h = Math.floor(runtime / 60);
       const m = runtime % 60;
-      document.getElementById("modal-runtime-chip").textContent =
-        runtime > 0 ? (h > 0 ? `${h}h ${m}m` : `${m}m`) : "";
-      document.getElementById("info-runtime").textContent =
-        runtime > 0 ? (h > 0 ? `${h}h ${m}m` : `${m}m`) : "Unknown";
+      const runStr = runtime > 0 ? (h > 0 ? `${h}h ${m}m` : `${m}m`) : "";
 
-      document.getElementById("info-language").textContent =
-        details.original_language || "EN";
-      document.getElementById("info-release").textContent =
-        releaseDate || "Unknown";
+      const modalRunChip = document.getElementById("modal-runtime-chip");
+      if (modalRunChip) modalRunChip.textContent = runStr;
+
+      const infoRuntime = document.getElementById("info-runtime");
+      if (infoRuntime)
+        infoRuntime.textContent = runtime > 0 ? runStr : "Unknown";
+
+      const infoLang = document.getElementById("info-language");
+      if (infoLang) infoLang.textContent = details.original_language || "EN";
+
+      const infoRel = document.getElementById("info-release");
+      if (infoRel) infoRel.textContent = releaseDate || "Unknown";
 
       const formatMoney = (amount) => {
         if (!amount) return "Unknown";
         return new Intl.NumberFormat("en-US", {
           style: "currency",
           currency: "USD",
+          maximumFractionDigits: 0,
         }).format(amount);
       };
-      document.getElementById("info-budget").textContent = formatMoney(
-        details.budget,
-      );
-      document.getElementById("info-revenue").textContent = formatMoney(
-        details.revenue,
-      );
+
+      const infoBudget = document.getElementById("info-budget");
+      if (infoBudget) infoBudget.textContent = formatMoney(details.budget);
+
+      const infoRev = document.getElementById("info-revenue");
+      if (infoRev) infoRev.textContent = formatMoney(details.revenue);
 
       // Parse Director
       let director = "Unknown";
@@ -1023,7 +1609,8 @@ async function openDetailModal(media) {
         const d = details.credits.crew.find((c) => c.job === "Director");
         if (d) director = d.name;
       }
-      document.getElementById("modal-director").textContent = director;
+      const modalDir = document.getElementById("modal-director");
+      if (modalDir) modalDir.textContent = director;
 
       // Extract Content Rating
       let ageRating = "NR";
@@ -1040,8 +1627,11 @@ async function openDetailModal(media) {
         );
         if (us) ageRating = us.rating || "NR";
       }
-      document.getElementById("modal-content-rating-chip").textContent =
-        ageRating;
+
+      const contentRatingChip = document.getElementById(
+        "modal-content-rating-chip",
+      );
+      if (contentRatingChip) contentRatingChip.textContent = ageRating;
 
       // Setup Logo
       const modalLogo = document.getElementById("modal-logo");
@@ -1054,26 +1644,34 @@ async function openDetailModal(media) {
         const engLogo =
           details.images.logos.find((l) => l.iso_639_1 === "en") ||
           details.images.logos[0];
-        modalLogo.src = `https://image.tmdb.org/t/p/w500${engLogo.file_path}`;
-        modalLogo.classList.remove("hidden");
-        modalTitleText.classList.add("hidden");
+        if (modalLogo) {
+          modalLogo.src = `https://image.tmdb.org/t/p/w500${engLogo.file_path}`;
+          modalLogo.classList.remove("hidden");
+        }
+        if (modalTitleText) modalTitleText.classList.add("hidden");
       } else {
-        modalLogo.classList.add("hidden");
-        modalTitleText.classList.remove("hidden");
-        modalTitleText.textContent =
-          details.title || details.name || media.title;
+        if (modalLogo) modalLogo.classList.add("hidden");
+        if (modalTitleText) {
+          modalTitleText.classList.remove("hidden");
+          modalTitleText.textContent =
+            details.title || details.name || media.title;
+        }
       }
 
       // Populate Genres
       const genresList = details.genres
         ? details.genres.map((g) => g.name).join(" • ")
-        : media.genres.join(" • ");
-      document.getElementById("modal-genres").textContent = genresList;
+        : media.genres
+          ? media.genres.join(" • ")
+          : "";
+      const genresContainer = document.getElementById("modal-genres");
+      if (genresContainer) genresContainer.textContent = genresList;
 
       // Cast rail population
       const castRail = document.getElementById("modal-cast-rail");
-      castRail.innerHTML = "";
-      if (details.credits && details.credits.cast) {
+      if (castRail && details.credits && details.credits.cast) {
+        enableHorizontalWheelScroll(castRail);
+        castRail.innerHTML = "";
         details.credits.cast.slice(0, 15).forEach((actor) => {
           const prof = actor.profile_path
             ? `https://image.tmdb.org/t/p/w185${actor.profile_path}`
@@ -1094,7 +1692,8 @@ async function openDetailModal(media) {
       const rating = details.vote_average
         ? details.vote_average.toFixed(1)
         : media.rating;
-      document.getElementById("modal-rating-text").textContent = rating;
+      const ratingText = document.getElementById("modal-rating-text");
+      if (ratingText) ratingText.textContent = rating;
 
       // Update seasons list if TV or Anime with seasons
       if (media.type === "tv" || (media.type === "anime" && details.seasons)) {
@@ -1118,6 +1717,8 @@ async function openDetailModal(media) {
       modalOverview.textContent = media.overview; // Restore on error
     }
   }
+
+  if (reqToken !== detailModalRequestToken) return;
 
   if (media.type === "tv" || media.type === "anime") {
     episodeSection.classList.remove("hidden");
@@ -1144,6 +1745,8 @@ async function openDetailModal(media) {
 }
 
 function closeDetailModal() {
+  // Invalidate pending async detail responses so they can't repaint stale content.
+  detailModalRequestToken++;
   document.getElementById("detail-modal").classList.add("hidden");
 }
 
@@ -1157,17 +1760,67 @@ function escapeHtml(s) {
   );
 }
 
-function appendEpisodeRow(grid, media, seasonVal, ep, title) {
+function formatEpisodeRuntime(minutes) {
+  if (!minutes || Number.isNaN(Number(minutes))) return "";
+  return `${Math.max(1, Math.round(Number(minutes)))}m`;
+}
+
+function scrollRailById(railId, direction = 1) {
+  const rail = document.getElementById(railId);
+  if (!rail) return;
+  const step = Math.max(240, Math.floor(rail.clientWidth * 0.75));
+  rail.scrollBy({ left: direction * step, behavior: "smooth" });
+}
+
+function scrollEpisodesRail(direction = 1) {
+  scrollRailById("episodes-grid", direction);
+}
+
+function scrollCastRail(direction = 1) {
+  scrollRailById("modal-cast-rail", direction);
+}
+
+function enableHorizontalWheelScroll(el) {
+  if (!el || el.dataset.horizontalWheelBound === "1") return;
+  el.addEventListener(
+    "wheel",
+    (e) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      el.scrollLeft += e.deltaY;
+      e.preventDefault();
+    },
+    { passive: false },
+  );
+  el.dataset.horizontalWheelBound = "1";
+}
+
+function appendEpisodeRow(grid, media, seasonVal, ep, title, extras = {}) {
+  const stillPath = extras.stillPath || null;
+  const overview = extras.overview || "";
+  const runtime = formatEpisodeRuntime(extras.runtime);
+  const thumb = stillPath
+    ? `https://image.tmdb.org/t/p/w500${stillPath}`
+    : media.backdrop ||
+      media.poster ||
+      "https://ui-avatars.com/api/?background=111&color=fff&name=Episode";
+
   const epRow = document.createElement("button");
   epRow.className =
-    "w-full text-left p-3 rounded-lg bg-brandTert hover:bg-brandCyan/10 border border-white/[0.04] text-xs font-semibold flex items-center justify-between group transition duration-200";
+    "group w-[300px] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/30 text-left backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.08]";
   epRow.onclick = () => playStream(media, seasonVal, ep);
   epRow.innerHTML = `
-    <div class="flex items-center gap-3">
-      <span class="text-brandCyan bg-cyan-950/40 px-2 py-1 rounded">EP ${ep}</span>
-      <span class="text-gray-300 group-hover:text-white transition">${escapeHtml(title)}</span>
+    <div class="relative aspect-video w-full overflow-hidden">
+      <img src="${thumb}" alt="${escapeHtml(title)}" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?background=111&color=fff&name=Episode';">
+      <span class="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-black text-white">E${ep}</span>
+      <span class="absolute right-2 bottom-2 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white/90">${runtime || "--"}</span>
+      <div class="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white/90 transition-colors group-hover:bg-brandCyan/80">
+        <i data-lucide="play" class="h-3.5 w-3.5 fill-current"></i>
+      </div>
     </div>
-    <i data-lucide="play" class="w-3.5 h-3.5 text-gray-500 group-hover:text-brandCyan fill-transparent group-hover:fill-brandCyan transition duration-300"></i>
+    <div class="p-3">
+      <p class="line-clamp-1 text-sm font-extrabold text-white">${escapeHtml(title)}</p>
+      <p class="mt-1 line-clamp-2 text-xs text-gray-400">${escapeHtml(overview || "No description available.")}</p>
+    </div>
   `;
   grid.appendChild(epRow);
 }
@@ -1177,6 +1830,7 @@ async function loadSeasonEpisodes() {
   const seasonSelect = document.getElementById("season-selector");
   const seasonVal = parseInt(seasonSelect.value) || 1;
   const grid = document.getElementById("episodes-grid");
+  enableHorizontalWheelScroll(grid);
   grid.innerHTML = "";
 
   // Anime: pull the real episode count + titles from AllAnime/AniList.
@@ -1200,7 +1854,9 @@ async function loadSeasonEpisodes() {
     }
     for (let ep = 1; ep <= count; ep++) {
       const title = (meta[ep] && meta[ep].title) || `Episode ${ep}`;
-      appendEpisodeRow(grid, media, seasonVal, ep, title);
+      appendEpisodeRow(grid, media, seasonVal, ep, title, {
+        overview: (meta[ep] && meta[ep].overview) || "",
+      });
     }
     lucide.createIcons();
     return;
@@ -1224,6 +1880,11 @@ async function loadSeasonEpisodes() {
           seasonVal,
           ep.episode_number,
           ep.name || `Episode ${ep.episode_number}`,
+          {
+            stillPath: ep.still_path,
+            overview: ep.overview,
+            runtime: ep.runtime,
+          },
         );
       });
       lucide.createIcons();
@@ -1235,88 +1896,778 @@ async function loadSeasonEpisodes() {
   let epCount = 10;
   if (media.episodesPerSeason && media.episodesPerSeason[seasonVal - 1]) {
     epCount = media.episodesPerSeason[seasonVal - 1];
-  } else if (media.id === "a1") {
-    epCount = 12; // Cap One Piece demo display list
   }
   for (let ep = 1; ep <= epCount; ep++) {
-    appendEpisodeRow(grid, media, seasonVal, ep, `Episode ${ep}`);
+    appendEpisodeRow(grid, media, seasonVal, ep, `Episode ${ep}`, {
+      overview: "Episode information unavailable.",
+    });
   }
   lucide.createIcons();
 }
 
 // Integrated Secure Webview Playback Launcher
-function playStream(media, season = null, episode = null, forceDomain = null) {
-  // Anime resolves a DIRECT stream (AllAnime), like the mobile apps — not a
-  // vidsrc embed. Route it to the direct-video player.
-  if (media.type === "anime" && window.OmniAnime) {
+// Ordered stream server list — shared by the player dropdown and auto-fallback.
+// Primary domains match the mobile apps (vidsrc-embed.* / *.su) — these stay
+// reachable where the older vidsrc.me/.to domains are ISP-blocked. Alternate
+// providers follow as auto-fallback if the vidsrc infra is unreachable.
+const STREAM_SERVERS = [
+  { name: "VidCore", domain: "vidcore.created.app", icon: "🟣" },
+  { name: "VSEmbed RU", domain: "vsembed.ru", icon: "🔴" },
+  { name: "VSEmbed SU", domain: "vsembed.su", icon: "🟠" },
+  { name: "VidSrcMe RU", domain: "vidsrcme.ru", icon: "🟡" },
+  { name: "2Embed", domain: "2embed.cc", icon: "🎥" },
+  { name: "SmashyStream", domain: "embed.smashystream.com", icon: "💥" },
+  { name: "AutoEmbed", domain: "autoembed.cc", icon: "🔥" },
+  { name: "SuperEmbed", domain: "multiembed.mov", icon: "⚡" },
+];
+
+// ===========================================================================
+// Chromeless VidSrc resolver — ported from Android VidsrcResolveScreen/WebGuards.
+// Loads the embed in a managed <webview>, defeats iframe sandboxing + ad
+// overlays, walks embed → cloudnestra /rcp/<hash>, auto-clicks play, and lets
+// the stream play in-place with the provider's chrome stripped away.
+// ===========================================================================
+const VIDSRC_EMBED_DOMAINS = ["vsembed.ru", "vsembed.su", "vidsrcme.ru"];
+const RESOLVE_POLL_MS = 700;
+const RESOLVE_POLL_ATTEMPTS = 14;
+const RESOLVE_TURNSTILE_ATTEMPTS = 45;
+
+// --- Injected JS guard payloads (verbatim from WebGuards.kt) ---------------
+const WG_UNSANDBOX = String.raw`
+(function () {
+  if (window.__omniplayUnsandbox) return; window.__omniplayUnsandbox = true;
+  try {
+    var origSetAttribute = Element.prototype.setAttribute;
+    Element.prototype.setAttribute = function (name, value) {
+      try { if (name && String(name).toLowerCase() === 'sandbox') return; } catch (_) {}
+      return origSetAttribute.apply(this, arguments);
+    };
+  } catch (_) {}
+  try {
+    var sandboxDesc = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'sandbox');
+    if (sandboxDesc && sandboxDesc.set) {
+      Object.defineProperty(HTMLIFrameElement.prototype, 'sandbox', {
+        configurable: true, enumerable: true,
+        get: function () { try { return sandboxDesc.get.call(this); } catch (_) { return null; } },
+        set: function () {}
+      });
+    }
+  } catch (_) {}
+  var unsandbox = function () {
+    try {
+      var frames = document.querySelectorAll('iframe[sandbox]');
+      for (var i = 0; i < frames.length; i++) {
+        var f = frames[i];
+        if (f.getAttribute('data-omniplay-unsandboxed') === '1') { if (f.hasAttribute('sandbox')) { try { f.removeAttribute('sandbox'); } catch (_) {} } continue; }
+        f.setAttribute('data-omniplay-unsandboxed', '1');
+        try { f.removeAttribute('sandbox'); } catch (_) {}
+        try { var src = f.getAttribute('src'); if (src) { f.setAttribute('src', 'about:blank'); f.setAttribute('src', src); } } catch (_) {}
+      }
+    } catch (_) {}
+  };
+  unsandbox();
+  try { setInterval(unsandbox, 500); } catch (_) {}
+  try { new MutationObserver(unsandbox).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['sandbox'] }); } catch (_) {}
+})();
+`;
+
+const WG_GUARD = String.raw`
+(function () {
+  if (window.__omniplayGuards) return; window.__omniplayGuards = true;
+  try { var st = document.createElement('style'); st.innerHTML = '* { outline: none !important; }'; document.documentElement.appendChild(st); } catch (_) {}
+  try { window.open = function () { return null; }; } catch (_) {}
+  var noop = function () {}; try { window.alert = noop; window.confirm = function(){return false;}; window.prompt = function(){return null;}; } catch (_) {}
+  try { var o = window.addEventListener; window.addEventListener = function (t, l, op) { if (t==='beforeunload'||t==='unload') return; o.apply(this, arguments); }; } catch (_) {}
+  var safeHosts = ['vidcore','created.app','vidsrc','vidsrc-embed','cloudnestra','cloudorchestra','vsembed','vsrc.','vidsrcme','about:','localhost','127.0.0.1','cdn','2embed','streamsrcs','embed.su','smashystream','autoembed','multiembed','rabbitstream','megacloud','streamtape','streamlare','doodstream','mixdrop','vidplay','filemoon','upstream','fembed','streamhide','mp4upload','streamsb','voe.sx','streamwish','vidcloud','youtube','workers.dev','instafashion662','ferocitycandour','cinezo','notyourtype.dad','1shows.app','vidlink','vidnest','vidrock','vidzee'];
+  var isAdHost = function (url) { try { if (!url) return false; var h = new URL(url, location.href).hostname.toLowerCase(); return !safeHosts.some(function(s){return h.indexOf(s)>=0;}); } catch (_) { return false; } };
+  var adTokens = ['ads','ad-','analytics','doubleclick','googletagmanager','googletagservices','pagead','popunder','popcash','propellerads','adservice','adsco','rtmark','profitable','histats','usrpubtrk','adexchangeclear','realizationnewestfangs','unbrownunflat','sixmossin','malocacomals','cloudflareinsights','videasy','bvtpk','b7510','adx1','intelligenceadx','yandex','tmstr.','click','track','redirect','pop'];
+  var isAdSrc = function (src) { if (!src) return false; var s = String(src).toLowerCase(); if (safeHosts.some(function(h){return s.indexOf(h)>=0;})) return false; return adTokens.some(function(t){return s.indexOf(t)>=0;}); };
+  try { var a = window.location.assign.bind(window.location); var r = window.location.replace.bind(window.location);
+    window.location.assign = function(u){ if (!isAdHost(u)) a(u); }; window.location.replace = function(u){ if (!isAdHost(u)) r(u); }; } catch (_) {}
+  var fixAnchors = function () { document.querySelectorAll('a[target]').forEach(function(a){ var t=a.getAttribute('target'); if (t==='_blank'||t==='_top'||t==='_parent') a.removeAttribute('target'); }); };
+  var stripAds = function () { document.querySelectorAll('iframe').forEach(function(f){ if (isAdSrc(f.src)) f.remove(); }); document.querySelectorAll('script').forEach(function(s){ if (isAdSrc(s.src)) s.remove(); }); fixAnchors(); };
+  stripAds();
+  try { new MutationObserver(stripAds).observe(document.documentElement, { childList: true, subtree: true }); } catch (_) {}
+  document.addEventListener('click', function (e) { var a = e.target && e.target.closest && e.target.closest('a[href]'); if (a && isAdHost(a.href)) { e.preventDefault(); e.stopPropagation(); } }, true);
+  setInterval(function () { var divs = document.querySelectorAll('div'); var sw = window.innerWidth, sh = window.innerHeight;
+    for (var i=0;i<divs.length;i++){ var d=divs[i]; var st2=window.getComputedStyle(d); if (st2.position==='absolute'||st2.position==='fixed'){ var z=parseInt(st2.zIndex,10); if (z>99){ var w=d.offsetWidth,h=d.offsetHeight; if (w>sw*0.5&&h>sh*0.5){ if (!d.querySelector('video, iframe, canvas, img') && d.innerText.trim().length<50) d.remove(); } } } } }, 500);
+})();
+`;
+
+const WG_EMBED_PROBE = String.raw`
+(function () {
+  try {
+    var html = document.documentElement.outerHTML || '';
+    var iframeMatch = html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+    var iframeSrc = iframeMatch ? iframeMatch[1] : '';
+    var simpleRe = /data-hash=["']([^"']+)["']/g;
+    var seen = {}, servers = [], m;
+    var nameRe = /data-hash=["']([^"']+)["'][^>]*>([\s\S]*?)<\/div>/g;
+    while ((m = nameRe.exec(html)) !== null) { var hash=m[1]; if (!hash||seen[hash]) continue; seen[hash]=true; var name=(m[2]||'').replace(/<[^>]*>/g,'').trim(); servers.push({name:name,hash:hash}); }
+    if (servers.length === 0) { while ((m = simpleRe.exec(html)) !== null) { if (!seen[m[1]]) { seen[m[1]]=true; servers.push({name:'',hash:m[1]}); } } }
+    var bodyText = (document.body && document.body.innerText) || '';
+    var hasChallenge = /just a moment/i.test(document.title) || /cf-chl|cf_chl|checking your browser/i.test(bodyText) || /enable javascript and cookies/i.test(bodyText);
+    var hasVideo = !!document.querySelector('video') || !!document.querySelector('iframe[allowfullscreen], iframe[src*="player"], iframe[src*="/e/"], iframe[src*="embed"]');
+    return JSON.stringify({ title: document.title||'', url: location.href, iframeSrc: iframeSrc, servers: servers, hasChallenge: hasChallenge, hasVideo: hasVideo });
+  } catch (e) { return JSON.stringify({ error: String(e) }); }
+})();
+`;
+
+const WG_PLAYER_PROBE = String.raw`
+(function () {
+  try {
+    var hasPlayButton = !!document.querySelector('#pl_but,.fa-play,[id*=play]');
+    var iframeLoaded = !!document.querySelector('iframe[src*="prorcp"], iframe#player_iframe');
+    var bodyText = (document.body && document.body.innerText) || '';
+    var hasChallenge = /just a moment/i.test(document.title) || /cf-chl|cf_chl|checking your browser/i.test(bodyText) || /enable javascript and cookies/i.test(bodyText);
+    var hasTurnstile = !!document.querySelector('.cf-turnstile, [data-sitekey]');
+    var hasRcpToken = /[?&]_rcp=/.test(location.href);
+    return JSON.stringify({ title: document.title||'', url: location.href, hasPlayButton: hasPlayButton, iframeLoaded: iframeLoaded, hasChallenge: hasChallenge, hasTurnstile: hasTurnstile, hasRcpToken: hasRcpToken });
+  } catch (e) { return JSON.stringify({ error: String(e) }); }
+})();
+`;
+
+const WG_CLICK_PLAY =
+  "(function(){var b=document.querySelector('#pl_but,.fa-play,[id*=play]');if(b)b.click();})();";
+
+let vidsrcResolver = null;
+
+// Electron <webview> ignores percentage height (falls back to ~150px). The
+// player overlay is a full-viewport fixed layer, so size the webview to the
+// window in explicit pixels and keep it in sync on resize.
+function sizeWebviewToWindow(webview) {
+  const apply = () => {
+    webview.style.setProperty("position", "absolute", "important");
+    webview.style.setProperty("top", "0", "important");
+    webview.style.setProperty("left", "0", "important");
+    webview.style.setProperty("right", "0", "important");
+    webview.style.setProperty("bottom", "0", "important");
+    webview.style.setProperty("z-index", "1", "important");
+
+    const isWebview =
+      webview &&
+      webview.tagName &&
+      String(webview.tagName).toLowerCase() === "webview";
+
+    if (isWebview) {
+      const container = document.getElementById("webview-container");
+      const rect = container
+        ? container.getBoundingClientRect()
+        : { width: window.innerWidth, height: window.innerHeight };
+      const width = Math.max(1, Math.floor(rect.width || window.innerWidth));
+      const height = Math.max(1, Math.floor(rect.height || window.innerHeight));
+
+      // Electron webview behaves best with explicit pixel sizing.
+      webview.style.setProperty("width", width + "px", "important");
+      webview.style.setProperty("height", height + "px", "important");
+      webview.style.setProperty("min-width", width + "px", "important");
+      webview.style.setProperty("min-height", height + "px", "important");
+      webview.style.setProperty("max-width", width + "px", "important");
+      webview.style.setProperty("max-height", height + "px", "important");
+
+      webview.removeAttribute("width");
+      webview.removeAttribute("height");
+      webview.removeAttribute("autosize");
+      webview.removeAttribute("minwidth");
+      webview.removeAttribute("minheight");
+      webview.removeAttribute("maxwidth");
+      webview.removeAttribute("maxheight");
+    } else {
+      // Standard iframe path (VidCore) should mirror provider docs.
+      webview.style.setProperty("width", "100%", "important");
+      webview.style.setProperty("height", "100%", "important");
+      webview.style.setProperty("min-width", "100%", "important");
+      webview.style.setProperty("min-height", "100%", "important");
+      webview.style.setProperty("max-width", "100%", "important");
+      webview.style.setProperty("max-height", "100%", "important");
+    }
+  };
+
+  apply();
+  requestAnimationFrame(apply);
+
+  if (webview.__omniResize) {
+    window.removeEventListener("resize", webview.__omniResize);
+  }
+  webview.__omniResize = apply;
+  window.addEventListener("resize", apply);
+}
+function unsizeWebview(webview) {
+  if (webview && webview.__omniResize) {
+    window.removeEventListener("resize", webview.__omniResize);
+    webview.__omniResize = null;
+  }
+}
+
+function buildEmbedUrls(media, season, episode, forceDomain) {
+  const pref = VIDSRC_EMBED_DOMAINS.includes(forceDomain)
+    ? forceDomain
+    : VIDSRC_EMBED_DOMAINS.includes(state.vidsrcDomain)
+      ? state.vidsrcDomain
+      : DEFAULT_VIDSRC_DOMAIN;
+  const ordered = VIDSRC_EMBED_DOMAINS.includes(pref)
+    ? [pref, ...VIDSRC_EMBED_DOMAINS.filter((d) => d !== pref)]
+    : [pref, ...VIDSRC_EMBED_DOMAINS];
+  const path = media.type === "movie" ? "/embed/movie" : "/embed/tv";
+  const q =
+    media.type === "movie"
+      ? `tmdb=${media.tmdbId}&autoplay=1`
+      : `tmdb=${media.tmdbId}&season=${season}&episode=${episode}&autonext=1&autoplay=1`;
+  return ordered.map((d) => `https://${d}${path}?${q}`);
+}
+
+// The old chromeless resolver walked VidSrc internals and navigated directly to
+// provider /rcp pages. That worked only for one VidSrc generation and often left
+// a stripped/black shell once providers changed nested player hosts. Use a single
+// embedded-player pipeline for every server instead: load the provider's own
+// embed, allow the real nested player hosts, probe for a playable surface, and
+// fail over when a page loads but stays blank.
+const EMBED_LOAD_TIMEOUT_MS = 22000;
+const EMBED_HEALTH_DELAY_MS = 4500;
+const EMBED_HEALTH_RECHECK_MS = 4500;
+const EMBED_HEALTH_GRACE_MS = 15000;
+
+const EMBED_HEALTH_PROBE = String.raw`
+(function () {
+  try {
+    var body = document.body;
+    var bodyText = body ? (body.innerText || '') : '';
+    var lowerText = bodyText.toLowerCase();
+    var frames = Array.prototype.slice.call(document.querySelectorAll('iframe[src], object, embed'));
+    var videos = Array.prototype.slice.call(document.querySelectorAll('video'));
+    var visibleFrames = frames.filter(function (f) {
+      try { var r = f.getBoundingClientRect(); return r.width > 40 && r.height > 40; } catch (_) { return true; }
+    });
+    var visibleVideos = videos.filter(function (v) {
+      try { var r = v.getBoundingClientRect(); return r.width > 40 && r.height > 40; } catch (_) { return true; }
+    });
+    var playerLike = false;
+    var els = document.querySelectorAll('[id], [class], button, [role="button"], video, iframe');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      var sig = String((el.id || '') + ' ' + (el.className || '') + ' ' + (el.tagName || '')).toLowerCase();
+      if (/(player|video|jwplayer|plyr|vjs|play)/.test(sig)) { playerLike = true; break; }
+    }
+    var hasChallenge = /just a moment|cf-chl|cf_chl|checking your browser|enable javascript and cookies|turnstile|captcha/.test(String(document.title || '').toLowerCase() + ' ' + lowerText);
+    var hasHardError = /(404|not found|unavailable|no sources|source unavailable|failed to load|access denied|server error|temporarily down)/.test(lowerText);
+    var hasPlayableSurface = visibleFrames.length > 0 || visibleVideos.length > 0 || playerLike;
+    var blank = bodyText.trim().length < 15 && visibleFrames.length === 0 && visibleVideos.length === 0 && !playerLike;
+    return JSON.stringify({
+      title: document.title || '',
+      url: location.href,
+      textLength: bodyText.trim().length,
+      frameCount: frames.length,
+      visibleFrameCount: visibleFrames.length,
+      videoCount: videos.length,
+      visibleVideoCount: visibleVideos.length,
+      hasPlayableSurface: hasPlayableSurface,
+      hasChallenge: hasChallenge,
+      hasHardError: hasHardError,
+      blank: blank
+    });
+  } catch (e) {
+    return JSON.stringify({ error: String(e), blank: true });
+  }
+})();
+`;
+
+function playbackTitle(media, season, episode) {
+  return media.type === "movie"
+    ? `${media.title} (Movie)`
+    : `${media.title} — S${season || 1} E${episode || 1}`;
+}
+
+function orderedStreamServers(forceDomain = null) {
+  const servers = STREAM_SERVERS.slice();
+  const preferred = forceDomain || state.vidsrcDomain || DEFAULT_VIDSRC_DOMAIN;
+  const idx = servers.findIndex((s) => s.domain === preferred);
+  if (idx >= 0) return [servers[idx], ...servers.filter((_, i) => i !== idx)];
+  if (preferred) {
+    return [{ name: preferred, domain: preferred, icon: "▶️" }, ...servers];
+  }
+  return servers;
+}
+
+function compactUniqueUrls(urls) {
+  const seen = new Set();
+  return urls.filter((url) => {
+    if (!url || seen.has(url)) return false;
+    seen.add(url);
+    return true;
+  });
+}
+
+function providerUrlsForServer(server, media, season, episode) {
+  const tmdbId = media && media.tmdbId ? encodeURIComponent(media.tmdbId) : "";
+  if (!tmdbId) return [];
+
+  const imdbId = media && media.imdbId ? encodeURIComponent(media.imdbId) : "";
+  const domain = server.domain;
+  const s = encodeURIComponent(season || 1);
+  const e = encodeURIComponent(episode || 1);
+  const isMovie = media.type === "movie";
+
+  if (domain.includes("vidcore")) {
+    return compactUniqueUrls([
+      isMovie
+        ? `https://vidcore.created.app/embed/movie/${tmdbId}`
+        : `https://vidcore.created.app/embed/tv/${tmdbId}/${s}/${e}`,
+    ]);
+  }
+
+  if (
+    domain.includes("vsembed") ||
+    domain.includes("vidsrcme.ru") ||
+    domain.includes("vidsrc-embed") ||
+    domain.includes("vidsrcme.su") ||
+    domain.includes("vsrc.su") ||
+    domain.includes("vidsrc.net")
+  ) {
+    return compactUniqueUrls([
+      isMovie
+        ? `https://${domain}/embed/movie/${tmdbId}`
+        : `https://${domain}/embed/tv/${tmdbId}/${s}/${e}`,
+    ]);
+  }
+
+  if (domain.includes("multiembed")) {
+    return compactUniqueUrls([
+      isMovie
+        ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`
+        : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${s}&e=${e}`,
+    ]);
+  }
+
+  if (domain.includes("autoembed")) {
+    return compactUniqueUrls([
+      isMovie
+        ? `https://autoembed.cc/embed/player.php?id=${tmdbId}`
+        : `https://autoembed.cc/embed/player.php?id=${tmdbId}&s=${s}&e=${e}`,
+    ]);
+  }
+
+  if (domain.includes("2embed")) {
+    return compactUniqueUrls([
+      isMovie && imdbId ? `https://www.2embed.cc/embed/${imdbId}` : "",
+      isMovie ? `https://www.2embed.cc/embed/${tmdbId}` : "",
+      !isMovie && imdbId
+        ? `https://www.2embed.cc/embedtv/${imdbId}&s=${s}&e=${e}`
+        : "",
+      !isMovie ? `https://www.2embed.cc/embedtv/${tmdbId}&s=${s}&e=${e}` : "",
+      isMovie && imdbId ? `https://2embed.cc/embed/${imdbId}` : "",
+      isMovie ? `https://2embed.cc/embed/${tmdbId}` : "",
+    ]);
+  }
+
+  if (domain.includes("smashy")) {
+    return compactUniqueUrls([
+      isMovie
+        ? `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`
+        : `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}&season=${s}&ep=${e}`,
+    ]);
+  }
+
+  const path = isMovie ? "/embed/movie" : "/embed/tv";
+  const query = isMovie
+    ? `tmdb=${tmdbId}&autoplay=1`
+    : `tmdb=${tmdbId}&season=${s}&episode=${e}&autonext=1&autoplay=1`;
+  const primary = `https://${domain}${path}?${query}`;
+  const pathStyle = isMovie
+    ? `https://${domain}${path}/${tmdbId}?autoplay=1`
+    : `https://${domain}${path}/${tmdbId}/${s}/${e}?autonext=1&autoplay=1`;
+  return compactUniqueUrls([primary, domain === "vidsrc.net" ? pathStyle : ""]);
+}
+
+function buildEmbedAttemptQueue(media, season, episode, forceDomain = null) {
+  return orderedStreamServers(forceDomain).flatMap((server) =>
+    providerUrlsForServer(server, media, season, episode).map((url, idx) => ({
+      server,
+      domain: server.domain,
+      url,
+      label: idx === 0 ? server.name : `${server.name} mirror ${idx + 1}`,
+    })),
+  );
+}
+
+function createEmbedStatusOverlay() {
+  const el = document.createElement("div");
+  el.className =
+    "absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 text-center px-8 bg-black/35 pointer-events-none transition-opacity duration-300";
+  el.innerHTML = `
+    <div class="w-10 h-10 rounded-full border-2 border-brandCyan border-t-transparent animate-spin"></div>
+    <div class="space-y-1">
+      <p class="text-sm text-white font-semibold" data-status-title>Loading player…</p>
+      <p class="text-[11px] text-gray-400 max-w-lg" data-status-detail>Preparing embed</p>
+    </div>`;
+  return el;
+}
+
+// Legacy entry point retained for any older click handlers. VidSrc now uses the same
+// provider-embed queue as every other server.
+function playStreamResolved(media, season, episode, forceDomain) {
+  playStreamEmbed(media, season, episode, forceDomain);
+}
+
+async function ensurePlaybackIds(media) {
+  if (
+    !media ||
+    !state.tmdbToken ||
+    !media.tmdbId ||
+    media._playbackIdsChecked
+  ) {
+    return media;
+  }
+  media._playbackIdsChecked = true;
+  const endpoint = media.type === "movie" ? "movie" : "tv";
+  const details = await fetchTmdb(`${endpoint}/${media.tmdbId}`, {
+    append_to_response: "external_ids",
+  });
+  const ids = details && details.external_ids;
+  if (ids) {
+    if (ids.imdb_id) media.imdbId = ids.imdb_id;
+    if (ids.tvdb_id) media.tvdbId = ids.tvdb_id;
+  }
+  return media;
+}
+
+// Router: anime (including TMDB titles detected as anime) → direct
+// AllAnime stream; movies/TV → unified embedded provider queue.
+async function playStream(
+  media,
+  season = null,
+  episode = null,
+  forceDomain = null,
+) {
+  if (isLikelyAnime(media) && window.OmniAnime) {
     playAnimeStream(media, episode || 1);
     return;
   }
+  await ensurePlaybackIds(media);
+  playStreamEmbed(media, season, episode, forceDomain);
+}
 
+function playStreamEmbed(
+  media,
+  season = null,
+  episode = null,
+  forceDomain = null,
+) {
   closeDetailModal();
 
+  if (vidsrcResolver) {
+    vidsrcResolver.cancelled = true;
+    vidsrcResolver = null;
+  }
+  if (state.activeEmbedSession && state.activeEmbedSession.cancel) {
+    state.activeEmbedSession.cancel();
+  }
+  if (state.activeHls) {
+    try {
+      state.activeHls.destroy();
+    } catch (_) {}
+    state.activeHls = null;
+  }
+
   const titleEl = document.getElementById("player-stream-title");
-
-  // Use passed domain or fallback to state
-  const targetDomain = forceDomain || state.vidsrcDomain || "vidsrc.me";
-  let embedUrl = "";
-
-  if (media.type === "movie") {
-    titleEl.textContent = `${media.title} (Movie)`;
-  } else {
-    titleEl.textContent = `${media.title} — S${season} E${episode}`;
-  }
-
-  if (targetDomain.includes("multiembed")) {
-    embedUrl =
-      media.type === "movie"
-        ? `https://multiembed.mov/?video_id=${media.tmdbId}&tmdb=1`
-        : `https://multiembed.mov/?video_id=${media.tmdbId}&tmdb=1&s=${season}&e=${episode}`;
-  } else if (targetDomain.includes("autoembed")) {
-    embedUrl =
-      media.type === "movie"
-        ? `https://autoembed.cc/embed/player.php?id=${media.tmdbId}`
-        : `https://autoembed.cc/embed/player.php?id=${media.tmdbId}&s=${season}&e=${episode}`;
-  } else if (targetDomain.includes("2embed")) {
-    embedUrl =
-      media.type === "movie"
-        ? `https://www.2embed.cc/embed/${media.tmdbId}`
-        : `https://www.2embed.cc/embedtv/${media.tmdbId}&s=${season}&e=${episode}`;
-  } else if (targetDomain.includes("smashy")) {
-    embedUrl =
-      media.type === "movie"
-        ? `https://embed.smashystream.com/playere.php?tmdb=${media.tmdbId}`
-        : `https://embed.smashystream.com/playere.php?tmdb=${media.tmdbId}&season=${season}&ep=${episode}`;
-  } else {
-    embedUrl =
-      media.type === "movie"
-        ? `https://${targetDomain}/embed/movie?tmdb=${media.tmdbId}`
-        : `https://${targetDomain}/embed/tv?tmdb=${media.tmdbId}&season=${season}&episode=${episode}`;
-  }
-
-  // Populate Server Dropdown dynamically
+  if (titleEl) titleEl.textContent = playbackTitle(media, season, episode);
   populateServerDropdown(media, season, episode);
 
-  // Create isolated WebView element
   const container = document.getElementById("webview-container");
+  unsizeWebview(state.activeWebview);
+  state.activeWebview = null;
   container.innerHTML = "";
 
-  const webview = document.createElement("webview");
+  const attempts = buildEmbedAttemptQueue(media, season, episode, forceDomain);
+  state.currentPlayback = { media, season, episode, forceDomain };
+  state.triedDomains = [];
+
+  document.getElementById("player-overlay").classList.remove("hidden");
+
+  if (attempts.length === 0) {
+    showPlayerStatus(
+      `<i data-lucide="alert-triangle" class="w-12 h-12 text-brandCyan"></i>
+       <h3 class="text-lg font-bold text-white">No embed URL could be built</h3>
+       <p class="text-sm text-gray-400 max-w-md">This title is missing the metadata id needed by the stream providers.</p>`,
+    );
+    return;
+  }
+
+  // Use iframe path for all providers to keep embed sizing/rendering consistent.
+  const useElectronWebview = false;
+  const webview = document.createElement("iframe");
   webview.id = "active-player-webview";
   webview.className = "webview-player";
-  webview.setAttribute("partition", "persist:player");
-  webview.setAttribute("src", embedUrl);
   webview.setAttribute("allowfullscreen", "true");
+  if (useElectronWebview) {
+    webview.setAttribute("partition", "persist:player");
+    webview.setAttribute(
+      "webpreferences",
+      "allowRunningInsecureContent=yes, autoplayPolicy=no-user-gesture-required",
+    );
+    webview.style.setProperty("width", "100%", "important");
+    webview.style.setProperty("height", "100%", "important");
+  } else {
+    webview.setAttribute("width", "100%");
+    webview.setAttribute("height", "100%");
+    webview.setAttribute(
+      "allow",
+      "autoplay; fullscreen; picture-in-picture; encrypted-media",
+    );
 
+    webview.setAttribute("referrerpolicy", "origin-when-cross-origin");
+    webview.setAttribute("frameborder", "0");
+    webview.setAttribute("scrolling", "no");
+  }
+
+  const statusEl = createEmbedStatusOverlay();
   container.appendChild(webview);
+  container.appendChild(statusEl);
+  sizeWebviewToWindow(webview);
   state.activeWebview = webview;
 
-  // Show player overlay
-  document.getElementById("player-overlay").classList.remove("hidden");
-  window.electron.showNotification(
-    "Streaming Live",
-    `Initializing isolated bypass stream from ${targetDomain}`,
-  );
+  const parseJson = (value) => {
+    try {
+      return JSON.parse(value);
+    } catch (_) {
+      return null;
+    }
+  };
+
+  let webviewDomReady = false;
+
+  const session = {
+    attempts,
+    index: 0,
+    webview,
+    statusEl,
+    loadTimer: null,
+    healthTimer: null,
+    failTimer: null,
+    cancelled: false,
+    switching: false,
+    ready: false,
+    token: 0,
+    startedAt: 0,
+    currentAttempt: null,
+    clearTimers() {
+      for (const key of ["loadTimer", "healthTimer", "failTimer"]) {
+        if (this[key]) clearTimeout(this[key]);
+        this[key] = null;
+      }
+    },
+    cancel() {
+      this.cancelled = true;
+      this.clearTimers();
+    },
+    showStatus(title, detail = "", spinning = true) {
+      const titleNode = this.statusEl.querySelector("[data-status-title]");
+      const detailNode = this.statusEl.querySelector("[data-status-detail]");
+      const spinner = this.statusEl.querySelector(".animate-spin");
+      if (titleNode) titleNode.textContent = title;
+      if (detailNode) detailNode.textContent = detail;
+      if (spinner) spinner.style.display = spinning ? "block" : "none";
+      this.statusEl.style.visibility = "visible";
+      this.statusEl.style.opacity = "1";
+    },
+    hideStatus() {
+      this.statusEl.style.opacity = "0";
+      this.statusEl.style.visibility = "hidden";
+    },
+    failCurrent(reason = "failed to load") {
+      if (this.cancelled || this.switching) return;
+      this.switching = true;
+      this.ready = false;
+      this.clearTimers();
+
+      const failed = this.currentAttempt;
+      const next = this.attempts[this.index + 1];
+      if (!next) {
+        this.cancelled = true;
+        if (state.activeEmbedSession === this) state.activeEmbedSession = null;
+        if (state.activeWebview === this.webview) {
+          unsizeWebview(this.webview);
+          state.activeWebview = null;
+        }
+        showPlayerStatus(
+          `<i data-lucide="wifi-off" class="w-12 h-12 text-brandCyan"></i>
+           <h3 class="text-lg font-bold text-white">All sources are unavailable</h3>
+           <p class="text-sm text-gray-400 max-w-md">${failed ? failed.label : "The selected source"} ${reason}. Try again shortly, or choose another server manually.</p>`,
+        );
+        return;
+      }
+
+      this.showStatus(
+        `${failed ? failed.label : "Source"} unavailable`,
+        `Trying ${next.label}…`,
+      );
+      this.failTimer = setTimeout(() => {
+        if (this.cancelled) return;
+        this.index += 1;
+        this.loadCurrent();
+      }, 800);
+    },
+    loadCurrent() {
+      if (this.cancelled) return;
+      this.clearTimers();
+      this.switching = false;
+      this.ready = false;
+
+      if (this.index >= this.attempts.length) {
+        this.failCurrent("failed");
+        return;
+      }
+
+      const attempt = this.attempts[this.index];
+      this.currentAttempt = attempt;
+      this.startedAt = Date.now();
+      const token = ++this.token;
+      state.triedDomains = this.attempts
+        .slice(0, this.index + 1)
+        .map((a) => a.domain);
+
+      let host = attempt.url;
+      try {
+        host = new URL(attempt.url).host;
+      } catch (_) {}
+      this.showStatus(`Loading ${attempt.label}…`, host);
+
+      try {
+        webviewDomReady = false;
+        this.webview.dataset.currentSrc = attempt.url;
+        // Use iframe-style src assignment for both <webview> and <iframe>.
+        // Calling webview.loadURL() before dom-ready can throw in Electron.
+        this.webview.setAttribute("src", attempt.url);
+      } catch (err) {
+        this.failCurrent(err && err.message ? err.message : "failed");
+        return;
+      }
+
+      this.loadTimer = setTimeout(() => {
+        if (this.cancelled || this.token !== token || this.ready) return;
+        this.failCurrent("timed out");
+      }, EMBED_LOAD_TIMEOUT_MS);
+    },
+    scheduleHealth(delay = EMBED_HEALTH_DELAY_MS) {
+      if (this.cancelled || this.ready) return;
+      const token = this.token;
+      if (this.healthTimer) clearTimeout(this.healthTimer);
+      this.healthTimer = setTimeout(() => this.checkHealth(token), delay);
+    },
+    async checkHealth(token) {
+      if (this.cancelled || this.ready || token !== this.token) return;
+      if (typeof this.webview.executeJavaScript !== "function") {
+        // Browser/Qt iframe fallback: cross-origin pages cannot be probed, so a
+        // completed iframe load is the best available readiness signal.
+        this.ready = true;
+        this.clearTimers();
+        this.hideStatus();
+        return;
+      }
+      if (!webviewDomReady) {
+        this.scheduleHealth(EMBED_HEALTH_RECHECK_MS);
+        return;
+      }
+      const raw = await this.webview
+        .executeJavaScript(EMBED_HEALTH_PROBE, true)
+        .catch(() => null);
+      const health = parseJson(raw);
+      if (this.cancelled || this.ready || token !== this.token) return;
+
+      const age = Date.now() - this.startedAt;
+      if (!health) {
+        if (age > EMBED_HEALTH_GRACE_MS) this.failCurrent("stayed blank");
+        else this.scheduleHealth(EMBED_HEALTH_RECHECK_MS);
+        return;
+      }
+
+      if (health.hasChallenge) {
+        this.showStatus(
+          "Waiting for provider verification…",
+          "Cloudflare or Turnstile challenge detected",
+        );
+        if (age > EMBED_LOAD_TIMEOUT_MS)
+          this.failCurrent("verification timed out");
+        else this.scheduleHealth(EMBED_HEALTH_RECHECK_MS);
+        return;
+      }
+
+      if (
+        health.hasHardError ||
+        (health.blank && age > EMBED_HEALTH_GRACE_MS)
+      ) {
+        this.failCurrent(
+          health.hasHardError ? "reported an error" : "stayed blank",
+        );
+        return;
+      }
+
+      if (health.hasPlayableSurface) {
+        this.ready = true;
+        this.clearTimers();
+        this.hideStatus();
+        return;
+      }
+
+      if (age > EMBED_HEALTH_GRACE_MS) {
+        this.failCurrent("did not expose a player");
+      } else {
+        this.showStatus(
+          "Waiting for player…",
+          "The provider page loaded; waiting for the nested player",
+        );
+        this.scheduleHealth(EMBED_HEALTH_RECHECK_MS);
+      }
+    },
+  };
+
+  state.activeEmbedSession = session;
+
+  const runGuards = () => {
+    if (typeof webview.executeJavaScript !== "function") return;
+    if (!webviewDomReady) return;
+    webview.executeJavaScript(WG_UNSANDBOX, true).catch(() => null);
+    webview.executeJavaScript(WG_GUARD, true).catch(() => null);
+  };
+
+  webview.addEventListener("dom-ready", () => {
+    webviewDomReady = true;
+    sizeWebviewToWindow(webview);
+    runGuards();
+    session.scheduleHealth(EMBED_HEALTH_DELAY_MS);
+  });
+  webview.addEventListener("did-finish-load", () => {
+    if (session.loadTimer) clearTimeout(session.loadTimer);
+    session.loadTimer = null;
+    sizeWebviewToWindow(webview);
+    runGuards();
+    session.scheduleHealth(EMBED_HEALTH_DELAY_MS);
+  });
+  webview.addEventListener("did-stop-loading", () => {
+    sizeWebviewToWindow(webview);
+    session.scheduleHealth(EMBED_HEALTH_DELAY_MS);
+  });
+  webview.addEventListener("did-fail-load", (e) => {
+    if (!e.isMainFrame || e.errorCode === -3) return;
+    session.failCurrent(e.errorDescription || `error ${e.errorCode}`);
+  });
+  webview.addEventListener("load", () => {
+    sizeWebviewToWindow(webview);
+    if (typeof webview.executeJavaScript !== "function") {
+      session.ready = true;
+      session.clearTimers();
+      session.hideStatus();
+    }
+  });
+  webview.addEventListener("crashed", () => session.failCurrent("crashed"));
+
+  session.loadCurrent();
+
+  if (window.electron && window.electron.showNotification) {
+    window.electron.showNotification(
+      "Streaming Live",
+      `Loading ${attempts[0].label}`,
+    );
+  }
 }
 
 // Populate the custom dropdown servers list
@@ -1324,17 +2675,7 @@ function populateServerDropdown(media, season, episode) {
   const list = document.getElementById("server-dropdown-list");
   if (!list) return;
 
-  const servers = [
-    { name: "VidSrc ME", domain: "vidsrc.me", icon: "🔴" },
-    { name: "VidSrc TO", domain: "vidsrc.to", icon: "🟢" },
-    { name: "VidSrc PRO", domain: "vidsrc.pro", icon: "🟡" },
-    { name: "VidSrc VIP", domain: "vidsrc.vip", icon: "🟣" },
-    { name: "VidSrc CC", domain: "vidsrc.cc", icon: "🔵" },
-    { name: "SuperEmbed", domain: "multiembed.mov", icon: "⚡" },
-    { name: "AutoEmbed", domain: "autoembed.cc", icon: "🔥" },
-    { name: "2Embed", domain: "2embed.cc", icon: "🎥" },
-    { name: "SmashyStream", domain: "embed.smashystream.com", icon: "💥" }
-  ];
+  const servers = STREAM_SERVERS;
 
   list.innerHTML = "";
 
@@ -1344,26 +2685,77 @@ function populateServerDropdown(media, season, episode) {
       "w-full text-left px-4 py-3 hover:bg-white/10 rounded-lg text-sm text-white font-medium flex items-center gap-3 transition cursor-pointer";
     btn.innerHTML = `<span>${srv.icon}</span> ${srv.name} <span class="text-[10px] text-gray-500 ml-auto">${srv.domain}</span>`;
     btn.onclick = () => {
-      playStream(media, season, episode, srv.domain);
-    };
-    list.appendChild(btn);
-  });
-      "w-full text-left px-4 py-2 hover:bg-white/10 rounded-lg text-sm text-white font-medium flex items-center gap-3 transition";
-    btn.innerHTML = `<span>${srv.icon}</span> ${srv.name} <span class="text-[10px] text-gray-500 ml-auto">${srv.domain}</span>`;
-    btn.onclick = () => {
-      // Re-trigger playback but force the new domain immediately
+      // Manual pick = fresh intent: restart the fallback chain from this server.
+      state.triedDomains = [];
       playStream(media, season, episode, srv.domain);
     };
     list.appendChild(btn);
   });
 }
 
+// Auto-fallback: when a source's main frame fails to load (dead/unreachable
+// host), automatically try the next server and keep the player informed instead
+// of showing a silent black screen.
+function setupWebviewFailObserver() {
+  if (!window.electron || !window.electron.onWebviewLoadFailed) return;
+  window.electron.onWebviewLoadFailed(({ errorCode, errorDesc }) => {
+    const overlay = document.getElementById("player-overlay");
+    if (!overlay || overlay.classList.contains("hidden")) return;
+
+    if (state.activeEmbedSession && !state.activeEmbedSession.cancelled) {
+      state.activeEmbedSession.failCurrent(errorDesc || `error ${errorCode}`);
+      return;
+    }
+
+    const ctx = state.currentPlayback;
+    if (!ctx) return;
+
+    const tried = state.triedDomains || [];
+    const next = STREAM_SERVERS.find((s) => !tried.includes(s.domain));
+
+    if (next) {
+      showPlayerStatus(
+        `<div class="w-10 h-10 rounded-full border-2 border-brandCyan border-t-transparent animate-spin"></div>
+         <p class="text-sm text-gray-300 font-medium max-w-md">Source unavailable (${errorDesc || "error " + errorCode}). Trying <span class="text-white font-semibold">${next.name}</span>…</p>`,
+      );
+      setTimeout(() => {
+        playStream(ctx.media, ctx.season, ctx.episode, next.domain);
+      }, 700);
+    } else {
+      showPlayerStatus(
+        `<i data-lucide="wifi-off" class="w-12 h-12 text-brandCyan"></i>
+         <h3 class="text-lg font-bold text-white">All sources are unavailable</h3>
+         <p class="text-sm text-gray-400 max-w-md">Every stream server failed to load — this is usually a temporary outage on the source's side. Try again shortly, or pick a server manually from the Servers menu.</p>`,
+      );
+    }
+  });
+}
+
+// Render a centered status/message inside the player webview container.
+function showPlayerStatus(innerHtml) {
+  const container = document.getElementById("webview-container");
+  if (!container) return;
+  unsizeWebview(state.activeWebview);
+  state.activeWebview = null;
+  container.innerHTML = `
+    <div class="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center px-8">
+      ${innerHtml}
+    </div>`;
+  if (window.lucide) lucide.createIcons();
+}
+
 // Anime direct-stream playback (parity with mobile: AllAnime -> direct URL).
 async function playAnimeStream(media, episode) {
   closeDetailModal();
+  if (state.activeEmbedSession && state.activeEmbedSession.cancel) {
+    state.activeEmbedSession.cancel();
+    state.activeEmbedSession = null;
+  }
   const titleEl = document.getElementById("player-stream-title");
   titleEl.textContent = `${media.title} — E${episode}`;
   const container = document.getElementById("webview-container");
+  unsizeWebview(state.activeWebview);
+  state.activeWebview = null;
 
   // Immersive Loader (Lordflix anime loading style)
   container.innerHTML = `
@@ -1412,6 +2804,10 @@ function playDirectVideo(
   try {
     window.electron.registerAnimeHost(new URL(url).host);
   } catch (_) {}
+  if (state.activeEmbedSession && state.activeEmbedSession.cancel) {
+    state.activeEmbedSession.cancel();
+    state.activeEmbedSession = null;
+  }
   container.innerHTML = "";
   const video = document.createElement("video");
   video.className = "webview-player";
@@ -1552,6 +2948,15 @@ function showAnimeCaptcha(url, onSolved) {
 }
 
 function exitPlayer() {
+  if (state.activeEmbedSession && state.activeEmbedSession.cancel) {
+    state.activeEmbedSession.cancel();
+    state.activeEmbedSession = null;
+  }
+  // Stop the chromeless resolver's polling loops before tearing down the webview.
+  if (vidsrcResolver) {
+    vidsrcResolver.cancelled = true;
+    vidsrcResolver = null;
+  }
   if (state.activeHls) {
     try {
       state.activeHls.destroy();
@@ -1561,23 +2966,38 @@ function exitPlayer() {
   document.getElementById("player-overlay").classList.add("hidden");
 
   // Safely destroy player WebContents instantly to freeze sound, clear caches, and stop video streams
+  unsizeWebview(state.activeWebview);
   const container = document.getElementById("webview-container");
   container.innerHTML = "";
   state.activeWebview = null;
+  state.currentPlayback = null;
 
-  window.electron.playerStopped(); // GC and Cache flush trigger on main thread
+  if (window.electron && window.electron.playerStopped) {
+    window.electron.playerStopped(); // GC and Cache flush trigger on main thread
+  }
 }
 
 function togglePiP() {
   if (state.activeWebview) {
-    const url = state.activeWebview.getAttribute("src");
+    const url =
+      (state.activeEmbedSession &&
+        state.activeEmbedSession.currentAttempt &&
+        state.activeEmbedSession.currentAttempt.url) ||
+      (typeof state.activeWebview.getURL === "function" &&
+        state.activeWebview.getURL()) ||
+      state.activeWebview.dataset.currentSrc ||
+      state.activeWebview.getAttribute("src");
     const title = document.getElementById("player-stream-title").textContent;
 
-    // Open floating window in Main Process
-    window.electron.openPipWindow(url, title);
+    if (window.electron && window.electron.openPipWindow) {
+      // Open floating window in Main Process
+      window.electron.openPipWindow(url, title);
 
-    // Close the internal player to prevent duplicate audio streams
-    exitPlayer();
+      // Close the internal player to prevent duplicate audio streams
+      exitPlayer();
+    } else if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
   }
 }
 
@@ -1892,43 +3312,76 @@ function setupSearchInput() {
     }
 
     searchTimeout = setTimeout(async () => {
-      if (state.tmdbToken) {
-        showGridLoading("grid-search-results");
-
-        const searchData = await fetchTmdb("search/multi", { query: val });
-
-        if (searchData && searchData.results && searchData.results.length > 0) {
-          const items = searchData.results
-            .filter(
-              (item) =>
-                (item.media_type === "movie" || item.media_type === "tv") &&
-                (item.poster_path || item.backdrop_path),
-            )
-            .map((item) => mapTmdbItem(item, item.media_type));
-
-          renderGrid("grid-search-results", items.slice(0, 24), true); // true = lordflix poster style
-          lucide.createIcons();
-          return;
-        }
+      if (!state.tmdbToken) {
+        showGridMessage(
+          "grid-search-results",
+          "Connect TMDB to search movies and TV",
+          "Search now uses live TMDB results only. Add your key in Settings to query the latest catalogue.",
+          "key-round",
+        );
+        return;
       }
 
-      // Fallback local filtering
-      const filteredMovies = FALLBACK_DB.movies.filter(
-        (m) =>
-          m.title.toLowerCase().includes(val) ||
-          m.overview.toLowerCase().includes(val),
-      );
-      const filteredTv = FALLBACK_DB.tv.filter(
-        (t) =>
-          t.title.toLowerCase().includes(val) ||
-          t.overview.toLowerCase().includes(val),
-      );
+      showGridLoading("grid-search-results", "Searching TMDB…");
+      const searchData = await fetchTmdb("search/multi", { query: val });
+      const items = ((searchData && searchData.results) || [])
+        .filter(
+          (item) =>
+            (item.media_type === "movie" || item.media_type === "tv") &&
+            (item.poster_path || item.backdrop_path),
+        )
+        .map((item) => mapTmdbItem(item, item.media_type));
 
-      const items = [...filteredMovies, ...filteredTv];
-      renderGrid("grid-search-results", items, true);
-      lucide.createIcons();
+      if (items.length) {
+        renderGrid("grid-search-results", items.slice(0, 24), true);
+      } else {
+        showGridMessage(
+          "grid-search-results",
+          "No live matches",
+          `TMDB returned no image-backed movie or TV matches for “${val}”.`,
+          "search-x",
+        );
+      }
+      if (window.lucide) lucide.createIcons();
     }, 400);
   });
+}
+
+// Clear cached network data and pull a fresh catalogue (homepage rails, grids).
+async function refreshCatalog(btn) {
+  const original = btn ? btn.innerHTML : null;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4 animate-spin"></i> Refreshing…`;
+    if (window.lucide) lucide.createIcons();
+  }
+  try {
+    if (window.electron && window.electron.clearCache) {
+      await window.electron.clearCache();
+    }
+    state.animeCatalog = [];
+    await renderCatalogFeeds();
+    switchScreen("home");
+    if (window.electron) {
+      window.electron.showNotification(
+        "Fresh Pull",
+        "Cache cleared and the latest catalogue has been reloaded.",
+      );
+    }
+  } catch (e) {
+    if (window.electron) {
+      window.electron.showNotification(
+        "Refresh Failed",
+        String((e && e.message) || e),
+      );
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = original;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
 }
 
 // Adblock Stats syncing
@@ -1945,10 +3398,12 @@ function savePlaybackSettings() {
   const select = document.getElementById("vidsrc-domain-select");
   state.vidsrcDomain = select.value;
   localStorage.setItem("omni_vidsrc_domain", select.value);
-  window.electron.showNotification(
-    "Preferences Updated",
-    `Preferred VidSrc Domain changed to: ${select.value}`,
-  );
+  if (window.electron && window.electron.showNotification) {
+    window.electron.showNotification(
+      "Preferences Updated",
+      `Preferred embed provider changed to: ${select.value}`,
+    );
+  }
 }
 
 // Save TMDB key
@@ -1966,11 +3421,12 @@ function saveTmdbToken() {
   } else {
     window.electron.showNotification(
       "Token Purged",
-      "Read Access Token cleared. Reverting to offline catalog feeds.",
+      "Read Access Token cleared. Movie and TV rails will stay empty until TMDB is reconnected.",
     );
   }
   // Reload feeds on TMDB token change
   renderCatalogFeeds();
+  hydrateProviderRailLogos();
 }
 
 // Save All Advanced API Keys
@@ -2114,6 +3570,7 @@ function importSyncCode() {
 
     // Refresh feed configurations and pull history
     renderCatalogFeeds();
+    hydrateProviderRailLogos();
 
     if (state.traktToken) {
       pullFromTrakt();
@@ -2571,7 +4028,7 @@ function renderPairingQr(qrImg, dataStr) {
       }
     }
   } catch (e) {
-    console.warn("[Omniverse] local QR generation failed, using fallback:", e);
+    console.warn("[Omniverse] local QR generation failed:", e);
   }
   // Fallback: online generator (only if the local library didn't produce output).
   qrImg.src =
@@ -2976,9 +4433,9 @@ function checkOnePaceMigration() {
       positionMs: paceEntry.positionMs || 0,
       durationMs: paceEntry.durationMs || 1500000,
       lastWatchedAt: Date.now(),
-      poster: "https://image.tmdb.org/t/p/w500/or06gK6hxJN98Es842gZgYI7CIE.jpg",
+      poster: "https://image.tmdb.org/t/p/w500/zGDhn834DojaLU7KkczgWWk75ET.jpg",
       backdrop:
-        "https://image.tmdb.org/t/p/original/bMv9mO_b2qf8U4VwYAtW3Zc40S9.jpg",
+        "https://image.tmdb.org/t/p/original/2rmK7mnchw9Xr3XdiTFSxTTLXqv.jpg",
     };
 
     state.watchHistory = history.filter(

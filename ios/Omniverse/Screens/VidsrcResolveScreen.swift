@@ -3,7 +3,7 @@ import WebKit
 import UIKit
 
 /// Plays a VidSrc title inside a WKWebView, mirroring `truelockmc/streambert`:
-///   1. Load `vidsrc-embed.ru/embed/...`.
+///   1. Load `vsembed.ru/embed/...`.
 ///   2. Regex-extract the cloudnestra iframe URL (`/rcp/<hash>`) + data-hash list.
 ///   3. Navigate the same WebView (top-level) to that cloudnestra URL.
 ///   4. Regex-extract the `src: '/prorcp/…'` path from the rcp page.
