@@ -244,12 +244,16 @@ class VidsrcExtractor {
     // MARK: Embed URL
 
     private fun embedUri(domain: String, item: MediaItem, episode: MediaEpisode?, id: String): String {
-        // stremsrc uses /embed/movie/{id} and /embed/tv/{id}/{season}-{episode}.
-        return if (item.type == MediaType.MOVIE) {
-            "https://$domain/embed/movie/$id"
+        val season = episode?.seasonNumber ?: 1
+        val ep = episode?.episodeNumber ?: 1
+        if (item.type == MediaType.MOVIE) {
+            return "https://$domain/embed/movie/$id"
+        }
+
+        // Desktop parity: VidCore and VidSrc-family domains use /tv/{id}/{s}/{e}.
+        return if (domain.contains("vidcore") || domain.contains("vsembed") || domain.contains("vidsrcme.ru")) {
+            "https://$domain/embed/tv/$id/$season/$ep"
         } else {
-            val season = episode?.seasonNumber ?: 1
-            val ep = episode?.episodeNumber ?: 1
             "https://$domain/embed/tv/$id/$season-$ep"
         }
     }
@@ -324,6 +328,7 @@ class VidsrcExtractor {
 
     companion object {
         private val sourceHosts = listOf(
+            "vidcore.created.app",
             "vsembed.ru",
             "vsembed.su",
             "vidsrcme.ru",

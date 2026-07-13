@@ -7,6 +7,7 @@ import Foundation
 final class VidsrcRepository: VidsrcRepositoryProtocol {
 
     static let embedDomains = [
+        "vidcore.created.app",
         "vsembed.ru",
         "vsembed.su",
         "vidsrcme.ru",
@@ -85,6 +86,34 @@ final class VidsrcRepository: VidsrcRepositoryProtocol {
     // MARK: Embed URL
 
     private func embedUri(domain: String, item: MediaItem, episode: MediaEpisode?, settings: UserSettings) -> URL {
+        let isMovie = item.type == .movie
+
+        // Desktop parity: VidCore uses path-style embeds keyed by TMDB id.
+        if domain.contains("vidcore"), let tmdbId = item.tmdbId {
+            var comps = URLComponents()
+            comps.scheme = "https"
+            comps.host = domain
+            if isMovie {
+                comps.path = "/embed/movie/\(tmdbId)"
+            } else {
+                let season = episode?.seasonNumber ?? 1
+                let ep = episode?.episodeNumber ?? 1
+                comps.path = "/embed/tv/\(tmdbId)/\(season)/\(ep)"
+            }
+
+            var extras: [URLQueryItem] = []
+            let subtitleUrl = settings.subtitleUrl.trimmed
+            if !subtitleUrl.isEmpty, let u = URL(string: subtitleUrl), u.scheme != nil {
+                extras.append(URLQueryItem(name: "sub_url", value: subtitleUrl))
+            }
+            let subtitleLanguage = settings.subtitleLanguage.trimmed
+            if !subtitleLanguage.isEmpty {
+                extras.append(URLQueryItem(name: "ds_lang", value: subtitleLanguage))
+            }
+            if !extras.isEmpty { comps.queryItems = extras }
+            return comps.url!
+        }
+
         var query: [URLQueryItem] = []
         if let imdb = item.imdbId?.trimmed, !imdb.isEmpty {
             query.append(URLQueryItem(name: "imdb", value: imdb))
@@ -109,7 +138,7 @@ final class VidsrcRepository: VidsrcRepositoryProtocol {
         var comps = URLComponents()
         comps.scheme = "https"
         comps.host = domain
-        comps.path = item.type == .movie ? "/embed/movie" : "/embed/tv"
+        comps.path = isMovie ? "/embed/movie" : "/embed/tv"
         comps.queryItems = query
         return comps.url!
     }
@@ -261,6 +290,7 @@ private enum VidsrcError: Error, CustomStringConvertible {
 final class VidsrcExtractor {
 
     private static let sourceHosts = [
+        "vidcore.created.app",
         "vsembed.ru",
         "vsembed.su",
         "vidsrcme.ru",
@@ -396,7 +426,6 @@ final class VidsrcExtractor {
     // MARK: Embed URL
 
     private func embedUri(domain: String, item: MediaItem, episode: MediaEpisode?, id: String) -> URL {
-        // stremsrc uses /embed/movie/{id} and /embed/tv/{id}/{season}-{episode}.
         var comps = URLComponents()
         comps.scheme = "https"
         comps.host = domain
@@ -405,7 +434,11 @@ final class VidsrcExtractor {
         } else {
             let season = episode?.seasonNumber ?? 1
             let ep = episode?.episodeNumber ?? 1
-            comps.path = "/embed/tv/\(id)/\(season)-\(ep)"
+            if domain.contains("vidcore") || domain.contains("vsembed") || domain.contains("vidsrcme.ru") {
+                comps.path = "/embed/tv/\(id)/\(season)/\(ep)"
+            } else {
+                comps.path = "/embed/tv/\(id)/\(season)-\(ep)"
+            }
         }
         return comps.url!
     }

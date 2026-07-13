@@ -59,6 +59,7 @@ import kotlinx.coroutines.delay
 /// navigating to the matching route.
 object RouteArgs {
     var detailItem: MediaItem? = null
+    var detailFocus: DetailFocusArgs? = null
     var player: PlayerArgs? = null
     var web: WebArgs? = null
     var vidsrc: VidsrcArgs? = null
@@ -76,7 +77,18 @@ data class PlayerArgs(
     val aniSkipEpisode: Int? = null,
 )
 
-data class WebArgs(val title: String, val url: String, val headers: Map<String, String> = emptyMap())
+data class DetailFocusArgs(
+    val seasonNumber: Int? = null,
+    val episodeNumber: Int? = null,
+)
+
+data class WebArgs(
+    val title: String,
+    val url: String,
+    val headers: Map<String, String> = emptyMap(),
+    val item: MediaItem? = null,
+    val episode: MediaEpisode? = null,
+)
 
 /// Captcha WebView payload. [onComplete] retries the request that hit
 /// NEED_CAPTCHA, once the user has solved it and cookies are banked.
@@ -107,9 +119,27 @@ fun OmniverseRoot() {
             OnboardingScreen()
         } else {
             NavHost(navController = nav, startDestination = "shell") {
+                fun returnToDetail(fromRoute: String, item: MediaItem?, episode: MediaEpisode?) {
+                    if (item == null) {
+                        nav.popBackStack()
+                        return
+                    }
+                    RouteArgs.detailItem = item
+                    RouteArgs.detailFocus = DetailFocusArgs(
+                        seasonNumber = episode?.seasonNumber,
+                        episodeNumber = episode?.episodeNumber,
+                    )
+                    val hadDetail = nav.popBackStack("detail", inclusive = true)
+                    if (hadDetail) {
+                        nav.navigate("detail")
+                    } else {
+                        nav.navigate("detail") { popUpTo(fromRoute) { inclusive = true } }
+                    }
+                }
+
                 composable("shell") { Shell(nav) }
                 composable("detail") {
-                    RouteArgs.detailItem?.let { MediaDetailScreen(it, nav) }
+                    RouteArgs.detailItem?.let { MediaDetailScreen(it, nav, RouteArgs.detailFocus) }
                 }
                 composable("player") {
                     RouteArgs.player?.let { args ->
@@ -125,14 +155,17 @@ fun OmniverseRoot() {
                             },
                             onOpenDetail = {
                                 RouteArgs.detailItem = it
+                                RouteArgs.detailFocus = null
                                 nav.navigate("detail") { popUpTo("player") { inclusive = true } }
                             },
-                            onClose = { nav.popBackStack() },
+                            onClose = { returnToDetail("player", args.item, args.episode) },
                         )
                     }
                 }
                 composable("web") {
-                    RouteArgs.web?.let { WebEmbedScreen(it) { nav.popBackStack() } }
+                    RouteArgs.web?.let { args ->
+                        WebEmbedScreen(args) { returnToDetail("web", args.item, args.episode) }
+                    }
                 }
                 composable("captcha") {
                     RouteArgs.captcha?.let { CaptchaScreen(it) { nav.popBackStack() } }
@@ -151,9 +184,10 @@ fun OmniverseRoot() {
                             },
                             onOpenDetail = {
                                 RouteArgs.detailItem = it
+                                RouteArgs.detailFocus = null
                                 nav.navigate("detail") { popUpTo("vidsrc") { inclusive = true } }
                             },
-                            onClose = { nav.popBackStack() },
+                            onClose = { returnToDetail("vidsrc", vargs.item, vargs.episode) },
                         )
                     }
                 }

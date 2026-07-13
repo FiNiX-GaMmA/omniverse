@@ -145,7 +145,11 @@ fun SearchScreen(nav: NavController) {
                         Column {
                             Box(
                                 Modifier.fillMaxWidth().aspectRatio(2f / 3f)
-                                    .tvFocusable(onClick = { RouteArgs.detailItem = item; nav.navigate("detail") })
+                                    .tvFocusable(onClick = {
+                                        RouteArgs.detailItem = item
+                                        RouteArgs.detailFocus = null
+                                        nav.navigate("detail")
+                                    })
                                     .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                             ) {
                                 PosterImage(

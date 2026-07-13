@@ -7,10 +7,13 @@ import kotlinx.serialization.Serializable
 enum class MediaType {
     @SerialName("movie")
     MOVIE,
+
     @SerialName("series")
     SERIES,
+
     @SerialName("anime")
     ANIME,
+
     @SerialName("liveTv")
     LIVE_TV;
 
@@ -76,7 +79,7 @@ data class UserSettings(
     val region: String = "US",
     val includeAdult: Boolean = false,
     val tvMode: Boolean = false,
-    val vidsrcDomain: String = "vsembed.ru",
+    val vidsrcDomain: String = "vidcore.created.app",
     val subtitleUrl: String = "",
     val subtitleLanguage: String = "en",
     val preferDubbedAnime: Boolean = false,

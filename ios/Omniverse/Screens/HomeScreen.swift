@@ -41,13 +41,27 @@ struct HomeScreen: View {
             .toolbar(.hidden, for: .navigationBar)
             .fullScreenCover(item: $player) { r in
                 PlayerScreen(title: r.title, url: r.url, headers: r.headers, item: r.item, episode: r.episode,
-                             subtitleUrl: r.subtitleUrl, startPositionMs: r.startPositionMs, aniSkipEpisode: r.aniSkipEpisode)
+                             subtitleUrl: r.subtitleUrl, startPositionMs: r.startPositionMs, aniSkipEpisode: r.aniSkipEpisode,
+                             onRequestClose: { item, episode in
+                                 guard let item else { return }
+                                 state.setDetailEpisodeFocus(item: item, episode: episode)
+                                 path.append(item)
+                             })
             }
             .fullScreenCover(item: $web) { r in
-                WebEmbedPlayerScreen(title: r.title, url: r.url, headers: r.headers, item: r.item)
+                WebEmbedPlayerScreen(title: r.title, url: r.url, headers: r.headers, item: r.item, episode: r.episode,
+                                     onRequestClose: { item, episode in
+                                         guard let item else { return }
+                                         state.setDetailEpisodeFocus(item: item, episode: episode)
+                                         path.append(item)
+                                     })
             }
             .fullScreenCover(item: $vidsrc) { r in
-                VidsrcResolveScreen(item: r.item, title: r.title, embedUrls: r.embedUrls, episode: r.episode)
+                VidsrcResolveScreen(item: r.item, title: r.title, embedUrls: r.embedUrls, episode: r.episode,
+                                    onRequestClose: { item, episode in
+                                        state.setDetailEpisodeFocus(item: item, episode: episode)
+                                        path.append(item)
+                                    })
             }
             .fullScreenCover(isPresented: Binding(
                 get: { selectedStudio != nil },
@@ -102,10 +116,10 @@ struct HomeScreen: View {
                                                           preferredDomain: state.settings.vidsrcDomain,
                                                           subtitleUrl: state.settings.subtitleUrl,
                                                           subtitleLanguage: state.settings.subtitleLanguage)
-                if urls.isEmpty { web = WebRoute(title: src.title, url: src.url, headers: src.headers, item: item) }
+                if urls.isEmpty { web = WebRoute(title: src.title, url: src.url, headers: src.headers, item: item, episode: episode) }
                 else { vidsrc = VidsrcRoute(item: item, title: src.title, embedUrls: urls, episode: episode) }
             } else if src.isEmbed {
-                web = WebRoute(title: src.title, url: src.url, headers: src.headers, item: item)
+                web = WebRoute(title: src.title, url: src.url, headers: src.headers, item: item, episode: episode)
             } else {
                 player = PlayerRoute(title: item.title, url: src.url, headers: src.headers, item: item,
                                      episode: episode, subtitleUrl: src.subtitleUrl, startPositionMs: startPositionMs, aniSkipEpisode: nil)

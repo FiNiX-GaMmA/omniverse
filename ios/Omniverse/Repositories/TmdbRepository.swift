@@ -251,7 +251,7 @@ final class TmdbRepository: TmdbRepositoryProtocol {
                 MediaEpisode(
                     seasonNumber: episode.int("season_number") ?? seasonNumber,
                     episodeNumber: episode.int("episode_number") ?? 0,
-                    title: episode.str("name") ?? "Episode",
+                    title: episode.str("name") ?? "Episode \(episode.int("episode_number") ?? 0)",
                     overview: episode.str("overview") ?? "",
                     airDate: episode.str("air_date") ?? "",
                     runtimeMinutes: episode.int("runtime"),

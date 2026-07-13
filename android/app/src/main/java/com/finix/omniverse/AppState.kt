@@ -29,6 +29,22 @@ import kotlin.math.ln
 import kotlin.random.Random
 
 private val appJson = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+private const val DEFAULT_VIDSRC_DOMAIN = "vidcore.created.app"
+private val LEGACY_DEFAULT_VIDSRC_DOMAINS = setOf(
+    "vsembed.ru",
+    "vsembed.su",
+    "vidsrcme.ru",
+    "vidsrc.me",
+    "vidsrc.to",
+    "vidsrc.xyz",
+    "vidsrc-embed.ru",
+    "vidsrc-embed.su",
+    "vidsrcme.su",
+    "vsrc.su",
+    "vidsrc.net",
+    "vidcore.org",
+    "www.vidcore.org",
+)
 
 /// Holds settings/credentials/categories/anime/liveTv/watchlist/watchHistory as
 /// Compose state. Faithful port of OmniplayState (app_state.dart) plus the iOS
@@ -90,13 +106,20 @@ class AppState(context: Context) {
 
     fun initialize() {
         scope.launch {
-            settings = settingsStore.loadSettings()
+            val loadedSettings = settingsStore.loadSettings()
+            val migratedSettings = normalizeSettings(loadedSettings)
+            settings = migratedSettings
+            if (migratedSettings != loadedSettings) {
+                settingsStore.saveSettings(migratedSettings)
+            }
             credentials = credentialsStore.load()
             liveTvSources.clear(); liveTvSources.addAll(settingsStore.loadLiveTvSources())
             watchlist = settingsStore.loadWatchlist()
             val cachedCategories = settingsStore.loadCachedCategories()
             val cachedLiveTv = settingsStore.loadCachedLiveTv()
-            if (cachedCategories.isNotEmpty()) { categories.clear(); categories.addAll(cachedCategories) }
+            if (cachedCategories.isNotEmpty()) {
+                categories.clear(); categories.addAll(cachedCategories)
+            }
             liveTv.clear(); liveTv.addAll(cachedLiveTv)
             hasScannedLiveTv = liveTv.isNotEmpty()
             watchHistory.clear(); watchHistory.addAll(settingsStore.loadWatchHistory())
@@ -216,7 +239,9 @@ class AppState(context: Context) {
         try {
             val cats = repos.anime.fetchAnimeCategories()
             animeCategories.clear(); animeCategories.addAll(cats)
-        } catch (t: Throwable) { message = "Could not refresh anime rows: $t" }
+        } catch (t: Throwable) {
+            message = "Could not refresh anime rows: $t"
+        }
     }
 
     suspend fun refreshTraktWatchlist() {
@@ -228,7 +253,9 @@ class AppState(context: Context) {
             for (item in items) next.addAll(watchlistKeys(item))
             watchlist = next
             settingsStore.saveWatchlist(next)
-        } catch (t: Throwable) { message = "Could not sync Trakt watchlist: $t" }
+        } catch (t: Throwable) {
+            message = "Could not sync Trakt watchlist: $t"
+        }
         refreshTraktPlayback()
     }
 
@@ -239,7 +266,8 @@ class AppState(context: Context) {
             syncWatchHistoryFromTrakt()
             val remote = repos.trakt.fetchPlaybackProgress(credentials)
             if (remote.isNotEmpty()) mergeProgress(remote, preferRemoteTime = false)
-        } catch (_: Throwable) { /* keep local */ }
+        } catch (_: Throwable) { /* keep local */
+        }
     }
 
     // MARK: - Watch history
@@ -393,9 +421,11 @@ class AppState(context: Context) {
         obj.optStringOrNull("tvdb_api_key")?.takeIf { it.isNotEmpty() }?.let { c = c.copy(tvdbApiKey = it) }
         obj.optStringOrNull("tvdb_pin")?.let { c = c.copy(tvdbPin = it) }
         obj.optStringOrNull("pixeldrain_api_key")?.takeIf { it.isNotEmpty() }?.let { c = c.copy(pixeldrainApiKey = it) }
-        obj.optStringOrNull("anilist_access_token")?.takeIf { it.isNotEmpty() }?.let { c = c.copy(anilistAccessToken = it) }
+        obj.optStringOrNull("anilist_access_token")?.takeIf { it.isNotEmpty() }
+            ?.let { c = c.copy(anilistAccessToken = it) }
         obj.optStringOrNull("trakt_client_id")?.takeIf { it.isNotEmpty() }?.let { c = c.copy(traktClientId = it) }
-        obj.optStringOrNull("trakt_client_secret")?.takeIf { it.isNotEmpty() }?.let { c = c.copy(traktClientSecret = it) }
+        obj.optStringOrNull("trakt_client_secret")?.takeIf { it.isNotEmpty() }
+            ?.let { c = c.copy(traktClientSecret = it) }
         val changed = c != credentials
         credentials = c
         credentialsStore.save(c)
@@ -408,8 +438,9 @@ class AppState(context: Context) {
     suspend fun saveCredentials(next: ApiCredentials) {
         var n = next
         val changed = n.traktClientId.trim() != credentials.traktClientId.trim() ||
-            n.traktClientSecret.trim() != credentials.traktClientSecret.trim()
-        if (changed) n = n.copy(traktAccessToken = "", traktRefreshToken = "", traktTokenExpiresAt = 0, traktUsername = "")
+                n.traktClientSecret.trim() != credentials.traktClientSecret.trim()
+        if (changed) n =
+            n.copy(traktAccessToken = "", traktRefreshToken = "", traktTokenExpiresAt = 0, traktUsername = "")
         credentials = n
         credentialsStore.save(n)
         if (credentials.hasTraktUser) scope.launch { runCatching { syncSettingsToTrakt() } }
@@ -417,8 +448,9 @@ class AppState(context: Context) {
     }
 
     suspend fun saveSettings(next: UserSettings) {
-        settings = next
-        settingsStore.saveSettings(next)
+        val normalized = normalizeSettings(next)
+        settings = normalized
+        settingsStore.saveSettings(normalized)
         if (credentials.hasTraktUser) scope.launch { runCatching { syncSettingsToTrakt() } }
         scope.launch { runCatching { refreshAll(isManual = false) } }
     }
@@ -472,7 +504,9 @@ class AppState(context: Context) {
             return false
         }
         val obj = SyncCenter.parse(value)
-        if (obj == null) { message = "Couldn't read that sync QR code."; return false }
+        if (obj == null) {
+            message = "Couldn't read that sync QR code."; return false
+        }
 
         var c = credentials
         obj.optStringOrNull("trakt_access_token")?.let { c = c.copy(traktAccessToken = it) }
@@ -546,7 +580,9 @@ class AppState(context: Context) {
                     val byNum = tmdbEps.associateBy { it.episodeNumber }
                     eps = eps.map { ep ->
                         val t = byNum[ep.episodeNumber]
-                        if (t?.stillPath != null && (ep.stillPath ?: "").isEmpty()) ep.copy(stillPath = t.stillPath) else ep
+                        if (t?.stillPath != null && (ep.stillPath
+                                ?: "").isEmpty()
+                        ) ep.copy(stillPath = t.stillPath) else ep
                     }
                 }
             }
@@ -557,11 +593,15 @@ class AppState(context: Context) {
         return repos.tvdb.fetchSeasonEpisodes(item, seasonNumber, credentials)
     }
 
-    suspend fun playbackSourcesFor(item: MediaItem, episode: MediaEpisode? = null, overrides: PlaybackOverrides = PlaybackOverrides()): List<PlaybackSource> {
+    suspend fun playbackSourcesFor(
+        item: MediaItem,
+        episode: MediaEpisode? = null,
+        overrides: PlaybackOverrides = PlaybackOverrides()
+    ): List<PlaybackSource> {
         val effective = settings.applying(overrides)
         if (item.type == MediaType.ANIME) {
             val target = episode ?: item.episodes.firstOrNull()
-                ?: MediaEpisode(seasonNumber = 1, episodeNumber = 1, title = "Episode 1")
+            ?: MediaEpisode(seasonNumber = 1, episodeNumber = 1, title = "Episode 1")
             return listOf(repos.anime.resolveSource(item, target, effective))
         }
         return repos.vidsrc.sourcesFor(item, effective, episode)
@@ -602,7 +642,9 @@ class AppState(context: Context) {
             if (credentials.hasTraktUser && item.type != MediaType.LIVE_TV) {
                 message = if (wasSaved) "Removed from Trakt watchlist." else "Added to Trakt watchlist."
             }
-        } catch (t: Throwable) { message = "Could not sync Trakt watchlist: $t" }
+        } catch (t: Throwable) {
+            message = "Could not sync Trakt watchlist: $t"
+        }
     }
 
     private fun watchlistKeys(item: MediaItem): Set<String> {
@@ -636,7 +678,12 @@ class AppState(context: Context) {
             val anilistId = if (item.title == "One Pace") 21 else item.anilistId
             if (isAnime && anilistId != null) {
                 runCatching {
-                    repos.anime.updateAniListProgress(credentials.anilistAccessToken, anilistId, episode.episodeNumber, "CURRENT")
+                    repos.anime.updateAniListProgress(
+                        credentials.anilistAccessToken,
+                        anilistId,
+                        episode.episodeNumber,
+                        "CURRENT"
+                    )
                 }
             }
         }
@@ -644,8 +691,11 @@ class AppState(context: Context) {
 
     private suspend fun sendScrobble(item: MediaItem, send: suspend (ApiCredentials) -> Unit) {
         if (!credentials.hasTraktUser || item.type == MediaType.LIVE_TV) return
-        try { refreshTraktCredentialsIfNeeded(); send(credentials) }
-        catch (t: Throwable) { message = "Could not update Trakt playback: $t" }
+        try {
+            refreshTraktCredentialsIfNeeded(); send(credentials)
+        } catch (t: Throwable) {
+            message = "Could not update Trakt playback: $t"
+        }
     }
 
     private suspend fun refreshTraktCredentialsIfNeeded() {
@@ -667,7 +717,8 @@ class AppState(context: Context) {
 
     fun disconnectTrakt() {
         pendingTraktState = null; traktConnecting = false
-        credentials = credentials.copy(traktAccessToken = "", traktRefreshToken = "", traktTokenExpiresAt = 0, traktUsername = "")
+        credentials =
+            credentials.copy(traktAccessToken = "", traktRefreshToken = "", traktTokenExpiresAt = 0, traktUsername = "")
         credentialsStore.save(credentials)
         message = "Trakt disconnected."
     }
@@ -693,7 +744,9 @@ class AppState(context: Context) {
             try {
                 val next = repos.trakt.exchangeAuthorizationCode(credentials, code)
                 saveTraktConnection(next)
-            } catch (t: Throwable) { traktConnecting = false; message = "Trakt sign in failed: $t" }
+            } catch (t: Throwable) {
+                traktConnecting = false; message = "Trakt sign in failed: $t"
+            }
         }
     }
 
@@ -714,19 +767,23 @@ class AppState(context: Context) {
                 obj.optStringOrNull("pixeldrain_api_key")?.let { c = c.copy(pixeldrainApiKey = it) }
                 obj.optStringOrNull("anilist_access_token")?.let { c = c.copy(anilistAccessToken = it) }
                 credentials = c; credentialsStore.save(c)
-                obj.optObjectOrNull("settings")?.let { settings = settingsFromJson(it); settingsStore.saveSettings(settings) }
+                obj.optObjectOrNull("settings")
+                    ?.let { settings = settingsFromJson(it); settingsStore.saveSettings(settings) }
                 obj.optArrayOrNull("watch_history")?.let {
                     mergeProgress(it.objects().mapNotNull { o -> watchProgressFromJson(o) }, preferRemoteTime = true)
                 }
             }
         }
-        message = if (withProfile.traktUsername.isEmpty()) "Trakt connected." else "Trakt connected as ${withProfile.traktUsername}."
+        message =
+            if (withProfile.traktUsername.isEmpty()) "Trakt connected." else "Trakt connected as ${withProfile.traktUsername}."
         refreshTraktWatchlist()
     }
 
     // MARK: - Hero picks
 
-    fun clearHeroCache() { heroPicksCache = emptyList() }
+    fun clearHeroCache() {
+        heroPicksCache = emptyList()
+    }
 
     val heroPicks: List<MediaItem>
         get() {
@@ -743,8 +800,9 @@ class AppState(context: Context) {
                 }
             }
             val withBackdrops = byKey.values.filter { it.heroBackdropUrl != null && it.overview.isNotEmpty() }
-            val pool = (if (withBackdrops.isEmpty()) byKey.values.filter { it.posterUrl != null || it.backdropUrl != null } else withBackdrops)
-                .sortedByDescending { heroScore(it) }
+            val pool =
+                (if (withBackdrops.isEmpty()) byKey.values.filter { it.posterUrl != null || it.backdropUrl != null } else withBackdrops)
+                    .sortedByDescending { heroScore(it) }
             val candidates = pool.take(25).shuffled()
             heroPicksCache = candidates.take(10)
             return heroPicksCache
@@ -812,7 +870,9 @@ class AppState(context: Context) {
 
     // MARK: - Live TV scan (iptv-org + M3U + Yarrlist + tv247 pipeline)
 
-    fun cancelLiveTvScan() { isScanningLiveTv = false }
+    fun cancelLiveTvScan() {
+        isScanningLiveTv = false
+    }
 
     fun startLiveTvScan() {
         scope.launch { runLiveTvScan() }
@@ -827,8 +887,10 @@ class AppState(context: Context) {
 
             // 1) iptv-org channels.json + streams.json join.
             runCatching {
-                val channelsResp = withTimeoutOrNull(15_000) { Http.request("https://iptv-org.github.io/api/channels.json") }
-                val streamsResp = withTimeoutOrNull(15_000) { Http.request("https://iptv-org.github.io/api/streams.json") }
+                val channelsResp =
+                    withTimeoutOrNull(15_000) { Http.request("https://iptv-org.github.io/api/channels.json") }
+                val streamsResp =
+                    withTimeoutOrNull(15_000) { Http.request("https://iptv-org.github.io/api/streams.json") }
                 if (channelsResp?.status == 200 && streamsResp?.status == 200) {
                     val channelsJson = JSONArray(channelsResp.body)
                     val streamsJson = JSONArray(streamsResp.body)
@@ -841,7 +903,8 @@ class AppState(context: Context) {
                         if (!url.lowercase().contains(".m3u8")) continue
                         val channelInfo = channelMap[channelId]
                         val languages = channelInfo?.optArrayOrNull("languages")?.stringList() ?: emptyList()
-                        val hasTargetLanguage = languages.contains("eng") || languages.contains("hin") || languages.contains("ben")
+                        val hasTargetLanguage =
+                            languages.contains("eng") || languages.contains("hin") || languages.contains("ben")
                         if (!hasTargetLanguage) continue
 
                         val title = channelInfo?.optStringOrNull("name") ?: channelId
@@ -849,7 +912,7 @@ class AppState(context: Context) {
                         val categoriesList = channelInfo?.optArrayOrNull("categories")?.stringList() ?: emptyList()
                         val titleLower = title.lowercase()
                         val isWestBengal = languages.contains("ben") || titleLower.contains("bengal") ||
-                            titleLower.contains("kolkata") || titleLower.contains("bangla")
+                                titleLower.contains("kolkata") || titleLower.contains("bangla")
 
                         val finalCategories = ArrayList<String>()
                         if (isWestBengal) finalCategories.add("West Bengal / Bangla")
@@ -858,15 +921,18 @@ class AppState(context: Context) {
                         val genreString = finalCategories.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(";")
 
                         val headers = HashMap<String, String>()
-                        stream.optStringOrNull("http_referrer")?.takeIf { it.isNotEmpty() }?.let { headers["Referer"] = it }
+                        stream.optStringOrNull("http_referrer")?.takeIf { it.isNotEmpty() }
+                            ?.let { headers["Referer"] = it }
                         val ua = stream.optStringOrNull("user_agent")
                         headers["User-Agent"] = if (!ua.isNullOrEmpty()) ua
-                            else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                        else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-                        parsedEntries.add(LiveTvEntry(
-                            title = title, url = url, source = "iptv-org",
-                            region = genreString.ifEmpty { "General" }, logoUrl = logoUrl, headers = headers,
-                        ))
+                        parsedEntries.add(
+                            LiveTvEntry(
+                                title = title, url = url, source = "iptv-org",
+                                region = genreString.ifEmpty { "General" }, logoUrl = logoUrl, headers = headers,
+                            )
+                        )
                     }
                 }
             }
@@ -877,10 +943,17 @@ class AppState(context: Context) {
                     async {
                         runCatching {
                             val res = withTimeoutOrNull(10_000) {
-                                repos.liveTv.fetchSource(LiveTvSource(id = "iptv-org-m3u-${url.hashCode()}", name = "IPTV Org M3U", url = url))
+                                repos.liveTv.fetchSource(
+                                    LiveTvSource(
+                                        id = "iptv-org-m3u-${url.hashCode()}",
+                                        name = "IPTV Org M3U",
+                                        url = url
+                                    )
+                                )
                             } ?: emptyList()
                             if (res.isNotEmpty()) {
-                                val isEng = url.contains("languages/eng") || url.contains("countries/us") || url.contains("countries/gb")
+                                val isEng =
+                                    url.contains("languages/eng") || url.contains("countries/us") || url.contains("countries/gb")
                                 val isIndia = url.contains("countries/in")
                                 res.map { entry ->
                                     entry.copy(language = if (isEng) "eng" else if (isIndia) "hin;ben;eng" else entry.language)
@@ -895,13 +968,15 @@ class AppState(context: Context) {
                     val filtered = res.filter { entry ->
                         val tl = entry.title.lowercase()
                         val isBengali = tl.contains("bangla") || tl.contains("bengal") || tl.contains("kolkata") ||
-                            tl.contains("jalsha") || tl.contains("aath") || tl.contains("ananda")
+                                tl.contains("jalsha") || tl.contains("aath") || tl.contains("ananda")
                         val isHindi = tl.contains("star plus") || tl.contains("sony sab") || tl.contains("zee tv") ||
-                            tl.contains("colors") || tl.contains("dangal") || tl.contains("aaj tak") || tl.contains("news18 india")
+                                tl.contains("colors") || tl.contains("dangal") || tl.contains("aaj tak") || tl.contains(
+                            "news18 india"
+                        )
                         val ll = entry.language.lowercase()
                         ll.contains("eng") || ll.contains("hin") || ll.contains("ben") || isBengali || isHindi ||
-                            entry.source.lowercase().contains("india") || entry.source.lowercase().contains("us") ||
-                            entry.source.lowercase().contains("uk") || entry.source.lowercase().contains("gb")
+                                entry.source.lowercase().contains("india") || entry.source.lowercase().contains("us") ||
+                                entry.source.lowercase().contains("uk") || entry.source.lowercase().contains("gb")
                     }
                     parsedEntries.addAll(filtered)
                 }
@@ -915,7 +990,13 @@ class AppState(context: Context) {
                     if (u.endsWith(".m3u") || u.endsWith(".m3u8") || u.contains("get.php") || u.contains("m3u")) {
                         runCatching {
                             val res = withTimeoutOrNull(10_000) {
-                                repos.liveTv.fetchSource(LiveTvSource(id = "iptv-yarrlist-${u.hashCode()}", name = entry.title, url = u))
+                                repos.liveTv.fetchSource(
+                                    LiveTvSource(
+                                        id = "iptv-yarrlist-${u.hashCode()}",
+                                        name = entry.title,
+                                        url = u
+                                    )
+                                )
                             } ?: emptyList()
                             if (res.isNotEmpty()) parsedEntries.addAll(res)
                         }
@@ -1030,19 +1111,29 @@ class AppState(context: Context) {
                     while (parent != null) {
                         val h2 = parent.selectFirst("h2")
                         val h3 = parent.selectFirst("h3")
-                        if (h2 != null) { category = h2.text().trim(); break }
-                        else if (h3 != null) { category = h3.text().trim(); break }
+                        if (h2 != null) {
+                            category = h2.text().trim(); break
+                        } else if (h3 != null) {
+                            category = h3.text().trim(); break
+                        }
                         parent = parent.parent()
                     }
 
                     val lowerCat = category.lowercase()
                     val isUsOrIndOrSports = lowerCat.contains("us") || lowerCat.contains("india") ||
-                        lowerCat.contains("ind") || lowerCat.contains("sport")
+                            lowerCat.contains("ind") || lowerCat.contains("sport")
                     if (isUsOrIndOrSports && !slug.contains("chat") && !slug.contains("tv-channels")) {
-                        entries.add(LiveTvEntry(
-                            title = text, url = mainPageUrl, source = "tv247.biz", region = category,
-                            logoUrl = "https://raw.githubusercontent.com/m3u8playlist/tvlogo/master/logo/${slug.replace("-", "")}.png",
-                        ))
+                        entries.add(
+                            LiveTvEntry(
+                                title = text, url = mainPageUrl, source = "tv247.biz", region = category,
+                                logoUrl = "https://raw.githubusercontent.com/m3u8playlist/tvlogo/master/logo/${
+                                    slug.replace(
+                                        "-",
+                                        ""
+                                    )
+                                }.png",
+                            )
+                        )
                     }
                 }
             }
@@ -1054,10 +1145,14 @@ class AppState(context: Context) {
         )
         for ((name, url) in customEmbeds) {
             if (entries.none { it.url == url }) {
-                entries.add(LiveTvEntry(
-                    title = name, url = url, source = "tv247.biz", region = "Sports Channels",
-                    logoUrl = "https://raw.githubusercontent.com/m3u8playlist/tvlogo/master/logo/${name.lowercase().replace(" ", "")}.png",
-                ))
+                entries.add(
+                    LiveTvEntry(
+                        title = name, url = url, source = "tv247.biz", region = "Sports Channels",
+                        logoUrl = "https://raw.githubusercontent.com/m3u8playlist/tvlogo/master/logo/${
+                            name.lowercase().replace(" ", "")
+                        }.png",
+                    )
+                )
             }
         }
         return entries
@@ -1101,6 +1196,7 @@ class AppState(context: Context) {
             t.contains("429") -> "$service rate-limited this refresh. Showing cached rows."
             t.contains("timed out") || t.contains("unreachable") || t.contains("network") ->
                 "$service is temporarily unreachable. Showing cached rows."
+
             else -> "$service refresh failed. Showing cached rows."
         }
     }
@@ -1108,6 +1204,16 @@ class AppState(context: Context) {
     private fun randomState(): String {
         val chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         return (0 until 32).map { chars[Random.nextInt(chars.length)] }.joinToString("")
+    }
+
+    private fun normalizeSettings(raw: UserSettings): UserSettings {
+        val domain = raw.vidsrcDomain.trim().lowercase()
+        val migratedDomain = when {
+            domain.isEmpty() -> DEFAULT_VIDSRC_DOMAIN
+            domain in LEGACY_DEFAULT_VIDSRC_DOMAINS -> DEFAULT_VIDSRC_DOMAIN
+            else -> raw.vidsrcDomain.trim()
+        }
+        return if (migratedDomain == raw.vidsrcDomain) raw else raw.copy(vidsrcDomain = migratedDomain)
     }
 
     // MARK: - JSON conversion helpers for the Trakt backup payload
@@ -1120,9 +1226,11 @@ class AppState(context: Context) {
     private fun settingsToJson(s: UserSettings): JSONObject =
         JSONObject(appJson.encodeToString(UserSettings.serializer(), s))
 
-    private fun settingsFromJson(json: JSONObject): UserSettings = runCatching {
-        appJson.decodeFromString(UserSettings.serializer(), json.toString())
-    }.getOrDefault(UserSettings())
+    private fun settingsFromJson(json: JSONObject): UserSettings = normalizeSettings(
+        runCatching {
+            appJson.decodeFromString(UserSettings.serializer(), json.toString())
+        }.getOrDefault(UserSettings())
+    )
 
     private fun watchProgressToJson(w: WatchProgress): JSONObject {
         val j = JSONObject()
@@ -1150,8 +1258,10 @@ class AppState(context: Context) {
             type = MediaType.fromWire(j.optStringOrNull("type")),
             posterPath = j.optStringOrNull("posterPath"),
             backdropPath = j.optStringOrNull("backdropPath"),
-            seasonNumber = j.optIntOrNull("seasonNumber") ?: j.optIntOrNull("season") ?: j.optIntOrNull("season_number"),
-            episodeNumber = j.optIntOrNull("episodeNumber") ?: j.optIntOrNull("episode") ?: j.optIntOrNull("episode_number") ?: j.optIntOrNull("number"),
+            seasonNumber = j.optIntOrNull("seasonNumber") ?: j.optIntOrNull("season")
+            ?: j.optIntOrNull("season_number"),
+            episodeNumber = j.optIntOrNull("episodeNumber") ?: j.optIntOrNull("episode")
+            ?: j.optIntOrNull("episode_number") ?: j.optIntOrNull("number"),
             episodeTitle = j.optStringOrNull("episodeTitle"),
             positionMs = j.optIntOrNull("positionMs") ?: 0,
             durationMs = j.optIntOrNull("durationMs") ?: 0,
@@ -1243,13 +1353,14 @@ class AppState(context: Context) {
 
     fun migrateOnePaceWatchHistory() {
         val history = watchHistory.toList()
-        val paceEntry = history.find { it.itemId == "onepace:anime:21" || it.title == "One Pace" || it.itemId.startsWith("onepace:") }
+        val paceEntry =
+            history.find { it.itemId == "onepace:anime:21" || it.title == "One Pace" || it.itemId.startsWith("onepace:") }
         if (paceEntry != null) {
             val season = paceEntry.seasonNumber ?: 1
             val epNum = paceEntry.episodeNumber ?: 1
             val realSeason = getRealOnePaceSeason(season)
             val mappedEp = if (realSeason == 0) 1 else mapOnePaceToOnePiece(realSeason, epNum)
-            
+
             val pieceEntry = WatchProgress(
                 id = null,
                 itemId = "anilist:anime:21",
@@ -1264,16 +1375,18 @@ class AppState(context: Context) {
                 durationMs = paceEntry.durationMs,
                 lastWatchedAt = System.currentTimeMillis()
             )
-            
-            val next = watchHistory.filter { it.itemId != "onepace:anime:21" && it.title != "One Pace" && !it.itemId.startsWith("onepace:") }.toMutableList()
+
+            val next = watchHistory.filter {
+                it.itemId != "onepace:anime:21" && it.title != "One Pace" && !it.itemId.startsWith("onepace:")
+            }.toMutableList()
             next.add(pieceEntry)
             val capped = next.sortedByDescending { it.lastWatchedAt }.take(30)
             watchHistory.clear()
             watchHistory.addAll(capped)
             settingsStore.saveWatchHistory(capped)
-            
+
             message = "One Pace progress migrated to One Piece Episode $mappedEp!"
-            
+
             if (credentials.hasTraktUser) {
                 scope.launch { runCatching { syncSettingsToTrakt(silent = true) } }
             }

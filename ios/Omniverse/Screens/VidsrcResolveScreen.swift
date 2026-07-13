@@ -124,7 +124,7 @@ private let vidsrcGuardJS = #"""
   } catch (_) {}
 
   const safeHosts = [
-    'vidsrc', 'cloudnestra', 'vsembed', 'vsrc.', 'vidsrcme', 'about:',
+    'vidsrc', 'vidcore', 'created.app', 'cloudnestra', 'vsembed', 'vsrc.', 'vidsrcme', 'about:',
     'localhost', '127.0.0.1', 'cdn', '2embed', 'embed.su', 'autoembed',
     'multiembed', 'rabbitstream', 'megacloud', 'streamtape', 'streamlare',
     'doodstream', 'mixdrop', 'vidplay', 'filemoon', 'upstream', 'fembed',
@@ -443,6 +443,8 @@ private final class VidsrcResolver: NSObject, WKNavigationDelegate, WKUIDelegate
         if !isMainFrame { decisionHandler(.allow); return }
         let allow =
             url.hasPrefix("about:") ||
+            url.contains("vidcore") ||
+            url.contains("created.app") ||
             url.contains("vidsrc-embed") ||
             url.contains("vsembed") ||
             url.contains("vsrc.") ||
@@ -752,11 +754,20 @@ struct VidsrcResolveScreen: View {
     @State private var recommendationDetail: MediaItem? = nil
     @State private var handledFinish = false
 
-    init(item: MediaItem, title: String, embedUrls: [URL], episode: MediaEpisode? = nil) {
+    private let onRequestClose: ((MediaItem, MediaEpisode?) -> Void)?
+
+    init(item: MediaItem, title: String, embedUrls: [URL], episode: MediaEpisode? = nil,
+         onRequestClose: ((MediaItem, MediaEpisode?) -> Void)? = nil) {
         self.item = item
         _title = State(initialValue: title)
         _episode = State(initialValue: episode)
         _resolver = State(initialValue: VidsrcResolver(embedUrls: embedUrls))
+        self.onRequestClose = onRequestClose
+    }
+
+    private func requestClose() {
+        onRequestClose?(item, episode)
+        dismiss()
     }
 
     /// Best-effort end detected (or manual close on a movie): autoplay the next
@@ -783,7 +794,7 @@ struct VidsrcResolveScreen: View {
             loadingRecommendations = true
             let recs = await appState.recommendationsFor(item)
             loadingRecommendations = false
-            if recs.isEmpty { dismiss() } else { recommendations = recs }
+            if recs.isEmpty { requestClose() } else { recommendations = recs }
         }
     }
 
@@ -793,7 +804,7 @@ struct VidsrcResolveScreen: View {
         if resolver.finishedPlaying, episode == nil, recommendations == nil, !loadingRecommendations, !handledFinish {
             handleFinished()
         } else {
-            dismiss()
+            requestClose()
         }
     }
 
@@ -858,7 +869,7 @@ struct VidsrcResolveScreen: View {
                             Label("Retry", systemImage: "arrow.clockwise").foregroundStyle(.white)
                         }
                         .buttonStyle(.bordered).tint(.white)
-                        Button("Close") { dismiss() }.foregroundStyle(.white)
+                        Button("Close") { requestClose() }.foregroundStyle(.white)
                     }
                 }
                 .padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 16)
@@ -886,13 +897,18 @@ struct VidsrcResolveScreen: View {
                     recommendations: recommendations,
                     loading: loadingRecommendations,
                     onSelect: { recommendationDetail = $0 },
-                    onClose: { dismiss() })
+                    onClose: { requestClose() })
             }
         }
         // Next episode resolved to a direct stream — hand off to the native player.
         .fullScreenCover(item: $nextPlayer) { r in
             PlayerScreen(title: r.title, url: r.url, headers: r.headers, item: r.item, episode: r.episode,
-                         subtitleUrl: r.subtitleUrl, startPositionMs: r.startPositionMs, aniSkipEpisode: r.aniSkipEpisode)
+                         subtitleUrl: r.subtitleUrl, startPositionMs: r.startPositionMs, aniSkipEpisode: r.aniSkipEpisode,
+                         onRequestClose: { item, episode in
+                             let closeItem = item ?? self.item
+                             onRequestClose?(closeItem, episode)
+                             dismiss()
+                         })
         }
         // A recommended title opens its own detail screen.
         .fullScreenCover(item: $recommendationDetail) { rec in

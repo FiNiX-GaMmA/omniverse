@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -85,7 +86,9 @@ private data class CaptionCue(val startMs: Int, val endMs: Int, val text: String
 
 private fun formatTime(ms: Int): String {
     val total = (ms.coerceAtLeast(0)) / 1000
-    val h = total / 3600; val m = (total % 3600) / 60; val s = total % 60
+    val h = total / 3600;
+    val m = (total % 3600) / 60;
+    val s = total % 60
     return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
 }
 
@@ -104,13 +107,15 @@ fun PlayerScreen(
     val scope = rememberCoroutineScope()
 
     KeepScreenOn(true)
+    BackHandler { onClose() }
     // Landscape lock + Immersive Full-Screen
     DisposableEffect(Unit) {
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         activity?.window?.let { window ->
             val controller = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
             controller.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-            controller.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.systemBarsBehavior =
+                androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         onDispose {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -223,6 +228,7 @@ fun PlayerScreen(
                     onEpisodeFinished()
                 }
             }
+
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                 if (reconnectAttempts < 3) {
                     reconnectAttempts++
@@ -288,7 +294,9 @@ fun PlayerScreen(
                             onEpisodeFinished()
                         } else {
                             player.seekTo(interval.endMs.toLong())
-                            toast = when (interval.type) { "op" -> "Skipped Intro"; "recap" -> "Skipped Recap"; else -> "Skipped" }
+                            toast = when (interval.type) {
+                                "op" -> "Skipped Intro"; "recap" -> "Skipped Recap"; else -> "Skipped"
+                            }
                         }
                         break
                     }
@@ -306,7 +314,10 @@ fun PlayerScreen(
             }
 
             // Autoplay next episode when countdown reaches 0 (1s or less remaining)
-            val hasNextEp = args.item != null && args.episode != null && (isOnePace || nextEpisodeFor(args.item, args.episode) != null)
+            val hasNextEp = args.item != null && args.episode != null && (isOnePace || nextEpisodeFor(
+                args.item,
+                args.episode
+            ) != null)
             if (hasNextEp && durationMs > 0 && durationMs - positionMs <= 1000) {
                 onEpisodeFinished()
             }
@@ -321,7 +332,11 @@ fun PlayerScreen(
             delay(10_000)
             if (args.item != null && durationMs > 0) {
                 appState.recordProgress(args.item, positionMs, durationMs, args.episode)
-                if (activeScrobble && !finishedScrobble) appState.startTraktPlayback(args.item, progressPct(), args.episode)
+                if (activeScrobble && !finishedScrobble) appState.startTraktPlayback(
+                    args.item,
+                    progressPct(),
+                    args.episode
+                )
             }
         }
     }
@@ -390,7 +405,9 @@ fun PlayerScreen(
         val anilistId = args.item?.anilistId ?: return@LaunchedEffect
         val ep = args.episode ?: return@LaunchedEffect
         val intervals = fetchAniSkip(anilistId, args.aniSkipEpisode ?: ep.episodeNumber, durationMs / 1000)
-        if (intervals.isNotEmpty()) { skipIntervals.clear(); skipIntervals.addAll(intervals) }
+        if (intervals.isNotEmpty()) {
+            skipIntervals.clear(); skipIntervals.addAll(intervals)
+        }
     }
 
     // Fetch subtitles
@@ -399,14 +416,18 @@ fun PlayerScreen(
         if (url.startsWith("http")) {
             runCatching {
                 val r = Http.request(url, timeoutMs = 12_000)
-                if (r.ok) { val cues = parseCaptions(r.body); captionCues.clear(); captionCues.addAll(cues) }
+                if (r.ok) {
+                    val cues = parseCaptions(r.body); captionCues.clear(); captionCues.addAll(cues)
+                }
             }
         }
     }
 
     // Auto-hide controls 1s
     LaunchedEffect(controlsVisible, interactionCount) {
-        if (controlsVisible) { delay(1000); controlsVisible = false }
+        if (controlsVisible) {
+            delay(1000); controlsVisible = false
+        }
     }
 
     val showManualSkip = isAnime && skipIntervals.isEmpty()
@@ -441,17 +462,35 @@ fun PlayerScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(color = LiquidColors.Cyan)
                         Spacer(Modifier.height(16.dp))
-                        Text(args.title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        Text("Opening stream...", color = Color.White.copy(alpha = 0.72f), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            args.title,
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            "Opening stream...",
+                            color = Color.White.copy(alpha = 0.72f),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
 
             // Captions overlay
             if (showCaptions && currentCaption.isNotEmpty()) {
-                Box(Modifier.fillMaxSize().padding(bottom = if (controlsVisible) 150.dp else 42.dp), Alignment.BottomCenter) {
-                    Text(currentCaption, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.background(Color.Black.copy(alpha = 0.58f)).padding(horizontal = 10.dp, vertical = 4.dp))
+                Box(
+                    Modifier.fillMaxSize().padding(bottom = if (controlsVisible) 150.dp else 42.dp),
+                    Alignment.BottomCenter
+                ) {
+                    Text(
+                        currentCaption, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.background(Color.Black.copy(alpha = 0.58f))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
                 }
             }
 
@@ -459,9 +498,21 @@ fun PlayerScreen(
                 PlayerControls(
                     args.title, args.episode, isPlaying, durationMs, positionMs, showCaptions,
                     onClose = onClose,
-                    onPlayPause = { if (player.isPlaying) player.pause() else player.play(); controlsVisible = true; interactionCount++ },
-                    onSeekBy = { player.seekTo((player.currentPosition + it).coerceIn(0, durationMs.toLong())); controlsVisible = true; interactionCount++ },
-                    onScrub = { f -> player.seekTo((durationMs * f).toLong()); controlsVisible = true; interactionCount++ },
+                    onPlayPause = {
+                        if (player.isPlaying) player.pause() else player.play(); controlsVisible =
+                        true; interactionCount++
+                    },
+                    onSeekBy = {
+                        player.seekTo(
+                            (player.currentPosition + it).coerceIn(
+                                0,
+                                durationMs.toLong()
+                            )
+                        ); controlsVisible = true; interactionCount++
+                    },
+                    onScrub = { f ->
+                        player.seekTo((durationMs * f).toLong()); controlsVisible = true; interactionCount++
+                    },
                     onToggleCaptions = { showCaptions = it },
                     onPrevEp = if (args.item != null && args.episode != null && prevEp != null) {
                         {
@@ -470,7 +521,9 @@ fun PlayerScreen(
                                 when (val prev = resolvePrevEpisode(args.item, args.episode, appState)) {
                                     is AutoplayNext.Play -> onPlayNext(prev.args)
                                     is AutoplayNext.Embed -> onPlayVidsrc(prev.args)
-                                    else -> { toast = "Could not resolve previous episode." }
+                                    else -> {
+                                        toast = "Could not resolve previous episode."
+                                    }
                                 }
                             }
                         }
@@ -482,7 +535,9 @@ fun PlayerScreen(
                                 when (val next = resolveNextEpisode(args.item, args.episode, appState)) {
                                     is AutoplayNext.Play -> onPlayNext(next.args)
                                     is AutoplayNext.Embed -> onPlayVidsrc(next.args)
-                                    else -> { toast = "Could not resolve next episode." }
+                                    else -> {
+                                        toast = "Could not resolve next episode."
+                                    }
                                 }
                             }
                         }
@@ -498,7 +553,8 @@ fun PlayerScreen(
                             .border(1.dp, Color.White.copy(alpha = 0.22f), RoundedCornerShape(50))
                             .tvFocusable(onClick = { player.seekTo(player.currentPosition + 85_000) }, corner = 50)
                             .padding(horizontal = 18.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Icon(Icons.Filled.SkipNext, null, tint = Color.White, modifier = Modifier.size(18.dp))
                         Text("Skip Intro", color = Color.White, fontWeight = FontWeight.Black, fontSize = 15.sp)
@@ -512,7 +568,8 @@ fun PlayerScreen(
                 Box(Modifier.fillMaxSize().padding(top = 40.dp), Alignment.TopCenter) {
                     Row(
                         Modifier.clip(RoundedCornerShape(50)).background(Color.Black.copy(alpha = 0.6f)).padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Icon(Icons.Filled.SkipNext, null, tint = LiquidColors.Cyan)
                         Text(t, color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
@@ -637,7 +694,11 @@ internal fun RecommendationsEndScreen(
             }
             Spacer(Modifier.height(24.dp))
             when {
-                loading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = LiquidColors.Cyan) }
+                loading -> Box(
+                    Modifier.fillMaxSize(),
+                    Alignment.Center
+                ) { CircularProgressIndicator(color = LiquidColors.Cyan) }
+
                 !recommendations.isNullOrEmpty() -> androidx.compose.foundation.lazy.LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
@@ -645,6 +706,7 @@ internal fun RecommendationsEndScreen(
                         Box(Modifier.width(132.dp)) { MediaPosterCard(rec, onTap = onSelect) }
                     }
                 }
+
                 else -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     Text("No recommendations available.", color = Color.White.copy(alpha = 0.6f), fontSize = 15.sp)
                 }
@@ -655,14 +717,33 @@ internal fun RecommendationsEndScreen(
 
 @Composable
 private fun PlayerControls(
-    title: String, episode: MediaEpisode?, isPlaying: Boolean, durationMs: Int, positionMs: Int, showCaptions: Boolean,
-    onClose: () -> Unit, onPlayPause: () -> Unit, onSeekBy: (Long) -> Unit, onScrub: (Float) -> Unit, onToggleCaptions: (Boolean) -> Unit,
-    onPrevEp: (() -> Unit)? = null, onNextEp: (() -> Unit)? = null,
+    title: String,
+    episode: MediaEpisode?,
+    isPlaying: Boolean,
+    durationMs: Int,
+    positionMs: Int,
+    showCaptions: Boolean,
+    onClose: () -> Unit,
+    onPlayPause: () -> Unit,
+    onSeekBy: (Long) -> Unit,
+    onScrub: (Float) -> Unit,
+    onToggleCaptions: (Boolean) -> Unit,
+    onPrevEp: (() -> Unit)? = null,
+    onNextEp: (() -> Unit)? = null,
 ) {
     val isLive = durationMs <= 0
-    Box(Modifier.fillMaxSize().background(
-        Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.66f), Color.Transparent, Color.Transparent, Color.Black.copy(alpha = 0.8f)))
-    )) {
+    Box(
+        Modifier.fillMaxSize().background(
+            Brush.verticalGradient(
+                listOf(
+                    Color.Black.copy(alpha = 0.66f),
+                    Color.Transparent,
+                    Color.Transparent,
+                    Color.Black.copy(alpha = 0.8f)
+                )
+            )
+        )
+    ) {
         Column(Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 CircleBtn(Icons.Filled.Close, onClose)
@@ -674,14 +755,23 @@ private fun PlayerControls(
             val isTv = isTvDevice()
             val playFocus = remember { FocusRequester() }
             LaunchedEffect(Unit) { if (isTv) runCatching { playFocus.requestFocus() } }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (onPrevEp != null) {
                     LargeBtn(Icons.Filled.SkipPrevious, 82.dp, onClick = onPrevEp)
                     Spacer(Modifier.size(40.dp))
                 }
                 LargeBtn(Icons.Filled.Replay10, 82.dp) { onSeekBy(-10_000) }
                 Spacer(Modifier.size(56.dp))
-                LargeBtn(if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, 112.dp, focusRequester = playFocus, onClick = onPlayPause)
+                LargeBtn(
+                    if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    112.dp,
+                    focusRequester = playFocus,
+                    onClick = onPlayPause
+                )
                 Spacer(Modifier.size(56.dp))
                 LargeBtn(Icons.Filled.Forward10, 82.dp) { onSeekBy(10_000) }
                 if (onNextEp != null) {
@@ -691,20 +781,54 @@ private fun PlayerControls(
             }
             Spacer(Modifier.weight(1f))
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(if (isLive) "LIVE" else formatTime(positionMs), color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    Scrubber(if (durationMs > 0) positionMs.toFloat() / durationMs else 0f, isLive, Modifier.weight(1f), onScrub)
-                    Text(if (isLive) "" else "-" + formatTime(durationMs - positionMs), color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        if (isLive) "LIVE" else formatTime(positionMs),
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Scrubber(
+                        if (durationMs > 0) positionMs.toFloat() / durationMs else 0f,
+                        isLive,
+                        Modifier.weight(1f),
+                        onScrub
+                    )
+                    Text(
+                        if (isLive) "" else "-" + formatTime(durationMs - positionMs),
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-                val display = if (episode != null) "$title • S${episode.seasonNumber}E${episode.episodeNumber}" else title
+                val display =
+                    if (episode != null) "$title • S${episode.seasonNumber}E${episode.episodeNumber}" else title
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(display, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Text(
+                        display,
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
                     if (!isLive) {
                         Box(
                             Modifier.size(44.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.1f))
                                 .tvFocusable(onClick = { onToggleCaptions(!showCaptions) }, corner = 22),
                             contentAlignment = Alignment.Center,
-                        ) { Text("CC", color = if (showCaptions) LiquidColors.Cyan else Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp) }
+                        ) {
+                            Text(
+                                "CC",
+                                color = if (showCaptions) LiquidColors.Cyan else Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
                     }
                 }
             }
@@ -720,8 +844,14 @@ private fun Scrubber(fraction: Float, isLive: Boolean, modifier: Modifier, onScr
         },
         contentAlignment = Alignment.CenterStart,
     ) {
-        Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.12f)))
-        Box(Modifier.fillMaxWidth(if (isLive) 1f else fraction.coerceIn(0f, 1f)).height(4.dp).clip(RoundedCornerShape(50)).background(Color.White))
+        Box(
+            Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(50))
+                .background(Color.White.copy(alpha = 0.12f))
+        )
+        Box(
+            Modifier.fillMaxWidth(if (isLive) 1f else fraction.coerceIn(0f, 1f)).height(4.dp)
+                .clip(RoundedCornerShape(50)).background(Color.White)
+        )
     }
 }
 
@@ -736,7 +866,12 @@ private fun CircleBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, onC
 }
 
 @Composable
-private fun LargeBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, size: androidx.compose.ui.unit.Dp, focusRequester: FocusRequester? = null, onClick: () -> Unit) {
+private fun LargeBtn(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    size: androidx.compose.ui.unit.Dp,
+    focusRequester: FocusRequester? = null,
+    onClick: () -> Unit
+) {
     Box(
         Modifier.size(size).clip(CircleShape).background(Color.Black.copy(alpha = 0.4f))
             .border(1.dp, Color.White.copy(alpha = 0.11f), CircleShape)
@@ -771,16 +906,21 @@ private suspend fun fetchAniSkip(anilistId: Int, episode: Int, lengthSec: Int): 
             results.objects().mapNotNull { e ->
                 val interval = e.optObjectOrNull("interval") ?: return@mapNotNull null
                 val type = e.optStringOrNull("skipType") ?: e.optStringOrNull("skip_type") ?: return@mapNotNull null
-                val start = interval.optDoubleOrNull("startTime") ?: interval.optDoubleOrNull("start_time") ?: return@mapNotNull null
-                val end = interval.optDoubleOrNull("endTime") ?: interval.optDoubleOrNull("end_time") ?: return@mapNotNull null
+                val start = interval.optDoubleOrNull("startTime") ?: interval.optDoubleOrNull("start_time")
+                ?: return@mapNotNull null
+                val end = interval.optDoubleOrNull("endTime") ?: interval.optDoubleOrNull("end_time")
+                ?: return@mapNotNull null
                 if (end <= start) return@mapNotNull null
                 SkipInterval(type, (start * 1000).toInt(), (end * 1000).toInt())
             }
         }.getOrDefault(emptyList())
     }
-    var list = fetch("https://api.aniskip.com/v2/skip-times/$anilistId/$episode?types[]=op&types[]=ed&types[]=recap&episodeLength=$lengthSec")
+
+    var list =
+        fetch("https://api.aniskip.com/v2/skip-times/$anilistId/$episode?types[]=op&types[]=ed&types[]=recap&episodeLength=$lengthSec")
     if (list.isNotEmpty()) return list
-    list = fetch("https://api.aniskip.com/v2/skip-times/$anilistId/$episode?types[]=op&types[]=ed&types[]=recap&episodeLength=1440")
+    list =
+        fetch("https://api.aniskip.com/v2/skip-times/$anilistId/$episode?types[]=op&types[]=ed&types[]=recap&episodeLength=1440")
     if (list.isNotEmpty()) return list
     return fetch("https://api.aniskip.com/v1/skip-times/$anilistId/$episode?types=op&types=ed")
 }

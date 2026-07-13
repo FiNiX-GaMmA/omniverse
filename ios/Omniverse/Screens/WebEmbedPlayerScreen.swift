@@ -114,8 +114,8 @@ private let webEmbedGuardJS = #"""
   try { window.alert = noop; window.confirm = () => false; window.prompt = () => null; } catch (_) {}
 
   const safeHosts = [
-    'vidsrc', 'cloudnestra', '2embed', 'embed.su', 'autoembed',
-    'multiembed', 'rabbitstream', 'megacloud', 'streamtape',
+    'vidsrc', 'vidcore', 'created.app', 'vsembed', 'vsrc.', 'vidsrcme', 'cloudnestra',
+    '2embed', 'embed.su', 'autoembed', 'multiembed', 'rabbitstream', 'megacloud', 'streamtape',
     'streamlare', 'doodstream', 'mixdrop', 'vidplay', 'filemoon',
     'upstream', 'fembed', 'streamhide', 'mp4upload', 'streamsb',
     'voe.sx', 'streamwish', 'vidcloud', 'youtube', 'cdn'
@@ -315,6 +315,8 @@ struct WebEmbedPlayerScreen: View {
     private let url: String
     private let headers: [String: String]
     private let item: MediaItem?
+    private let episode: MediaEpisode?
+    private let onRequestClose: ((MediaItem?, MediaEpisode?) -> Void)?
 
     @State private var loading = true
     @State private var blockedRequests = 0
@@ -322,11 +324,15 @@ struct WebEmbedPlayerScreen: View {
     @State private var controlsVisible = true
     @State private var controlsHideTask: Task<Void, Never>?
 
-    init(title: String, url: String, headers: [String: String] = [:], item: MediaItem? = nil) {
+    init(title: String, url: String, headers: [String: String] = [:], item: MediaItem? = nil,
+         episode: MediaEpisode? = nil,
+         onRequestClose: ((MediaItem?, MediaEpisode?) -> Void)? = nil) {
         self.title = title
         self.url = url
         self.headers = headers
         self.item = item
+        self.episode = episode
+        self.onRequestClose = onRequestClose
     }
 
     var body: some View {
@@ -366,7 +372,7 @@ struct WebEmbedPlayerScreen: View {
             // Top control bar
             VStack {
                 HStack(spacing: 12) {
-                    Button { dismiss() } label: {
+                    Button { requestClose() } label: {
                         Image(systemName: "xmark").foregroundStyle(.white)
                             .frame(width: 46, height: 46)
                             .background(.ultraThinMaterial, in: Circle())
@@ -399,6 +405,11 @@ struct WebEmbedPlayerScreen: View {
             startControlsTimer()
         }
         .onDisappear { PlayerOrientation.restore() }
+    }
+
+    private func requestClose() {
+        onRequestClose?(item, episode)
+        dismiss()
     }
 
     private func toggleControls() {

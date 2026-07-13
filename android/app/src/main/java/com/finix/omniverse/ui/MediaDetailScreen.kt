@@ -69,7 +69,7 @@ import kotlin.math.ceil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MediaDetailScreen(item: MediaItem, nav: NavController) {
+fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailFocusArgs? = null) {
     val state = AppGraph.appState
     val scope = rememberCoroutineScope()
 
@@ -86,9 +86,13 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
         if (trimmed.isEmpty()) episodes.toList()
         else episodes.filter { ep ->
             ep.episodeNumber.toString() == trimmed ||
-            ep.title.lowercase().contains(trimmed) ||
-            ep.overview.lowercase().contains(trimmed)
+                    ep.title.lowercase().contains(trimmed) ||
+                    ep.overview.lowercase().contains(trimmed)
         }
+    }
+
+    var pendingFocus by remember(item.id, initialFocus?.seasonNumber, initialFocus?.episodeNumber) {
+        mutableStateOf(initialFocus)
     }
 
     // Source sheet state
@@ -108,7 +112,8 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
             if (total > limit) {
                 val chunks = ceil(total / limit.toDouble()).toInt()
                 for (i in 0 until chunks) {
-                    val startE = i * limit + 1; val endE = minOf(total, (i + 1) * limit)
+                    val startE = i * limit + 1;
+                    val endE = minOf(total, (i + 1) * limit)
                     out.add(MediaSeason(s.seasonNumber * 1000 + i, "${s.name} (Part ${i + 1})", endE - startE + 1))
                 }
             } else out.add(s)
@@ -116,14 +121,28 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
         return out
     }
 
+    fun focusedSeasonFor(c: MediaItem, seasons: List<MediaSeason>, seasonNumber: Int?, episodeNumber: Int?): Int? {
+        if (seasonNumber == null) return null
+        if (seasons.any { it.seasonNumber == seasonNumber }) return seasonNumber
+        if (seasonNumber < 1000 && episodeNumber != null) {
+            val limit = if (c.type == MediaType.ANIME) 100 else 50
+            val chunkIndex = (episodeNumber - 1) / limit
+            val virtualSeason = seasonNumber * 1000 + chunkIndex
+            if (seasons.any { it.seasonNumber == virtualSeason }) return virtualSeason
+        }
+        return null
+    }
+
     suspend fun loadEpisodes(c: MediaItem, season: Int) {
         loadingEpisodes = true
         val limit = if (c.type == MediaType.ANIME) 100 else 50
         val result = if (season >= 1000) {
-            val original = season / 1000; val chunk = season % 1000
+            val original = season / 1000;
+            val chunk = season % 1000
             var full = if (c.episodes.firstOrNull()?.seasonNumber == original) c.episodes
-                else state.seasonEpisodesFor(c, original)
-            val startI = chunk * limit; val endI = minOf(full.size, (chunk + 1) * limit)
+            else state.seasonEpisodesFor(c, original)
+            val startI = chunk * limit;
+            val endI = minOf(full.size, (chunk + 1) * limit)
             full = if (startI < endI) full.subList(startI, endI) else emptyList()
             full.map { it.copy(seasonNumber = season) }
         } else state.seasonEpisodesFor(c, season)
@@ -137,21 +156,22 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
         if (d.type == MediaType.SERIES || d.type == MediaType.ANIME) {
             val seasons = expandedSeasons(d)
             val prog = state.continueWatching.firstOrNull { it.itemId == d.id }
-            var targetSeason = seasons.firstOrNull { it.seasonNumber > 0 }?.seasonNumber ?: seasons.firstOrNull()?.seasonNumber ?: 1
-            if (prog != null) {
-                val progEpNum = prog.episodeNumber
-                val progSeasonNum = prog.seasonNumber
-                if (progSeasonNum != null) {
-                    if (seasons.any { it.seasonNumber == progSeasonNum }) {
-                        targetSeason = progSeasonNum
-                    } else if (progSeasonNum < 1000 && progEpNum != null) {
-                        val limit = if (d.type == MediaType.ANIME) 100 else 50
-                        val chunkIndex = (progEpNum - 1) / limit
-                        val virtualSeason = progSeasonNum * 1000 + chunkIndex
-                        if (seasons.any { it.seasonNumber == virtualSeason }) {
-                            targetSeason = virtualSeason
-                        }
-                    }
+            var targetSeason =
+                seasons.firstOrNull { it.seasonNumber > 0 }?.seasonNumber ?: seasons.firstOrNull()?.seasonNumber ?: 1
+
+            val focusSeason = focusedSeasonFor(
+                d,
+                seasons,
+                pendingFocus?.seasonNumber,
+                pendingFocus?.episodeNumber,
+            )
+            if (focusSeason != null) {
+                targetSeason = focusSeason
+                episodeQuery = ""
+            } else if (prog != null) {
+                val progSeason = focusedSeasonFor(d, seasons, prog.seasonNumber, prog.episodeNumber)
+                if (progSeason != null) {
+                    targetSeason = progSeason
                 }
             }
             selectedSeason = targetSeason
@@ -163,7 +183,8 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
         if (current.type != MediaType.ANIME) {
             scope.launch { state.recordProgress(current, 10000, 3600000, episode) }
         }
-        val resume = state.continueWatching.firstOrNull { it.itemId == current.id && it.episodeNumber == episode?.episodeNumber }?.positionMs
+        val resume =
+            state.continueWatching.firstOrNull { it.itemId == current.id && it.episodeNumber == episode?.episodeNumber }?.positionMs
         when {
             source.isEmbed && source.provider == "VidSrc" -> {
                 val urls = VidsrcExtractor().embedUrlsFor(
@@ -171,12 +192,17 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                     state.settings.subtitleUrl, state.settings.subtitleLanguage,
                 )
                 if (urls.isEmpty()) {
-                    RouteArgs.web = WebArgs(source.title, source.url, source.headers); nav.navigate("web")
+                    RouteArgs.web =
+                        WebArgs(source.title, source.url, source.headers, current, episode); nav.navigate("web")
                 } else {
                     RouteArgs.vidsrc = VidsrcArgs(current, source.title, urls, episode); nav.navigate("vidsrc")
                 }
             }
-            source.isEmbed -> { RouteArgs.web = WebArgs(source.title, source.url, source.headers); nav.navigate("web") }
+
+            source.isEmbed -> {
+                RouteArgs.web = WebArgs(source.title, source.url, source.headers, current, episode); nav.navigate("web")
+            }
+
             else -> {
                 RouteArgs.player = PlayerArgs(
                     "${current.title} • ${source.title}", source.url, source.headers, current, episode,
@@ -191,9 +217,12 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
         loadingStreams = true
         try {
             val s = state.playbackSourcesFor(current, episode)
-            if (s.isEmpty()) { state.message = "No playable sources found."; return }
+            if (s.isEmpty()) {
+                state.message = "No playable sources found."; return
+            }
             sheetSources = s
-            sheetTitle = if (episode != null) "${current.title} S${episode.seasonNumber}E${episode.episodeNumber}" else current.title
+            sheetTitle =
+                if (episode != null) "${current.title} S${episode.seasonNumber}E${episode.episodeNumber}" else current.title
             pendingEpisode = episode
             // one-click preferred-server bypass + single direct anime auto-open
             val domain = state.settings.vidsrcDomain.trim()
@@ -207,7 +236,11 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
             // AllAnime wants a captcha. Show it; retry this same call once solved.
             RouteArgs.captcha = CaptchaArgs(t.url) { scope.launch { openSources(episode) } }
             nav.navigate("captcha")
-        } catch (t: Throwable) { state.message = "Could not load sources: $t" } finally { loadingStreams = false }
+        } catch (t: Throwable) {
+            state.message = "Could not load sources: $t"
+        } finally {
+            loadingStreams = false
+        }
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -215,7 +248,8 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
             item {
                 androidx.compose.foundation.layout.BoxWithConstraints {
                     val wide = maxWidth >= 900.dp
-                    DetailHero(current, wide, loadingStreams, isSeries,
+                    DetailHero(
+                        current, wide, loadingStreams, isSeries,
                         onPlay = {
                             scope.launch {
                                 if (isSeries) {
@@ -238,13 +272,24 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                     ) {
                         Box(Modifier.weight(0.45f)) {
                             Box(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.1f))
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(50))
+                                    .background(Color.White.copy(alpha = 0.1f))
                                     .tvFocusable(onClick = { seasonMenu = true }, corner = 50)
                                     .padding(horizontal = 16.dp, vertical = 10.dp)
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(seasons.firstOrNull { it.seasonNumber == selectedSeason }?.name ?: "Season",
-                                        color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        seasons.firstOrNull { it.seasonNumber == selectedSeason }?.name ?: "Season",
+                                        color = Color.White,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f)
+                                    )
                                     Icon(Icons.Filled.KeyboardArrowDown, null, tint = Color.White.copy(alpha = 0.7f))
                                 }
                             }
@@ -264,7 +309,13 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                                 value = episodeQuery,
                                 onValueChange = { episodeQuery = it },
                                 modifier = Modifier.fillMaxWidth().height(42.dp),
-                                placeholder = { Text("Filter by Ep # or title...", color = Color.White.copy(alpha = 0.45f), fontSize = 12.sp) },
+                                placeholder = {
+                                    Text(
+                                        "Filter by Ep # or title...",
+                                        color = Color.White.copy(alpha = 0.45f),
+                                        fontSize = 12.sp
+                                    )
+                                },
                                 singleLine = true,
                                 shape = RoundedCornerShape(50),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -285,11 +336,24 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                         loadingEpisodes -> Box(Modifier.fillMaxWidth().height(150.dp), Alignment.Center) {
                             CircularProgressIndicator(color = LiquidColors.Cyan)
                         }
-                        filteredEpisodes.isEmpty() -> Text("No episodes found matching filter.",
-                            color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, modifier = Modifier.padding(26.dp))
+
+                        filteredEpisodes.isEmpty() -> Text(
+                            "No episodes found matching filter.",
+                            color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, modifier = Modifier.padding(26.dp)
+                        )
+
                         else -> {
                             val listState = rememberLazyListState()
-                            LaunchedEffect(filteredEpisodes) {
+                            LaunchedEffect(filteredEpisodes, pendingFocus?.episodeNumber, selectedSeason) {
+                                val focusEpisode = pendingFocus?.episodeNumber
+                                if (focusEpisode != null) {
+                                    val focusIndex = filteredEpisodes.indexOfFirst { it.episodeNumber == focusEpisode }
+                                    if (focusIndex >= 0) {
+                                        listState.scrollToItem(focusIndex)
+                                        pendingFocus = null
+                                        return@LaunchedEffect
+                                    }
+                                }
                                 val prog = state.continueWatching.firstOrNull { it.itemId == current.id }
                                 if (prog != null && prog.episodeNumber != null) {
                                     val index = filteredEpisodes.indexOfFirst { it.episodeNumber == prog.episodeNumber }
@@ -305,7 +369,10 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                                 modifier = Modifier.padding(top = 14.dp),
                             ) {
                                 items(filteredEpisodes, key = { "${it.seasonNumber}-${it.episodeNumber}" }) { ep ->
-                                    EpisodeCard(ep) { scope.launch { openSources(ep) } }
+                                    EpisodeCard(
+                                        ep = ep,
+                                        fallbackImageUrl = current.backdropUrl ?: current.posterUrl,
+                                    ) { scope.launch { openSources(ep) } }
                                 }
                             }
                         }
@@ -339,7 +406,11 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController) {
                         Icon(Icons.Filled.PlayArrow, null, tint = LiquidColors.Cyan)
                         Column(Modifier.weight(1f)) {
                             Text(src.title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                            Text("${src.provider} • ${src.quality}", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
+                            Text(
+                                "${src.provider} • ${src.quality}",
+                                color = Color.White.copy(alpha = 0.6f),
+                                fontSize = 12.sp
+                            )
                         }
                     }
                 }
@@ -363,18 +434,40 @@ private fun DetailHero(
         else -> "Play"
     }
     Box(Modifier.fillMaxWidth().height(720.dp)) {
-        PosterImage(current.heroBackdropUrl ?: current.backdropUrl ?: current.posterUrl, Modifier.fillMaxSize(), ContentScale.Crop)
-        Box(Modifier.fillMaxSize().background(
-            Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.6f), Color.Black.copy(alpha = 0.08f), Color.Black.copy(alpha = 0.93f)))
-        ))
+        PosterImage(
+            current.heroBackdropUrl ?: current.backdropUrl ?: current.posterUrl,
+            Modifier.fillMaxSize(),
+            ContentScale.Crop
+        )
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color.Black.copy(alpha = 0.6f),
+                        Color.Black.copy(alpha = 0.08f),
+                        Color.Black.copy(alpha = 0.93f)
+                    )
+                )
+            )
+        )
         Column(
             Modifier.align(Alignment.BottomStart).widthIn(max = 720.dp)
                 .padding(horizontal = if (wide) 54.dp else 26.dp).padding(bottom = 30.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(current.title, color = Color.White, fontSize = if (wide) 44.sp else 30.sp, fontWeight = FontWeight.Black, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(current.type.label + (if (current.genres.isEmpty()) "" else " • " + current.genres.take(3).joinToString(" • ")),
-                color = Color.White.copy(alpha = 0.72f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                current.title,
+                color = Color.White,
+                fontSize = if (wide) 44.sp else 30.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                current.type.label + (if (current.genres.isEmpty()) "" else " • " + current.genres.take(3)
+                    .joinToString(" • ")),
+                color = Color.White.copy(alpha = 0.72f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold
+            )
             if (current.overview.isNotEmpty()) {
                 var expanded by remember { mutableStateOf(false) }
                 Column(Modifier.fillMaxWidth().animateContentSize()) {
@@ -411,8 +504,15 @@ private fun DetailHero(
                     Modifier.clip(RoundedCornerShape(50)).background(Color.White)
                         .tvFocusable(onClick = onPlay, corner = 50).padding(vertical = 14.dp, horizontal = 26.dp),
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (loadingStreams) CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (loadingStreams) CircularProgressIndicator(
+                            color = Color.Black,
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
                         else Icon(Icons.Filled.PlayArrow, null, tint = Color.Black, modifier = Modifier.size(20.dp))
                         Text(playLabel, color = Color.Black, fontWeight = FontWeight.Black, fontSize = 16.sp)
                     }
@@ -423,7 +523,12 @@ private fun DetailHero(
                         .tvFocusable(onClick = onWatchlist, corner = 28),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(if (state.isInWatchlist(current)) Icons.Filled.Check else Icons.Filled.Add, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    Icon(
+                        if (state.isInWatchlist(current)) Icons.Filled.Check else Icons.Filled.Add,
+                        null,
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
                 }
             }
         }
@@ -431,16 +536,41 @@ private fun DetailHero(
 }
 
 @Composable
-private fun EpisodeCard(ep: MediaEpisode, onTap: () -> Unit) {
+private fun EpisodeCard(ep: MediaEpisode, fallbackImageUrl: String?, onTap: () -> Unit) {
+    val resolvedTitle = if (ep.title.isBlank() || ep.title.equals("Episode", ignoreCase = true)) {
+        "Episode ${ep.episodeNumber}"
+    } else {
+        ep.title
+    }
+    val resolvedOverview = ep.overview.ifBlank { "No description available." }
+
     Column(Modifier.width(280.dp)) {
         Box(
             Modifier.width(280.dp).height(158.dp).tvFocusable(onClick = onTap)
         ) {
-            PosterImage(ep.stillUrl, Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)))
+            PosterImage(ep.stillUrl ?: fallbackImageUrl, Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)))
         }
         Spacer(Modifier.height(6.dp))
-        Text("EPISODE ${ep.episodeNumber}", color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-        Text(ep.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (ep.overview.isNotEmpty()) Text(ep.overview, color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(
+            "EPISODE ${ep.episodeNumber}",
+            color = Color.White.copy(alpha = 0.5f),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            resolvedTitle,
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            resolvedOverview,
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 11.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

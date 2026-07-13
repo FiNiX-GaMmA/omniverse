@@ -7,6 +7,7 @@ import android.net.Uri
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -82,12 +83,14 @@ fun VidsrcResolveScreen(
     val appState = AppGraph.appState
 
     KeepScreenOn(true)
+    BackHandler { closeOrRecommend() }
     DisposableEffect(Unit) {
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         activity?.window?.let { window ->
             val controller = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
             controller.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-            controller.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.systemBarsBehavior =
+                androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         onDispose {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -155,19 +158,25 @@ fun VidsrcResolveScreen(
         webRef[0]?.loadUrl(url)
     }
 
-    fun nextDomain() { machine.pollJob?.cancel(); if (finished) return; machine.domainIndex++; loadCurrentDomain() }
+    fun nextDomain() {
+        machine.pollJob?.cancel(); if (finished) return; machine.domainIndex++; loadCurrentDomain()
+    }
 
     fun navigateToServer() {
         if (finished) return
         val base = machine.cloudnestraBase ?: run { nextDomain(); return }
-        if (currentServer >= servers.size) { nextDomain(); return }
+        if (currentServer >= servers.size) {
+            nextDomain(); return
+        }
         machine.stage = VStage.PLAYER
         val s = servers[currentServer]
         status = "Loading ${s.name.ifEmpty { "server ${currentServer + 1}" }}..."
         webRef[0]?.loadUrl("$base/rcp/${s.hash}")
     }
 
-    fun tryNextServer() { machine.pollJob?.cancel(); currentServer++; navigateToServer() }
+    fun tryNextServer() {
+        machine.pollJob?.cancel(); currentServer++; navigateToServer()
+    }
 
     fun waitForEmbed() {
         status = "Looking for servers..."
@@ -179,7 +188,9 @@ fun VidsrcResolveScreen(
                 attempt++
                 val text = runJs(WebGuards.embedProbeJs)
                 val json = text?.let { runCatching { JSONObject(it) }.getOrNull() }
-                if (json == null) { delay(POLL_MS); continue }
+                if (json == null) {
+                    delay(POLL_MS); continue
+                }
                 val list = json.optJSONArray("servers")
                 val parsed = ArrayList<VServer>()
                 if (list != null) for (i in 0 until list.length()) {
@@ -191,17 +202,22 @@ fun VidsrcResolveScreen(
                 val iframeSrc = json.optString("iframeSrc")
                 if (hasChallenge && parsed.isEmpty()) {
                     status = "Solving Cloudflare check (${attempt}s)..."
-                    if (attempt >= POLL_ATTEMPTS) { nextDomain(); return@launch }
+                    if (attempt >= POLL_ATTEMPTS) {
+                        nextDomain(); return@launch
+                    }
                     delay(POLL_MS); continue
                 }
                 if (parsed.isNotEmpty() && iframeSrc.isNotEmpty()) {
                     servers.clear(); servers.addAll(parsed); currentServer = 0
                     val raw = if (iframeSrc.startsWith("//")) "https:$iframeSrc" else iframeSrc
                     val uri = runCatching { Uri.parse(raw) }.getOrNull()
-                    machine.cloudnestraBase = if (uri?.scheme != null && uri.host != null) "${uri.scheme}://${uri.host}" else "https://cloudnestra.com"
+                    machine.cloudnestraBase =
+                        if (uri?.scheme != null && uri.host != null) "${uri.scheme}://${uri.host}" else "https://cloudnestra.com"
                     navigateToServer(); return@launch
                 }
-                if (attempt >= POLL_ATTEMPTS) { nextDomain(); return@launch }
+                if (attempt >= POLL_ATTEMPTS) {
+                    nextDomain(); return@launch
+                }
                 delay(POLL_MS)
             }
         }
@@ -235,7 +251,9 @@ fun VidsrcResolveScreen(
                 if (handledFinish) return@launch
                 val t = runJs(WebGuards.videoEndedProbeJs)
                 val j = t?.let { runCatching { JSONObject(it) }.getOrNull() }
-                if (j?.optBoolean("ended") == true) { onEpisodeFinished(); return@launch }
+                if (j?.optBoolean("ended") == true) {
+                    onEpisodeFinished(); return@launch
+                }
             }
         }
     }
@@ -258,7 +276,9 @@ fun VidsrcResolveScreen(
                 attempt++
                 val text = runJs(WebGuards.playerProbeJs)
                 val json = text?.let { runCatching { JSONObject(it) }.getOrNull() }
-                if (json == null) { delay(POLL_MS); continue }
+                if (json == null) {
+                    delay(POLL_MS); continue
+                }
                 val hasChallenge = json.optBoolean("hasChallenge")
                 val hasTurnstile = json.optBoolean("hasTurnstile")
                 val hasRcp = json.optBoolean("hasRcpToken")
@@ -266,135 +286,218 @@ fun VidsrcResolveScreen(
                 val iframeLoaded = json.optBoolean("iframeLoaded")
                 if (hasChallenge) {
                     status = "Cloudflare check on cloudnestra (${attempt}s)..."
-                    if (attempt >= POLL_ATTEMPTS) { tryNextServer(); return@launch }
+                    if (attempt >= POLL_ATTEMPTS) {
+                        tryNextServer(); return@launch
+                    }
                     delay(POLL_MS); continue
                 }
                 if (hasTurnstile && !hasRcp) {
                     status = "Verifying with Cloudflare Turnstile (${attempt}s)..."
-                    if (attempt >= TURNSTILE_ATTEMPTS) { tryNextServer(); return@launch }
+                    if (attempt >= TURNSTILE_ATTEMPTS) {
+                        tryNextServer(); return@launch
+                    }
                     delay(POLL_MS); continue
                 }
                 if (hasPlay && !iframeLoaded) runJs(WebGuards.clickPlayJs)
                 if (hasPlay || iframeLoaded) {
                     finished = true
-                    status = if (iframeLoaded) "Playing in WebView. Tap inside the player if it pauses." else "Server ready — tap the play button."
+                    status =
+                        if (iframeLoaded) "Playing in WebView. Tap inside the player if it pauses." else "Server ready — tap the play button."
                     startEndWatch()
                     return@launch
                 }
-                if (attempt >= POLL_ATTEMPTS) { tryNextServer(); return@launch }
+                if (attempt >= POLL_ATTEMPTS) {
+                    tryNextServer(); return@launch
+                }
                 delay(POLL_MS)
             }
         }
     }
 
     Box(Modifier.fillMaxSize()) {
-    Column(Modifier.fillMaxSize()) {
-        if (controlsVisible || !finished) {
-            Row(Modifier.fillMaxWidth().background(Color.Black).padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(40.dp).tvFocusable(onClick = { closeOrRecommend() }, corner = 20), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Close, "Close", tint = Color.White)
-                }
-                Text(args.title, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
-                if (servers.size > 1) {
-                    Box {
-                        Text("Servers", color = Color.White, fontSize = 14.sp, modifier = Modifier.tvFocusable(onClick = { serverMenu = true }, corner = 6).padding(8.dp))
-                        DropdownMenu(serverMenu, { serverMenu = false }) {
-                            servers.forEachIndexed { i, s ->
-                                DropdownMenuItem(text = { Text((s.name.ifEmpty { "Server ${i + 1}" }) + (if (i == currentServer) " ✓" else "")) }, onClick = {
-                                    serverMenu = false; machine.pollJob?.cancel(); finished = false; currentServer = i; navigateToServer()
-                                })
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (!finished) {
-            Row(Modifier.fillMaxWidth().background(Color.Black).padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (errorMessage == null) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                Text(errorMessage ?: status, color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-            }
-        }
-        @Suppress("DEPRECATION")
-        AndroidView(
-            factory = { ctx ->
-                WebView(ctx).apply {
-                    layoutParams = android.view.ViewGroup.LayoutParams(
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    setLayerType(android.view.View.LAYER_TYPE_NONE, null)
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled = true
-                    settings.databaseEnabled = true
-                    settings.mediaPlaybackRequiresUserGesture = false
-                    settings.setSupportMultipleWindows(false)
-                    // The cloudnestra player loads http subresources inside an
-                    // https page — allow mixed content or the stream never loads.
-                    settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                    settings.useWideViewPort = true
-                    settings.loadWithOverviewMode = true
-                    settings.allowContentAccess = true
-                    settings.allowFileAccess = true
-                    // A WebChromeClient is required for HTML5 video playback in WebView.
-                    webChromeClient = android.webkit.WebChromeClient()
-                    // Spoof standard Mobile Chrome to bypass WebView-specific video player restrictions and ensure proper HLS playback
-                    settings.userAgentString = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
-                    setBackgroundColor(AndroidColor.TRANSPARENT)
-                    webViewClient = object : WebViewClient() {
-                        override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                            if (request?.isForMainFrame != true) return false
-                            val url = request.url?.toString() ?: ""
-                            val urlLower = url.lowercase()
-                            val allow = urlLower.startsWith("about:") || urlLower.contains("vidsrc-embed") || urlLower.contains("vsembed") ||
-                                urlLower.contains("vsrc.") || urlLower.contains("vidsrcme") || urlLower.contains("cloudnestra") ||
-                                urlLower.contains("rcp/") || urlLower.contains("prorcp/")
-                            return !allow
-                        }
-                        override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
-                            val url = request?.url?.toString() ?: return null
-                            if (url.contains("disable-devtool")) {
-                                return android.webkit.WebResourceResponse(
-                                    "text/javascript",
-                                    "UTF-8",
-                                    java.io.ByteArrayInputStream("".toByteArray())
-                                )
-                            }
-                            return null
-                        }
-                        override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                            // Defeat iframe sandboxing as early as possible.
-                            view?.evaluateJavascript(WebGuards.unsandboxJs, null)
-                        }
-                        override fun onPageFinished(view: WebView?, url: String?) {
-                            if (finished) return
-                            view?.evaluateJavascript(WebGuards.unsandboxJs, null)
-                            view?.evaluateJavascript(WebGuards.vidsrcGuardJs, null)
-                            if (machine.stage == VStage.EMBED) waitForEmbed() else onPlayerLoaded()
-                        }
-                        override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
-                            if (request?.isForMainFrame != true) return
-                            if (machine.stage == VStage.EMBED) nextDomain() else tryNextServer()
-                        }
-                    }
-                    webRef[0] = this
-                    post { loadCurrentDomain() }
-                }
-            },
-            modifier = Modifier.fillMaxSize().weight(1f),
-        )
-        if (errorMessage != null) {
-            Row(Modifier.fillMaxWidth().background(Color.Black.copy(alpha = 0.86f)).padding(16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxSize()) {
+            if (controlsVisible || !finished) {
                 Row(
-                    Modifier.clip(RoundedCornerShape(8.dp)).border(1.dp, Color.White.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                        .tvFocusable(onClick = { machine.domainIndex = 0; errorMessage = null; loadCurrentDomain() }, corner = 8).padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) { Icon(Icons.Filled.Refresh, null, tint = Color.White, modifier = Modifier.size(18.dp)); Text("Retry", color = Color.White) }
-                Text("Close", color = Color.White, modifier = Modifier.tvFocusable(onClick = onClose, corner = 6).padding(8.dp))
+                    Modifier.fillMaxWidth().background(Color.Black).padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        Modifier.size(40.dp).tvFocusable(onClick = { closeOrRecommend() }, corner = 20),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Filled.Close, "Close", tint = Color.White)
+                    }
+                    Text(
+                        args.title,
+                        color = Color.White,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+                    )
+                    if (servers.size > 1) {
+                        Box {
+                            Text(
+                                "Servers",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                modifier = Modifier.tvFocusable(onClick = { serverMenu = true }, corner = 6)
+                                    .padding(8.dp)
+                            )
+                            DropdownMenu(serverMenu, { serverMenu = false }) {
+                                servers.forEachIndexed { i, s ->
+                                    DropdownMenuItem(
+                                        text = { Text((s.name.ifEmpty { "Server ${i + 1}" }) + (if (i == currentServer) " ✓" else "")) },
+                                        onClick = {
+                                            serverMenu = false; machine.pollJob?.cancel(); finished =
+                                            false; currentServer = i; navigateToServer()
+                                        })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (!finished) {
+                Row(
+                    Modifier.fillMaxWidth().background(Color.Black).padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    if (errorMessage == null) CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Text(
+                        errorMessage ?: status,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            @Suppress("DEPRECATION")
+            AndroidView(
+                factory = { ctx ->
+                    WebView(ctx).apply {
+                        layoutParams = android.view.ViewGroup.LayoutParams(
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        setLayerType(android.view.View.LAYER_TYPE_NONE, null)
+                        settings.javaScriptEnabled = true
+                        settings.domStorageEnabled = true
+                        settings.databaseEnabled = true
+                        settings.mediaPlaybackRequiresUserGesture = false
+                        settings.setSupportMultipleWindows(false)
+                        // The cloudnestra player loads http subresources inside an
+                        // https page — allow mixed content or the stream never loads.
+                        settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                        settings.useWideViewPort = true
+                        settings.loadWithOverviewMode = true
+                        settings.allowContentAccess = true
+                        settings.allowFileAccess = true
+                        // A WebChromeClient is required for HTML5 video playback in WebView.
+                        webChromeClient = android.webkit.WebChromeClient()
+                        // Spoof standard Mobile Chrome to bypass WebView-specific video player restrictions and ensure proper HLS playback
+                        settings.userAgentString =
+                            "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+                        setBackgroundColor(AndroidColor.TRANSPARENT)
+                        webViewClient = object : WebViewClient() {
+                            override fun shouldOverrideUrlLoading(
+                                view: WebView?,
+                                request: WebResourceRequest?
+                            ): Boolean {
+                                if (request?.isForMainFrame != true) return false
+                                val url = request.url?.toString() ?: ""
+                                val urlLower = url.lowercase()
+                                val allow =
+                                    urlLower.startsWith("about:") || urlLower.contains("vidcore") || urlLower.contains("created.app") ||
+                                            urlLower.contains("vidsrc-embed") || urlLower.contains("vsembed") ||
+                                            urlLower.contains("vsrc.") || urlLower.contains("vidsrcme") || urlLower.contains(
+                                        "cloudnestra"
+                                    ) ||
+                                            urlLower.contains("rcp/") || urlLower.contains("prorcp/")
+                                return !allow
+                            }
+
+                            override fun shouldInterceptRequest(
+                                view: WebView?,
+                                request: WebResourceRequest?
+                            ): android.webkit.WebResourceResponse? {
+                                val url = request?.url?.toString() ?: return null
+                                if (url.contains("disable-devtool")) {
+                                    return android.webkit.WebResourceResponse(
+                                        "text/javascript",
+                                        "UTF-8",
+                                        java.io.ByteArrayInputStream("".toByteArray())
+                                    )
+                                }
+                                return null
+                            }
+
+                            override fun onPageStarted(
+                                view: WebView?,
+                                url: String?,
+                                favicon: android.graphics.Bitmap?
+                            ) {
+                                // Defeat iframe sandboxing as early as possible.
+                                view?.evaluateJavascript(WebGuards.unsandboxJs, null)
+                            }
+
+                            override fun onPageFinished(view: WebView?, url: String?) {
+                                if (finished) return
+                                view?.evaluateJavascript(WebGuards.unsandboxJs, null)
+                                view?.evaluateJavascript(WebGuards.vidsrcGuardJs, null)
+                                if (machine.stage == VStage.EMBED) waitForEmbed() else onPlayerLoaded()
+                            }
+
+                            override fun onReceivedError(
+                                view: WebView?,
+                                request: WebResourceRequest?,
+                                error: android.webkit.WebResourceError?
+                            ) {
+                                if (request?.isForMainFrame != true) return
+                                if (machine.stage == VStage.EMBED) nextDomain() else tryNextServer()
+                            }
+                        }
+                        webRef[0] = this
+                        post { loadCurrentDomain() }
+                    }
+                },
+                modifier = Modifier.fillMaxSize().weight(1f),
+            )
+            if (errorMessage != null) {
+                Row(
+                    Modifier.fillMaxWidth().background(Color.Black.copy(alpha = 0.86f)).padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        Modifier.clip(RoundedCornerShape(8.dp))
+                            .border(1.dp, Color.White.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                            .tvFocusable(onClick = {
+                                machine.domainIndex = 0; errorMessage = null; loadCurrentDomain()
+                            }, corner = 8).padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Icon(
+                            Icons.Filled.Refresh,
+                            null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        ); Text("Retry", color = Color.White)
+                    }
+                    Text(
+                        "Close",
+                        color = Color.White,
+                        modifier = Modifier.tvFocusable(onClick = onClose, corner = 6).padding(8.dp)
+                    )
+                }
             }
         }
-    }
 
         // Invisible top area to trigger/toggle controls back on when tapped
         if (!controlsVisible && finished) {

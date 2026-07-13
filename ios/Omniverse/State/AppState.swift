@@ -3,6 +3,12 @@ import Observation
 import UIKit
 import CommonCrypto
 
+struct DetailEpisodeFocusContext: Equatable {
+    let itemId: String
+    let seasonNumber: Int?
+    let episodeNumber: Int?
+}
+
 @Observable
 @MainActor
 final class AppState {
@@ -36,7 +42,28 @@ final class AppState {
     var pendingPairingId: String?
     var pendingPairingPayload: String?
 
+    // Ephemeral navigation context used when closing playback to return to the
+    // exact title/episode detail screen and focus that episode row.
+    var detailEpisodeFocus: DetailEpisodeFocusContext?
+
     var needsSetup: Bool { !credentials.hasTmdb }
+
+    private let defaultVidsrcDomain = "vidcore.created.app"
+    private let legacyDefaultVidsrcDomains: Set<String> = [
+        "vsembed.ru",
+        "vsembed.su",
+        "vidsrcme.ru",
+        "vidsrc.me",
+        "vidsrc.to",
+        "vidsrc.xyz",
+        "vidsrc-embed.ru",
+        "vidsrc-embed.su",
+        "vidsrcme.su",
+        "vsrc.su",
+        "vidsrc.net",
+        "vidcore.org",
+        "www.vidcore.org",
+    ]
 
     private var playbackTimer: Timer?
 
@@ -52,7 +79,12 @@ final class AppState {
             UserDefaults.standard.set(true, forKey: "app_installed_before")
         }
 
-        settings = settingsStore.loadSettings()
+        let loadedSettings = settingsStore.loadSettings()
+        let migratedSettings = normalizeSettings(loadedSettings)
+        settings = migratedSettings
+        if migratedSettings != loadedSettings {
+            settingsStore.saveSettings(migratedSettings)
+        }
         credentials = credentialsStore.load()
         liveTvSources = settingsStore.loadLiveTvSources()
         watchlist = settingsStore.loadWatchlist()
@@ -136,7 +168,7 @@ final class AppState {
     func refreshCategories() async {
         var next: [MediaCategory] = []
         var notices: [String] = []
-        
+
         async let tmdbResult: ([MediaCategory], Error?) = {
             do {
                 let tmdb = try await repos.tmdb.fetchLandingCategories(credentials: credentials, settings: settings)
@@ -145,7 +177,7 @@ final class AppState {
                 return ([], error)
             }
         }()
-        
+
         async let traktResult: ([MediaCategory], Error?) = {
             do {
                 let trakt = try await repos.trakt.fetchDiscoveryCategories(credentials)
@@ -154,15 +186,15 @@ final class AppState {
                 return ([], error)
             }
         }()
-        
+
         async let vidsrcResult: [MediaCategory] = {
             return await repos.vidsrc.fetchLatestCategories()
         }()
-        
+
         let (tmdbRaw, tmdbEx) = await tmdbResult
         let (traktRaw, traktEx) = await traktResult
         let vidsrcRaw = await vidsrcResult
-        
+
         // Filter and enrich on the MainActor
         let tmdbLoaded = nonEmptyCategories(tmdbRaw)
         if let tmdbEx {
@@ -170,7 +202,7 @@ final class AppState {
         } else if tmdbLoaded.isEmpty, let err = categoryErrorMessage(tmdbRaw, "TMDB") {
             notices.append(err)
         }
-        
+
         var traktLoaded: [MediaCategory] = []
         if let traktEx {
             notices.append(safeRefreshMessage("Trakt", traktEx))
@@ -179,17 +211,17 @@ final class AppState {
             let enrichedTrakt = await enrichMetadataCategories(filteredTrakt, maxItems: 12)
             traktLoaded = nonEmptyCategories(enrichedTrakt)
         }
-        
+
         let enrichedVidsrc = await enrichMetadataCategories(vidsrcRaw, maxItems: 10)
         let vidsrcLoaded = nonEmptyCategories(enrichedVidsrc)
-        
+
         next.append(contentsOf: tmdbLoaded)
         next.append(contentsOf: traktLoaded)
-        
+
         if !next.isEmpty || categories.isEmpty {
             next.append(contentsOf: vidsrcLoaded)
         }
-        
+
         if !next.isEmpty {
             categories = next
             settingsStore.saveCachedCategories(categories)
@@ -290,6 +322,20 @@ final class AppState {
     }
 
     var continueWatching: [WatchProgress] { watchHistory.sorted { $0.lastWatchedAt > $1.lastWatchedAt } }
+
+    func setDetailEpisodeFocus(item: MediaItem, episode: MediaEpisode?) {
+        detailEpisodeFocus = DetailEpisodeFocusContext(
+            itemId: item.id,
+            seasonNumber: episode?.seasonNumber,
+            episodeNumber: episode?.episodeNumber
+        )
+    }
+
+    func consumeDetailEpisodeFocus(for itemId: String) -> DetailEpisodeFocusContext? {
+        guard let focus = detailEpisodeFocus, focus.itemId == itemId else { return nil }
+        detailEpisodeFocus = nil
+        return focus
+    }
 
     func syncWatchHistoryFromTrakt() async {
         guard credentials.hasTraktUser else { return }
@@ -425,8 +471,9 @@ final class AppState {
         credentials = c
         credentialsStore.save(c)
         if let s = parsed.settings {
-            settings = s
-            settingsStore.saveSettings(s)
+            let normalized = normalizeSettings(s)
+            settings = normalized
+            settingsStore.saveSettings(normalized)
         }
         message = "Signed in from Sync QR."
         await refreshAll(isManual: false)
@@ -460,7 +507,8 @@ final class AppState {
         credentials = c
         credentialsStore.save(c)
         if let s = obj["settings"] as? [String: Any] {
-            settings = UserSettings.fromJSON(s); settingsStore.saveSettings(settings)
+            settings = normalizeSettings(UserSettings.fromJSON(s))
+            settingsStore.saveSettings(settings)
         }
         if changed { await refreshAll(isManual: false) }
     }
@@ -479,8 +527,9 @@ final class AppState {
     }
 
     func saveSettings(_ next: UserSettings) async {
-        settings = next
-        settingsStore.saveSettings(next)
+        let normalized = normalizeSettings(next)
+        settings = normalized
+        settingsStore.saveSettings(normalized)
         if credentials.hasTraktUser { Task { try? await syncSettingsToTrakt() } }
         await refreshAll()
     }
@@ -703,7 +752,10 @@ final class AppState {
             if let v = obj["pixeldrain_api_key"] as? String { c.pixeldrainApiKey = v }
             if let v = obj["anilist_access_token"] as? String { c.anilistAccessToken = v }
             credentials = c; credentialsStore.save(c)
-            if let s = obj["settings"] as? [String: Any] { settings = UserSettings.fromJSON(s); settingsStore.saveSettings(settings) }
+            if let s = obj["settings"] as? [String: Any] {
+                settings = normalizeSettings(UserSettings.fromJSON(s))
+                settingsStore.saveSettings(settings)
+            }
             if let raw = obj["watch_history"] as? [[String: Any]] { mergeProgress(raw.compactMap { WatchProgress.fromJSON($0) }, preferRemoteTime: true) }
         }
         message = withProfile.traktUsername.isEmpty ? "Trakt connected." : "Trakt connected as \(withProfile.traktUsername)."
@@ -775,6 +827,21 @@ final class AppState {
         if t.contains("timed out") || t.contains("unreachable") || t.contains("network") { return "\(service) is temporarily unreachable. Showing cached rows." }
         return "\(service) refresh failed. Showing cached rows."
     }
+
+    private func normalizeSettings(_ raw: UserSettings) -> UserSettings {
+        let clean = raw.vidsrcDomain.trimmed.lowercased()
+        let migratedDomain: String
+        if clean.isEmpty || legacyDefaultVidsrcDomains.contains(clean) {
+            migratedDomain = defaultVidsrcDomain
+        } else {
+            migratedDomain = raw.vidsrcDomain.trimmed
+        }
+        guard migratedDomain != raw.vidsrcDomain else { return raw }
+        var next = raw
+        next.vidsrcDomain = migratedDomain
+        return next
+    }
+
     private func randomState() -> String {
         let chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         return String((0..<32).map { _ in chars.randomElement()! })
@@ -870,7 +937,7 @@ final class AppState {
             let epNum = paceEntry.episodeNumber ?? 1
             let realSeason = getRealOnePaceSeason(season: season)
             let mappedEp = realSeason == 0 ? 1 : mapOnePaceToOnePiece(season: realSeason, episode: epNum)
-            
+
             let pieceEntry = WatchProgress(
                 id: nil,
                 itemId: "anilist:anime:21",
@@ -885,15 +952,15 @@ final class AppState {
                 durationMs: paceEntry.durationMs,
                 lastWatchedAt: Int(Date().timeIntervalSince1970 * 1000)
             )
-            
+
             var next = watchHistory.filter { $0.itemId != "onepace:anime:21" && $0.title != "One Pace" && !$0.itemId.hasPrefix("onepace:") }
             next.append(pieceEntry)
             let capped = Array(next.sorted { $0.lastWatchedAt > $1.lastWatchedAt }.prefix(30))
             watchHistory = capped
             settingsStore.saveWatchHistory(capped)
-            
+
             message = "One Pace progress migrated to One Piece Episode \(mappedEp)!"
-            
+
             if credentials.hasTraktUser {
                 Task { try? await syncSettingsToTrakt(silent: true) }
             }

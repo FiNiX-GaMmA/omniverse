@@ -246,7 +246,8 @@ class TmdbRepositoryImpl : TmdbRepository {
             MediaEpisode(
                 seasonNumber = episode.optIntOrNull("season_number") ?: seasonNumber,
                 episodeNumber = episode.optIntOrNull("episode_number") ?: 0,
-                title = episode.optStringOrNull("name") ?: "Episode",
+                title = episode.optStringOrNull("name")
+                    ?: "Episode ${episode.optIntOrNull("episode_number") ?: 0}",
                 overview = episode.optStringOrNull("overview") ?: "",
                 airDate = episode.optStringOrNull("air_date") ?: "",
                 runtimeMinutes = episode.optIntOrNull("runtime"),

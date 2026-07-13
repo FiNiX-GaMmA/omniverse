@@ -66,7 +66,7 @@ struct UserSettings: Codable, Equatable {
     var region = "US"
     var includeAdult = false
     var tvMode = false
-    var vidsrcDomain = "vsembed.ru"
+    var vidsrcDomain = "vidcore.created.app"
     var subtitleUrl = ""
     var subtitleLanguage = "en"
     var preferDubbedAnime = false

@@ -826,19 +826,28 @@ struct PlayerScreen: View {
     @State private var recommendationDetail: MediaItem? = nil   // tapped recommendation
     @State private var nextVidsrc: VidsrcRoute? = nil           // next episode is a VidSrc embed
 
+    private let onRequestClose: ((MediaItem?, MediaEpisode?) -> Void)?
+
     init(title: String, url: String, headers: [String: String] = [:],
          item: MediaItem? = nil, episode: MediaEpisode? = nil,
          subtitleUrl: String = "", startPositionMs: Int? = nil,
-         aniSkipEpisode: Int? = nil) {
+         aniSkipEpisode: Int? = nil,
+         onRequestClose: ((MediaItem?, MediaEpisode?) -> Void)? = nil) {
         _route = State(initialValue: PlayerRoute(
             title: title, url: url, headers: headers, item: item, episode: episode,
             subtitleUrl: subtitleUrl, startPositionMs: startPositionMs, aniSkipEpisode: aniSkipEpisode))
+        self.onRequestClose = onRequestClose
     }
 
     private var title: String { route.title }
     private var item: MediaItem? { route.item }
     private var episode: MediaEpisode? { route.episode }
     private var isAnime: Bool { item?.type == .anime || item?.isAnime == true }
+
+    private func requestClose() {
+        onRequestClose?(route.item, route.episode)
+        dismiss()
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -896,7 +905,11 @@ struct PlayerScreen: View {
         }
         // The next episode resolved to a VidSrc embed — present the resolver.
         .fullScreenCover(item: $nextVidsrc) { v in
-            VidsrcResolveScreen(item: v.item, title: v.title, embedUrls: v.embedUrls, episode: v.episode)
+            VidsrcResolveScreen(item: v.item, title: v.title, embedUrls: v.embedUrls, episode: v.episode,
+                                onRequestClose: { item, episode in
+                                    onRequestClose?(item, episode)
+                                    dismiss()
+                                })
         }
     }
 
@@ -918,7 +931,7 @@ struct PlayerScreen: View {
             loadingRecommendations = true
             let recs = await appState.recommendationsFor(route.item)
             loadingRecommendations = false
-            if recs.isEmpty { dismiss() } else { recommendations = recs }
+            if recs.isEmpty { requestClose() } else { recommendations = recs }
         }
     }
 
@@ -937,7 +950,7 @@ struct PlayerScreen: View {
             recommendations: recommendations,
             loading: loadingRecommendations,
             onSelect: { recommendationDetail = $0 },
-            onClose: { dismiss() })
+            onClose: { requestClose() })
     }
 
     @ViewBuilder
@@ -945,9 +958,9 @@ struct PlayerScreen: View {
         if let engine {
             ZStack {
                 if engine.hasError {
-                    PlayerErrorView(message: engine.errorMessage ?? "Could not open this stream.") { dismiss() }
+                    PlayerErrorView(message: engine.errorMessage ?? "Could not open this stream.") { requestClose() }
                 } else if !engine.isReady {
-                    PlayerLoadingView(title: title, message: "Opening stream...") { dismiss() }
+                    PlayerLoadingView(title: title, message: "Opening stream...") { requestClose() }
                 } else {
                     stage(engine: engine, geo: geo)
                 }
@@ -968,7 +981,7 @@ struct PlayerScreen: View {
                 }
             }
         } else {
-            PlayerLoadingView(title: title, message: "Opening stream...") { dismiss() }
+            PlayerLoadingView(title: title, message: "Opening stream...") { requestClose() }
         }
     }
 
@@ -1111,7 +1124,7 @@ struct PlayerScreen: View {
 
     private var topControls: some View {
         HStack(spacing: 12) {
-            circleButton("xmark") { dismiss() }
+            circleButton("xmark") { requestClose() }
             circleButton("arrow.up.left.and.arrow.down.right") { showControls() }
             Spacer()
             circleButton("speaker.wave.2.fill") { showControls() }
@@ -1144,7 +1157,7 @@ struct PlayerScreen: View {
                     }
                 }
             }
-            
+
             largeButton("gobackward.10", size: 82) {
                 showControls(); engine.seekBy(-10)
             }
@@ -1156,7 +1169,7 @@ struct PlayerScreen: View {
             largeButton("goforward.10", size: 82) {
                 showControls(); engine.seekBy(10)
             }
-            
+
             if let _ = nextEpisode {
                 largeButton("forward.end.fill", size: 82) {
                     showControls()
@@ -1238,8 +1251,8 @@ struct PlayerScreen: View {
                 .onTapGesture { engine.play(); userPaused = false }
             VStack {
                 HStack(spacing: 12) {
-                    circleButton("xmark") { dismiss() }
-                    if !isLive { circleButton("arrow.up.left.and.arrow.down.right") { showControls() } }
+                    circleButton("xmark") { requestClose() }
+                    if (!isLive) { circleButton("arrow.up.left.and.arrow.down.right") { showControls() } }
                     Spacer()
                     circleButton("speaker.wave.2.fill") { showControls() }
                 }
@@ -1263,7 +1276,7 @@ struct PlayerScreen: View {
                         VStack(spacing: 12) {
                             overlayActionButton("play.fill", "Resume Playback") { engine.play(); userPaused = false }
                             overlayActionButton("play", "From Beginning") { engine.seekToBeginning(); engine.play(); userPaused = false }
-                            overlayActionButton("info", "More Info") { dismiss() }
+                            overlayActionButton("info", "More Info") { requestClose() }
                         }
                         .frame(maxWidth: 280)
                     }
@@ -1419,7 +1432,7 @@ struct PlayerScreen: View {
                 let shouldDismiss = velocity > 900 || dragOffset > height * 0.22
                 if shouldDismiss {
                     engine?.pause()
-                    dismiss()
+                    requestClose()
                 } else {
                     withAnimation(.easeOut(duration: 0.22)) { dragOffset = 0 }
                 }

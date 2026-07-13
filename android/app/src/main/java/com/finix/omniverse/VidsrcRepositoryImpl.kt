@@ -80,10 +80,32 @@ class VidsrcRepositoryImpl : VidsrcRepository {
     // MARK: Embed URL
 
     private fun embedUri(domain: String, item: MediaItem, episode: MediaEpisode?, settings: UserSettings): String {
+        val tmdbId = item.tmdbId?.toString()
+        val isMovie = item.type == MediaType.MOVIE
+
+        // Desktop parity: VidCore uses path-style embeds keyed by TMDB id.
+        if (domain.contains("vidcore") && !tmdbId.isNullOrEmpty()) {
+            val base = if (isMovie) {
+                "https://$domain/embed/movie/$tmdbId"
+            } else {
+                val season = episode?.seasonNumber ?: 1
+                val ep = episode?.episodeNumber ?: 1
+                "https://$domain/embed/tv/$tmdbId/$season/$ep"
+            }
+            val extras = ArrayList<Pair<String, String>>()
+            val subtitleUrl = settings.subtitleUrl.trim()
+            if (subtitleUrl.isNotEmpty() && hasScheme(subtitleUrl)) extras.add("sub_url" to subtitleUrl)
+            val subtitleLanguage = settings.subtitleLanguage.trim()
+            if (subtitleLanguage.isNotEmpty()) extras.add("ds_lang" to subtitleLanguage)
+            if (extras.isEmpty()) return base
+            val qs = extras.joinToString("&") { "${it.first}=${enc(it.second)}" }
+            return "$base?$qs"
+        }
+
         val query = ArrayList<Pair<String, String>>()
         val imdb = item.imdbId?.trim()
         if (!imdb.isNullOrEmpty()) query.add("imdb" to imdb)
-        else item.tmdbId?.let { query.add("tmdb" to it.toString()) }
+        else tmdbId?.let { query.add("tmdb" to it) }
         if (episode != null) {
             query.add("season" to episode.seasonNumber.toString())
             query.add("episode" to episode.episodeNumber.toString())
@@ -95,7 +117,7 @@ class VidsrcRepositoryImpl : VidsrcRepository {
         if (subtitleLanguage.isNotEmpty()) query.add("ds_lang" to subtitleLanguage)
         query.add("autoplay" to "1")
 
-        val path = if (item.type == MediaType.MOVIE) "/embed/movie" else "/embed/tv"
+        val path = if (isMovie) "/embed/movie" else "/embed/tv"
         val qs = query.joinToString("&") { "${it.first}=${enc(it.second)}" }
         return "https://$domain$path?$qs"
     }
@@ -195,7 +217,7 @@ class VidsrcRepositoryImpl : VidsrcRepository {
     private fun enc(value: String): String = URLEncoder.encode(value, "UTF-8")
 
     companion object {
-        val EMBED_DOMAINS = listOf("vsembed.ru", "vsembed.su", "vidsrcme.ru")
+        val EMBED_DOMAINS = listOf("vidcore.created.app", "vsembed.ru", "vsembed.su", "vidsrcme.ru")
         private const val LISTING_DOMAIN = "vsembed.ru"
     }
 }

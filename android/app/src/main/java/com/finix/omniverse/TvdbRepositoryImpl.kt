@@ -16,7 +16,11 @@ class TvdbRepositoryImpl : TvdbRepository {
 
     override suspend fun validate(credentials: ApiCredentials): Boolean {
         if (!credentials.hasTvdb) return false
-        return try { ensureToken(credentials); true } catch (_: Throwable) { false }
+        return try {
+            ensureToken(credentials); true
+        } catch (_: Throwable) {
+            false
+        }
     }
 
     override suspend fun enrichDetails(item: MediaItem, credentials: ApiCredentials): MediaItem {
@@ -34,12 +38,20 @@ class TvdbRepositoryImpl : TvdbRepository {
         }
     }
 
-    override suspend fun fetchSeasonEpisodes(item: MediaItem, seasonNumber: Int, credentials: ApiCredentials): List<MediaEpisode> {
+    override suspend fun fetchSeasonEpisodes(
+        item: MediaItem,
+        seasonNumber: Int,
+        credentials: ApiCredentials
+    ): List<MediaEpisode> {
         if (!credentials.hasTvdb || item.type != MediaType.SERIES) return emptyList()
         return try {
             val token = ensureToken(credentials)
             val tvdbId = item.tvdbId ?: findTvdbId(item, token) ?: return emptyList()
-            val response = Http.request(base + "series/$tvdbId/episodes/default/eng", headers = authHeaders(token), timeoutMs = 12_000)
+            val response = Http.request(
+                base + "series/$tvdbId/episodes/default/eng",
+                headers = authHeaders(token),
+                timeoutMs = 12_000
+            )
             if (response.status >= 400) return emptyList()
             val data = response.jsonObject().optObjectOrNull("data") ?: return emptyList()
             val episodes = data.optArrayOrNull("episodes") ?: return emptyList()
@@ -49,7 +61,8 @@ class TvdbRepositoryImpl : TvdbRepository {
                     MediaEpisode(
                         seasonNumber = episode.optIntOrNull("seasonNumber") ?: seasonNumber,
                         episodeNumber = episode.optIntOrNull("number") ?: 0,
-                        title = episode.optStringOrNull("name") ?: "Episode",
+                        title = episode.optStringOrNull("name")
+                            ?: "Episode ${episode.optIntOrNull("number") ?: 0}",
                         overview = episode.optStringOrNull("overview") ?: "",
                         airDate = episode.optStringOrNull("aired") ?: episode.optStringOrNull("firstAired") ?: "",
                         runtimeMinutes = episode.optIntOrNull("runtime"),
@@ -86,14 +99,17 @@ class TvdbRepositoryImpl : TvdbRepository {
         item.tmdbId?.let { remoteIds.add(it.toString()) }
 
         for (remoteId in remoteIds) {
-            val response = try { Http.request(base + "search/remoteid/$remoteId", headers = authHeaders(token), timeoutMs = 12_000) }
-                catch (_: Throwable) { continue }
+            val response = try {
+                Http.request(base + "search/remoteid/$remoteId", headers = authHeaders(token), timeoutMs = 12_000)
+            } catch (_: Throwable) {
+                continue
+            }
             if (response.status >= 400) continue
             val data = response.jsonObject().optArrayOrNull("data") ?: continue
             for (result in data.objects()) {
                 val type = (result.optStringOrNull("type") ?: "").lowercase()
                 val typeMatches = (item.type == MediaType.MOVIE && type.contains("movie")) ||
-                    ((item.type == MediaType.SERIES || item.type == MediaType.ANIME) && type.contains("series"))
+                        ((item.type == MediaType.SERIES || item.type == MediaType.ANIME) && type.contains("series"))
                 if (!typeMatches && type.isNotEmpty()) continue
                 (result.optIntOrNull("tvdb_id") ?: result.optIntOrNull("id"))?.let { return it }
             }

@@ -24,6 +24,8 @@ struct MediaDetailScreen: View {
     @State private var webEmbed: WebRoute?
     @State private var vidsrc: VidsrcRoute?
     @State private var captcha: CaptchaRoute?
+    @State private var pendingFocusSeasonNumber: Int?
+    @State private var pendingFocusEpisodeNumber: Int?
 
     private var current: MediaItem { detailed ?? item }
     private var isSeries: Bool { current.type == .series || current.type == .anime }
@@ -33,13 +35,30 @@ struct MediaDetailScreen: View {
             .task { await load() }
         .fullScreenCover(item: $player) { r in
             PlayerScreen(title: r.title, url: r.url, headers: r.headers, item: r.item, episode: r.episode,
-                         subtitleUrl: r.subtitleUrl, startPositionMs: r.startPositionMs, aniSkipEpisode: r.aniSkipEpisode)
+                         subtitleUrl: r.subtitleUrl, startPositionMs: r.startPositionMs, aniSkipEpisode: r.aniSkipEpisode,
+                         onRequestClose: { item, episode in
+                             let focusItem = item ?? current
+                             if focusItem.id == current.id {
+                                 applyEpisodeFocus(seasonNumber: episode?.seasonNumber, episodeNumber: episode?.episodeNumber)
+                             }
+                         })
         }
         .fullScreenCover(item: $webEmbed) { r in
-            WebEmbedPlayerScreen(title: r.title, url: r.url, headers: r.headers, item: r.item)
+            WebEmbedPlayerScreen(title: r.title, url: r.url, headers: r.headers, item: r.item, episode: r.episode,
+                                 onRequestClose: { item, episode in
+                                     let focusItem = item ?? current
+                                     if focusItem.id == current.id {
+                                         applyEpisodeFocus(seasonNumber: episode?.seasonNumber, episodeNumber: episode?.episodeNumber)
+                                     }
+                                 })
         }
         .fullScreenCover(item: $vidsrc) { r in
-            VidsrcResolveScreen(item: r.item, title: r.title, embedUrls: r.embedUrls, episode: r.episode)
+            VidsrcResolveScreen(item: r.item, title: r.title, embedUrls: r.embedUrls, episode: r.episode,
+                                onRequestClose: { item, episode in
+                                    if item.id == current.id {
+                                        applyEpisodeFocus(seasonNumber: episode?.seasonNumber, episodeNumber: episode?.episodeNumber)
+                                    }
+                                })
         }
         .fullScreenCover(item: $captcha) { r in
             CaptchaResolveScreen(url: r.url) {
@@ -190,6 +209,55 @@ struct MediaDetailScreen: View {
         }
     }
 
+    private func focusedSeason(for seasonNumber: Int?, episodeNumber: Int?) -> Int? {
+        guard let seasonNumber else { return nil }
+        if expandedSeasons.contains(where: { $0.seasonNumber == seasonNumber }) {
+            return seasonNumber
+        }
+        if seasonNumber < 1000, let episodeNumber {
+            let limit = current.type == .anime ? 100 : 50
+            let chunkIndex = (episodeNumber - 1) / limit
+            let virtualSeason = seasonNumber * 1000 + chunkIndex
+            if expandedSeasons.contains(where: { $0.seasonNumber == virtualSeason }) {
+                return virtualSeason
+            }
+        }
+        return nil
+    }
+
+    private func applyEpisodeFocus(seasonNumber: Int?, episodeNumber: Int?) {
+        guard isSeries, let episodeNumber else { return }
+        pendingFocusSeasonNumber = seasonNumber
+        pendingFocusEpisodeNumber = episodeNumber
+        episodeQuery = ""
+        if let targetSeason = focusedSeason(for: seasonNumber, episodeNumber: episodeNumber), targetSeason != selectedSeason {
+            selectedSeason = targetSeason
+            Task { await loadEpisodes() }
+        }
+    }
+
+    private func scrollToPreferredEpisode(_ proxy: ScrollViewProxy) {
+        if let focusedEpisode = pendingFocusEpisodeNumber,
+           filteredEpisodes.contains(where: { $0.episodeNumber == focusedEpisode }) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation {
+                    proxy.scrollTo(focusedEpisode, anchor: .center)
+                }
+            }
+            pendingFocusEpisodeNumber = nil
+            return
+        }
+
+        if let prog = state.continueWatching.first(where: { $0.itemId == current.id }),
+           let epNum = prog.episodeNumber {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation {
+                    proxy.scrollTo(epNum, anchor: .center)
+                }
+            }
+        }
+    }
+
     private var seasonSelector: some View {
         HStack(spacing: 12) {
             Menu {
@@ -237,20 +305,19 @@ struct MediaDetailScreen: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 14) {
                             ForEach(filteredEpisodes) { ep in
-                                episodeCard(ep)
+                                episodeCard(ep, fallbackImage: current.backdropUrl ?? current.posterUrl)
                                     .id(ep.episodeNumber)
                             }
                         }.padding(.horizontal, 26)
                     }
                     .onAppear {
-                        if let prog = state.continueWatching.first(where: { $0.itemId == current.id }),
-                           let epNum = prog.episodeNumber {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                withAnimation {
-                                    proxy.scrollTo(epNum, anchor: .center)
-                                }
-                            }
-                        }
+                        scrollToPreferredEpisode(proxy)
+                    }
+                    .onChange(of: filteredEpisodes.map(\.episodeNumber)) { _, _ in
+                        scrollToPreferredEpisode(proxy)
+                    }
+                    .onChange(of: pendingFocusEpisodeNumber) { _, _ in
+                        scrollToPreferredEpisode(proxy)
                     }
                 }
             }
@@ -258,15 +325,26 @@ struct MediaDetailScreen: View {
         .padding(.top, 14)
     }
 
-    private func episodeCard(_ ep: MediaEpisode) -> some View {
-        Button { Task { await openEpisodeSources(ep) } } label: {
+    private func episodeCard(_ ep: MediaEpisode, fallbackImage: String?) -> some View {
+        let resolvedTitle: String = {
+            let t = ep.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            if t.isEmpty || t.lowercased() == "episode" {
+                return "Episode \(ep.episodeNumber)"
+            }
+            return t
+        }()
+        let resolvedOverview = ep.overview.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "No description available."
+            : ep.overview
+
+        return Button { Task { await openEpisodeSources(ep) } } label: {
             VStack(alignment: .leading, spacing: 6) {
-                PosterImage(url: ep.stillUrl, fallbackSystemName: "play.rectangle")
+                PosterImage(url: ep.stillUrl ?? fallbackImage, fallbackSystemName: "play.rectangle")
                     .aspectRatio(16/9, contentMode: .fill).frame(width: 280, height: 158).clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 Text("EPISODE \(ep.episodeNumber)").font(.system(size: 11, weight: .bold)).foregroundStyle(.white.opacity(0.5))
-                Text(ep.title).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
-                if !ep.overview.isEmpty { Text(ep.overview).font(.system(size: 11)).foregroundStyle(.white.opacity(0.6)).lineLimit(2) }
+                Text(resolvedTitle).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+                Text(resolvedOverview).font(.system(size: 11)).foregroundStyle(.white.opacity(0.6)).lineLimit(2)
             }.frame(width: 280)
         }.buttonStyle(.plain)
     }
@@ -275,30 +353,28 @@ struct MediaDetailScreen: View {
 
     private func load() async {
         loading = true
+        pendingFocusSeasonNumber = nil
+        pendingFocusEpisodeNumber = nil
         detailed = await state.detailsFor(item)
         loading = false
         if isSeries {
+            if let focus = state.consumeDetailEpisodeFocus(for: current.id) {
+                pendingFocusSeasonNumber = focus.seasonNumber
+                pendingFocusEpisodeNumber = focus.episodeNumber
+                episodeQuery = ""
+            }
+
             var targetSeason = expandedSeasons.first(where: { $0.seasonNumber > 0 })?.seasonNumber
                 ?? expandedSeasons.first?.seasonNumber ?? 1
-            
-            if let prog = state.continueWatching.first(where: { $0.itemId == current.id }) {
-                let progEpNum = prog.episodeNumber
-                let progSeasonNum = prog.seasonNumber
-                
-                if let progSeasonNum {
-                    if expandedSeasons.contains(where: { $0.seasonNumber == progSeasonNum }) {
-                        targetSeason = progSeasonNum
-                    } else if progSeasonNum < 1000, let progEpNum {
-                        let limit = current.type == .anime ? 100 : 50
-                        let chunkIndex = (progEpNum - 1) / limit
-                        let virtualSeason = progSeasonNum * 1000 + chunkIndex
-                        if expandedSeasons.contains(where: { $0.seasonNumber == virtualSeason }) {
-                            targetSeason = virtualSeason
-                        }
-                    }
+
+            if let focusedSeason = focusedSeason(for: pendingFocusSeasonNumber, episodeNumber: pendingFocusEpisodeNumber) {
+                targetSeason = focusedSeason
+            } else if let prog = state.continueWatching.first(where: { $0.itemId == current.id }) {
+                if let progSeason = focusedSeason(for: prog.seasonNumber, episodeNumber: prog.episodeNumber) {
+                    targetSeason = progSeason
                 }
             }
-            
+
             selectedSeason = targetSeason
             await loadEpisodes()
         }
@@ -413,10 +489,10 @@ struct MediaDetailScreen: View {
                                               preferredDomain: state.settings.vidsrcDomain,
                                               subtitleUrl: state.settings.subtitleUrl,
                                               subtitleLanguage: state.settings.subtitleLanguage)
-            if urls.isEmpty { webEmbed = WebRoute(title: source.title, url: source.url, headers: source.headers, item: current) }
+            if urls.isEmpty { webEmbed = WebRoute(title: source.title, url: source.url, headers: source.headers, item: current, episode: episode) }
             else { vidsrc = VidsrcRoute(item: current, title: source.title, embedUrls: urls, episode: episode) }
         } else if source.isEmbed {
-            webEmbed = WebRoute(title: source.title, url: source.url, headers: source.headers, item: current)
+            webEmbed = WebRoute(title: source.title, url: source.url, headers: source.headers, item: current, episode: episode)
         } else {
             player = PlayerRoute(title: "\(current.title) • \(source.title)", url: source.url, headers: source.headers,
                                  item: current, episode: episode, subtitleUrl: source.subtitleUrl, startPositionMs: resume, aniSkipEpisode: nil)
@@ -426,7 +502,7 @@ struct MediaDetailScreen: View {
 
 // Identifiable route payloads for fullScreenCover.
 struct PlayerRoute: Identifiable { let id = UUID(); let title: String; let url: String; let headers: [String:String]; let item: MediaItem?; let episode: MediaEpisode?; let subtitleUrl: String; let startPositionMs: Int?; let aniSkipEpisode: Int? }
-struct WebRoute: Identifiable { let id = UUID(); let title: String; let url: String; let headers: [String:String]; let item: MediaItem? }
+struct WebRoute: Identifiable { let id = UUID(); let title: String; let url: String; let headers: [String:String]; let item: MediaItem?; let episode: MediaEpisode? }
 struct VidsrcRoute: Identifiable { let id = UUID(); let item: MediaItem; let title: String; let embedUrls: [URL]; let episode: MediaEpisode? }
 struct CaptchaRoute: Identifiable { let id = UUID(); let url: URL; let onSolved: () -> Void }
 

@@ -82,6 +82,7 @@ fun HomeScreen(nav: NavController) {
 
     fun openDetail(item: MediaItem) {
         RouteArgs.detailItem = item
+        RouteArgs.detailFocus = null
         nav.navigate("detail")
     }
 
@@ -117,14 +118,14 @@ fun HomeScreen(nav: NavController) {
                         state.settings.subtitleUrl, state.settings.subtitleLanguage
                     )
                     if (urls.isEmpty()) {
-                        RouteArgs.web = WebArgs(src.title, src.url, src.headers); nav.navigate("web")
+                        RouteArgs.web = WebArgs(src.title, src.url, src.headers, item, episode); nav.navigate("web")
                     } else {
                         RouteArgs.vidsrc = VidsrcArgs(item, src.title, urls, episode); nav.navigate("vidsrc")
                     }
                 }
 
                 src.isEmbed -> {
-                    RouteArgs.web = WebArgs(src.title, src.url, src.headers); nav.navigate("web")
+                    RouteArgs.web = WebArgs(src.title, src.url, src.headers, item, episode); nav.navigate("web")
                 }
 
                 else -> {

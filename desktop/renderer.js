@@ -59,6 +59,7 @@ let state = {
   anilistAccessToken: localStorage.getItem("omni_anilist_token") || "",
 
   watchHistory: JSON.parse(localStorage.getItem("omni_watch_history") || "[]"),
+  returnToDetailContext: null,
 };
 
 const STUDIO_PROVIDER_MAP = {
@@ -667,6 +668,82 @@ async function fetchAniListDiscoverPage(page = 1) {
   } catch {
     return null;
   }
+}
+
+async function fetchAniListRecommendations(anilistId) {
+  if (!anilistId) return [];
+  const query = `
+    query($id:Int!) {
+      Media(id: $id, type: ANIME) {
+        recommendations(sort: RATING_DESC, perPage: 24) {
+          nodes {
+            mediaRecommendation {
+              id
+              title { romaji english native }
+              description(asHtml: false)
+              coverImage { extraLarge large }
+              bannerImage
+              genres
+              averageScore
+              seasonYear
+              startDate { year }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const res = await appFetch(
+    ANILIST_GRAPHQL,
+    "POST",
+    { "Content-Type": "application/json", Accept: "application/json" },
+    JSON.stringify({ query, variables: { id: Number(anilistId) } }),
+  );
+
+  if (!res || !res.ok || !res.html) return [];
+
+  try {
+    const parsed = JSON.parse(res.html);
+    const nodes =
+      parsed?.data?.Media?.recommendations?.nodes &&
+      Array.isArray(parsed.data.Media.recommendations.nodes)
+        ? parsed.data.Media.recommendations.nodes
+        : [];
+
+    return nodes
+      .map((n) =>
+        n && n.mediaRecommendation
+          ? mapAniListItem(n.mediaRecommendation)
+          : null,
+      )
+      .filter((m) => m && (m.poster || m.backdrop));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchDesktopRecommendationsFor(media) {
+  if (!media) return [];
+
+  if (media.title === "One Pace") {
+    return await fetchAniListRecommendations(21);
+  }
+
+  if ((media.type === "anime" || isLikelyAnime(media)) && media.anilistId) {
+    const aniListRecs = await fetchAniListRecommendations(media.anilistId);
+    if (aniListRecs.length) return aniListRecs;
+  }
+
+  if (media.tmdbId) {
+    const tmdbType = media.type === "movie" ? "movie" : "tv";
+    const recData = await fetchTmdb(
+      `${tmdbType}/${media.tmdbId}/recommendations`,
+    );
+    return mapTmdbResults(recData, tmdbType);
+  }
+
+  return [];
 }
 
 function resetAnimeInfinite(items) {
@@ -1476,6 +1553,139 @@ async function filterByStudio(studio) {
   }
 }
 
+function parsePositiveIntOrNull(value) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function captureReturnToDetailContext(media, season = null, episode = null) {
+  if (!media) return;
+  state.returnToDetailContext = {
+    media: { ...(media || {}) },
+    season: parsePositiveIntOrNull(season),
+    episode: parsePositiveIntOrNull(episode),
+  };
+}
+
+function focusEpisodeCardInDetail(season, episode) {
+  const grid = document.getElementById("episodes-grid");
+  if (!grid) return;
+
+  const target = grid.querySelector(
+    `[data-season="${String(season)}"][data-episode="${String(episode)}"]`,
+  );
+  if (!target) return;
+
+  grid
+    .querySelectorAll(".episode-focused")
+    .forEach((node) => node.classList.remove("episode-focused"));
+
+  target.scrollIntoView({
+    behavior: "smooth",
+    inline: "center",
+    block: "nearest",
+  });
+
+  if (typeof target.focus === "function") {
+    target.focus({ preventScroll: true });
+  }
+
+  target.classList.add("episode-focused");
+  setTimeout(() => target.classList.remove("episode-focused"), 1200);
+}
+
+async function restoreDetailFromPlaybackContext() {
+  const ctx = state.returnToDetailContext;
+  if (!ctx || !ctx.media) return false;
+
+  try {
+    await openDetailModal(ctx.media);
+
+    if (!ctx.episode) return true;
+
+    const seasonSelector = document.getElementById("season-selector");
+    if (!seasonSelector) return true;
+
+    const desiredSeason = ctx.season || 1;
+    const hasDesiredSeason = Array.from(seasonSelector.options || []).some(
+      (opt) => opt.value === String(desiredSeason),
+    );
+
+    if (hasDesiredSeason) {
+      seasonSelector.value = String(desiredSeason);
+    }
+
+    await loadSeasonEpisodes();
+    const activeSeason = parsePositiveIntOrNull(seasonSelector.value) || 1;
+    focusEpisodeCardInDetail(activeSeason, ctx.episode);
+    return true;
+  } catch (err) {
+    console.warn("[Omniverse] Failed to restore detail modal context:", err);
+    return false;
+  }
+}
+
+function scrollRecommendationsRail(direction = 1) {
+  scrollRailById("modal-recommendations-rail", direction);
+}
+
+async function loadDetailRecommendations(media, reqToken) {
+  const recSection = document.getElementById("modal-recommendations-section");
+  const recRail = document.getElementById("modal-recommendations-rail");
+  if (!recSection || !recRail) return;
+
+  recSection.classList.remove("hidden");
+  recRail.innerHTML =
+    '<div class="text-xs text-gray-500 p-3 flex items-center gap-2"><div class="w-4 h-4 border-2 border-brandCyan border-t-transparent rounded-full animate-spin"></div> Loading recommendations…</div>';
+
+  let recommendations = [];
+  try {
+    recommendations = await fetchDesktopRecommendationsFor(media);
+  } catch (err) {
+    console.warn("[Omniverse] recommendations fetch failed:", err);
+    recommendations = [];
+  }
+
+  if (reqToken !== detailModalRequestToken) return;
+
+  const filtered = [];
+  const seen = new Set();
+  for (const rec of recommendations || []) {
+    if (!rec) continue;
+    if (
+      media.tmdbId &&
+      rec.tmdbId &&
+      Number(rec.tmdbId) === Number(media.tmdbId)
+    )
+      continue;
+    if (
+      media.anilistId &&
+      rec.anilistId &&
+      Number(rec.anilistId) === Number(media.anilistId)
+    )
+      continue;
+    const key =
+      rec.id ||
+      (rec.tmdbId ? `tmdb:${rec.tmdbId}` : "") ||
+      (rec.anilistId ? `anilist:${rec.anilistId}` : "") ||
+      `${rec.type || "media"}:${rec.title || "untitled"}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    filtered.push(rec);
+    if (filtered.length >= 18) break;
+  }
+
+  if (!filtered.length) {
+    recSection.classList.add("hidden");
+    recRail.innerHTML = "";
+    return;
+  }
+
+  recRail.innerHTML = "";
+  enableHorizontalWheelScroll(recRail);
+  appendMediaCards(recRail, filtered, 0, true);
+}
+
 // Detail Sheet Overlay Manager
 async function openDetailModal(media) {
   const reqToken = ++detailModalRequestToken;
@@ -1493,6 +1703,8 @@ async function openDetailModal(media) {
   const playBtn = document.getElementById("modal-play-btn");
   const seasonSelector = document.getElementById("season-selector");
   const episodesGrid = document.getElementById("episodes-grid");
+  const recSection = document.getElementById("modal-recommendations-section");
+  const recRail = document.getElementById("modal-recommendations-rail");
 
   media = state.selectedMedia;
 
@@ -1502,6 +1714,8 @@ async function openDetailModal(media) {
   if (modalTitle) modalTitle.classList.remove("hidden");
   if (seasonSelector) seasonSelector.innerHTML = "";
   if (episodesGrid) episodesGrid.innerHTML = "";
+  if (recRail) recRail.innerHTML = "";
+  if (recSection) recSection.classList.add("hidden");
 
   // Load initial fallback/passed data defensively
   if (modalPoster) modalPoster.src = media.poster;
@@ -1733,7 +1947,7 @@ async function openDetailModal(media) {
       }
     }
 
-    loadSeasonEpisodes();
+    await loadSeasonEpisodes();
   } else {
     episodeSection.classList.add("hidden");
     playBtn.classList.remove("hidden");
@@ -1741,6 +1955,7 @@ async function openDetailModal(media) {
   }
 
   document.getElementById("detail-modal").classList.remove("hidden");
+  loadDetailRecommendations(state.selectedMedia, reqToken);
   lucide.createIcons();
 }
 
@@ -1805,6 +2020,8 @@ function appendEpisodeRow(grid, media, seasonVal, ep, title, extras = {}) {
       "https://ui-avatars.com/api/?background=111&color=fff&name=Episode";
 
   const epRow = document.createElement("button");
+  epRow.dataset.season = String(seasonVal);
+  epRow.dataset.episode = String(ep);
   epRow.className =
     "group w-[300px] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/30 text-left backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.08]";
   epRow.onclick = () => playStream(media, seasonVal, ep);
@@ -2339,7 +2556,7 @@ async function playStream(
   forceDomain = null,
 ) {
   if (isLikelyAnime(media) && window.OmniAnime) {
-    playAnimeStream(media, episode || 1);
+    playAnimeStream(media, episode || 1, season || 1);
     return;
   }
   await ensurePlaybackIds(media);
@@ -2352,6 +2569,7 @@ function playStreamEmbed(
   episode = null,
   forceDomain = null,
 ) {
+  captureReturnToDetailContext(media, season, episode);
   closeDetailModal();
 
   if (vidsrcResolver) {
@@ -2745,7 +2963,13 @@ function showPlayerStatus(innerHtml) {
 }
 
 // Anime direct-stream playback (parity with mobile: AllAnime -> direct URL).
-async function playAnimeStream(media, episode) {
+async function playAnimeStream(media, episode, season = 1) {
+  const seasonSelector = document.getElementById("season-selector");
+  const selectedSeason =
+    parsePositiveIntOrNull(seasonSelector && seasonSelector.value) ||
+    parsePositiveIntOrNull(season) ||
+    1;
+  captureReturnToDetailContext(media, selectedSeason, episode);
   closeDetailModal();
   if (state.activeEmbedSession && state.activeEmbedSession.cancel) {
     state.activeEmbedSession.cancel();
@@ -2777,7 +3001,7 @@ async function playAnimeStream(media, episode) {
     playDirectVideo(container, src.url, src.referer, media, episode);
   } catch (e) {
     if (e && e.name === "CaptchaRequiredError") {
-      showAnimeCaptcha(e.url, () => playAnimeStream(media, episode));
+      showAnimeCaptcha(e.url, () => playAnimeStream(media, episode, season));
       return;
     }
     console.warn("[Omniverse] anime resolve failed:", e);
@@ -2947,7 +3171,9 @@ function showAnimeCaptcha(url, onSolved) {
   container.appendChild(bar);
 }
 
-function exitPlayer() {
+async function exitPlayer(options = {}) {
+  const { restoreDetail = true } = options;
+
   if (state.activeEmbedSession && state.activeEmbedSession.cancel) {
     state.activeEmbedSession.cancel();
     state.activeEmbedSession = null;
@@ -2975,6 +3201,18 @@ function exitPlayer() {
   if (window.electron && window.electron.playerStopped) {
     window.electron.playerStopped(); // GC and Cache flush trigger on main thread
   }
+
+  if (!restoreDetail) {
+    state.returnToDetailContext = null;
+    return;
+  }
+
+  if (!state.returnToDetailContext) return;
+
+  const restored = await restoreDetailFromPlaybackContext();
+  if (restored) {
+    state.returnToDetailContext = null;
+  }
 }
 
 function togglePiP() {
@@ -2994,7 +3232,7 @@ function togglePiP() {
       window.electron.openPipWindow(url, title);
 
       // Close the internal player to prevent duplicate audio streams
-      exitPlayer();
+      exitPlayer({ restoreDetail: false });
     } else if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     }

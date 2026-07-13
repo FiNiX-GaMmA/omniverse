@@ -6,6 +6,7 @@ import android.graphics.Color as AndroidColor
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -52,12 +53,14 @@ fun WebEmbedScreen(args: WebArgs, onClose: () -> Unit) {
     var blocked by remember { mutableIntStateOf(0) }
 
     KeepScreenOn(true)
+    BackHandler { onClose() }
     DisposableEffect(Unit) {
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         activity?.window?.let { window ->
             val controller = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
             controller.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-            controller.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.systemBarsBehavior =
+                androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         onDispose {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -100,7 +103,11 @@ fun WebEmbedScreen(args: WebArgs, onClose: () -> Unit) {
                             }
                             return false
                         }
-                        override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
+
+                        override fun shouldInterceptRequest(
+                            view: WebView?,
+                            request: WebResourceRequest?
+                        ): android.webkit.WebResourceResponse? {
                             val url = request?.url?.toString() ?: return null
                             if (url.contains("disable-devtool")) {
                                 return android.webkit.WebResourceResponse(
@@ -111,17 +118,24 @@ fun WebEmbedScreen(args: WebArgs, onClose: () -> Unit) {
                             }
                             return null
                         }
+
                         override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                             loading = true
                             // Defeat iframe sandboxing as early as possible.
                             view?.evaluateJavascript(WebGuards.unsandboxJs, null)
                         }
+
                         override fun onPageFinished(view: WebView?, url: String?) {
                             loading = false
                             view?.evaluateJavascript(WebGuards.unsandboxJs, null)
                             view?.evaluateJavascript(WebGuards.embedGuardJs, null)
                         }
-                        override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
+
+                        override fun onReceivedError(
+                            view: WebView?,
+                            request: WebResourceRequest?,
+                            error: android.webkit.WebResourceError?
+                        ) {
                             if (request?.isForMainFrame != true) return
                         }
                     }
@@ -136,17 +150,31 @@ fun WebEmbedScreen(args: WebArgs, onClose: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
         )
 
-        if (loading) Box(Modifier.fillMaxSize().background(Color.Black), Alignment.Center) { CircularProgressIndicator(color = Color.White) }
+        if (loading) Box(Modifier.fillMaxSize().background(Color.Black), Alignment.Center) {
+            CircularProgressIndicator(
+                color = Color.White
+            )
+        }
 
-        Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(
                 Modifier.size(46.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.4f))
                     .border(1.dp, Color.White.copy(alpha = 0.18f), CircleShape)
                     .tvFocusable(onClick = onClose, corner = 23),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.Close, "Close", tint = Color.White) }
-            Text(args.title, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f).padding(horizontal = 12.dp))
+            Text(
+                args.title,
+                color = Color.White,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
+            )
             Text("⛉ $blocked", color = Color.White, fontSize = 14.sp)
         }
     }

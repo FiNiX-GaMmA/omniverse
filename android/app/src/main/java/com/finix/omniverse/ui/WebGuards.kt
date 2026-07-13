@@ -73,7 +73,7 @@ object WebGuards {
   if (window.__omniplayGuards) return; window.__omniplayGuards = true;
   window.open = () => null; const noop = () => {};
   try { window.alert = noop; window.confirm = () => false; window.prompt = () => null; } catch (_) {}
-  const safeHosts = ['vidsrc','cloudnestra','2embed','embed.su','autoembed','multiembed','rabbitstream','megacloud','streamtape','streamlare','doodstream','mixdrop','vidplay','filemoon','upstream','fembed','streamhide','mp4upload','streamsb','voe.sx','streamwish','vidcloud','youtube','cdn'];
+  const safeHosts = ['vidcore','created.app','vidsrc','cloudnestra','2embed','embed.su','autoembed','multiembed','rabbitstream','megacloud','streamtape','streamlare','doodstream','mixdrop','vidplay','filemoon','upstream','fembed','streamhide','mp4upload','streamsb','voe.sx','streamwish','vidcloud','youtube','cdn'];
   const isAdHost = (url) => { try { const h = new URL(url, location.href).hostname.toLowerCase(); return !safeHosts.some(s => h.includes(s)); } catch (_) { return false; } };
   try { const a = window.location.assign.bind(window.location); const r = window.location.replace.bind(window.location);
     window.location.assign = (u) => { if (!isAdHost(u)) a(u); }; window.location.replace = (u) => { if (!isAdHost(u)) r(u); }; } catch (_) {}
@@ -95,7 +95,7 @@ object WebGuards {
   try { window.open = function () { return null; }; } catch (_) {}
   const noop = function () {}; try { window.alert = noop; window.confirm = function(){return false;}; window.prompt = function(){return null;}; } catch (_) {}
   try { const o = window.addEventListener; window.addEventListener = function (t, l, op) { if (t==='beforeunload'||t==='unload') return; o.apply(this, arguments); }; } catch (_) {}
-  const safeHosts = ['vidsrc','cloudnestra','vsembed','vsrc.','vidsrcme','about:','localhost','127.0.0.1','cdn','2embed','embed.su','autoembed','multiembed','rabbitstream','megacloud','streamtape','streamlare','doodstream','mixdrop','vidplay','filemoon','upstream','fembed','streamhide','mp4upload','streamsb','voe.sx','streamwish','vidcloud','youtube'];
+  const safeHosts = ['vidcore','created.app','vidsrc','cloudnestra','vsembed','vsrc.','vidsrcme','about:','localhost','127.0.0.1','cdn','2embed','embed.su','autoembed','multiembed','rabbitstream','megacloud','streamtape','streamlare','doodstream','mixdrop','vidplay','filemoon','upstream','fembed','streamhide','mp4upload','streamsb','voe.sx','streamwish','vidcloud','youtube'];
   const isAdHost = function (url) { try { if (!url) return false; const h = new URL(url, location.href).hostname.toLowerCase(); return !safeHosts.some(function(s){return h.indexOf(s)>=0;}); } catch (_) { return false; } };
   const adTokens = ['ads','ad-','analytics','doubleclick','googletagmanager','googletagservices','pagead','popunder','popcash','propellerads','adservice','adsco','rtmark','profitable','histats','usrpubtrk','adexchangeclear','realizationnewestfangs','unbrownunflat','sixmossin','malocacomals','cloudflareinsights','videasy','bvtpk','b7510','adx1','intelligenceadx','yandex','tmstr.','click','track','redirect','pop'];
   const isAdSrc = function (src) { if (!src) return false; const s = String(src).toLowerCase(); if (safeHosts.some(function(h){return s.indexOf(h)>=0;})) return false; return adTokens.some(function(t){return s.indexOf(t)>=0;}); };

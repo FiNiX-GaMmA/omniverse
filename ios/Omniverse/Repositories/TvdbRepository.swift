@@ -79,7 +79,7 @@ final class TvdbRepository: TvdbRepositoryProtocol {
                     MediaEpisode(
                         seasonNumber: episode.int("seasonNumber") ?? seasonNumber,
                         episodeNumber: episode.int("number") ?? 0,
-                        title: episode.str("name") ?? "Episode",
+                        title: episode.str("name") ?? "Episode \(episode.int("number") ?? 0)",
                         overview: episode.str("overview") ?? "",
                         airDate: episode.str("aired") ?? episode.str("firstAired") ?? "",
                         runtimeMinutes: episode.int("runtime"),
