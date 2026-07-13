@@ -83,7 +83,6 @@ fun VidsrcResolveScreen(
     val appState = AppGraph.appState
 
     KeepScreenOn(true)
-    BackHandler { closeOrRecommend() }
     DisposableEffect(Unit) {
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         activity?.window?.let { window ->
@@ -266,6 +265,8 @@ fun VidsrcResolveScreen(
             onClose()
         }
     }
+
+    BackHandler { closeOrRecommend() }
 
     fun onPlayerLoaded() {
         machine.pollJob?.cancel()
