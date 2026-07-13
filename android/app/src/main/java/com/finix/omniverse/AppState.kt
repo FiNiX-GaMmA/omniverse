@@ -545,16 +545,23 @@ class AppState(context: Context) {
 
     suspend fun detailsFor(item: MediaItem): MediaItem {
         if (item.title == "One Pace") return item
-        if (item.type == MediaType.ANIME || item.isAnime) {
+        if (item.type == MediaType.ANIME) {
             repos.anime.findByTitle(item.title)?.let { hydrated ->
                 return hydrated.copy(
                     tmdbId = item.tmdbId ?: hydrated.tmdbId,
                     tvdbId = item.tvdbId ?: hydrated.tvdbId,
                     imdbId = item.imdbId ?: hydrated.imdbId,
                     traktId = item.traktId ?: hydrated.traktId,
+                    posterPath = item.posterPath ?: hydrated.posterPath,
+                    backdropPath = item.backdropPath ?: hydrated.backdropPath,
+                    releaseDate = if (item.releaseDate.isNotBlank()) item.releaseDate else hydrated.releaseDate,
+                    genres = if (item.genres.isNotEmpty()) item.genres else hydrated.genres,
+                    originCountry = if (item.originCountry.isNotEmpty()) item.originCountry else hydrated.originCountry,
+                    seasons = if (item.seasons.isNotEmpty()) item.seasons else hydrated.seasons,
+                    episodes = if (item.episodes.isNotEmpty()) item.episodes else hydrated.episodes,
                 )
             }
-            if (item.type == MediaType.ANIME && item.seasons.isNotEmpty()) return item
+            if (item.seasons.isNotEmpty()) return item
         }
         val detailed = repos.tmdb.fetchDetails(item, credentials, settings) ?: item
         val enriched = repos.tvdb.enrichDetails(detailed, credentials)
@@ -562,8 +569,17 @@ class AppState(context: Context) {
         if (enriched.isAnime && enriched.type != MediaType.ANIME) {
             repos.anime.findByTitle(enriched.title)?.let { anilist ->
                 return anilist.copy(
-                    tmdbId = enriched.tmdbId, tvdbId = enriched.tvdbId,
-                    imdbId = enriched.imdbId, traktId = enriched.traktId,
+                    tmdbId = enriched.tmdbId ?: anilist.tmdbId,
+                    tvdbId = enriched.tvdbId ?: anilist.tvdbId,
+                    imdbId = enriched.imdbId ?: anilist.imdbId,
+                    traktId = enriched.traktId ?: anilist.traktId,
+                    posterPath = enriched.posterPath ?: anilist.posterPath,
+                    backdropPath = enriched.backdropPath ?: anilist.backdropPath,
+                    releaseDate = if (enriched.releaseDate.isNotBlank()) enriched.releaseDate else anilist.releaseDate,
+                    genres = if (enriched.genres.isNotEmpty()) enriched.genres else anilist.genres,
+                    originCountry = if (enriched.originCountry.isNotEmpty()) enriched.originCountry else anilist.originCountry,
+                    seasons = if (enriched.seasons.isNotEmpty()) enriched.seasons else anilist.seasons,
+                    episodes = if (enriched.episodes.isNotEmpty()) enriched.episodes else anilist.episodes,
                 )
             }
         }
@@ -593,18 +609,115 @@ class AppState(context: Context) {
         return repos.tvdb.fetchSeasonEpisodes(item, seasonNumber, credentials)
     }
 
+    private fun isAnimePlaybackCandidate(item: MediaItem): Boolean {
+        return item.type == MediaType.ANIME || item.isAnime || item.title == "One Pace"
+    }
+
+    private val onePieceSeasonStartEpisodes = mapOf(
+        1 to 1,
+        2 to 62,
+        3 to 78,
+        4 to 92,
+        5 to 131,
+        6 to 144,
+        7 to 196,
+        8 to 229,
+        9 to 264,
+        10 to 326,
+        11 to 384,
+        12 to 425,
+        13 to 457,
+        14 to 491,
+        15 to 517,
+        16 to 579,
+        17 to 629,
+        18 to 747,
+        19 to 783,
+        20 to 878,
+        21 to 892,
+        22 to 1089,
+    )
+
+    private fun isOnePieceLike(item: MediaItem): Boolean {
+        val t = item.title.lowercase()
+        return item.anilistId == 21 || t == "one piece" || t.contains("one piece")
+    }
+
+    private fun hardMapOnePieceEpisode(seasonNumber: Int, episodeNumber: Int): Int? {
+        val start = onePieceSeasonStartEpisodes[seasonNumber] ?: return null
+        if (episodeNumber <= 0) return null
+        return start + episodeNumber - 1
+    }
+
+    private fun normalizeAnimeEpisodeLinkage(item: MediaItem, episode: MediaEpisode): MediaEpisode {
+        if (!isOnePieceLike(item)) return episode
+        val epNum = episode.episodeNumber
+        val seasonNum = episode.seasonNumber
+        if (epNum <= 0 || seasonNum <= 1 || epNum >= 400) return episode
+
+        val currentSeason = item.seasons.firstOrNull {
+            it.seasonNumber == seasonNum && it.episodeCount > 0
+        }
+
+        if (currentSeason == null) {
+            val mapped = hardMapOnePieceEpisode(seasonNum, epNum) ?: return episode
+            return episode.copy(episodeNumber = mapped)
+        }
+
+        if (epNum > currentSeason.episodeCount) return episode
+
+        val priorEpisodes = item.seasons
+            .filter { it.seasonNumber in 1 until seasonNum }
+            .sumOf { it.episodeCount.coerceAtLeast(0) }
+
+        if (priorEpisodes > 0) return episode.copy(episodeNumber = priorEpisodes + epNum)
+
+        val mapped = hardMapOnePieceEpisode(seasonNum, epNum) ?: return episode
+        return episode.copy(episodeNumber = mapped)
+    }
+
+    private suspend fun hydrateAnimePlaybackItem(item: MediaItem): MediaItem {
+        if (item.type == MediaType.ANIME || item.title == "One Pace") return item
+        val hydrated = repos.anime.findByTitle(item.title) ?: return item
+        return hydrated.copy(
+            tmdbId = item.tmdbId ?: hydrated.tmdbId,
+            tvdbId = item.tvdbId ?: hydrated.tvdbId,
+            imdbId = item.imdbId ?: hydrated.imdbId,
+            traktId = item.traktId ?: hydrated.traktId,
+            posterPath = item.posterPath ?: hydrated.posterPath,
+            backdropPath = item.backdropPath ?: hydrated.backdropPath,
+            releaseDate = if (item.releaseDate.isNotBlank()) item.releaseDate else hydrated.releaseDate,
+            genres = if (item.genres.isNotEmpty()) item.genres else hydrated.genres,
+            originCountry = if (item.originCountry.isNotEmpty()) item.originCountry else hydrated.originCountry,
+            seasons = if (item.seasons.isNotEmpty()) item.seasons else hydrated.seasons,
+            episodes = if (item.episodes.isNotEmpty()) item.episodes else hydrated.episodes,
+            source = hydrated.source,
+        )
+    }
+
     suspend fun playbackSourcesFor(
         item: MediaItem,
         episode: MediaEpisode? = null,
         overrides: PlaybackOverrides = PlaybackOverrides()
     ): List<PlaybackSource> {
         val effective = settings.applying(overrides)
-        if (item.type == MediaType.ANIME) {
-            val target = episode ?: item.episodes.firstOrNull()
+        val embedFallback = repos.vidsrc.sourcesFor(item, effective, episode)
+
+        if (isAnimePlaybackCandidate(item)) {
+            val targetBase = episode ?: item.episodes.firstOrNull()
             ?: MediaEpisode(seasonNumber = 1, episodeNumber = 1, title = "Episode 1")
-            return listOf(repos.anime.resolveSource(item, target, effective))
+            val playbackItem = hydrateAnimePlaybackItem(item)
+            val target = normalizeAnimeEpisodeLinkage(playbackItem, targetBase)
+
+            val direct = runCatching {
+                repos.anime.resolveSource(playbackItem, target, effective)
+            }.getOrNull()
+
+            if (direct != null) return listOf(direct) + embedFallback
+            if (embedFallback.isNotEmpty()) return embedFallback
         }
-        return repos.vidsrc.sourcesFor(item, effective, episode)
+
+        return embedFallback
     }
 
     // MARK: - Recommendations

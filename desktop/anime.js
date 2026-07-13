@@ -114,6 +114,14 @@
       .trim();
   }
 
+  function sanitizeTitle(value) {
+    return (value || "")
+      .replace(/[''`´]/g, "")
+      .replace(/[:!.]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   function mediaFromAnilist(json) {
     const id = json.id || 0;
     const t = json.title || {};
@@ -376,9 +384,169 @@ fragment animeFields on Media {
     }
   }
 
+  async function anilistSeasonTitle(baseTitle, seasonNumber = 1) {
+    if (seasonNumber <= 1) return { title: baseTitle, romaji: null };
+
+    const query = `
+      query($search:String) {
+        Media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+          title { english romaji }
+          relations {
+            edges {
+              relationType
+              node {
+                type
+                format
+                title { english romaji }
+                startDate { year }
+                seasonYear
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+      const body = await postJson(ANILIST, {
+        query,
+        variables: { search: baseTitle },
+      });
+      const media = body && body.data && body.data.Media;
+      if (!media) return { title: baseTitle, romaji: null };
+
+      const edges =
+        media.relations && Array.isArray(media.relations.edges)
+          ? media.relations.edges
+          : [];
+      const sequels = edges
+        .filter((edge) => {
+          const node = (edge && edge.node) || null;
+          return (
+            edge &&
+            edge.relationType === "SEQUEL" &&
+            node &&
+            node.type === "ANIME" &&
+            (node.format === "TV" || node.format === "TV_SHORT")
+          );
+        })
+        .sort((a, b) => {
+          const ay =
+            (a && a.node && a.node.startDate && a.node.startDate.year) ||
+            (a && a.node && a.node.seasonYear) ||
+            9999;
+          const by =
+            (b && b.node && b.node.startDate && b.node.startDate.year) ||
+            (b && b.node && b.node.seasonYear) ||
+            9999;
+          return ay - by;
+        });
+
+      const targetIndex = seasonNumber - 2;
+      if (targetIndex < 0 || targetIndex >= sequels.length) {
+        return { title: baseTitle, romaji: null };
+      }
+
+      const nodeTitle =
+        sequels[targetIndex] &&
+        sequels[targetIndex].node &&
+        sequels[targetIndex].node.title
+          ? sequels[targetIndex].node.title
+          : null;
+      return {
+        title:
+          (nodeTitle && (nodeTitle.english || nodeTitle.romaji)) || baseTitle,
+        romaji: (nodeTitle && nodeTitle.romaji) || null,
+      };
+    } catch {
+      return { title: baseTitle, romaji: null };
+    }
+  }
+
+  const ONE_PIECE_SEASON_START_EPISODES = {
+    1: 1,
+    2: 62,
+    3: 78,
+    4: 92,
+    5: 131,
+    6: 144,
+    7: 196,
+    8: 229,
+    9: 264,
+    10: 326,
+    11: 384,
+    12: 425,
+    13: 457,
+    14: 491,
+    15: 517,
+    16: 579,
+    17: 629,
+    18: 747,
+    19: 783,
+    20: 878,
+    21: 892,
+    22: 1089,
+  };
+
+  function isOnePieceTitle(title) {
+    const lower = (title || "").toLowerCase();
+    return lower === "one piece" || lower.includes("one piece");
+  }
+
+  function hardMapOnePieceEpisode(seasonNum, episodeNum) {
+    const start = ONE_PIECE_SEASON_START_EPISODES[seasonNum];
+    if (!start || episodeNum <= 0) return null;
+    return start + episodeNum - 1;
+  }
+
+  function normalizeEpisodeLinkage(item, seasonNumber, episodeNumber) {
+    const seasonNum = Number.parseInt(seasonNumber, 10);
+    const epNum = Number.parseInt(episodeNumber, 10);
+    if (!Number.isFinite(seasonNum) || !Number.isFinite(epNum))
+      return episodeNumber;
+    if (!isOnePieceTitle(item && item.title)) return epNum;
+    if (seasonNum <= 1 || epNum <= 0 || epNum >= 400) return epNum;
+
+    const rawSeasons = Array.isArray(item && item.seasonsData)
+      ? item.seasonsData
+      : Array.isArray(item && item.seasons)
+        ? item.seasons
+        : [];
+
+    const seasons = rawSeasons
+      .map((s) => ({
+        seasonNumber: Number.parseInt(
+          s && (s.season_number != null ? s.season_number : s.seasonNumber),
+          10,
+        ),
+        episodeCount: Number.parseInt(
+          s && (s.episode_count != null ? s.episode_count : s.episodeCount),
+          10,
+        ),
+      }))
+      .filter(
+        (s) =>
+          Number.isFinite(s.seasonNumber) && Number.isFinite(s.episodeCount),
+      );
+
+    const current = seasons.find((s) => s.seasonNumber === seasonNum);
+    if (!current || current.episodeCount <= 0) {
+      return hardMapOnePieceEpisode(seasonNum, epNum) || epNum;
+    }
+    if (epNum > current.episodeCount) return epNum;
+
+    const priorEpisodes = seasons
+      .filter((s) => s.seasonNumber > 0 && s.seasonNumber < seasonNum)
+      .reduce((sum, s) => sum + Math.max(0, s.episodeCount), 0);
+
+    if (priorEpisodes > 0) return priorEpisodes + epNum;
+    return hardMapOnePieceEpisode(seasonNum, epNum) || epNum;
+  }
+
   /** Returns { count, meta } for an anime item's season. */
   async function fetchEpisodes(item, seasonNumber = 1) {
-    const searchTitle = item.title;
+    const seasonTitle = await anilistSeasonTitle(item.title, seasonNumber);
+    const searchTitle = seasonTitle.title;
     const live = await allmangaEpisodeCount(searchTitle);
     const planned = item.episodesTotal || 0;
     const count = live != null ? live : planned;
@@ -673,16 +841,54 @@ fragment animeFields on Media {
   }
 
   async function resolveAllmanga(
+    item,
     title,
+    seasonNumber,
     episodeNumber,
     isMovie,
     translationType,
   ) {
     const dubSub = translationType === "dub" ? "dub" : "sub";
-    const epStr = isMovie ? "1" : String(episodeNumber);
-    const edges = await searchAllmanga(title, dubSub);
+    const seasonTitle = isMovie
+      ? { title, romaji: null }
+      : await anilistSeasonTitle(title, seasonNumber);
+    const linkedEpisode = isMovie
+      ? 1
+      : normalizeEpisodeLinkage(item || { title }, seasonNumber, episodeNumber);
+    const epStr = String(linkedEpisode);
+
+    const seen = new Set();
+    const candidates = [];
+    const addCandidate = (value) => {
+      const v = (value || "").trim();
+      if (!v || seen.has(v)) return;
+      seen.add(v);
+      candidates.push(v);
+    };
+
+    addCandidate(seasonTitle.title);
+    addCandidate(sanitizeTitle(seasonTitle.title));
+    addCandidate(seasonTitle.romaji || "");
+    addCandidate(title);
+    addCandidate(sanitizeTitle(title));
+
+    let edges = null;
+    let matchedTitle = seasonTitle.title;
+    for (const candidate of candidates) {
+      try {
+        const res = await searchAllmanga(candidate, dubSub);
+        if (res && res.length) {
+          edges = res;
+          matchedTitle = candidate;
+          break;
+        }
+      } catch (_) {
+        // Try next candidate.
+      }
+    }
+
     if (!edges || !edges.length) return null;
-    const anime = bestAllmangaMatch(edges, title);
+    const anime = bestAllmangaMatch(edges, matchedTitle);
     const showId = anime && anime._id;
     if (!showId) return null;
     const sourceUrls = await episodeSourceUrls(showId, dubSub, epStr);
@@ -698,18 +904,28 @@ fragment animeFields on Media {
   async function resolveSource(item, episodeNumber, opts = {}) {
     const dub = !!opts.dub;
     const translationType = dub ? "dub" : "sub";
+    const seasonNumber = Number.parseInt(opts.seasonNumber || "1", 10) || 1;
     const isMovie = item.episodesTotal === 1 && episodeNumber === 1;
     episodeNeededCaptcha = false;
 
     // Try AllAnime (AllManga)
     let result = await resolveAllmanga(
+      item,
       item.title,
+      seasonNumber,
       episodeNumber,
       isMovie,
       translationType,
     );
     if (!result && translationType === "dub") {
-      result = await resolveAllmanga(item.title, episodeNumber, isMovie, "sub");
+      result = await resolveAllmanga(
+        item,
+        item.title,
+        seasonNumber,
+        episodeNumber,
+        isMovie,
+        "sub",
+      );
     }
     if (result) return { ...result, provider: "AllManga" };
 

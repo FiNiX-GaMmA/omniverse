@@ -2996,15 +2996,25 @@ async function playAnimeStream(media, episode, season = 1) {
   try {
     const src = await window.OmniAnime.resolveSource(media, episode, {
       dub: state.preferDub || false,
+      seasonNumber: selectedSeason,
     });
     state.animeResume = { media, episode };
     playDirectVideo(container, src.url, src.referer, media, episode);
   } catch (e) {
     if (e && e.name === "CaptchaRequiredError") {
-      showAnimeCaptcha(e.url, () => playAnimeStream(media, episode, season));
+      showAnimeCaptcha(e.url, () =>
+        playAnimeStream(media, episode, selectedSeason),
+      );
       return;
     }
     console.warn("[Omniverse] anime resolve failed:", e);
+
+    if (media && media.tmdbId) {
+      showPlayerToast("Anime Source Failed", "Trying your server list…");
+      playStreamEmbed(media, selectedSeason, episode);
+      return;
+    }
+
     container.innerHTML =
       '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#fff;font-weight:600">No playable source found.</div>';
     window.electron.showNotification(

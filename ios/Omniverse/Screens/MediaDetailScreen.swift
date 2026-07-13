@@ -442,13 +442,16 @@ struct MediaDetailScreen: View {
         state.message = "Could not load sources: \(error)"
     }
 
-    /// One-click preferred-server bypass + single-direct-anime auto open.
+    /// One-click preferred-server bypass + anime direct auto open.
     private func maybeAutoOpen(_ s: [PlaybackSource], episode: MediaEpisode?, fallback: () -> Void) async throws {
+        let preferAnimeDirect = current.type == .anime || current.isAnime
+        if preferAnimeDirect, let direct = s.first(where: { $0.isDirect }) {
+            openSource(direct, episode: episode); return
+        }
         let domain = state.settings.vidsrcDomain.trimmed
         if !domain.isEmpty, let match = s.first(where: { $0.url.contains(domain) }) {
             openSource(match, episode: episode); return
         }
-        if current.type == .anime, s.count == 1, s[0].isDirect { openSource(s[0], episode: episode); return }
         fallback()
     }
 
