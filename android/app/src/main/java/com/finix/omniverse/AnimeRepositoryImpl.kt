@@ -9,6 +9,8 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import java.net.URLDecoder
+import java.net.URLEncoder
 import java.security.MessageDigest
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -92,6 +94,20 @@ class AnimeRepositoryImpl(
         "Accept" to "*/*",
     )
 
+    private val hianimeDomains = listOf(
+        "https://hianime.to",
+        "https://hianime.tv",
+        "https://hianime.cv",
+        "https://hianimes.ro",
+        "https://hianime.nz",
+        "https://hianime.bz",
+        "https://hianime.pe",
+        "https://hianime.cx",
+        "https://hianime.do",
+    )
+    private val hianimeOnePieceSlug = "one-piece-100"
+    private val hianimeOnePieceMinEpisode = 1020
+
     // MARK: - Supporting value types
 
     data class AnilistEpisodeMeta(val title: String, val thumbnail: String?)
@@ -124,6 +140,13 @@ class AnimeRepositoryImpl(
         val resolution: String,
         val sourceName: String,
         val referer: String,
+    )
+
+    private data class HianimeSource(
+        val url: String,
+        val referer: String,
+        val quality: String,
+        val direct: Boolean,
     )
 
     class AnimeException(message: String) : Exception(message)
@@ -557,7 +580,25 @@ query(${'$'}search: String) {
 
         episodeNeededCaptcha = false
 
-        // AllAnime — primary path. Same path ani-cli uses.
+        // Try HiAnime first for all anime (First preference)
+        var hiAnime = runCatching { resolveAnimeFromHianime(item.title, episode.episodeNumber, dub) }.getOrNull()
+        if (hiAnime == null && dub) {
+            hiAnime = runCatching { resolveAnimeFromHianime(item.title, episode.episodeNumber, false) }.getOrNull()
+        }
+        if (hiAnime != null) {
+            return PlaybackSource(
+                id = "hianime:${item.id}:${episode.seasonNumber}:${episode.episodeNumber}",
+                title = if (hiAnime.direct) "HiAnime ${hiAnime.quality}".trim() else "HiAnime Embed",
+                url = hiAnime.url,
+                provider = "HiAnime",
+                kind = if (hiAnime.direct) PlaybackSourceKind.DIRECT else PlaybackSourceKind.EMBED,
+                quality = if (hiAnime.direct) hiAnime.quality else "Embed",
+                headers = mapOf("Referer" to hiAnime.referer),
+                subtitleUrl = settings.subtitleUrl.trim(),
+            )
+        }
+
+        // Try AllAnime (AllManga) as fallback
         var result = resolveAllmanga(
             title = item.title,
             seasonNumber = episode.seasonNumber,
@@ -597,7 +638,239 @@ query(${'$'}search: String) {
         throw AnimeException("No playable anime source found for ${item.title}.")
     }
 
-    // MARK: - mediaFromAnilist
+    private fun isHiAnimeFallbackTarget(item: MediaItem, episode: MediaEpisode): Boolean {
+        if (!isOnePieceLikeTitle(item.title)) return false
+        return episode.episodeNumber >= hianimeOnePieceMinEpisode
+    }
+
+    private fun isOnePieceLikeTitle(title: String): Boolean {
+        val lower = title.lowercase()
+        return lower == "one piece" || lower.contains("one piece")
+    }
+
+    private fun hianimeHeaders(base: String, ajax: Boolean = false): Map<String, String> {
+        val headers = mutableMapOf(
+            "Accept" to if (ajax) "application/json, text/plain, */*" else "text/html,*/*",
+            "Referer" to "$base/",
+            "Origin" to base,
+        )
+        if (ajax) headers["X-Requested-With"] = "XMLHttpRequest"
+        return headers
+    }
+
+    private fun stripHtml(value: String): String =
+        value.replace(Regex("<[^>]*>"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+
+    private fun parseJsonObjectOrNull(body: String): JSONObject? =
+        try {
+            JSONObject(body)
+        } catch (_: Throwable) {
+            null
+        }
+
+    private suspend fun resolveAnimeFromHianime(title: String, episodeNumber: Int, preferDub: Boolean): HianimeSource? {
+        val epNum = episodeNumber
+        if (epNum <= 0) return null
+
+        for (base in hianimeDomains) {
+            val slugs = discoverAnimeSlugs(base, title)
+            for (slug in slugs) {
+                try {
+                    val watchUrl = "$base/watch/$slug"
+                    val watchRes = get(watchUrl, hianimeHeaders(base), 12)
+                    if (watchRes == null || !watchRes.ok || watchRes.body.isNullOrEmpty()) continue
+
+                    val animeId = extractHianimeAnimeId(watchRes.body, slug) ?: continue
+
+                    val listUrl = "$base/ajax/v2/episode/list/$animeId"
+                    val listRes = get(listUrl, hianimeHeaders(base, true), 12)
+                    if (listRes == null || !listRes.ok || listRes.body.isNullOrEmpty()) continue
+                    val listHtml = htmlFromMaybeAjaxJson(listRes.body)
+
+                    val episodeId = extractHianimeEpisodeId(listHtml, epNum) ?: continue
+
+                    val serversUrl = "$base/ajax/v2/episode/servers?episodeId=$episodeId"
+                    val serversRes = get(serversUrl, hianimeHeaders(base, true), 12)
+                    if (serversRes == null || !serversRes.ok || serversRes.body.isNullOrEmpty()) continue
+                    val serversHtml = htmlFromMaybeAjaxJson(serversRes.body)
+
+                    val serverId = extractHianimeServerId(serversHtml, preferDub) ?: continue
+
+                    val sourcesUrl = "$base/ajax/v2/episode/sources?id=$serverId"
+                    val sourcesRes = get(sourcesUrl, hianimeHeaders(base, true), 12)
+                    if (sourcesRes == null || !sourcesRes.ok || sourcesRes.body.isNullOrEmpty()) continue
+
+                    val srcJson = parseJsonObjectOrNull(sourcesRes.body) ?: continue
+                    val srcData = srcJson.optJSONObject("data") ?: srcJson
+
+                    val direct = pickHianimeDirectUrl(srcData)
+                    if (direct != null) {
+                        return HianimeSource(
+                            url = direct,
+                            quality = "?",
+                            referer = "$base/",
+                            direct = true
+                        )
+                    }
+
+                    val link =
+                        absoluteUrl(base, srcData.optStringOrNull("link") ?: srcJson.optStringOrNull("link") ?: "")
+                    if (link != null) {
+                        return HianimeSource(
+                            url = link,
+                            quality = "Embed",
+                            referer = "$base/",
+                            direct = false
+                        )
+                    }
+                } catch (_: Throwable) {
+                    // Try next slug/domain
+                }
+            }
+        }
+        return null
+    }
+
+    private suspend fun discoverAnimeSlugs(base: String, title: String): List<String> {
+        val slugs = mutableListOf<String>()
+        if (title.lowercase() == "one piece") {
+            slugs.add(hianimeOnePieceSlug)
+        }
+        try {
+            val searchUrl = "$base/search?keyword=${URLEncoder.encode(title, "UTF-8")}"
+            val res = get(searchUrl, hianimeHeaders(base), 12)
+            if (res != null && res.ok && !res.body.isNullOrEmpty()) {
+                val seen = HashSet(slugs)
+                val re = Regex("href=[\"']/watch/([^\"'#?\\s]+)[\"']", RegexOption.IGNORE_CASE)
+                re.findAll(res.body).forEach { m ->
+                    val slug = m.groupValues.getOrNull(1)?.trim() ?: ""
+                    if (slug.isNotEmpty() && !seen.contains(slug)) {
+                        if (!Regex(
+                                "(movie|film|special|recap)",
+                                RegexOption.IGNORE_CASE
+                            ).containsMatchIn(slug.lowercase())
+                        ) {
+                            seen.add(slug)
+                            slugs.add(0, slug) // priority
+                        }
+                    }
+                }
+            }
+        } catch (_: Throwable) {
+        }
+        return slugs
+    }
+
+    private fun extractHianimeAnimeId(watchHtml: String, slug: String): String? {
+        val candidates = listOf(
+            Regex("id=[\"']ani_detail[\"'][^>]*data-id=[\"']([^\"']+)[\"']", RegexOption.IGNORE_CASE),
+            Regex("class=[\"'][^\"']*film-detail[^\"']*[\"'][^>]*data-id=[\"']([^\"']+)[\"']", RegexOption.IGNORE_CASE),
+            Regex("data-id=[\"'](\\d+)[\"']", RegexOption.IGNORE_CASE)
+        )
+        for (rx in candidates) {
+            val m = rx.find(watchHtml)
+            if (m != null) return m.groupValues.getOrNull(1)
+        }
+        val tail = Regex("-(\\d+)(?:$|\\?)").find(slug)
+        return tail?.groupValues?.getOrNull(1)
+    }
+
+    private fun extractHianimeEpisodeId(listHtml: String, episodeNumber: Int): String? {
+        val ep = episodeNumber.toString()
+        val patterns = listOf(
+            Regex("data-number=[\"']$ep[\"'][^>]*data-id=[\"']([^\"']+)[\"']", RegexOption.IGNORE_CASE),
+            Regex("data-id=[\"']([^\"']+)[\"'][^>]*data-number=[\"']$ep[\"']", RegexOption.IGNORE_CASE)
+        )
+        for (rx in patterns) {
+            val m = rx.find(listHtml)
+            if (m != null) return m.groupValues.getOrNull(1)
+        }
+        return null
+    }
+
+    private fun extractHianimeServerId(serversHtml: String, preferDub: Boolean): String? {
+        val serverRe = Regex("<[^>]*data-id=[\"']([^\"']+)[\"'][^>]*>([\\s\\S]*?)</[^>]+>", RegexOption.IGNORE_CASE)
+        val entries = mutableListOf<Pair<String, String>>()
+        serverRe.findAll(serversHtml).forEach { match ->
+            val id = match.groupValues.getOrNull(1)?.trim() ?: ""
+            val raw = match.groupValues.getOrNull(0) ?: ""
+            val label = stripHtml(match.groupValues.getOrNull(2) ?: "")
+            if (id.isNotEmpty()) {
+                entries.add(Pair(id, "$raw $label".lowercase()))
+            }
+        }
+        if (entries.isEmpty()) return null
+
+        val preferredLane = if (preferDub) "dub" else "sub"
+        fun score(entry: Pair<String, String>): Int {
+            var s = 0
+            if (entry.second.contains(preferredLane)) s += 30
+            if (!preferDub && !entry.second.contains("dub")) s += 4
+            if (Regex("(hd-?1|vidstream|megacloud|streamsb|streamtape|default|server\\s*1)").containsMatchIn(entry.second)) s += 20
+            if (Regex("(hd-?2|server\\s*2)").containsMatchIn(entry.second)) s += 10
+            return s
+        }
+
+        val sorted = entries.sortedByDescending { score(it) }
+        return sorted.firstOrNull()?.first ?: entries.first().first
+    }
+
+    private fun pickHianimeDirectUrl(json: JSONObject): String? {
+        val urls = mutableListOf<String>()
+        collectHttpUrls(json, urls, HashSet())
+        for (u in urls) {
+            if (isDirectVideoUrl(u)) return u
+        }
+        return null
+    }
+
+    private fun collectHttpUrls(value: Any?, out: MutableList<String>, seen: MutableSet<Any>) {
+        if (value == null) return
+        if (value is String) {
+            val v = value.trim()
+            if (v.startsWith("http://") || v.startsWith("https://")) {
+                out.add(v)
+            }
+            return
+        }
+        if (value !is JSONObject && value !is JSONArray) return
+        if (seen.contains(value)) return
+        seen.add(value)
+        if (value is JSONArray) {
+            for (i in 0 until value.length()) {
+                collectHttpUrls(value.opt(i), out, seen)
+            }
+        } else if (value is JSONObject) {
+            val keys = value.keys()
+            while (keys.hasNext()) {
+                val k = keys.next()
+                collectHttpUrls(value.opt(k), out, seen)
+            }
+        }
+    }
+
+    private fun htmlFromMaybeAjaxJson(body: String): String {
+        val parsed = parseJsonObjectOrNull(body) ?: return body
+        parsed.optStringOrNull("html")?.let { return it }
+        parsed.optJSONObject("data")?.optStringOrNull("html")?.let { return it }
+        return body
+    }
+
+    private fun absoluteUrl(base: String, value: String): String? {
+        val raw = value.trim()
+        if (raw.isEmpty()) return null
+        if (raw.startsWith("http://") || raw.startsWith("https://")) return raw
+        if (raw.startsWith("//")) return "https:$raw"
+        return try {
+            val uri = java.net.URI(raw)
+            if (uri.isAbsolute) raw
+            else java.net.URI(base).resolve(uri).toString()
+        } catch (_: Throwable) {
+            null
+        }
+    }
 
     private fun mediaFromAnilist(json: JSONObject): MediaItem {
         val id = json.optInt("id", 0)
@@ -634,7 +907,10 @@ query(${'$'}search: String) {
                 ?: json.optJSONObject("coverImage")?.optStringOrNull("large"),
             backdropPath = json.optStringOrNull("bannerImage"),
             releaseDate = year?.toString() ?: "",
-            rating = (if (json.has("averageScore") && !json.isNull("averageScore")) json.optDouble("averageScore", 0.0) else 0.0) / 10.0,
+            rating = (if (json.has("averageScore") && !json.isNull("averageScore")) json.optDouble(
+                "averageScore",
+                0.0
+            ) else 0.0) / 10.0,
             genres = json.optJSONArray("genres").toStringList(),
             directors = studios,
             runtimeMinutes = if (json.has("duration") && !json.isNull("duration")) json.optInt("duration") else null,
@@ -729,20 +1005,22 @@ query(${'$'}search:String) {
                     .put("query", query)
                     .put("variables", JSONObject().put("search", baseTitle)),
             )
-            val media = body.optJSONObject("data")?.optJSONObject("Media") ?: return SeasonTitle(title = baseTitle)
+            val media =
+                body.optJSONObject("data")?.optJSONObject("Media") ?: return SeasonTitle(title = baseTitle)
             val relations = media.optJSONObject("relations")?.optJSONArray("edges") ?: JSONArray()
             val sequels = (0 until relations.length())
                 .mapNotNull { relations.optJSONObject(it) }
                 .filter { edge ->
                     val node = edge.optJSONObject("node") ?: JSONObject()
                     edge.optStringOrNull("relationType") == "SEQUEL" &&
-                        node.optStringOrNull("type") == "ANIME" &&
-                        (node.optStringOrNull("format") == "TV" || node.optStringOrNull("format") == "TV_SHORT")
+                            node.optStringOrNull("type") == "ANIME" &&
+                            (node.optStringOrNull("format") == "TV" || node.optStringOrNull("format") == "TV_SHORT")
                 }
                 .sortedBy { edge ->
                     val node = edge.optJSONObject("node") ?: JSONObject()
                     val start = node.optJSONObject("startDate")
-                    val startYear = if (start != null && start.has("year") && !start.isNull("year")) start.optInt("year") else null
+                    val startYear =
+                        if (start != null && start.has("year") && !start.isNull("year")) start.optInt("year") else null
                     startYear
                         ?: (if (node.has("seasonYear") && !node.isNull("seasonYear")) node.optInt("seasonYear") else null)
                         ?: 9999

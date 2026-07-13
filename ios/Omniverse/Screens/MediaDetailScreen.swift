@@ -445,6 +445,9 @@ struct MediaDetailScreen: View {
     /// One-click preferred-server bypass + anime direct auto open.
     private func maybeAutoOpen(_ s: [PlaybackSource], episode: MediaEpisode?, fallback: () -> Void) async throws {
         let preferAnimeDirect = current.type == .anime || current.isAnime
+        if preferAnimeDirect, let animeSource = s.first(where: { $0.provider == "HiAnime" || $0.provider == "AllManga" }) {
+            openSource(animeSource, episode: episode); return
+        }
         if preferAnimeDirect, let direct = s.first(where: { $0.isDirect }) {
             openSource(direct, episode: episode); return
         }

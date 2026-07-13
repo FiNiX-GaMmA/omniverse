@@ -9,8 +9,8 @@
 // Networking goes through window.electron.iptvFetch (main-process fetch) to avoid
 // renderer CORS. Exposes window.OmniAnime.
 //
-// NOTE: the HiAnime/Megacloud fallback is not ported here yet (documented TODO);
-// AllAnime + the captcha flow is the primary path and covers the captcha case.
+// Includes a HiAnime fallback for long-running One Piece episodes when AllAnime
+// has gaps in the latest range.
 // ==============================================================================
 
 (function () {
@@ -32,6 +32,20 @@
     Accept: "*/*",
   };
   const ALLMANGA_HEADERS = { Referer: "https://allmanga.to", Accept: "*/*" };
+
+  const HIANIME_DOMAINS = [
+    "https://hianime.to",
+    "https://hianime.tv",
+    "https://hianime.cv",
+    "https://hianimes.ro",
+    "https://hianime.nz",
+    "https://hianime.bz",
+    "https://hianime.pe",
+    "https://hianime.cx",
+    "https://hianime.do",
+  ];
+  const HIANIME_ONE_PIECE_SLUG = "one-piece-100";
+  const HIANIME_ONE_PIECE_MIN_EPISODE = 1020;
 
   // Raised by resolveSource when AllAnime answers NEED_CAPTCHA.
   class CaptchaRequiredError extends Error {
@@ -896,9 +910,1465 @@ fragment animeFields on Media {
     return trySourceUrls(sourceUrls);
   }
 
+  function parseJsonSafe(v) {
+    try {
+      return JSON.parse(v);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function hianimeHeaders(base, ajax = false) {
+    const headers = {
+      Accept: ajax ? "application/json, text/plain, */*" : "text/html,*/*",
+      Referer: `${base}/`,
+      Origin: base,
+    };
+    if (ajax) headers["X-Requested-With"] = "XMLHttpRequest";
+    return headers;
+  }
+
+  function htmlFromMaybeAjaxJson(body) {
+    const parsed = parseJsonSafe(body || "");
+    if (parsed && typeof parsed.html === "string") return parsed.html;
+    if (parsed && parsed.data && typeof parsed.data.html === "string")
+      return parsed.data.html;
+    return body || "";
+  }
+
+  function stripHtml(v) {
+    return String(v || "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function absoluteUrl(base, value) {
+    const raw = String(value || "").trim();
+    if (!raw) return null;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (raw.startsWith("//")) return "https:" + raw;
+    try {
+      return new URL(raw, base).toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function extractHianimeAnimeId(watchHtml, slug) {
+    const candidates = [
+      /id=["']ani_detail["'][^>]*data-id=["']([^"']+)["']/i,
+      /class=["'][^"']*film-detail[^"']*["'][^>]*data-id=["']([^"']+)["']/i,
+      /data-id=["'](\d+)["']/i,
+    ];
+    for (const rx of candidates) {
+      const m = rx.exec(watchHtml || "");
+      if (m && m[1]) return m[1];
+    }
+    const tail = /-(\d+)(?:$|\?)/.exec(slug || "");
+    return tail && tail[1] ? tail[1] : null;
+  }
+
+  function extractHianimeEpisodeId(listHtml, episodeNumber) {
+    const ep = String(Number.parseInt(episodeNumber, 10));
+    if (!ep || ep === "NaN") return null;
+    const patterns = [
+      new RegExp(`data-number=["']${ep}["'][^>]*data-id=["']([^"']+)["']`, "i"),
+      new RegExp(`data-id=["']([^"']+)["'][^>]*data-number=["']${ep}["']`, "i"),
+    ];
+    for (const rx of patterns) {
+      const m = rx.exec(listHtml || "");
+      if (m && m[1]) return m[1];
+    }
+    return null;
+  }
+
+  function extractHianimeServerId(serversHtml, preferDub = false) {
+    const serverRe =
+      /<[^>]*data-id=["']([^"']+)["'][^>]*>([\s\S]*?)<\/[^>]+>/gi;
+    const entries = [];
+    let match;
+    while ((match = serverRe.exec(serversHtml || ""))) {
+      const id = (match[1] || "").trim();
+      if (!id) continue;
+      const raw = match[0] || "";
+      const label = stripHtml(match[2] || "");
+      const text = `${raw} ${label}`.toLowerCase();
+      entries.push({ id, text });
+    }
+
+    if (!entries.length) return null;
+
+    const preferredLane = preferDub ? "dub" : "sub";
+    const score = (entry) => {
+      let s = 0;
+      if (entry.text.includes(preferredLane)) s += 30;
+      if (!preferDub && !entry.text.includes("dub")) s += 4;
+      if (
+        /hd-?1|vidstream|megacloud|streamsb|streamtape|default|server\s*1/.test(
+          entry.text,
+        )
+      ) {
+        s += 20;
+      }
+      if (/hd-?2|server\s*2/.test(entry.text)) s += 10;
+      return s;
+    };
+
+    const sorted = [...entries].sort((a, b) => score(b) - score(a));
+    return sorted[0] && sorted[0].id ? sorted[0].id : entries[0].id;
+  }
+
+  function collectHttpUrls(value, out, seen = new Set()) {
+    if (value == null) return;
+    if (typeof value === "string") {
+      const v = value.trim();
+      if (/^https?:\/\//i.test(v)) out.push(v);
+      return;
+    }
+    if (typeof value !== "object") return;
+    if (seen.has(value)) return;
+    seen.add(value);
+    if (Array.isArray(value)) {
+      for (const item of value) collectHttpUrls(item, out, seen);
+      return;
+    }
+    for (const k of Object.keys(value)) collectHttpUrls(value[k], out, seen);
+  }
+
+  function pickHianimeDirectUrl(payload) {
+    const urls = [];
+    collectHttpUrls(payload, urls);
+    for (const u of urls) {
+      if (isDirectVideoUrl(u)) return u;
+    }
+    return null;
+  }
+
+  async function discoverOnePieceSlugs(base) {
+    const slugs = [HIANIME_ONE_PIECE_SLUG];
+    try {
+      const searchUrl = `${base}/search?keyword=${encodeURIComponent("one piece")}`;
+      const res = await httpText(searchUrl, { headers: hianimeHeaders(base) });
+      if (!res.ok || !res.body) return slugs;
+      const seen = new Set(slugs);
+      const re = /href=["']\/watch\/([^"'#?\s]+)["']/gi;
+      let m;
+      while ((m = re.exec(res.body))) {
+        const slug = (m[1] || "").trim();
+        if (!slug || seen.has(slug)) continue;
+        if (!slug.toLowerCase().includes("one-piece")) continue;
+        if (/(movie|film|special|recap)/i.test(slug)) continue;
+        seen.add(slug);
+        slugs.unshift(slug);
+      }
+    } catch (_) {}
+    return slugs;
+  }
+
+  async function resolveHianimeOnePiece(episodeNumber, dub = false) {
+    const epNum = Number.parseInt(episodeNumber, 10);
+    if (!Number.isFinite(epNum) || epNum <= 0) return null;
+
+    for (const base of HIANIME_DOMAINS) {
+      const slugs = await discoverOnePieceSlugs(base);
+      for (const slug of slugs) {
+        try {
+          const watchUrl = `${base}/watch/${slug}`;
+          const watchRes = await httpText(watchUrl, {
+            headers: hianimeHeaders(base),
+          });
+          if (!watchRes.ok || !watchRes.body) continue;
+
+          const animeId = extractHianimeAnimeId(watchRes.body, slug);
+          if (!animeId) continue;
+
+          const listUrl = `${base}/ajax/v2/episode/list/${encodeURIComponent(animeId)}`;
+          const listRes = await httpText(listUrl, {
+            headers: hianimeHeaders(base, true),
+          });
+          if (!listRes.ok || !listRes.body) continue;
+          const listHtml = htmlFromMaybeAjaxJson(listRes.body);
+
+          const episodeId = extractHianimeEpisodeId(listHtml, epNum);
+          if (!episodeId) continue;
+
+          const serversUrl = `${base}/ajax/v2/episode/servers?episodeId=${encodeURIComponent(episodeId)}`;
+          const serversRes = await httpText(serversUrl, {
+            headers: hianimeHeaders(base, true),
+          });
+          if (!serversRes.ok || !serversRes.body) continue;
+          const serversHtml = htmlFromMaybeAjaxJson(serversRes.body);
+
+          const serverId = extractHianimeServerId(serversHtml, dub);
+          if (!serverId) continue;
+
+          const sourcesUrl = `${base}/ajax/v2/episode/sources?id=${encodeURIComponent(serverId)}`;
+          const sourcesRes = await httpText(sourcesUrl, {
+            headers: hianimeHeaders(base, true),
+          });
+          if (!sourcesRes.ok || !sourcesRes.body) continue;
+
+          const srcJson = parseJsonSafe(sourcesRes.body) || {};
+          const srcData =
+            srcJson.data && typeof srcJson.data === "object"
+              ? srcJson.data
+              : srcJson;
+
+          const direct = pickHianimeDirectUrl(srcData);
+          if (direct) {
+            return {
+              url: direct,
+              resolution: "?",
+              sourceName: "HiAnime",
+              referer: `${base}/`,
+              kind: "direct",
+            };
+          }
+
+          const link = absoluteUrl(base, srcData.link || srcJson.link || "");
+          if (link) {
+            return {
+              url: link,
+              resolution: "Embed",
+              sourceName: "HiAnime",
+              referer: `${base}/`,
+              kind: "embed",
+            };
+          }
+        } catch (_) {
+          // try next slug/domain
+        }
+      }
+    }
+
+    return null;
+  }
+
   /**
    * Resolves a direct playable source for an anime episode.
    * @returns {url, referer, resolution, sourceName}
+   * @throws CaptchaRequiredError when AllAnime is captcha-gated.
+   */
+  function parseJsonSafe(text) {
+    try {
+      return JSON.parse(text || "");
+    } catch {
+      return null;
+    }
+  }
+
+  function stripHtml(value) {
+    return (value || "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function hianimeHeaders(base, ajax = false) {
+    const headers = {
+      Accept: ajax ? "application/json, text/plain, */*" : "text/html,*/*",
+      Referer: `${base}/`,
+      Origin: base,
+    };
+    if (ajax) headers["X-Requested-With"] = "XMLHttpRequest";
+    return headers;
+  }
+
+  function absUrl(base, maybeUrl) {
+    const value = (maybeUrl || "").trim();
+    if (!value) return null;
+    if (/^https?:\/\//i.test(value)) return value;
+    if (value.startsWith("//")) return "https:" + value;
+    if (value.startsWith("/")) return base + value;
+    return `${base}/${value}`;
+  }
+
+  function htmlFromMaybeJsonBody(body) {
+    const parsed = parseJsonSafe(body);
+    if (parsed && typeof parsed.html === "string") return parsed.html;
+    if (parsed && parsed.data && typeof parsed.data.html === "string") {
+      return parsed.data.html;
+    }
+    return body || "";
+  }
+
+  function extractHianimeAnimeId(watchHtml, slug) {
+    const html = watchHtml || "";
+    const explicit =
+      /id=["']ani_detail["'][^>]*\bdata-id=["']([^"']+)["']/i.exec(html) ||
+      /id=["']watch-main["'][^>]*\bdata-id=["']([^"']+)["']/i.exec(html) ||
+      /\bdata-id=["'](\d+)["']/i.exec(html);
+    if (explicit && explicit[1]) return explicit[1];
+    const slugMatch = /-(\d+)(?:$|\?)/.exec(slug || "");
+    return slugMatch && slugMatch[1] ? slugMatch[1] : null;
+  }
+
+  function extractHianimeEpisodeId(episodeListHtml, episodeNumber) {
+    const ep = Number.parseInt(episodeNumber, 10);
+    if (!Number.isFinite(ep) || ep <= 0) return null;
+    const html = episodeListHtml || "";
+    const patternA = new RegExp(
+      `data-number=["']${ep}["'][^>]*data-id=["']([^"']+)["']`,
+      "i",
+    );
+    const patternB = new RegExp(
+      `data-id=["']([^"']+)["'][^>]*data-number=["']${ep}["']`,
+      "i",
+    );
+    const hit = patternA.exec(html) || patternB.exec(html);
+    return hit && hit[1] ? hit[1] : null;
+  }
+
+  function extractHianimeServerId(serversHtml, preferDub) {
+    const html = serversHtml || "";
+    const matches = [];
+    const re = /<[^>]*data-id=["']([^"']+)["'][^>]*>([\s\S]*?)<\/[^>]+>/gi;
+    let m;
+    while ((m = re.exec(html))) {
+      const fullTag = m[0] || "";
+      const attrs = (fullTag.split(">", 1)[0] || "").toLowerCase();
+      const label = `${attrs} ${stripHtml(m[2] || "")}`.toLowerCase();
+      const id = (m[1] || "").trim();
+      if (!id) continue;
+      matches.push({ id, label });
+    }
+    if (!matches.length) return null;
+
+    const score = (entry) => {
+      let s = 0;
+      if (preferDub) {
+        if (entry.label.includes("dub")) s += 30;
+        if (entry.label.includes("sub")) s -= 8;
+      } else {
+        if (entry.label.includes("sub")) s += 30;
+        if (entry.label.includes("dub")) s -= 8;
+      }
+      if (/hd\s*-?\s*1|vidstream|megacloud|streamsb/.test(entry.label)) s += 12;
+      if (/hd\s*-?\s*2|default/.test(entry.label)) s += 6;
+      return s;
+    };
+
+    matches.sort((a, b) => score(b) - score(a));
+    return matches[0].id || null;
+  }
+
+  function collectUrlsDeep(value, out, seen) {
+    if (value == null) return;
+    if (typeof value === "string") {
+      const v = value.trim();
+      if (/^https?:\/\//i.test(v) || v.startsWith("//")) out.push(v);
+      return;
+    }
+    if (typeof value !== "object") return;
+    if (seen.has(value)) return;
+    seen.add(value);
+
+    if (Array.isArray(value)) {
+      for (const entry of value) collectUrlsDeep(entry, out, seen);
+      return;
+    }
+
+    for (const key of Object.keys(value)) {
+      collectUrlsDeep(value[key], out, seen);
+    }
+  }
+
+  function pickHianimeDirectUrl(json) {
+    if (!json) return null;
+    const urls = [];
+    collectUrlsDeep(json.sources || null, urls, new Set());
+    collectUrlsDeep(json.sourcesBackup || null, urls, new Set());
+    collectUrlsDeep(json.data && json.data.sources, urls, new Set());
+    collectUrlsDeep(json.data && json.data.sourcesBackup, urls, new Set());
+    for (const raw of urls) {
+      const url = raw.startsWith("//") ? `https:${raw}` : raw;
+      if (isDirectVideoUrl(url)) return url;
+    }
+    return null;
+  }
+
+  async function discoverHianimeOnePieceSlugs(base) {
+    const fallback = [HIANIME_ONE_PIECE_SLUG];
+    try {
+      const searchUrl = `${base}/search?keyword=${encodeURIComponent("one piece")}`;
+      const searchRes = await httpText(searchUrl, {
+        headers: hianimeHeaders(base, false),
+      });
+      if (!searchRes.ok || !searchRes.body) return fallback;
+      const out = [];
+      const seen = new Set();
+      const re = /href=["']\/watch\/([^"'#?]+)[^"']*["']/gi;
+      let m;
+      while ((m = re.exec(searchRes.body))) {
+        const slug = (m[1] || "").trim();
+        if (!slug || seen.has(slug)) continue;
+        const lower = slug.toLowerCase();
+        if (!lower.includes("one-piece")) continue;
+        if (/movie|film|special|recap/.test(lower)) continue;
+        seen.add(slug);
+        out.push(slug);
+      }
+      if (!seen.has(HIANIME_ONE_PIECE_SLUG))
+        out.unshift(HIANIME_ONE_PIECE_SLUG);
+      return out.length ? out : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  async function resolveHianimeOnePiece(episodeNumber, dub = false) {
+    const ep = Number.parseInt(episodeNumber, 10);
+    if (!Number.isFinite(ep) || ep <= 0) return null;
+
+    for (const base of HIANIME_DOMAINS) {
+      let slugs = [HIANIME_ONE_PIECE_SLUG];
+      try {
+        slugs = await discoverHianimeOnePieceSlugs(base);
+      } catch {
+        slugs = [HIANIME_ONE_PIECE_SLUG];
+      }
+
+      for (const slug of slugs) {
+        try {
+          const watchRes = await httpText(`${base}/watch/${slug}`, {
+            headers: hianimeHeaders(base, false),
+          });
+          if (!watchRes.ok || !watchRes.body) continue;
+
+          const animeId = extractHianimeAnimeId(watchRes.body, slug);
+          if (!animeId) continue;
+
+          const episodeListRes = await httpText(
+            `${base}/ajax/v2/episode/list/${encodeURIComponent(animeId)}`,
+            { headers: hianimeHeaders(base, true) },
+          );
+          if (!episodeListRes.ok || !episodeListRes.body) continue;
+          const episodeId = extractHianimeEpisodeId(
+            htmlFromMaybeJsonBody(episodeListRes.body),
+            ep,
+          );
+          if (!episodeId) continue;
+
+          const serversRes = await httpText(
+            `${base}/ajax/v2/episode/servers?episodeId=${encodeURIComponent(episodeId)}`,
+            { headers: hianimeHeaders(base, true) },
+          );
+          if (!serversRes.ok || !serversRes.body) continue;
+          const serverId = extractHianimeServerId(
+            htmlFromMaybeJsonBody(serversRes.body),
+            dub,
+          );
+          if (!serverId) continue;
+
+          const srcRes = await httpText(
+            `${base}/ajax/v2/episode/sources?id=${encodeURIComponent(serverId)}`,
+            { headers: hianimeHeaders(base, true) },
+          );
+          if (!srcRes.ok || !srcRes.body) continue;
+
+          const srcJson = parseJsonSafe(srcRes.body) || {};
+          const direct = pickHianimeDirectUrl(srcJson);
+          if (direct) {
+            return {
+              url: direct,
+              resolution: "?",
+              sourceName: "HiAnime",
+              referer: `${base}/`,
+              kind: "direct",
+            };
+          }
+
+          const rawLink =
+            (typeof srcJson.link === "string" && srcJson.link) ||
+            (srcJson.data && typeof srcJson.data.link === "string"
+              ? srcJson.data.link
+              : "");
+          const embedLink = absUrl(base, rawLink);
+          if (embedLink) {
+            return {
+              url: embedLink,
+              resolution: "Embed",
+              sourceName: "HiAnime",
+              referer: `${base}/`,
+              kind: "embed",
+            };
+          }
+        } catch {
+          continue;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Resolves a direct playable source for an anime episode.
+   * @returns {url, referer, resolution, sourceName}
+   * @throws CaptchaRequiredError when AllAnime is captcha-gated.
+   */
+  function parseJsonSafe(text) {
+    if (!text || typeof text !== "string") return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
+  }
+
+  function hianimeHeaders(baseUrl, ajax = false) {
+    const headers = {
+      Accept: ajax
+        ? "application/json, text/plain, */*"
+        : "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      Referer: `${baseUrl}/`,
+      Origin: baseUrl,
+    };
+    if (ajax) headers["X-Requested-With"] = "XMLHttpRequest";
+    return headers;
+  }
+
+  function htmlFromMaybeJsonBody(body) {
+    const parsed = parseJsonSafe(body);
+    if (parsed && typeof parsed.html === "string") return parsed.html;
+    if (
+      parsed &&
+      parsed.data &&
+      parsed.data.html &&
+      typeof parsed.data.html === "string"
+    ) {
+      return parsed.data.html;
+    }
+    return body || "";
+  }
+
+  function absUrl(baseUrl, value) {
+    if (!value || typeof value !== "string") return null;
+    if (/^https?:\/\//i.test(value)) return value;
+    if (value.startsWith("//")) return "https:" + value;
+    if (value.startsWith("/")) return baseUrl + value;
+    return `${baseUrl}/${value}`;
+  }
+
+  function extractHianimeAnimeId(watchHtml, slug) {
+    const fromDataId =
+      /id=["']ani_detail["'][^>]*data-id=["']([^"']+)["']/i.exec(watchHtml) ||
+      /data-id=["'](\d+)["']/i.exec(watchHtml);
+    if (fromDataId && fromDataId[1]) return fromDataId[1];
+    const fromSlug = /-(\d+)(?:\?|$)/.exec(slug || "");
+    return fromSlug ? fromSlug[1] : null;
+  }
+
+  function extractHianimeEpisodeId(listHtml, absoluteEpisode) {
+    if (!listHtml) return null;
+    const ep = String(absoluteEpisode).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const patterns = [
+      new RegExp(`data-number=["']${ep}["'][^>]*data-id=["']([^"']+)["']`, "i"),
+      new RegExp(`data-id=["']([^"']+)["'][^>]*data-number=["']${ep}["']`, "i"),
+    ];
+    for (const pattern of patterns) {
+      const match = pattern.exec(listHtml);
+      if (match && match[1]) return match[1];
+    }
+    return null;
+  }
+
+  function stripTags(value) {
+    return (value || "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function extractHianimeServerId(serversHtml, preferDub) {
+    if (!serversHtml) return null;
+    const candidates = [];
+    const rowRegex =
+      /<[^>]*data-id=["']([^"']+)["'][^>]*>([\s\S]*?)<\/[^>]+>/gi;
+    let row;
+    while ((row = rowRegex.exec(serversHtml))) {
+      const attrs = (row[0] || "").split(">", 1)[0].toLowerCase();
+      const label = `${attrs} ${stripTags(row[2] || "")}`.toLowerCase();
+      const id = row[1];
+      if (!id) continue;
+      candidates.push({ id, label });
+    }
+
+    if (!candidates.length) {
+      const fallback = /data-id=["']([^"']+)["']/i.exec(serversHtml);
+      return fallback ? fallback[1] : null;
+    }
+
+    const score = (candidate) => {
+      const label = candidate.label;
+      let value = 0;
+      if (preferDub) {
+        if (label.includes("dub")) value += 20;
+        if (label.includes("sub")) value -= 8;
+      } else {
+        if (label.includes("sub")) value += 20;
+        if (label.includes("dub")) value -= 8;
+      }
+      if (/hd-?1|megacloud|vidstream|streamsb|streamtape/.test(label))
+        value += 12;
+      else if (/hd-?2|hd-?3/.test(label)) value += 6;
+      return value;
+    };
+
+    candidates.sort((a, b) => score(b) - score(a));
+    return candidates[0] ? candidates[0].id : null;
+  }
+
+  function collectUrlsDeep(value, out, seen = new Set()) {
+    if (value == null) return;
+    if (typeof value === "string") {
+      const v = value.trim();
+      if (/^https?:\/\//i.test(v)) out.push(v);
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const entry of value) collectUrlsDeep(entry, out, seen);
+      return;
+    }
+    if (typeof value === "object") {
+      if (seen.has(value)) return;
+      seen.add(value);
+      for (const key of Object.keys(value))
+        collectUrlsDeep(value[key], out, seen);
+    }
+  }
+
+  function pickDirectHianimeUrl(payload) {
+    const urls = [];
+    collectUrlsDeep(payload, urls);
+    return urls.find((u) => isDirectVideoUrl(u)) || null;
+  }
+
+  async function discoverHianimeOnePieceSlugs(baseUrl) {
+    const searchUrl = `${baseUrl}/search?keyword=${encodeURIComponent("one piece")}`;
+    const resp = await httpText(searchUrl, {
+      headers: hianimeHeaders(baseUrl),
+    });
+    if (!resp.ok || !resp.body) return [HIANIME_ONE_PIECE_SLUG];
+
+    const slugs = [];
+    const seen = new Set();
+    const regex = /href=["']\/watch\/([^"'#?]+)["']/gi;
+    let match;
+    while ((match = regex.exec(resp.body))) {
+      const slug = (match[1] || "").trim();
+      const lower = slug.toLowerCase();
+      if (!lower.includes("one-piece")) continue;
+      if (
+        lower.includes("movie") ||
+        lower.includes("film") ||
+        lower.includes("special")
+      ) {
+        continue;
+      }
+      if (!seen.has(slug)) {
+        seen.add(slug);
+        slugs.push(slug);
+      }
+    }
+    if (!seen.has(HIANIME_ONE_PIECE_SLUG)) slugs.push(HIANIME_ONE_PIECE_SLUG);
+    return slugs.length ? slugs : [HIANIME_ONE_PIECE_SLUG];
+  }
+
+  async function resolveHianimeOnePiece(absoluteEpisode, dub = false) {
+    const episodeNum = Number.parseInt(absoluteEpisode, 10);
+    if (!Number.isFinite(episodeNum) || episodeNum <= 0) return null;
+
+    for (const baseUrl of HIANIME_DOMAINS) {
+      try {
+        const slugs = await discoverHianimeOnePieceSlugs(baseUrl);
+        for (const slug of slugs) {
+          const watchUrl = `${baseUrl}/watch/${slug}`;
+          const watchResp = await httpText(watchUrl, {
+            headers: hianimeHeaders(baseUrl),
+          });
+          if (!watchResp.ok || !watchResp.body) continue;
+
+          const animeId = extractHianimeAnimeId(watchResp.body, slug);
+          if (!animeId) continue;
+
+          const listResp = await httpText(
+            `${baseUrl}/ajax/v2/episode/list/${encodeURIComponent(animeId)}`,
+            { headers: hianimeHeaders(baseUrl, true) },
+          );
+          if (!listResp.ok || !listResp.body) continue;
+          const listHtml = htmlFromMaybeJsonBody(listResp.body);
+          const episodeId = extractHianimeEpisodeId(listHtml, episodeNum);
+          if (!episodeId) continue;
+
+          const serversResp = await httpText(
+            `${baseUrl}/ajax/v2/episode/servers?episodeId=${encodeURIComponent(episodeId)}`,
+            { headers: hianimeHeaders(baseUrl, true) },
+          );
+          if (!serversResp.ok || !serversResp.body) continue;
+          const serversHtml = htmlFromMaybeJsonBody(serversResp.body);
+          const serverId = extractHianimeServerId(serversHtml, dub);
+          if (!serverId) continue;
+
+          const sourceResp = await httpText(
+            `${baseUrl}/ajax/v2/episode/sources?id=${encodeURIComponent(serverId)}`,
+            { headers: hianimeHeaders(baseUrl, true) },
+          );
+          if (!sourceResp.ok || !sourceResp.body) continue;
+
+          const payload = parseJsonSafe(sourceResp.body) || {};
+          const directUrl = pickDirectHianimeUrl(payload);
+          if (directUrl) {
+            return {
+              url: directUrl,
+              resolution: "?",
+              sourceName: "HiAnime",
+              referer: `${baseUrl}/`,
+              kind: "direct",
+            };
+          }
+
+          const embedCandidate =
+            (typeof payload.link === "string" && payload.link) ||
+            (payload.data && typeof payload.data.link === "string"
+              ? payload.data.link
+              : "");
+          const embedUrl = absUrl(baseUrl, embedCandidate);
+          if (embedUrl) {
+            return {
+              url: embedUrl,
+              resolution: "Embed",
+              sourceName: "HiAnime",
+              referer: `${baseUrl}/`,
+              kind: "embed",
+            };
+          }
+        }
+      } catch {
+        // Try next HiAnime domain.
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Resolves a direct playable source for an anime episode.
+   * @returns {url, referer, resolution, sourceName}
+   * @throws CaptchaRequiredError when AllAnime is captcha-gated.
+   */
+  function parseJsonSafe(value) {
+    if (!value || typeof value !== "string") return null;
+    try {
+      return JSON.parse(value);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function stripHtml(value) {
+    return String(value || "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function absUrl(base, value) {
+    const v = (value || "").trim();
+    if (!v) return null;
+    try {
+      return new URL(v, base).toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function hianimeHeaders(base, ajax = false) {
+    const headers = {
+      Accept: ajax
+        ? "application/json, text/plain, */*"
+        : "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      Referer: `${base}/`,
+      Origin: base,
+    };
+    if (ajax) headers["X-Requested-With"] = "XMLHttpRequest";
+    return headers;
+  }
+
+  function htmlFromMaybeJsonBody(raw) {
+    const parsed = parseJsonSafe(raw);
+    if (parsed && typeof parsed.html === "string") return parsed.html;
+    if (parsed && parsed.data && typeof parsed.data.html === "string") {
+      return parsed.data.html;
+    }
+    return raw || "";
+  }
+
+  function extractHianimeAnimeId(watchHtml, slug) {
+    const patterns = [
+      /id=["']ani_detail["'][^>]*data-id=["']([^"']+)["']/i,
+      /class=["'][^"']*film-stats[^"']*["'][^>]*data-id=["']([^"']+)["']/i,
+      /data-id=["']([0-9]{2,})["']/i,
+    ];
+    for (const pattern of patterns) {
+      const m = pattern.exec(watchHtml || "");
+      if (m && m[1]) return m[1];
+    }
+    const slugMatch = /-([0-9]{2,})$/.exec((slug || "").trim());
+    return slugMatch && slugMatch[1] ? slugMatch[1] : null;
+  }
+
+  function extractHianimeEpisodeId(episodeListHtml, episodeNumber) {
+    const ep = String(episodeNumber).trim();
+    if (!ep) return null;
+    const patterns = [
+      new RegExp(`data-number=["']${ep}["'][^>]*data-id=["']([^"']+)["']`, "i"),
+      new RegExp(`data-id=["']([^"']+)["'][^>]*data-number=["']${ep}["']`, "i"),
+      new RegExp(`data-num=["']${ep}["'][^>]*data-id=["']([^"']+)["']`, "i"),
+      new RegExp(`data-id=["']([^"']+)["'][^>]*data-num=["']${ep}["']`, "i"),
+    ];
+    for (const pattern of patterns) {
+      const m = pattern.exec(episodeListHtml || "");
+      if (m && m[1]) return m[1];
+    }
+    return null;
+  }
+
+  function extractHianimeServerId(serversHtml, preferDub) {
+    const html = serversHtml || "";
+    const entries = [];
+    const re = /<[^>]*data-id=["']([^"']+)["'][^>]*>([\s\S]*?)<\/[^>]+>/gi;
+    let m;
+    while ((m = re.exec(html))) {
+      const attrs = m[0].split(">", 1)[0].toLowerCase();
+      const text = stripHtml(m[2]).toLowerCase();
+      const joined = `${attrs} ${text}`;
+      if (!joined.includes("server") && !/hd|stream|cloud|vid/.test(joined)) {
+        continue;
+      }
+      entries.push({ id: m[1], label: joined });
+    }
+
+    const fallbackIds = [...html.matchAll(/data-id=["']([^"']+)["']/gi)].map(
+      (v) => v[1],
+    );
+    if (!entries.length) return fallbackIds[0] || null;
+
+    const score = (entry) => {
+      let s = 0;
+      if (preferDub) {
+        if (entry.label.includes("dub")) s += 25;
+        if (entry.label.includes("sub")) s -= 8;
+      } else {
+        if (entry.label.includes("sub")) s += 25;
+        if (entry.label.includes("dub")) s -= 8;
+      }
+      if (/hd-?1|megacloud|vidstream|streamsb|server-?1/.test(entry.label))
+        s += 14;
+      if (/hd-?2|server-?2/.test(entry.label)) s += 8;
+      return s;
+    };
+
+    entries.sort((a, b) => score(b) - score(a));
+    return entries[0] ? entries[0].id : fallbackIds[0] || null;
+  }
+
+  function collectStringUrls(value, out, seen = new Set()) {
+    if (value == null) return;
+    if (typeof value === "string") {
+      if (/^https?:\/\//i.test(value) && !seen.has(value)) {
+        seen.add(value);
+        out.push(value);
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const v of value) collectStringUrls(v, out, seen);
+      return;
+    }
+    if (typeof value === "object") {
+      for (const v of Object.values(value)) collectStringUrls(v, out, seen);
+    }
+  }
+
+  function pickHianimeDirectUrl(sourceJson) {
+    const candidates = [];
+    collectStringUrls(sourceJson, candidates);
+    return candidates.find((u) => isDirectVideoUrl(u)) || null;
+  }
+
+  async function discoverOnePieceSlugs(base) {
+    const out = [HIANIME_ONE_PIECE_SLUG];
+    try {
+      const searchUrl = `${base}/search?keyword=${encodeURIComponent("one piece")}`;
+      const res = await httpText(searchUrl, { headers: hianimeHeaders(base) });
+      if (!res.ok || !res.body) return out;
+      const matches = [
+        ...res.body.matchAll(/href=["']\/watch\/([^"'#?]+)(?:\?[^"']*)?["']/gi),
+      ];
+      for (const hit of matches) {
+        const slug = (hit && hit[1] ? hit[1] : "").trim();
+        if (!slug) continue;
+        const lower = slug.toLowerCase();
+        if (!lower.includes("one-piece")) continue;
+        if (/movie|film|special|ova/.test(lower)) continue;
+        if (!out.includes(slug)) out.unshift(slug);
+      }
+    } catch (_) {}
+    return out;
+  }
+
+  async function resolveHianimeOnePiece(episodeNumber, dub = false) {
+    const epNum = Number.parseInt(episodeNumber, 10);
+    if (!Number.isFinite(epNum) || epNum <= 0) return null;
+
+    for (const base of HIANIME_DOMAINS) {
+      try {
+        const slugs = await discoverOnePieceSlugs(base);
+        for (const slug of slugs) {
+          const watchRes = await httpText(`${base}/watch/${slug}`, {
+            headers: hianimeHeaders(base),
+          });
+          if (!watchRes.ok || !watchRes.body) continue;
+
+          const animeId = extractHianimeAnimeId(watchRes.body, slug);
+          if (!animeId) continue;
+
+          const listRes = await httpText(
+            `${base}/ajax/v2/episode/list/${encodeURIComponent(animeId)}`,
+            { headers: hianimeHeaders(base, true) },
+          );
+          if (!listRes.ok || !listRes.body) continue;
+
+          const listHtml = htmlFromMaybeJsonBody(listRes.body);
+          const episodeId = extractHianimeEpisodeId(listHtml, epNum);
+          if (!episodeId) continue;
+
+          const serversRes = await httpText(
+            `${base}/ajax/v2/episode/servers?episodeId=${encodeURIComponent(episodeId)}`,
+            { headers: hianimeHeaders(base, true) },
+          );
+          if (!serversRes.ok || !serversRes.body) continue;
+
+          const serversHtml = htmlFromMaybeJsonBody(serversRes.body);
+          const serverId = extractHianimeServerId(serversHtml, dub);
+          if (!serverId) continue;
+
+          const srcRes = await httpText(
+            `${base}/ajax/v2/episode/sources?id=${encodeURIComponent(serverId)}`,
+            { headers: hianimeHeaders(base, true) },
+          );
+          if (!srcRes.ok || !srcRes.body) continue;
+
+          const srcJson = parseJsonSafe(srcRes.body) || {};
+          const direct = pickHianimeDirectUrl(srcJson);
+          if (direct) {
+            return {
+              url: direct,
+              resolution: "?",
+              sourceName: "HiAnime",
+              referer: `${base}/`,
+              kind: "direct",
+            };
+          }
+
+          const linkRaw =
+            (typeof srcJson.link === "string" && srcJson.link) ||
+            (srcJson.data && typeof srcJson.data.link === "string"
+              ? srcJson.data.link
+              : null);
+          const link = absUrl(base, linkRaw);
+          if (link) {
+            return {
+              url: link,
+              resolution: "Embed",
+              sourceName: "HiAnime",
+              referer: `${base}/`,
+              kind: "embed",
+            };
+          }
+        }
+      } catch (_) {
+        // Try next domain.
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Resolves a direct playable source for an anime episode.
+   * @returns {url, referer, resolution, sourceName}
+   * @throws CaptchaRequiredError when AllAnime is captcha-gated.
+   */
+  function parseJsonSafe(value) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+
+  function hianimeHeaders(base, ajax = false) {
+    const headers = {
+      Accept: ajax ? "application/json, text/plain, */*" : "text/html,*/*",
+      Referer: `${base}/`,
+      Origin: base,
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    };
+    if (ajax) headers["X-Requested-With"] = "XMLHttpRequest";
+    return headers;
+  }
+
+  function htmlFromMaybeJsonBody(body) {
+    const parsed = parseJsonSafe(body || "");
+    if (parsed && typeof parsed.html === "string") return parsed.html;
+    return body || "";
+  }
+
+  function firstCapture(text, regex) {
+    const m = regex.exec(text || "");
+    return m && m[1] ? m[1] : null;
+  }
+
+  function stripTags(value) {
+    return (value || "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function absoluteUrl(base, value) {
+    const v = (value || "").trim();
+    if (!v) return null;
+    if (v.startsWith("http://") || v.startsWith("https://")) return v;
+    if (v.startsWith("//")) return `https:${v}`;
+    if (v.startsWith("/")) return `${base}${v}`;
+    return `${base}/${v}`;
+  }
+
+  function extractHianimeAnimeId(watchHtml, slug) {
+    const fromDataId =
+      firstCapture(
+        watchHtml,
+        /id=["']anime-info["'][^>]*data-id=["']([^"']+)["']/i,
+      ) || firstCapture(watchHtml, /data-id=["'](\d+)["']/i);
+    if (fromDataId) return fromDataId;
+    const fromSlug = firstCapture(slug || "", /-(\d+)(?:$|\?)/);
+    return fromSlug;
+  }
+
+  function extractHianimeEpisodeId(episodeListHtml, episodeNumber) {
+    const ep = String(episodeNumber);
+    const patterns = [
+      new RegExp(`data-number=["']${ep}["'][^>]*data-id=["']([^"']+)["']`, "i"),
+      new RegExp(`data-id=["']([^"']+)["'][^>]*data-number=["']${ep}["']`, "i"),
+    ];
+    for (const regex of patterns) {
+      const id = firstCapture(episodeListHtml, regex);
+      if (id) return id;
+    }
+    return null;
+  }
+
+  function extractHianimeServerId(serversHtml, preferDub) {
+    const candidates = [];
+    const re = /<[^>]*data-id=["']([^"']+)["'][^>]*>([\s\S]*?)<\/[^>]+>/gi;
+    let m;
+    while ((m = re.exec(serversHtml || ""))) {
+      const id = (m[1] || "").trim();
+      if (!id) continue;
+      const rawTag = (m[0] || "").split(">", 1)[0].toLowerCase();
+      const text = stripTags(m[2] || "").toLowerCase();
+      const label = `${rawTag} ${text}`;
+      candidates.push({ id, label });
+    }
+    if (!candidates.length) {
+      return firstCapture(serversHtml || "", /data-id=["']([^"']+)["']/i);
+    }
+
+    const weighted = candidates.map((c) => {
+      let score = 0;
+      if (preferDub) {
+        if (c.label.includes("dub")) score += 30;
+        if (c.label.includes("sub")) score -= 6;
+      } else {
+        if (c.label.includes("sub")) score += 30;
+        if (c.label.includes("dub")) score -= 6;
+      }
+      if (/hd-?1|vidstream|megacloud|streamsb/.test(c.label)) score += 20;
+      if (/hd-?2|default|server-?1/.test(c.label)) score += 12;
+      return { ...c, score };
+    });
+
+    weighted.sort((a, b) => b.score - a.score);
+    return weighted[0] && weighted[0].id ? weighted[0].id : null;
+  }
+
+  function collectHttpUrlsDeep(value, out, seen = new Set()) {
+    if (value == null) return;
+    if (typeof value === "string") {
+      if (/^https?:\/\//i.test(value)) out.push(value);
+      return;
+    }
+    if (typeof value !== "object") return;
+    if (seen.has(value)) return;
+    seen.add(value);
+    if (Array.isArray(value)) {
+      for (const v of value) collectHttpUrlsDeep(v, out, seen);
+      return;
+    }
+    for (const key of Object.keys(value)) {
+      collectHttpUrlsDeep(value[key], out, seen);
+    }
+  }
+
+  function pickHianimeDirectUrl(sourceJson) {
+    const urls = [];
+    collectHttpUrlsDeep(sourceJson, urls);
+    return urls.find((u) => isDirectVideoUrl(u)) || null;
+  }
+
+  async function discoverHianimeOnePieceSlugs(base) {
+    const slugs = [];
+    slugs.push(HIANIME_ONE_PIECE_SLUG);
+    try {
+      const searchUrl = `${base}/search?keyword=${encodeURIComponent("one piece")}`;
+      const res = await httpText(searchUrl, { headers: hianimeHeaders(base) });
+      if (!res.ok || !res.body) return slugs;
+      const re = /href=["']\/watch\/([^"'?#\s]+)["']/gi;
+      let m;
+      while ((m = re.exec(res.body))) {
+        const slug = (m[1] || "").trim();
+        if (!slug) continue;
+        const lower = slug.toLowerCase();
+        if (!lower.includes("one-piece")) continue;
+        if (/(movie|film|special|ova)/.test(lower)) continue;
+        if (!slugs.includes(slug)) slugs.unshift(slug);
+      }
+    } catch (_) {}
+    return slugs;
+  }
+
+  async function resolveHianimeOnePiece(episodeNumber, dub = false) {
+    const episodeNum = Number.parseInt(episodeNumber, 10);
+    if (!Number.isFinite(episodeNum) || episodeNum <= 0) return null;
+
+    for (const base of HIANIME_DOMAINS) {
+      const slugs = await discoverHianimeOnePieceSlugs(base);
+      for (const slug of slugs) {
+        try {
+          const watchUrl = `${base}/watch/${slug}`;
+          const watchRes = await httpText(watchUrl, {
+            headers: hianimeHeaders(base),
+          });
+          if (!watchRes.ok || !watchRes.body) continue;
+
+          const animeId = extractHianimeAnimeId(watchRes.body, slug);
+          if (!animeId) continue;
+
+          const listUrl = `${base}/ajax/v2/episode/list/${encodeURIComponent(animeId)}`;
+          const listRes = await httpText(listUrl, {
+            headers: hianimeHeaders(base, true),
+          });
+          if (!listRes.ok || !listRes.body) continue;
+
+          const listHtml = htmlFromMaybeJsonBody(listRes.body);
+          const episodeId = extractHianimeEpisodeId(listHtml, episodeNum);
+          if (!episodeId) continue;
+
+          const serversUrl = `${base}/ajax/v2/episode/servers?episodeId=${encodeURIComponent(episodeId)}`;
+          const serversRes = await httpText(serversUrl, {
+            headers: hianimeHeaders(base, true),
+          });
+          if (!serversRes.ok || !serversRes.body) continue;
+
+          const serversHtml = htmlFromMaybeJsonBody(serversRes.body);
+          const serverId = extractHianimeServerId(serversHtml, dub);
+          if (!serverId) continue;
+
+          const sourceUrl = `${base}/ajax/v2/episode/sources?id=${encodeURIComponent(serverId)}`;
+          const sourceRes = await httpText(sourceUrl, {
+            headers: hianimeHeaders(base, true),
+          });
+          if (!sourceRes.ok || !sourceRes.body) continue;
+
+          const sourceJson = parseJsonSafe(sourceRes.body) || {};
+          const directUrl = pickHianimeDirectUrl(sourceJson);
+          if (directUrl) {
+            return {
+              url: directUrl,
+              resolution: "?",
+              sourceName: "HiAnime",
+              referer: `${base}/`,
+              kind: "direct",
+            };
+          }
+
+          const link =
+            (typeof sourceJson.link === "string" && sourceJson.link) ||
+            (sourceJson.data && typeof sourceJson.data.link === "string"
+              ? sourceJson.data.link
+              : "");
+          const embedUrl = absoluteUrl(base, link);
+          if (embedUrl) {
+            return {
+              url: embedUrl,
+              resolution: "Embed",
+              sourceName: "HiAnime",
+              referer: `${base}/`,
+              kind: "embed",
+            };
+          }
+        } catch (_) {
+          continue;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Resolves a direct playable source for an anime episode.
+   * @returns {url, referer, resolution, sourceName}
+   * @throws CaptchaRequiredError when AllAnime is captcha-gated.
+   */
+  function parseJsonSafe(text) {
+    try {
+      return JSON.parse(text || "");
+    } catch {
+      return null;
+    }
+  }
+
+  function htmlFromAjaxPayload(text) {
+    const parsed = parseJsonSafe(text);
+    if (parsed && typeof parsed.html === "string") return parsed.html;
+    return text || "";
+  }
+
+  function hianimeHeaders(base, ajax = false) {
+    const headers = {
+      Accept: ajax ? "application/json, text/plain, */*" : "text/html,*/*",
+      Referer: base + "/",
+      Origin: base,
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    };
+    if (ajax) headers["X-Requested-With"] = "XMLHttpRequest";
+    return headers;
+  }
+
+  function extractHianimeAnimeId(watchHtml, slug) {
+    if (!watchHtml) return null;
+    const patterns = [
+      /class=["'][^"']*film-stats[^"']*["'][^>]*data-id=["']([^"']+)["']/i,
+      /id=["']ani_detail["'][^>]*data-id=["']([^"']+)["']/i,
+      /data-id=["'](\d+)["']/i,
+    ];
+    for (const re of patterns) {
+      const match = re.exec(watchHtml);
+      if (match && match[1]) return match[1];
+    }
+    const slugMatch = /-(\d+)(?:\?|$)/.exec(slug || "");
+    return slugMatch && slugMatch[1] ? slugMatch[1] : null;
+  }
+
+  function extractHianimeEpisodeId(episodeListHtml, episodeNumber) {
+    const ep = String(episodeNumber);
+    const patterns = [
+      new RegExp(`data-number=["']${ep}["'][^>]*data-id=["']([^"']+)["']`, "i"),
+      new RegExp(`data-id=["']([^"']+)["'][^>]*data-number=["']${ep}["']`, "i"),
+      new RegExp(`\\bep\\s*${ep}\\b[^>]*data-id=["']([^"']+)["']`, "i"),
+    ];
+    for (const re of patterns) {
+      const match = re.exec(episodeListHtml || "");
+      if (match && match[1]) return match[1];
+    }
+    return null;
+  }
+
+  function extractHianimeServerCandidates(serversHtml) {
+    const out = [];
+    const re = /<[^>]*data-id=["']([^"']+)["'][^>]*>([\s\S]*?)<\/[^>]+>/gi;
+    let match;
+    while ((match = re.exec(serversHtml || "")) !== null) {
+      const id = (match[1] || "").trim();
+      if (!id) continue;
+      const fullTag = (match[0] || "").toLowerCase();
+      const text = (match[2] || "")
+        .replace(/<[^>]*>/g, " ")
+        .trim()
+        .toLowerCase();
+      const lane =
+        fullTag.includes("dub") || text.includes("dub")
+          ? "dub"
+          : fullTag.includes("sub") || text.includes("sub")
+            ? "sub"
+            : "";
+      out.push({ id, text, fullTag, lane });
+    }
+    const dedup = [];
+    const seen = new Set();
+    for (const c of out) {
+      if (seen.has(c.id)) continue;
+      seen.add(c.id);
+      dedup.push(c);
+    }
+    return dedup;
+  }
+
+  function pickHianimeServerId(serversHtml, preferDub) {
+    const candidates = extractHianimeServerCandidates(serversHtml);
+    if (!candidates.length) return null;
+    const lane = preferDub ? "dub" : "sub";
+    const laneCandidates = candidates.filter((c) => c.lane === lane);
+    const preferredPool = laneCandidates.length ? laneCandidates : candidates;
+    const score = (c) => {
+      const hay = `${c.text} ${c.fullTag}`;
+      if (hay.includes("hd-1") || hay.includes("hd 1")) return 0;
+      if (hay.includes("vidstream") || hay.includes("megacloud")) return 1;
+      if (hay.includes("hd-2") || hay.includes("hd 2")) return 2;
+      return 9;
+    };
+    preferredPool.sort((a, b) => score(a) - score(b));
+    return preferredPool[0] && preferredPool[0].id ? preferredPool[0].id : null;
+  }
+
+  function collectHttpUrls(value, out) {
+    if (value == null) return;
+    if (typeof value === "string") {
+      if (/^https?:\/\//i.test(value)) out.push(value);
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const entry of value) collectHttpUrls(entry, out);
+      return;
+    }
+    if (typeof value === "object") {
+      for (const key of Object.keys(value)) collectHttpUrls(value[key], out);
+    }
+  }
+
+  function pickHianimeDirectUrl(payload) {
+    const urls = [];
+    if (payload && typeof payload === "object") {
+      collectHttpUrls(payload.sources || null, urls);
+      collectHttpUrls(payload.sourcesBackup || null, urls);
+      // Fallback in case the API shape changes.
+      collectHttpUrls(payload, urls);
+    }
+    return urls.find((u) => isDirectVideoUrl(u)) || null;
+  }
+
+  async function discoverAnimeSlug(base, title) {
+    try {
+      const searchUrl = `${base}/search?keyword=${encodeURIComponent(title)}`;
+      const res = await httpText(searchUrl, { headers: hianimeHeaders(base) });
+      if (!res.ok || !res.body) return null;
+      const matches = [];
+      const re = /href=["']\/watch\/([^"'#?\s]+)["']/gi;
+      let m;
+      while ((m = re.exec(res.body)) !== null) {
+        const slug = decodeURIComponent((m[1] || "").trim());
+        if (!slug) continue;
+        const lower = slug.toLowerCase();
+        if (
+          lower.includes("movie") ||
+          lower.includes("film") ||
+          lower.includes("special")
+        ) {
+          continue;
+        }
+        if (!matches.includes(slug)) matches.push(slug);
+      }
+      return matches[0] || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async function resolveAnimeFromHianime(
+    title,
+    episodeNumber,
+    preferDub = false,
+  ) {
+    const epNum = Number.parseInt(episodeNumber, 10);
+    if (!Number.isFinite(epNum) || epNum <= 0) return null;
+
+    for (const base of HIANIME_DOMAINS) {
+      try {
+        const slug = await discoverAnimeSlug(base, title);
+        if (!slug) continue;
+
+        const watchUrl = `${base}/watch/${slug}`;
+        const watchRes = await httpText(watchUrl, {
+          headers: hianimeHeaders(base),
+        });
+        if (!watchRes.ok || !watchRes.body) continue;
+
+        const animeId = extractHianimeAnimeId(watchRes.body, slug);
+        if (!animeId) continue;
+
+        const listRes = await httpText(
+          `${base}/ajax/v2/episode/list/${encodeURIComponent(animeId)}`,
+          { headers: hianimeHeaders(base, true) },
+        );
+        if (!listRes.ok || !listRes.body) continue;
+        const listHtml = htmlFromAjaxPayload(listRes.body);
+        const episodeId = extractHianimeEpisodeId(listHtml, epNum);
+        if (!episodeId) continue;
+
+        const serversRes = await httpText(
+          `${base}/ajax/v2/episode/servers?episodeId=${encodeURIComponent(episodeId)}`,
+          { headers: hianimeHeaders(base, true) },
+        );
+        if (!serversRes.ok || !serversRes.body) continue;
+        const serversHtml = htmlFromAjaxPayload(serversRes.body);
+        const serverId = pickHianimeServerId(serversHtml, preferDub);
+        if (!serverId) continue;
+
+        const sourcesRes = await httpText(
+          `${base}/ajax/v2/episode/sources?id=${encodeURIComponent(serverId)}`,
+          { headers: hianimeHeaders(base, true) },
+        );
+        if (!sourcesRes.ok || !sourcesRes.body) continue;
+
+        const sourcesJson = parseJsonSafe(sourcesRes.body) || {};
+        const direct = pickHianimeDirectUrl(sourcesJson);
+        if (direct) {
+          return {
+            url: direct,
+            resolution: "?",
+            sourceName: "HiAnime",
+            referer: `${base}/`,
+            kind: "direct",
+          };
+        }
+
+        const link =
+          typeof sourcesJson.link === "string" ? sourcesJson.link.trim() : "";
+        if (link.startsWith("http")) {
+          return {
+            url: link,
+            resolution: "Embed",
+            sourceName: "HiAnime",
+            referer: `${base}/`,
+            kind: "embed",
+          };
+        }
+      } catch (_) {
+        // try next domain
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Resolves a direct playable source for an anime episode.
+   * @returns {url, referer, resolution, sourceName, kind?}
    * @throws CaptchaRequiredError when AllAnime is captcha-gated.
    */
   async function resolveSource(item, episodeNumber, opts = {}) {
@@ -908,7 +2378,17 @@ fragment animeFields on Media {
     const isMovie = item.episodesTotal === 1 && episodeNumber === 1;
     episodeNeededCaptcha = false;
 
-    // Try AllAnime (AllManga)
+    // Try HiAnime first for all anime (First preference)
+    try {
+      const hianimeResult = await resolveAnimeFromHianime(
+        item.title,
+        episodeNumber,
+        dub,
+      );
+      if (hianimeResult) return hianimeResult;
+    } catch (_) {}
+
+    // Try AllAnime (AllManga) as fallback
     let result = await resolveAllmanga(
       item,
       item.title,
@@ -927,7 +2407,7 @@ fragment animeFields on Media {
         "sub",
       );
     }
-    if (result) return { ...result, provider: "AllManga" };
+    if (result) return { ...result, provider: "AllManga", kind: "direct" };
 
     if (episodeNeededCaptcha) throw new CaptchaRequiredError(CAPTCHA_URL);
 

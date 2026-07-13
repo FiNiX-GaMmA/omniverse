@@ -2195,7 +2195,7 @@ const WG_GUARD = String.raw`
   try { window.open = function () { return null; }; } catch (_) {}
   var noop = function () {}; try { window.alert = noop; window.confirm = function(){return false;}; window.prompt = function(){return null;}; } catch (_) {}
   try { var o = window.addEventListener; window.addEventListener = function (t, l, op) { if (t==='beforeunload'||t==='unload') return; o.apply(this, arguments); }; } catch (_) {}
-  var safeHosts = ['vidcore','created.app','vidsrc','vidsrc-embed','cloudnestra','cloudorchestra','vsembed','vsrc.','vidsrcme','about:','localhost','127.0.0.1','cdn','2embed','streamsrcs','embed.su','smashystream','autoembed','multiembed','rabbitstream','megacloud','streamtape','streamlare','doodstream','mixdrop','vidplay','filemoon','upstream','fembed','streamhide','mp4upload','streamsb','voe.sx','streamwish','vidcloud','youtube','workers.dev','instafashion662','ferocitycandour','cinezo','notyourtype.dad','1shows.app','vidlink','vidnest','vidrock','vidzee'];
+  var safeHosts = ['vidcore','created.app','vidsrc','vidsrc-embed','cloudnestra','cloudorchestra','vsembed','vsrc.','vidsrcme','about:','localhost','127.0.0.1','cdn','2embed','streamsrcs','embed.su','smashystream','autoembed','multiembed','rabbitstream','megacloud','hianime','streamtape','streamlare','doodstream','mixdrop','vidplay','filemoon','upstream','fembed','streamhide','mp4upload','streamsb','voe.sx','streamwish','vidcloud','youtube','workers.dev','instafashion662','ferocitycandour','cinezo','notyourtype.dad','1shows.app','vidlink','vidnest','vidrock','vidzee'];
   var isAdHost = function (url) { try { if (!url) return false; var h = new URL(url, location.href).hostname.toLowerCase(); return !safeHosts.some(function(s){return h.indexOf(s)>=0;}); } catch (_) { return false; } };
   var adTokens = ['ads','ad-','analytics','doubleclick','googletagmanager','googletagservices','pagead','popunder','popcash','propellerads','adservice','adsco','rtmark','profitable','histats','usrpubtrk','adexchangeclear','realizationnewestfangs','unbrownunflat','sixmossin','malocacomals','cloudflareinsights','videasy','bvtpk','b7510','adx1','intelligenceadx','yandex','tmstr.','click','track','redirect','pop'];
   var isAdSrc = function (src) { if (!src) return false; var s = String(src).toLowerCase(); if (safeHosts.some(function(h){return s.indexOf(h)>=0;})) return false; return adTokens.some(function(t){return s.indexOf(t)>=0;}); };
@@ -2962,6 +2962,39 @@ function showPlayerStatus(innerHtml) {
   if (window.lucide) lucide.createIcons();
 }
 
+function playAnimeEmbed(container, media, episode, src) {
+  if (!container || !src || !src.url) return;
+  unsizeWebview(state.activeWebview);
+  state.activeWebview = null;
+  container.innerHTML = "";
+
+  const frame = document.createElement("iframe");
+  frame.id = "active-player-webview";
+  frame.className = "webview-player";
+  frame.setAttribute("allowfullscreen", "true");
+  frame.setAttribute(
+    "allow",
+    "autoplay; fullscreen; picture-in-picture; encrypted-media",
+  );
+  frame.setAttribute("referrerpolicy", "origin-when-cross-origin");
+  frame.setAttribute("frameborder", "0");
+  frame.setAttribute("scrolling", "no");
+  frame.setAttribute("width", "100%");
+  frame.setAttribute("height", "100%");
+  frame.setAttribute("src", src.url);
+
+  container.appendChild(frame);
+  sizeWebviewToWindow(frame);
+  state.activeWebview = frame;
+
+  if (window.electron && window.electron.showNotification) {
+    window.electron.showNotification(
+      "Streaming Live",
+      `Loading ${src.sourceName || src.provider || "HiAnime"}`,
+    );
+  }
+}
+
 // Anime direct-stream playback (parity with mobile: AllAnime -> direct URL).
 async function playAnimeStream(media, episode, season = 1) {
   const seasonSelector = document.getElementById("season-selector");
@@ -2974,6 +3007,12 @@ async function playAnimeStream(media, episode, season = 1) {
   if (state.activeEmbedSession && state.activeEmbedSession.cancel) {
     state.activeEmbedSession.cancel();
     state.activeEmbedSession = null;
+  }
+  if (state.activeHls) {
+    try {
+      state.activeHls.destroy();
+    } catch (_) {}
+    state.activeHls = null;
   }
   const titleEl = document.getElementById("player-stream-title");
   titleEl.textContent = `${media.title} — E${episode}`;
@@ -2999,6 +3038,11 @@ async function playAnimeStream(media, episode, season = 1) {
       seasonNumber: selectedSeason,
     });
     state.animeResume = { media, episode };
+    if (src && src.kind === "embed") {
+      showPlayerToast("Anime Source", "Using HiAnime fallback…");
+      playAnimeEmbed(container, media, episode, src);
+      return;
+    }
     playDirectVideo(container, src.url, src.referer, media, episode);
   } catch (e) {
     if (e && e.name === "CaptchaRequiredError") {
