@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4c35bd8` (Media Details Recommendations & Trakt Deep-Link OAuth Handler Fixes)
+- Built from commit: `f1724fd` (Fix RouteArgs.detailItem reference in Android MediaDetailScreen)
 - Codebase status: Cleaned & Refactored via Ponytail Minimalist Skill
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 
