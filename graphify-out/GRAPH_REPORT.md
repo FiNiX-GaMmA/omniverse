@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `786c0564` (Production Refactored)
+- Built from commit: `04c706d` (Production Refactored & Instant QR Sync / Trakt OAuth Restored)
 - Codebase status: Cleaned & Refactored via Ponytail Minimalist Skill
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 
