@@ -1,13 +1,13 @@
 import SwiftUI
 
-/// Core palette aligned with desktop's Lordflix crimson-on-black styling.
+/// Core palette aligned with Apple space-black and electric cyan liquid glass styling.
 enum LiquidColors {
-    static let ink = Color(hex: 0x070707)
-    static let dusk = Color(hex: 0x141414)
-    static let deepTeal = Color(hex: 0x1C0B0D)
-    static let cyan = Color(hex: 0xFF1E27)
-    static let rose = Color(hex: 0xB20710)
-    static let gold = Color(hex: 0xFF6A72)
+    static let ink = Color(hex: 0x05070C)
+    static let dusk = Color(hex: 0x0F141C)
+    static let deepTeal = Color(hex: 0x0A192F)
+    static let cyan = Color(hex: 0x38BDF8)
+    static let rose = Color(hex: 0x0284C7)
+    static let gold = Color(hex: 0x94A3B8)
 }
 
 extension Color {
@@ -28,9 +28,9 @@ struct LiquidBackdrop: View {
             LinearGradient(
                 colors: [
                     Color.black,
-                    Color(hex: 0x070707),
-                    Color(hex: 0x120608),
-                    Color(hex: 0x22080D),
+                    Color(hex: 0x05070C),
+                    Color(hex: 0x0A111E),
+                    Color(hex: 0x0F1B2E),
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing

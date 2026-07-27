@@ -23,14 +23,14 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
 
-/// Palette aligned with the desktop (Lordflix) crimson-on-black visual system.
+/// Palette aligned with Apple liquid glass space-black and electric cyan visual system.
 object LiquidColors {
-    val Ink = Color(0xFF070707)
-    val Dusk = Color(0xFF141414)
-    val DeepTeal = Color(0xFF1C0B0D)
-    val Cyan = Color(0xFFFF1E27)
-    val Rose = Color(0xFFB20710)
-    val Gold = Color(0xFFFF6A72)
+    val Ink = Color(0xFF05070C)
+    val Dusk = Color(0xFF0F141C)
+    val DeepTeal = Color(0xFF0A192F)
+    val Cyan = Color(0xFF38BDF8)
+    val Rose = Color(0xFF0284C7)
+    val Gold = Color(0xFF94A3B8)
 }
 
 private val OmniverseColorScheme = darkColorScheme(
@@ -53,7 +53,7 @@ fun OmniverseTheme(content: @Composable () -> Unit) {
     )
 }
 
-/// Ambient diagonal backdrop — the canvas the glass panels float over with desktop-style drifting aurora glows.
+/// Ambient diagonal backdrop — space black canvas with Apple cyan & deep slate blue drifting aurora glows.
 @Composable
 fun LiquidBackdrop(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "aurora")
@@ -73,9 +73,9 @@ fun LiquidBackdrop(modifier: Modifier = Modifier) {
             .background(
                 Brush.radialGradient(
                     colors = listOf(
-                        Color(0xFF2E0507).copy(alpha = 0.25f + pulse * 0.12f),
-                        Color(0xFF180507).copy(alpha = 0.15f + (1f - pulse) * 0.10f),
-                        Color(0xFF050505),
+                        Color(0xFF0284C7).copy(alpha = 0.20f + pulse * 0.10f),
+                        Color(0xFF0A192F).copy(alpha = 0.15f + (1f - pulse) * 0.10f),
+                        Color(0xFF05070C),
                     ),
                     center = androidx.compose.ui.geometry.Offset(
                         x = 300f + pulse * 200f,
@@ -87,9 +87,9 @@ fun LiquidBackdrop(modifier: Modifier = Modifier) {
             .background(
                 Brush.linearGradient(
                     0f to Color.Black,
-                    0.38f to Color(0xFF080808),
-                    0.72f to Color(0xFF130708),
-                    1f to Color(0xFF22080C),
+                    0.38f to Color(0xFF060911),
+                    0.72f to Color(0xFF0A111E),
+                    1f to Color(0xFF0F1B2E),
                 )
             )
     )

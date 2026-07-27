@@ -44,12 +44,14 @@ struct ApiCredentials: Codable, Equatable {
     var traktTokenExpiresAt = 0          // epoch milliseconds
     var traktUsername = ""
     var pixeldrainApiKey = ""
+    var anilistAccessToken = ""
 
     var hasTmdb: Bool { !tmdbToken.trimmed.isEmpty }
     var hasTvdb: Bool { !tvdbApiKey.trimmed.isEmpty }
     var hasTraktApp: Bool { !traktClientId.trimmed.isEmpty }
     var hasTraktUser: Bool { !traktAccessToken.trimmed.isEmpty }
     var hasPixeldrain: Bool { !pixeldrainApiKey.trimmed.isEmpty }
+    var hasAnilist: Bool { !anilistAccessToken.trimmed.isEmpty }
     var canRefreshTrakt: Bool { !traktRefreshToken.trimmed.isEmpty && !traktClientSecret.trimmed.isEmpty }
 }
 

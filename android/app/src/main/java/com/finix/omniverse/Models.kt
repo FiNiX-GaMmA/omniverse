@@ -56,12 +56,14 @@ data class ApiCredentials(
     val traktTokenExpiresAt: Long = 0,
     val traktUsername: String = "",
     val pixeldrainApiKey: String = "",
+    val anilistAccessToken: String = "",
 ) {
     val hasTmdb get() = tmdbToken.trim().isNotEmpty()
     val hasTvdb get() = tvdbApiKey.trim().isNotEmpty()
     val hasTraktApp get() = traktClientId.trim().isNotEmpty()
     val hasTraktUser get() = traktAccessToken.trim().isNotEmpty()
     val hasPixeldrain get() = pixeldrainApiKey.trim().isNotEmpty()
+    val hasAnilist get() = anilistAccessToken.trim().isNotEmpty()
     val canRefreshTrakt get() = traktRefreshToken.trim().isNotEmpty() && traktClientSecret.trim().isNotEmpty()
 }
 

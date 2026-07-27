@@ -254,22 +254,37 @@ jobs:
           tag_name: v2.1.${{ github.run_number }}
           name: Omniverse v2.1.${{ github.run_number }} Release
           body: |
-            ## 🚀 New Update Released!
+            # ✨ Omniverse v2.1.${{ github.run_number }} Enterprise Release
 
-            ### 🆕 What's New / Changes:
+            > **Ultimate Multi-Platform Streaming Client** — High Performance, Native Liquid-Glass Aesthetic & Zero-Ads Engine.
+
+            ---
+
+            ### 🚀 Highlights & Release Notes
             ${{ env.COMMIT_MSG }}
 
             ---
 
-            ### 📦 Installation Packages:
-            *   🤖 **Android Devices**: Download **`Omniverse-android-arm64.apk`** (optimized for 64-bit phone, tablet, and TV) or **`Omniverse-android-universal.apk`** (universal installer) to install directly on any Android Mobile, Tablet, or Android TV / Fire TV.
-            *   🍎 **iOS/iPadOS/macOS (Native App)**: Download **`Omniverse-Unsigned.ipa`** to sideload or deploy on your Apple hardware.
-            *   💻 **Windows Devices (Desktop App)**: Download the **`.exe`** NSIS setup installer (or portable build) to install on Windows PCs.
-            *   🍏 **macOS Devices (Desktop App)**: Apple Silicon (M1–M4) → **`-arm64.dmg`**; Intel Macs → the plain **`.dmg`**. These builds are ad-hoc signed (not notarized), so on **first launch** right-click the app → **Open** (or run `xattr -dr com.apple.quarantine /Applications/Omniverse.app`) to get past Gatekeeper.
-            *   🐧 **Linux Devices (Desktop App)**: Download the **`.AppImage`** or **`.deb`** to install on Linux distributions.
+            ### 📦 Official Installation Matrix
 
-            ### ⚡ Features Highlight:
-            *   🍿 **Trakt Sync**: Real-time cloud sync & watchlist manager.
+            | Platform | Installer Package | Compatibility & Instructions |
+            | :--- | :--- | :--- |
+            | 🤖 **Android** | `Omniverse-android-arm64.apk`<br>`Omniverse-android-universal.apk` | Direct install on Phones, Tablets, Android TV & Fire TV |
+            | 🍎 **iOS / iPadOS** | `Omniverse-Unsigned.ipa` | Sideload via AltStore / SideStore / TrollStore / Xcode |
+            | 💻 **Windows** | `Omniverse Setup *.exe` | Windows 10/11 x64 Auto-installer |
+            | 🍏 **macOS** | `Omniverse-*.dmg` | macOS Apple Silicon (M1–M4) & Intel (Right-click Open on 1st launch) |
+            | 🐧 **Linux** | `*.AppImage` / `*.deb` | Universal Linux AppImage & Debian/Ubuntu Package |
+
+            ---
+
+            ### ⚡ Core Platform Capabilities
+            - 🛡️ **Built-in Shielding**: Integrated ad-blocker, pop-up suppressor, and tracking protection.
+            - 💎 **Liquid Glass UX**: Apple-style space black canvas, floating translucent pills, and spring physics.
+            - 🍿 **Cross-Device Sync**: Serverless QR & Trakt/AniList cloud watch history sync.
+            - ⚡ **Multi-Engine Resolvers**: High-availability stream engines with auto-fallback servers.
+
+            ---
+            *Automated CI/CD Enterprise Build pipeline powered by GitHub Actions.*
           draft: false
           prerelease: false
           files: |
