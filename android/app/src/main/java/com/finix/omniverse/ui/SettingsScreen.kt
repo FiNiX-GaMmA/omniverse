@@ -155,9 +155,9 @@ fun SettingsScreen() {
 
     suspend fun saveAll() {
         var c = state.credentials.copy(
-            tmdbToken = tmdb, tvdbApiKey = tvdb, tvdbPin = tvdbPin,
-            traktClientId = traktId, traktClientSecret = traktSecret,
-            pixeldrainApiKey = pixeldrain,
+            tmdbToken = tmdb.trim(), tvdbApiKey = tvdb.trim(), tvdbPin = tvdbPin.trim(),
+            traktClientId = traktId.trim(), traktClientSecret = traktSecret.trim(),
+            pixeldrainApiKey = pixeldrain.trim(),
         )
         state.saveCredentials(c)
         val s = state.settings.copy(
@@ -237,6 +237,12 @@ fun SettingsScreen() {
                             )
                         }
                         Section("Trakt Developer Client Keys") {
+                            Text(
+                                "💡 Set Redirect URI in your Trakt App Settings to:\nomniplay://trakt/oauth",
+                                fontSize = 11.sp,
+                                color = Color.White.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
                             SecretField(traktId, { traktId = it }, "Trakt Client ID", "https://trakt.tv/favicon.ico")
                             SecretField(
                                 traktSecret,

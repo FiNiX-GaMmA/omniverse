@@ -27,7 +27,7 @@ class TraktRepositoryImpl : TraktRepository {
         if (!c.hasTraktApp) return null
         val params = listOf(
             "response_type" to "code",
-            "client_id" to c.traktClientId,
+            "client_id" to c.traktClientId.trim(),
             "redirect_uri" to REDIRECT_URI,
             "state" to state,
         )
@@ -48,7 +48,7 @@ class TraktRepositoryImpl : TraktRepository {
             throw TraktException("Save your Trakt client ID and client secret first.")
         }
         val body = JSONObject()
-            .put("code", code)
+            .put("code", code.trim())
             .put("client_id", c.traktClientId.trim())
             .put("client_secret", c.traktClientSecret.trim())
             .put("redirect_uri", REDIRECT_URI)
@@ -69,9 +69,8 @@ class TraktRepositoryImpl : TraktRepository {
 
     override suspend fun startDeviceAuth(c: ApiCredentials): TraktDeviceCode {
         if (!c.hasTraktApp) throw TraktException("Save a Trakt client ID first.")
-        // NOTE: client_id is NOT trimmed here, matching the Dart implementation.
-        val r = postRaw("oauth/device/code", JSONObject().put("client_id", c.traktClientId),
-            mapOf("Content-Type" to "application/json"))
+        val r = postRaw("oauth/device/code", JSONObject().put("client_id", c.traktClientId.trim()),
+            mapOf("Content-Type" to "application/json", "trakt-api-version" to "2", "User-Agent" to "Omniverse/2.1"))
         if (r.status >= 400) throw TraktException("Trakt device auth returned ${r.status}")
         val json = r.jsonObject()
         return TraktDeviceCode(

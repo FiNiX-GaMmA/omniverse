@@ -35,7 +35,7 @@ final class TraktRepository: TraktRepositoryProtocol {
         comps.path = "/oauth/authorize"
         comps.queryItems = [
             URLQueryItem(name: "response_type", value: "code"),
-            URLQueryItem(name: "client_id", value: c.traktClientId),
+            URLQueryItem(name: "client_id", value: c.traktClientId.trimmed),
             URLQueryItem(name: "redirect_uri", value: Self.redirectUri),
             URLQueryItem(name: "state", value: state),
         ]
