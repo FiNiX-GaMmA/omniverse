@@ -33,6 +33,10 @@ function resolveSavedVidsrcDomain() {
 // Global Application State
 let detailModalRequestToken = 0;
 
+function getEffectiveTmdbToken() {
+  return (state.tmdbToken || "").trim();
+}
+
 let state = {
   tmdbToken: localStorage.getItem("omni_tmdb_token") || "",
   vidsrcDomain: resolveSavedVidsrcDomain(),
@@ -265,7 +269,8 @@ async function hydrateProviderRailLogos() {
   if (!logoNodes.length) return;
 
   let providersById = new Map();
-  if (state.tmdbToken && state.tmdbToken.trim()) {
+  const token = getEffectiveTmdbToken();
+  if (token) {
     const providersResponse = await fetchTmdb("watch/providers/movie", {
       watch_region: "US",
     });
@@ -327,7 +332,7 @@ async function appFetch(url, method = "GET", headers = {}, body = null) {
 
 // TMDB API Client Helpers
 async function fetchTmdb(path, params = {}) {
-  const token = state.tmdbToken.trim();
+  const token = getEffectiveTmdbToken();
   if (!token) return null;
 
   const urlParams = new URLSearchParams({
@@ -580,7 +585,7 @@ function resetTmdbInfinite(type, items) {
 }
 
 async function loadMoreTmdbGrid(type = "movie") {
-  if (!state.tmdbToken) return;
+  if (!getEffectiveTmdbToken()) return;
   const key = type === "tv" ? "tv" : "movies";
   const containerId = type === "tv" ? "grid-all-tv" : "grid-all-movies";
   const st = infiniteState[key];
@@ -776,7 +781,7 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
     loadAnimeCatalog();
   }
 
-  if (state.tmdbToken) {
+  if (getEffectiveTmdbToken()) {
     showGridLoading("grid-all-movies", "Syncing TMDB movies…");
     showGridLoading("grid-all-tv", "Syncing TMDB shows…");
     setHeroMessage(
@@ -844,7 +849,7 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
   ].filter((m) => m && (m.backdrop || m.poster));
   if (heroFeed.length) {
     initHeroCarousel(heroFeed);
-  } else if (!state.tmdbToken) {
+  } else if (!getEffectiveTmdbToken()) {
     setHeroMessage(
       "Live catalogue only",
       "Anime will sync from AniList automatically. Add TMDB in Settings to unlock fresh movie and TV discovery.",
@@ -1343,7 +1348,7 @@ async function filterByStudio(studio) {
   state.activeStudio = (studio || "").toLowerCase();
 
   const cfg = STUDIO_PROVIDER_MAP[state.activeStudio];
-  if (!state.tmdbToken) {
+  if (!getEffectiveTmdbToken()) {
     setMoviesProviderMode(false);
     showGridMessage(
       "grid-all-movies",
@@ -1707,7 +1712,7 @@ async function openDetailModal(media) {
 
   // If TMDB is active, fetch deeper details dynamically from the live API.
   // Anime can use TMDB details too when it has a tmdbId.
-  if (state.tmdbToken && media.tmdbId) {
+  if (getEffectiveTmdbToken() && media.tmdbId) {
     const tmdbEndpoint = media.type === "movie" ? "movie" : "tv";
 
     modalOverview.innerHTML = `
@@ -2057,7 +2062,7 @@ async function loadSeasonEpisodes() {
   }
 
   // Dynamic TMDB TV Series Episode Loading!
-  if (state.tmdbToken && media.tmdbId && media.type === "tv") {
+  if (getEffectiveTmdbToken() && media.tmdbId && media.type === "tv") {
     grid.innerHTML =
       '<div class="text-xs text-gray-500 p-3 flex items-center gap-2"><div class="w-4 h-4 border-2 border-brandCyan border-t-transparent rounded-full animate-spin"></div> Loading season episodes from TMDB…</div>';
 
@@ -2494,7 +2499,7 @@ function playStreamResolved(media, season, episode, forceDomain) {
 async function ensurePlaybackIds(media) {
   if (
     !media ||
-    !state.tmdbToken ||
+    !getEffectiveTmdbToken() ||
     !media.tmdbId ||
     media._playbackIdsChecked
   ) {
@@ -3225,65 +3230,6 @@ async function fetchDesktopAniSkip(anilistId, episode, durationSec) {
   return [];
 }
 
-  const parseIntervals = (raw) => {
-    if (!raw) return [];
-    let data;
-    try {
-      data = typeof raw === "string" ? JSON.parse(raw) : raw;
-    } catch {
-      return [];
-    }
-    if (!data || data.found !== true || !Array.isArray(data.results)) return [];
-
-    const allowedTypes = new Set(["op", "ed", "recap"]);
-    return data.results
-      .map((entry) => {
-        const type = ((entry && (entry.skipType || entry.skip_type)) || "")
-          .toString()
-          .toLowerCase();
-        if (!allowedTypes.has(type)) return null;
-
-        const interval = entry && entry.interval;
-        const start = Number(interval && interval.startTime);
-        const end = Number(interval && interval.endTime);
-        if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-          return null;
-        }
-
-        return { type, start, end };
-      })
-      .filter(Boolean)
-      .sort((a, b) => a.start - b.start);
-  };
-
-  const fetchUrl = async (url) => {
-    try {
-      const res = await appFetch(url, "GET", {
-        Accept: "application/json",
-      });
-      if (!res.ok || !res.html) return [];
-      return parseIntervals(res.html);
-    } catch (e) {
-      console.warn("AniSkip fetch failed:", e);
-      return [];
-    }
-  };
-
-  let list = await fetchUrl(
-    `https://api.aniskip.com/v2/skip-times/${aniList}/${ep}?types[]=op&types[]=ed&types[]=recap&episodeLength=${length}`,
-  );
-  if (list.length) return list;
-
-  list = await fetchUrl(
-    `https://api.aniskip.com/v2/skip-times/${aniList}/${ep}?types[]=op&types[]=ed&types[]=recap&episodeLength=1440`,
-  );
-  if (list.length) return list;
-
-  return fetchUrl(
-    `https://api.aniskip.com/v1/skip-times/${aniList}/${ep}?types=op&types=ed`,
-  );
-}
-
 function showPlayerToast(title, body) {
   const toast = document.getElementById("player-toast");
   const titleEl = document.getElementById("player-toast-title");
@@ -3717,7 +3663,7 @@ function setupSearchInput() {
     }
 
     searchTimeout = setTimeout(async () => {
-      if (!state.tmdbToken) {
+      if (!getEffectiveTmdbToken()) {
         showGridMessage(
           "grid-search-results",
           "Connect TMDB to search movies and TV",
@@ -4050,6 +3996,156 @@ async function ensureFreshTraktToken() {
   }
 }
 
+async function disconnectTrakt() {
+  state.traktToken = "";
+  state.traktRefreshToken = "";
+  state.traktTokenExpiresAt = 0;
+  state.traktUsername = "";
+  localStorage.removeItem("omni_trakt_token");
+  localStorage.removeItem("omni_trakt_refresh_token");
+  localStorage.removeItem("omni_trakt_expires_at");
+  localStorage.removeItem("omni_trakt_username");
+  loadSavedPreferences();
+  window.electron.showNotification("Trakt Disconnected", "Trakt sync channel closed.");
+}
+
+async function startTraktAuth() {
+  const clientIdInput = document.getElementById("trakt-client-id-input");
+  const clientSecretInput = document.getElementById("trakt-client-secret-input");
+
+  const clientId = (clientIdInput ? clientIdInput.value : "").trim() || state.traktClientId || "";
+  const clientSecret = (clientSecretInput ? clientSecretInput.value : "").trim() || state.traktClientSecret || "";
+
+  if (!clientId) {
+    window.electron.showNotification(
+      "Trakt Client ID Required",
+      "Please enter your Trakt Client ID in Settings first."
+    );
+    if (clientIdInput) clientIdInput.focus();
+    return;
+  }
+
+  state.traktClientId = clientId;
+  state.traktClientSecret = clientSecret;
+  localStorage.setItem("omni_trakt_client_id", clientId);
+  localStorage.setItem("omni_trakt_client_secret", clientSecret);
+
+  const stateToken = Math.random().toString(36).substring(2, 10);
+  const redirectUri = "omniplay://trakt/oauth";
+  const authUrl = `https://trakt.tv/oauth/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${stateToken}`;
+
+  window.electron.openExternal(authUrl);
+  showTraktCodePromptModal();
+}
+
+function showTraktCodePromptModal() {
+  const existing = document.getElementById("trakt-auth-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "trakt-auth-modal";
+  modal.className = "fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in";
+  modal.innerHTML = `
+    <div class="bg-brandSec border border-brandCyan/20 p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-5 text-center">
+      <div class="w-12 h-12 bg-brandCyan/10 border border-brandCyan/20 rounded-full flex items-center justify-center mx-auto text-brandCyan text-xl select-none">
+        📡
+      </div>
+      <div>
+        <h3 class="text-lg font-black text-white tracking-tight">Authorizing Trakt.tv Sync</h3>
+        <p class="text-xs text-gray-400 mt-1 leading-relaxed">
+          Trakt has opened in your browser. Click <b>"Allow"</b>, then copy the authorization code or redirect URI and paste it below:
+        </p>
+      </div>
+      <div class="space-y-2 text-left">
+        <label class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">Trakt Authorization Code</label>
+        <input type="text" id="trakt-oauth-code-input" placeholder="Paste authorization code here..."
+               class="w-full bg-brandDark border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brandCyan font-mono" />
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="document.getElementById('trakt-auth-modal').remove()" 
+                class="w-1/3 bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold py-2.5 rounded-xl transition">
+          Cancel
+        </button>
+        <button onclick="exchangeTraktOAuthCode()" 
+                class="w-2/3 bg-brandCyan hover:bg-cyan-400 text-brandDark text-xs font-extrabold py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+          <span>🚀 Complete Connection</span>
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  setTimeout(() => {
+    const input = document.getElementById("trakt-oauth-code-input");
+    if (input) input.focus();
+  }, 100);
+}
+
+async function exchangeTraktOAuthCode() {
+  const codeInput = document.getElementById("trakt-oauth-code-input");
+  let rawCode = (codeInput ? codeInput.value : "").trim();
+
+  if (!rawCode) {
+    window.electron.showNotification("Trakt Auth Error", "Please paste your Trakt Authorization Code.");
+    return;
+  }
+
+  if (rawCode.includes("code=")) {
+    try {
+      const parsed = new URL(rawCode);
+      rawCode = parsed.searchParams.get("code") || rawCode;
+    } catch (_) {
+      const match = rawCode.match(/code=([^&]+)/);
+      if (match) rawCode = match[1];
+    }
+  }
+
+  try {
+    const url = "https://api.trakt.tv/oauth/token";
+    const body = {
+      code: rawCode,
+      client_id: state.traktClientId,
+      client_secret: state.traktClientSecret,
+      redirect_uri: "omniplay://trakt/oauth",
+      grant_type: "authorization_code",
+    };
+    const headers = { "Content-Type": "application/json" };
+
+    const res = await appFetch(url, "POST", headers, body);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.error || "Trakt rejected authorization code"}`);
+    }
+
+    const data = JSON.parse(res.html);
+    const createdAt = data.created_at || Math.floor(Date.now() / 1000);
+    const expiresIn = data.expires_in || 0;
+    const expiresAt = expiresIn <= 0 ? 0 : (createdAt + expiresIn) * 1000;
+
+    state.traktToken = data.access_token || "";
+    state.traktRefreshToken = data.refresh_token || "";
+    state.traktTokenExpiresAt = expiresAt;
+
+    localStorage.setItem("omni_trakt_token", state.traktToken);
+    localStorage.setItem("omni_trakt_refresh_token", state.traktRefreshToken);
+    localStorage.setItem("omni_trakt_expires_at", expiresAt);
+
+    await refreshTraktLoginState();
+
+    const modal = document.getElementById("trakt-auth-modal");
+    if (modal) modal.remove();
+
+    window.electron.showNotification(
+      "Trakt Connected! 🎉",
+      "Seamless cloud sync is active across your mobile and desktop devices!"
+    );
+
+    await pullFromTrakt();
+    renderContinueWatching();
+  } catch (err) {
+    console.error("Exchange Trakt OAuth code error:", err);
+    window.electron.showNotification("Trakt Connection Error", "Could not complete Trakt authentication: " + err.message);
+  }
+}
+
 // Interactively refresh and verify Trakt authentication state
 async function refreshTraktLoginState() {
   const btn = document.getElementById("btn-refresh-login");
@@ -4059,25 +4155,12 @@ async function refreshTraktLoginState() {
     lucide.createIcons();
   }
 
-  // Attempt to refresh the token if we have a refresh token
   await ensureFreshTraktToken();
 
-  const token = (
-    document.getElementById("trakt-token-input").value ||
-    state.traktToken ||
-    ""
-  ).trim();
-  const clientId = (
-    document.getElementById("trakt-client-id-input").value ||
-    state.traktClientId ||
-    ""
-  ).trim();
+  const token = (state.traktToken || "").trim();
+  const clientId = (state.traktClientId || "").trim();
 
   if (!token || !clientId) {
-    window.electron.showNotification(
-      "Login Status",
-      "Please enter your Trakt Account Token and Client ID first to verify authentication.",
-    );
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline mr-1 select-none"></i> Refresh Login`;
@@ -4098,36 +4181,14 @@ async function refreshTraktLoginState() {
     const res = await appFetch(url, "GET", headers);
     if (res.ok && res.html) {
       const data = JSON.parse(res.html);
-      const username =
-        data.user && data.user.username ? data.user.username : "";
+      const username = data.user && data.user.username ? data.user.username : "";
 
-      // Persist verified state
-      state.traktToken = token;
-      state.traktClientId = clientId;
       state.traktUsername = username;
-      localStorage.setItem("omni_trakt_token", token);
-      localStorage.setItem("omni_trakt_client_id", clientId);
       localStorage.setItem("omni_trakt_username", username);
       loadSavedPreferences();
-
-      window.electron.showNotification(
-        "Sync Authenticated",
-        username
-          ? `Welcome back, ${username}! Sync channels are active.`
-          : "Trakt session verified successfully.",
-      );
-    } else {
-      window.electron.showNotification(
-        "Authentication Refused",
-        "Trakt rejected this Token. Please verify credentials.",
-      );
     }
   } catch (err) {
     console.error("Trakt refresh settings error:", err);
-    window.electron.showNotification(
-      "Sync Network Warning",
-      "Could not complete verification. Server connection timed out.",
-    );
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -5177,10 +5238,9 @@ async function forceSyncNow() {
   }
 }
 
-async function checkAnimeServerLatencies(btn) {}
-
-  const originalHtml = btn.innerHTML;
-  btn.disabled = true;
+async function checkAnimeServerLatencies(btn) {
+  const container = document.getElementById("anime-latency-results");
+  if (!container) return;
   btn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4 animate-spin inline mr-1"></i> Testing...`;
   if (window.lucide) lucide.createIcons();
 

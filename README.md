@@ -1,27 +1,21 @@
-# <p align="center"><img src="assets/branding/omniplay_icon_1024.png" alt="Omniverse Logo" width="120" height="120"/><br>Omniverse</p>
+# <p align="center"><img src="assets/branding/omniplay_icon_1024.png" alt="Omniverse Logo" width="120" height="120"/><br>🚀 Omniverse</p>
 
 <p align="center">
-  <strong>The ultimate, ultra-premium media companion app for your iOS, iPadOS, Android, and Android TV devices. Completely native, blazing fast, and privately yours.</strong>
+  <strong>The ultimate, ultra-premium multi-platform media companion app. Completely native, blazing fast, private, and zero-ads.</strong>
 </p>
 
 <div align="center">
 
-### Repository Metadata
+### 💎 Repository Metadata & Build Badges
 
 | Category | Badges |
 | :--- | :--- |
 | **License** | [![License](https://img.shields.io/badge/License-MIT-4fc921?style=flat-square)](LICENSE) |
-| **Downloads** | [![Total Downloads](https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/total?style=flat-square&logo=github&color=06b6d4)](https://github.com/FiNiX-GaMmA/omniverse/releases) [![Latest Release Downloads](https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/latest/total?style=flat-square&logo=github&color=10b981)](#) |
-| **Platforms** | [![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20iPadOS%20%7C%20Android%20%7C%20Android%20TV-E3008C?style=flat-square)](#) |
-| **Languages** | [![Kotlin](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org) [![Swift](https://img.shields.io/badge/Language-Swift-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org) |
-| **Frameworks** | [![Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-3DDC84?style=flat-square&logo=android&logoColor=white)](#) [![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-007ACC?style=flat-square&logo=swift&logoColor=white)](#) |
-| **Dev Tools** | [![Linter](https://img.shields.io/badge/Linter-ktlint%20%7C%20swiftlint-blueviolet?style=flat-square)](#) |
-
-### Build & Test Automation Status
-
-| Branch | Pipeline Status | Unit Tests |
-| :--- | :--- | :--- |
-| **Main** | [![Native Enterprise Build Artifacts](https://github.com/FiNiX-GaMmA/omniverse/actions/workflows/build.yml/badge.svg)](https://github.com/FiNiX-GaMmA/omniverse/actions) | [![Tests (Kotlin)](https://img.shields.io/badge/Tests_Kotlin-passing-brightgreen?style=flat-square)](#) [![Tests (Swift)](https://img.shields.io/badge/Tests_Swift-passing-brightgreen?style=flat-square)](#) |
+| **Downloads** | [![Total Downloads](https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/total?style=flat-square&logo=github&color=06b6d4)](https://github.com/FiNiX-GaMmA/omniverse/releases) [![Latest Release Downloads](https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/latest/total?style=flat-square&logo=github&color=10b981)](https://github.com/FiNiX-GaMmA/omniverse/releases) |
+| **Platforms** | [![Platforms](https://img.shields.io/badge/Platforms-Android%20%7C%20iOS%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-E3008C?style=flat-square)](#-platform-support--download-matrix) |
+| **Languages** | [![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org) [![Swift](https://img.shields.io/badge/Swift-5.9+-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org) [![JavaScript](https://img.shields.io/badge/Node-20+-F7DF1E?style=flat-square&logo=nodedotjs&logoColor=black)](https://nodejs.org) |
+| **Frameworks** | [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-3DDC84?style=flat-square&logo=android&logoColor=white)](#) [![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-007ACC?style=flat-square&logo=swift&logoColor=white)](#) [![Electron](https://img.shields.io/badge/UI-Electron-47848F?style=flat-square&logo=electron&logoColor=white)](#) |
+| **CI/CD Build** | [![Native Enterprise Build Artifacts](https://github.com/FiNiX-GaMmA/omniverse/actions/workflows/build.yml/badge.svg)](https://github.com/FiNiX-GaMmA/omniverse/actions) |
 
 </div>
 
@@ -29,164 +23,109 @@
 
 ## 🌟 What is Omniverse?
 
-**Omniverse** is an elegant, high-fidelity native media player and discovery center redesigned from the ground up to run directly on your hardware. Unlike clunky, slow web-wrapped apps, Omniverse is **100% pure native code** (Kotlin for Android/Android TV and Swift for iOS/iPadOS). It opens instantly, glides at a silky-smooth **120Hz**, and integrates deeply with your system’s video pipeline.
+**Omniverse** is an elegant, high-fidelity native media player and discovery center redesigned from the ground up to run directly on your hardware. Unlike clunky web wrappers, Omniverse leverages **100% pure native code** (Kotlin for Android/Android TV, Swift for iOS/iPadOS, and custom Electron for Desktop). It boots instantly, glides at a silky-smooth **120Hz**, and integrates directly with system video acceleration.
 
-No trackers, no central servers, and completely open source. Your watch history, accounts, and playlists are encrypted and synchronized peer-to-peer or backed up privately to your personal account.
+No trackers, no telemetry, no mandatory central servers, and completely open source. Your watch history, accounts, and playlists stay strictly encrypted on your devices or sync peer-to-peer using QR codes and private cloud accounts.
+
+---
+
+## 📦 Platform Support & Download Matrix
+
+| Platform | Recommended Package | Target Compatibility | Direct Download |
+| :--- | :--- | :--- | :--- |
+| 🤖 **Android** | `Omniverse-android-arm64.apk`<br>`Omniverse-android-universal.apk` | Android 6.0+ (ARM64, v7a, x86_64) | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
+| 📺 **Android TV / Fire TV** | `Omniverse-android-universal.apk` | Android TV Leanback UI & D-pad Remotes | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
+| 🍎 **iOS / iPadOS** | `Omniverse-Unsigned.ipa` | iOS / iPadOS 16.0+ (AltStore, SideStore, TrollStore) | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
+| 💻 **Windows** | `Omniverse Setup *.exe` | Windows 10 / 11 (64-bit Installer) | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
+| 🍏 **macOS** | `Omniverse-*.dmg` | macOS Apple Silicon (M1–M4) & Intel x64 | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
+| 🐧 **Linux** | `*.AppImage` / `*.deb` | Ubuntu, Debian, Fedora, Arch & SteamOS | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
 
 ---
 
 ## ✨ Premium Features You’ll Love
 
-### ☁️ 1. Zero-Config 1-Second Sync (No Server, Fully Private)
-*   **Instant Setup**: Signed in on your iPad and want to move to your Android phone? Just go to Settings, tap **Show Sync QR**, and scan it on your phone.
-*   **Total Cloud Sync**: Your Trakt account, API keys, lists, and watch history are instantly copied and signed in.
-*   **No Central Server**: Because everything is handled in a secure, peer-to-peer-like Base64 package encoded directly in the QR code, your keys are never stored on any third-party servers.
+### ☁️ 1. Zero-Config 1-Second Sync
+* **Instant Peer-to-Peer Transfer**: Signed in on your iPad and want to switch to your phone? Tap **Show Sync QR** in Settings and scan it on your target device.
+* **Total Credentials Transfer**: API keys, Trakt login, watchlist, and play progress are instantly transferred without intermediate cloud databases.
 
-### ⏱️ 2. Netflix-Style Next Episode Countdown
-*   **Smooth Transitions**: In the video player, when there are less than 10 seconds remaining, a premium card slides in.
-*   **Interactive Ring**: Watch a gorgeous circular countdown ring drain in real-time. 
-*   **Auto-Play**: Tap the card or click it with your Android TV D-pad to start the next episode immediately, or wait for the countdown to hit zero and let it autoplay!
+### ⏱️ 2. Next Episode Countdown Ring
+* **Netflix-Style Overlay**: When <10s remain in playback, an animated countdown card slides onto the screen.
+* **Auto-Play Support**: Tap or press D-Pad Center to launch immediately, or let the circular timer drain to auto-advance.
 
-### 🍿 3. Clean "Continue Watching" Shelf
-*   **No Clutter**: Unlike other apps that list separate entries for every single episode you watched, Omniverse groups progress by show.
-*   **One Card Per Show**: You'll see exactly one unified card representing your favorite TV show or movie series, displaying a badge with your last watched progress. Simply select it to resume playback exactly from where you paused!
+### 🍿 3. Unified "Continue Watching" Shelf
+* **One Show, One Card**: Groups progress intelligently by series so your home screen stays clean and uncluttered.
+* **Exact Timestamp Resume**: Click any card to pick up playback down to the exact frame.
 
-### 🔄 4. Silky 120Hz Fluid Rendering & Landscape-Lock
-*   **Silky Smooth**: Supports Apple ProMotion and Android high-refresh displays to render animations, transitions, and sliders at a beautiful, stutter-free **120 frames per second**.
-*   **Landscape Lock**: Tired of the video rotating back and forth when you lie down? The video player locks strictly into Landscape mode no matter how you hold your device, and restores your standard settings automatically when you exit.
+### 🔄 4. Silky 120Hz Liquid Rendering & Landscape Lock
+* **ProMotion & High Refresh**: Fluid animations at 120 FPS on supported Apple ProMotion and Android displays.
+* **Auto Landscape-Lock**: Player automatically locks to landscape mode regardless of system rotation, restoring your orientation on exit.
 
-
-
-### 📺 6. Real Android TV Leanback Support
-*   **TV Parity**: A gorgeous, dedicated layout designed for your TV screen. Focus halos, scale-up highlights, and full native support for your Android TV remote/D-pad.
-
-### 🚀 7. Continuous In-App Update Engine
-*   **Dynamic OTA Updates**: Increments release versions automatically on every push, allowing you to install updates in-place without losing watch history, accounts, or settings.
-*   **Rich Native Markdown Renderer**: Beautiful in-app updater that parses release notes on-the-fly, displaying headers, cyan bullet points, bolds, and monospaced code blocks inside a fully scrollable viewport.
+### 🚀 5. In-App OTA Update Engine
+* **Continuous Updates**: Direct check against GitHub releases API with progress indicator and animated installer launcher.
+* **Native Release Notes Markdown**: Formatted release notes rendered directly in-app.
 
 ---
 
 ## 🚀 Easy One-Click Real Device Installers
 
-We have crafted smart, fully-automated deployment scripts that build and install the application directly onto your connected device with **zero manual configuration**!
+Smart automated deployment scripts compile and install the application directly onto connected hardware:
 
 ### 📱 A. Install to iPad / iPhone (macOS)
-If you have an iPad or iPhone connected to your Mac (via USB or on the same Wi-Fi network with Developer Mode turned on):
-
-1.  Open your terminal in the project directory and run:
-    ```bash
-    ./install_ipad.sh
-    ```
-2.  The script will automatically detect your iPad Pro, compile the Swift project, sign it, and install it.
-3.  **To Trust the App (First-Time Only)**:
-    *   Open **Settings** on your iPad.
-    *   Go to **General > VPN & Device Management**.
-    *   Tap your Apple ID email under "Developer App" and tap **Trust**.
-4.  The terminal script will detect when you're ready and instantly launch Omniverse on your iPad!
+```bash
+./install_ipad.sh
+```
+*Auto-detects connected iOS devices, builds the Swift bundle, and launches it on device.*
 
 ### 🤖 B. Install to Android Device (Phone / Tablet / TV)
-If you have an Android device connected via USB with USB Debugging enabled:
+```bash
+./install_android.sh
+```
+*Auto-detects ADB device, compiles signed debug/release APK, and launches foreground activity.*
 
-1.  Open your terminal in the project directory and run:
-    ```bash
-    ./install_android.sh
-    ```
-2.  The script will auto-detect your device model (e.g. *Samsung Galaxy*), boot Android Studio's bundled JDK, compile, and install the package.
-3.  The app will instantly launch on your Android screen in the foreground!
-
-### 🖥️ C. Compile & Run on Desktop (macOS, Windows, Linux)
-Omniverse includes a premium, ultra-fast Electron-based desktop app supporting zero-config cloud sync, ad-blocked VidSrc streaming, and high-performance Live TV HLS playback natively across Windows, Linux, and macOS (universal builds for both Intel & Apple Silicon).
-
-1.  **To run locally in development mode (requires Node.js 18+):**
-    ```bash
-    cd desktop && npm install && npm start
-    ```
-2.  **To package production native installers for your host platform:**
-    ```bash
-    ./build.sh desktop
-    ```
-    *   **macOS (Intel/Silicon)**: Packages a universal `.dmg` disk image.
-    *   **Windows**: Packages an `.exe` NSIS setup installer and a standalone portable build.
-    *   **Linux**: Packages both safe containerized `.AppImage` and Debian `.deb` installers.
-3.  Your compiled installers will reside in `dist/desktop/`.
-
-> [!IMPORTANT]
-> ** macOS Gatekeeper & "App is Damaged" Quarantine Fix:**
-> When opening packaged apps on macOS without an active paid Apple Developer certificate, macOS will block execution or falsely report that the app is "damaged" or from an "unidentified developer".
-> 
-> To bypass this restriction instantly, open your terminal and run this **one-liner command** to clear the macOS quarantine attribute:
-> ```bash
-> xattr -cr /Applications/Omniverse.app
-> ```
-> *If you are running the packaged Electron build directly from the `dist/` folder, run:*
-> ```bash
-> xattr -cr dist/desktop/mac-universal/Omniverse.app
-> ```
+### 🖥️ C. Compile & Run Desktop App
+```bash
+cd desktop && npm install && npm start
+```
+*Runs cross-platform Electron app in development mode.*
 
 ---
 
 ## 🔑 Required API Keys & Sync Configuration
 
-To keep Omniverse completely private, decentralized, and under your control, **the app connects directly to public media APIs using your own personal credentials**. You will need to provide your own API keys to enable core features like movie discovery and cloud sync.
-
-For complete, step-by-step instructions on where to register and how to generate these keys, please refer to our dedicated guide:
+To keep Omniverse private and decentralized, **the app connects directly to public media APIs using your own personal credentials**.
 
 👉 **[Omniverse API Keys & Sync Configuration Guide](API_SETUP.md)** 👈
 
-### Overview of Supported Integrations:
-*   **TMDB Access Token** (*Required*): Movie & TV metadata, trending collections, poster art, and search results.
-*   **Trakt.tv Developer Keys** (*Highly Recommended*): Real-time play progress scrobbling, watchlist syncing, and fully encrypted configuration backup to your private account.
-*   **Pixeldrain API Key** (*Optional*): Restores unrestricted streaming speeds for direct Pixeldrain-hosted streams.
-*   **TVDB API Key & PIN** (*Optional*): Extended TV series metadata and live TV guide schedules.
+* **TMDB Access Token** (*Required*): Movie & TV metadata, trending collections, posters, and search.
+* **Trakt.tv Developer Keys** (*Recommended*): Playback scrobbling and watchlist synchronization.
+* **Pixeldrain API Key** (*Optional*): Restores unrestricted streaming speeds.
+* **TVDB API Key & PIN** (*Optional*): Extended TV metadata and guide schedules.
 
 ---
 
 ## 🏗️ Repository Architecture
 
-If you're a developer or just curious about how things are structured under the hood, here is the directory layout:
-
 ```
-omniplay/
+omniverse/
 ├── android/            # Native Kotlin + Jetpack Compose Android & Android TV App
-│   ├── app/            # Main Android application module
-│   └── build.gradle.kts# Gradle dependencies and targets
+│   ├── app/            # App module, repositories, stores & Compose UI
+│   └── build.gradle.kts# Gradle dependencies and build setup
 ├── ios/                # Native Swift + SwiftUI iOS & iPadOS App
 │   ├── Omniverse/      # Swift layout views, networking, and assets
-│   ├── Omniverse.xcodeproj # Generated Xcode project bundle
-│   └── project.yml     # XcodeGen configuration sheet
-├── desktop/            # Frameless Electron Desktop App (Windows, macOS Intel/Silicon, Linux)
-│   ├── main.js         # Core process lifecycle, header bypass filters, and strict ad-blocking
-│   ├── preload.js      # Dual-duty context isolation bridge and anti-redirection webview shield
-│   ├── index.html      # Responsive dashboard UI (Tailwind, Lucide)
-│   └── package.json    # Electron dependencies and multi-OS builder configs
-├── keystore/           # Secure release keystores for signed Android binaries
+│   └── project.yml     # XcodeGen project specification
+├── desktop/            # Frameless Electron Desktop App
+│   ├── main.js         # Core process lifecycle & ad-block filters
+│   ├── preload.js      # Context isolation & webview shields
+│   └── index.html      # Responsive Glassmorphic Dashboard UI
+├── keystore/           # Secure release keystores
 ├── SYNC_SPEC.md        # Cryptographic sync protocol specification
 ├── build.sh            # Unified multi-platform build compiler
-├── install_ipad.sh     # One-click iPad/iOS device installer
-└── install_android.sh  # One-click Android device installer
+└── install_*.sh        # Deployment scripts
 ```
 
 ---
 
-## 🤝 Community & Contributing
+## 📄 License & Disclaimer
 
-We welcome contributions of all kinds!
-*   **Feedback & Feature Requests**: Open an issue to suggest additions.
-*   **Android Tweaks**: convention follows [Official Kotlin Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html).
-*   **iOS Tweaks**: Keep SwiftUI views lightweight and leverage our central `@Observable` `AppState` engine.
-
----
-
-## 📄 License
-
-Omniverse is open-source software distributed under the [MIT License](LICENSE). Made with ❤️ for a premium, private streaming experience.
-
----
-
-## ⚖️ Legal Disclaimer
-
-**Omniverse does NOT host, store, stream, or distribute any media files, movies, TV shows, or video files.**
-
-The application functions strictly as a client-side **media player, catalog organizer, and search index browser** that connects to public metadata directories (such as TMDB, TVDB, and Trakt.tv) and plays user-provided local streams or user-resolved public feeds. 
-
-Omniverse does not promote, encourage, or facilitate copyright infringement or digital piracy. It is an open-source tool designed solely for personal media management, cataloging, and playing legally acquired content. Any third-party stream links or sources accessed through the player are hosted elsewhere, and Omniverse has no control over, nor assumes any responsibility or liability for, their content, legality, or availability.
+- Distributed under the [MIT License](LICENSE).
+- **Omniverse does NOT host, store, stream, or distribute any media files.** All metadata and streams are resolved dynamically on client devices from public user-configured endpoints.

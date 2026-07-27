@@ -59,7 +59,6 @@ android {
             include("arm64-v8a")
             isUniversalApk = true
         }
-        density { isEnable = false }
     }
 
     compileOptions {

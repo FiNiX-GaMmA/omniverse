@@ -9,9 +9,9 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `57b3868d`
+- Built from commit: `786c0564` (Production Refactored)
+- Codebase status: Cleaned & Refactored via Ponytail Minimalist Skill
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
-- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - AppState

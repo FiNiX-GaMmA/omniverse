@@ -33,9 +33,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.buildAnnotatedString
@@ -109,6 +111,8 @@ fun SettingsScreen() {
 
     var showSyncQr by remember { mutableStateOf(false) }
     var updateInfo by remember { mutableStateOf<UpdateChecker.UpdateInfo?>(null) }
+    var isDownloadingUpdate by remember { mutableStateOf(false) }
+    var updateDownloadProgress by remember { mutableFloatStateOf(0f) }
 
     var tmdbError by remember { mutableStateOf(false) }
     var tvdbError by remember { mutableStateOf(false) }
@@ -472,36 +476,97 @@ fun SettingsScreen() {
 
     updateInfo?.let { info ->
         AlertDialog(
-            onDismissRequest = { updateInfo = null },
-            title = { Text("Update available", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Black) },
+            onDismissRequest = {
+                if (!isDownloadingUpdate) updateInfo = null
+            },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("🚀 New Update Available", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                }
+            },
             text = {
                 val notes = info.notes?.takeIf { it.isNotBlank() }
                 Column(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        "Version ${info.versionName} is available.",
-                        color = LiquidColors.Cyan,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(LiquidColors.Cyan.copy(alpha = 0.15f))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Version ${info.versionName}",
+                            color = LiquidColors.Cyan,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text("✨ Production Build", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                    }
+
+                    if (isDownloadingUpdate) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        ) {
+                            Text(
+                                "Downloading update... ${(updateDownloadProgress * 100).toInt()}%",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            LinearProgressIndicator(
+                                progress = { updateDownloadProgress },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                color = LiquidColors.Cyan,
+                                trackColor = Color.White.copy(alpha = 0.15f)
+                            )
+                        }
+                    }
+
                     notes?.let {
                         MarkdownText(it)
                     }
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    updateInfo = null
-                    scope.launch {
-                        Toast.makeText(context, "Downloading update...", Toast.LENGTH_SHORT).show()
-                        val err = UpdateChecker.downloadAndInstall(context, info)
-                        if (err != null) Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                if (!isDownloadingUpdate) {
+                    TextButton(onClick = {
+                        isDownloadingUpdate = true
+                        updateDownloadProgress = 0f
+                        scope.launch {
+                            val err = UpdateChecker.downloadAndInstall(context, info) { pct ->
+                                updateDownloadProgress = pct
+                            }
+                            isDownloadingUpdate = false
+                            if (err != null) {
+                                Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                            } else {
+                                updateInfo = null
+                            }
+                        }
+                    }) {
+                        Text("⚡ Download & Install", color = LiquidColors.Cyan, fontWeight = FontWeight.Bold)
                     }
-                }) { Text("Download & Install") }
+                }
             },
-            dismissButton = { TextButton(onClick = { updateInfo = null }) { Text("Later") } },
+            dismissButton = {
+                if (!isDownloadingUpdate) {
+                    TextButton(onClick = { updateInfo = null }) {
+                        Text("Later", color = Color.White.copy(alpha = 0.6f))
+                    }
+                }
+            },
         )
     }
 }

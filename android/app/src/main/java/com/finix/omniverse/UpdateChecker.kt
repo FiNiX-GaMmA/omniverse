@@ -130,9 +130,13 @@ object UpdateChecker {
         }.getOrElse { CheckResult.Error("Couldn't check for updates: ${it.localizedMessage}") }
     }
 
-    /// Download the APK to cache, then launch the system installer. Returns an
-    /// error message on failure, or null on success (installer launched).
-    suspend fun downloadAndInstall(context: Context, info: UpdateInfo): String? = withContext(Dispatchers.IO) {
+    /// Download the APK to cache with progress tracking, then launch the system installer.
+    /// Returns an error message on failure, or null on success (installer launched).
+    suspend fun downloadAndInstall(
+        context: Context,
+        info: UpdateInfo,
+        onProgress: ((Float) -> Unit)? = null
+    ): String? = withContext(Dispatchers.IO) {
         runCatching {
             val dir = File(context.cacheDir, "updates").apply { mkdirs() }
             val cleanTagName = info.versionName.removePrefix("v").removePrefix("V")
@@ -140,8 +144,22 @@ object UpdateChecker {
             val req = Request.Builder().url(info.apkUrl).get().build()
             client.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return@withContext "Download failed (${resp.code})."
-                val sink = resp.body ?: return@withContext "Download failed."
-                apk.outputStream().use { out -> sink.byteStream().copyTo(out) }
+                val body = resp.body ?: return@withContext "Download failed."
+                val contentLength = body.contentLength()
+                val inputStream = body.byteStream()
+                apk.outputStream().use { out ->
+                    val buffer = ByteArray(8192)
+                    var bytesRead: Int
+                    var totalRead = 0L
+                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                        out.write(buffer, 0, bytesRead)
+                        totalRead += bytesRead
+                        if (contentLength > 0 && onProgress != null) {
+                            val pct = (totalRead.toFloat() / contentLength.toFloat()).coerceIn(0f, 1f)
+                            onProgress(pct)
+                        }
+                    }
+                }
             }
             val uri: Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", apk)
             val intent = Intent(Intent.ACTION_VIEW).apply {

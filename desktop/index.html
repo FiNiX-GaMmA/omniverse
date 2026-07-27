@@ -779,44 +779,42 @@
                                 </p>
 
                                 <div class="space-y-3.5">
-                                    <!-- Trakt Client Credentials -->
-                                    <div class="space-y-1.5">
-                                        <label
-                                            class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
-                                            >Trakt Account User Token</label
-                                        >
-                                        <input
-                                            type="password"
-                                            id="trakt-token-input"
-                                            placeholder="Not configured"
-                                            class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
-                                        />
+                                    <!-- Trakt Client Credentials & OAuth -->
+                                    <div class="bg-brandDark p-4 rounded-xl border border-white/[0.04] space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <span id="trakt-status-dot" class="w-2.5 h-2.5 bg-gray-500 rounded-full"></span>
+                                                <span id="trakt-status-label" class="text-xs font-bold text-gray-300">Trakt Disconnected</span>
+                                            </div>
+                                            <span class="text-[9px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-gray-400 font-mono">omniplay://trakt/oauth</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 pt-1">
+                                            <button id="btn-connect-trakt" onclick="startTraktAuth()" class="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white text-xs font-black px-4 py-2 rounded-lg transition duration-200 flex items-center gap-1.5 shadow-lg">
+                                                <i data-lucide="radio" class="w-3.5 h-3.5"></i>
+                                                <span>Connect Trakt (OAuth)</span>
+                                            </button>
+                                            <button id="btn-force-sync" onclick="forceSyncNow()" class="bg-white/5 hover:bg-white/10 text-white text-xs font-bold px-3 py-2 rounded-lg transition duration-200 flex items-center gap-1">
+                                                <i data-lucide="refresh-cw" id="icon-force-sync" class="w-3.5 h-3.5"></i>
+                                                <span>Sync Now</span>
+                                            </button>
+                                            <button id="btn-disconnect-trakt" onclick="disconnectTrakt()" class="hidden bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold px-3 py-2 rounded-lg transition duration-200">
+                                                Disconnect
+                                            </button>
+                                        </div>
                                     </div>
+
                                     <div class="grid grid-cols-2 gap-3">
                                         <div class="space-y-1.5">
-                                            <label
-                                                class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
-                                                >Trakt Client ID</label
-                                            >
-                                            <input
-                                                type="password"
-                                                id="trakt-client-id-input"
-                                                placeholder="Not configured"
-                                                class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
-                                            />
+                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Trakt Client ID</label>
+                                            <input type="password" id="trakt-client-id-input" placeholder="Client ID" class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono" />
                                         </div>
                                         <div class="space-y-1.5">
-                                            <label
-                                                class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
-                                                >Trakt Client Secret</label
-                                            >
-                                            <input
-                                                type="password"
-                                                id="trakt-client-secret-input"
-                                                placeholder="Not configured"
-                                                class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
-                                            />
+                                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Trakt Client Secret</label>
+                                            <input type="password" id="trakt-client-secret-input" placeholder="Client Secret" class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono" />
                                         </div>
+                                    </div>
+                                    <div class="space-y-1.5 hidden">
+                                        <input type="password" id="trakt-token-input" placeholder="Not configured" />
                                     </div>
 
                                     <!-- Pixeldrain Key -->
