@@ -406,7 +406,8 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
                         ) {
                             items(recommendations, key = { it.id }) { rec ->
                                 GridPoster(item = rec, onClick = {
-                                    RouteArgs.detail = rec
+                                    RouteArgs.detailItem = rec
+                                    RouteArgs.detailFocus = null
                                     nav.navigate("detail")
                                 })
                             }
