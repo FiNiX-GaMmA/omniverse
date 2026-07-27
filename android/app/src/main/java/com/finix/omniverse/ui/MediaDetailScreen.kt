@@ -76,6 +76,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
     var detailed by remember { mutableStateOf<MediaItem?>(null) }
     var selectedSeason by remember { mutableStateOf(1) }
     val episodes = remember { mutableStateListOf<MediaEpisode>() }
+    val recommendations = remember { mutableStateListOf<MediaItem>() }
     var loadingEpisodes by remember { mutableStateOf(false) }
     var loadingStreams by remember { mutableStateOf(false) }
     var seasonMenu by remember { mutableStateOf(false) }
@@ -176,6 +177,11 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
             }
             selectedSeason = targetSeason
             loadEpisodes(d, selectedSeason)
+        }
+        runCatching {
+            val recs = state.recommendationsFor(d)
+            recommendations.clear()
+            recommendations.addAll(recs)
         }
     }
 
@@ -377,6 +383,32 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
                                         fallbackImageUrl = current.backdropUrl ?: current.posterUrl,
                                     ) { scope.launch { openSources(ep) } }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+            if (recommendations.isNotEmpty()) {
+                item {
+                    Column(Modifier.fillMaxWidth().padding(top = 24.dp)) {
+                        Text(
+                            "MORE LIKE THIS",
+                            color = LiquidColors.Cyan,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 2.sp,
+                            modifier = Modifier.padding(horizontal = 26.dp, vertical = 6.dp)
+                        )
+                        LazyRow(
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 26.dp),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier.padding(top = 10.dp)
+                        ) {
+                            items(recommendations, key = { it.id }) { rec ->
+                                GridPoster(item = rec, onClick = {
+                                    RouteArgs.detail = rec
+                                    nav.navigate("detail")
+                                })
                             }
                         }
                     }

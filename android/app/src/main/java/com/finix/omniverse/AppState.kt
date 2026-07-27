@@ -716,14 +716,17 @@ class AppState(context: Context) {
     }
 
     suspend fun handleIncomingUri(uri: Uri) {
-        if (uri.scheme != "omniplay" || uri.host != "trakt" || uri.path != "/oauth") return
-        val code = uri.getQueryParameter("code")
+        val scheme = uri.scheme ?: return
+        if (scheme != "omniplay" && scheme != "omniverse") return
+        val code = uri.getQueryParameter("code") ?: uri.getQueryParameter("token")
         if (!code.isNullOrEmpty()) {
             try {
-                val next = repos.trakt.exchangeAuthorizationCode(credentials, code)
+                message = "Exchanging Trakt authorization code..."
+                val next = repos.trakt.exchangeAuthorizationCode(credentials, code.trim())
                 saveTraktConnection(next)
+                message = "Trakt successfully connected!"
             } catch (t: Throwable) {
-                traktConnecting = false; message = "Trakt sign in failed: $t"
+                traktConnecting = false; message = "Trakt sign in failed: ${t.message ?: t.toString()}"
             }
         }
     }

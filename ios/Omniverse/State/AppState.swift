@@ -653,13 +653,15 @@ final class AppState {
     }
 
     func handleIncomingURL(_ url: URL) async {
+        guard let scheme = url.scheme, scheme == "omniplay" || scheme == "omniverse" else { return }
         let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        guard url.scheme == "omniplay", url.host == "trakt", url.path == "/oauth" else { return }
         let q = comps?.queryItems ?? []
-        if let code = q.first(where: { $0.name == "code" })?.value, !code.isEmpty {
+        if let code = q.first(where: { $0.name == "code" || $0.name == "token" })?.value?.trimmed, !code.isEmpty {
             do {
+                message = "Exchanging Trakt authorization code..."
                 let next = try await repos.trakt.exchangeAuthorizationCode(credentials, code: code)
                 await saveTraktConnection(next)
+                message = "Trakt successfully connected!"
             } catch { traktConnecting = false; message = "Trakt sign in failed: \(error)" }
         }
     }
