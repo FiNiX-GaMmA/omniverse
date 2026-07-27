@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -66,13 +67,25 @@ fun Modifier.tvFocusable(
 ): Modifier {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
-    val scale by animateFloatAsState(if (focused) focusScale else 1f, tween(140), label = "focusScale")
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = when {
+            pressed -> 0.95f
+            focused -> focusScale
+            else -> 1f
+        },
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+        ),
+        label = "scale"
+    )
     return this
         .scale(scale)
         .clip(RoundedCornerShape(corner.dp))
         .border(
-            width = if (focused) 2.5.dp else 0.dp,
-            color = if (focused) LiquidColors.Cyan else Color.Transparent,
+            width = if (focused) 2.5.dp else if (pressed) 1.5.dp else 0.dp,
+            color = if (focused) LiquidColors.Cyan else if (pressed) LiquidColors.Cyan.copy(alpha = 0.6f) else Color.Transparent,
             shape = RoundedCornerShape(corner.dp),
         )
         .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)

@@ -47,9 +47,9 @@ final class AppState {
 
     var needsSetup: Bool { !credentials.hasTmdb }
 
-    private let defaultVidsrcDomain = "vidcore.created.app"
+    private let defaultVidsrcDomain = "vsembed.ru"
     private let legacyDefaultVidsrcDomains: Set<String> = [
-        "vsembed.ru",
+        "vidcore.created.app",
         "vsembed.su",
         "vidsrcme.ru",
         "vidsrc.me",

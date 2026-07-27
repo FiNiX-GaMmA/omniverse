@@ -28,41 +28,51 @@ struct LiquidBackdrop: View {
             LinearGradient(
                 colors: [
                     Color.black,
-                    Color(hex: 0x0B0B0B),
-                    Color(hex: 0x140708),
-                    Color(hex: 0x24090D),
+                    Color(hex: 0x070707),
+                    Color(hex: 0x120608),
+                    Color(hex: 0x22080D),
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-            // Soft colored aurora blobs for depth — heavily blurred so the
-            // glass tinting picks them up without being distracting.
-            GeometryReader { geo in
-                ZStack {
-                    Circle()
-                        .fill(LiquidColors.cyan.opacity(0.20))
-                        .frame(width: geo.size.width * 0.9)
-                        .blur(radius: 140)
-                        .offset(x: -geo.size.width * 0.3, y: -geo.size.height * 0.2)
-                    Circle()
-                        .fill(LiquidColors.rose.opacity(0.16))
-                        .frame(width: geo.size.width * 0.8)
-                        .blur(radius: 150)
-                        .offset(x: geo.size.width * 0.4, y: geo.size.height * 0.5)
-                    Circle()
-                        .fill(LiquidColors.gold.opacity(0.08))
-                        .frame(width: geo.size.width * 0.6)
-                        .blur(radius: 130)
-                        .offset(x: geo.size.width * 0.1, y: geo.size.height * 0.9)
+            TimelineView(.animation) { timeline in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let driftX = sin(t * 0.12) * 40.0
+                let driftY = cos(t * 0.14) * 35.0
+                let scalePulse = 1.0 + sin(t * 0.18) * 0.08
+
+                GeometryReader { geo in
+                    ZStack {
+                        Circle()
+                            .fill(LiquidColors.cyan.opacity(0.22))
+                            .frame(width: geo.size.width * 0.95 * scalePulse)
+                            .blur(radius: 140)
+                            .offset(x: -geo.size.width * 0.28 + driftX, y: -geo.size.height * 0.22 + driftY)
+                        Circle()
+                            .fill(LiquidColors.rose.opacity(0.18))
+                            .frame(width: geo.size.width * 0.85 / scalePulse)
+                            .blur(radius: 150)
+                            .offset(x: geo.size.width * 0.38 - driftX, y: geo.size.height * 0.48 - driftY)
+                    }
                 }
             }
             LinearGradient(
-                colors: [Color.clear, Color.black.opacity(0.15)],
+                colors: [Color.clear, Color.black.opacity(0.20)],
                 startPoint: .top,
                 endPoint: .bottom
             )
         }
         .ignoresSafeArea()
+    }
+}
+
+/// Spring touch feedback style for buttons and cards.
+struct SpringTouchStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .shadow(color: configuration.isPressed ? LiquidColors.cyan.opacity(0.35) : .clear, radius: 10, y: 2)
+            .animation(.spring(response: 0.32, dampingFraction: 0.68), value: configuration.isPressed)
     }
 }
 

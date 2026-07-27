@@ -15,6 +15,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
+
 /// Palette aligned with the desktop (Lordflix) crimson-on-black visual system.
 object LiquidColors {
     val Ink = Color(0xFF070707)
@@ -45,18 +53,43 @@ fun OmniverseTheme(content: @Composable () -> Unit) {
     )
 }
 
-/// Ambient diagonal backdrop — the canvas the glass panels float over.
+/// Ambient diagonal backdrop — the canvas the glass panels float over with desktop-style drifting aurora glows.
 @Composable
 fun LiquidBackdrop(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "aurora")
+    val pulse by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(18000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "auroraPulse"
+    )
+
     Box(
         modifier
             .fillMaxSize()
             .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        Color(0xFF2E0507).copy(alpha = 0.25f + pulse * 0.12f),
+                        Color(0xFF180507).copy(alpha = 0.15f + (1f - pulse) * 0.10f),
+                        Color(0xFF050505),
+                    ),
+                    center = androidx.compose.ui.geometry.Offset(
+                        x = 300f + pulse * 200f,
+                        y = 400f + (1f - pulse) * 300f
+                    ),
+                    radius = 1200f
+                )
+            )
+            .background(
                 Brush.linearGradient(
                     0f to Color.Black,
-                    0.38f to Color(0xFF0B0B0B),
-                    0.68f to Color(0xFF140708),
-                    1f to Color(0xFF24090D),
+                    0.38f to Color(0xFF080808),
+                    0.72f to Color(0xFF130708),
+                    1f to Color(0xFF22080C),
                 )
             )
     )

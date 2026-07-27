@@ -1,6 +1,7 @@
 package com.finix.omniverse.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -47,9 +48,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import com.finix.omniverse.AppGraph
 import com.finix.omniverse.MediaEpisode
 import com.finix.omniverse.MediaItem
+import com.finix.omniverse.UserSettings
 import com.finix.omniverse.ui.theme.LiquidBackdrop
 import com.finix.omniverse.ui.theme.LiquidColors
 import kotlinx.coroutines.delay
@@ -101,7 +105,7 @@ data class VidsrcArgs(
     val episode: MediaEpisode? = null,
 )
 
-private data class ShellTab(val id: String, val title: String, val icon: ImageVector)
+data class ShellTab(val id: String, val title: String, val icon: ImageVector)
 
 @Composable
 fun OmniverseRoot() {
@@ -222,26 +226,29 @@ fun OmniverseRoot() {
     }
 }
 
+fun resolveAvailableTabs(settings: UserSettings): List<ShellTab> {
+    return buildList {
+        if (settings.showMoviesTv) {
+            add(ShellTab("home", "Home", Icons.Filled.Home))
+            add(ShellTab("movies", "Movies", Icons.Filled.PlayCircle))
+            add(ShellTab("shows", "Shows", Icons.Filled.PlayCircle))
+        }
+        if (settings.showLiveTv) {
+            add(ShellTab("livetv", "Live TV", Icons.Filled.LiveTv))
+        }
+        add(ShellTab("search", "Search", Icons.Filled.Search))
+        add(ShellTab("settings", "Settings", Icons.Filled.Settings))
+    }
+}
+
 @Composable
 private fun Shell(nav: androidx.navigation.NavController) {
     val state = AppGraph.appState
-    val tabs = remember(state.settings, state.credentials) {
-        buildList {
-            if (state.settings.showMoviesTv && state.credentials.hasTmdb)
-                add(ShellTab("home", "Home", Icons.Filled.Home))
-            if (state.settings.showLiveTv)
-                add(ShellTab("livetv", "LiveTV", Icons.Filled.LiveTv))
-            add(ShellTab("settings", "Settings", Icons.Filled.Settings))
-            if (state.credentials.hasTmdb)
-                add(ShellTab("search", "Search", Icons.Filled.Search))
-        }
-    }
-    var selection by rememberSaveable { mutableStateOf(0) }
-    val idx = selection.coerceIn(0, (tabs.size - 1).coerceAtLeast(0))
-    val activeId = tabs.getOrNull(idx)?.id ?: "settings"
+    val tabs = remember(state.settings) { resolveAvailableTabs(state.settings) }
+    var requestedTabId by rememberSaveable { mutableStateOf("home") }
 
-    // On a TV/leanback device, plant initial D-pad focus on the active nav item so a
-    // remote always has a reachable, operable landing spot when the Shell opens.
+    val activeId = if (tabs.any { it.id == requestedTabId }) requestedTabId else (tabs.firstOrNull()?.id ?: "settings")
+
     val isTv = isTvDevice()
     val navFocus = remember { FocusRequester() }
     LaunchedEffect(isTv) {
@@ -252,28 +259,42 @@ private fun Shell(nav: androidx.navigation.NavController) {
         val wide = maxWidth >= 820.dp
         Box(Modifier.fillMaxSize()) {
             Box(Modifier.fillMaxSize().padding(start = if (wide) 96.dp else 0.dp)) {
-                when (activeId) {
-                    "home" -> HomeScreen(nav)
-                    "livetv" -> LiveTvScreen(nav)
-                    "search" -> SearchScreen(nav)
-                    else -> SettingsScreen()
+                androidx.compose.animation.AnimatedContent(
+                    targetState = activeId,
+                    transitionSpec = {
+                        (androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(240)) +
+                                androidx.compose.animation.scaleIn(initialScale = 0.97f, animationSpec = androidx.compose.animation.core.tween(240)))
+                            .togetherWith(
+                                androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(160))
+                            )
+                    },
+                    label = "screenTransition"
+                ) { target ->
+                    when (target) {
+                        "home" -> HomeScreen(nav)
+                        "movies" -> HomeScreen(nav)
+                        "shows" -> HomeScreen(nav)
+                        "livetv" -> LiveTvScreen(nav)
+                        "search" -> SearchScreen(nav)
+                        else -> SettingsScreen()
+                    }
                 }
             }
             if (wide) {
                 GlassRail(
                     tabs,
-                    idx,
+                    activeId,
                     navFocus,
                     Modifier.align(Alignment.CenterStart).padding(start = 16.dp, top = 24.dp, bottom = 24.dp)
-                ) { selection = it }
+                ) { requestedTabId = it }
             } else {
                 GlassTabBar(
                     tabs,
-                    idx,
+                    activeId,
                     navFocus,
                     Modifier.align(Alignment.BottomCenter).navigationBarsPadding()
-                        .padding(horizontal = 18.dp, vertical = 8.dp)
-                ) { selection = it }
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) { requestedTabId = it }
             }
         }
     }
@@ -282,40 +303,42 @@ private fun Shell(nav: androidx.navigation.NavController) {
 @Composable
 private fun GlassTabBar(
     tabs: List<ShellTab>,
-    selected: Int,
+    activeId: String,
     focusRequester: FocusRequester,
     modifier: Modifier,
-    onSelect: (Int) -> Unit
+    onSelect: (String) -> Unit
 ) {
+    val scrollState = rememberScrollState()
     Row(
         modifier
-            .clip(RoundedCornerShape(26.dp))
-            .background(Color.Black.copy(alpha = 0.55f))
-            .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(26.dp))
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .clip(RoundedCornerShape(32.dp))
+            .background(Color.Black.copy(alpha = 0.65f))
+            .border(1.dp, Color.White.copy(alpha = 0.16f), RoundedCornerShape(32.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .horizontalScroll(scrollState),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        tabs.forEachIndexed { i, tab ->
-            val active = i == selected
+        tabs.forEach { tab ->
+            val active = tab.id == activeId
             Row(
                 Modifier
-                    .clip(RoundedCornerShape(22.dp))
+                    .clip(RoundedCornerShape(24.dp))
                     .then(if (active) Modifier.background(LiquidColors.Cyan) else Modifier)
                     .tvFocusable(
-                        onClick = { onSelect(i) },
-                        corner = 22,
+                        onClick = { onSelect(tab.id) },
+                        corner = 24,
                         focusRequester = if (active) focusRequester else null
                     )
-                    .padding(horizontal = if (active) 16.dp else 12.dp, vertical = 11.dp),
+                    .padding(horizontal = if (active) 16.dp else 12.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     tab.icon,
                     tab.title,
-                    tint = if (active) LiquidColors.Ink else Color.White.copy(alpha = 0.74f),
-                    modifier = Modifier.size(20.dp),
+                    tint = if (active) LiquidColors.Ink else Color.White.copy(alpha = 0.75f),
+                    modifier = Modifier.size(18.dp),
                 )
                 AnimatedVisibility(visible = active) {
                     Text(
@@ -333,17 +356,17 @@ private fun GlassTabBar(
 @Composable
 private fun GlassRail(
     tabs: List<ShellTab>,
-    selected: Int,
+    activeId: String,
     focusRequester: FocusRequester,
     modifier: Modifier,
-    onSelect: (Int) -> Unit
+    onSelect: (String) -> Unit
 ) {
     Column(
         modifier
             .fillMaxHeight()
             .width(64.dp)
             .clip(RoundedCornerShape(32.dp))
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(Color.Black.copy(alpha = 0.55f))
             .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(32.dp))
             .padding(vertical = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -355,15 +378,15 @@ private fun GlassRail(
             tint = LiquidColors.Cyan,
             modifier = Modifier.size(30.dp).padding(bottom = 8.dp)
         )
-        tabs.forEachIndexed { i, tab ->
-            val active = i == selected
+        tabs.forEach { tab ->
+            val active = tab.id == activeId
             Box(
                 Modifier
                     .size(52.dp)
                     .clip(CircleShape)
                     .then(if (active) Modifier.background(LiquidColors.Cyan) else Modifier)
                     .tvFocusable(
-                        onClick = { onSelect(i) },
+                        onClick = { onSelect(tab.id) },
                         corner = 26,
                         focusRequester = if (active) focusRequester else null
                     ),

@@ -71,7 +71,7 @@ data class UserSettings(
     val region: String = "US",
     val includeAdult: Boolean = false,
     val tvMode: Boolean = false,
-    val vidsrcDomain: String = "vidcore.created.app",
+    val vidsrcDomain: String = "vsembed.ru",
     val subtitleUrl: String = "",
     val subtitleLanguage: String = "en",
     val liveTvCountry: String = "IN",

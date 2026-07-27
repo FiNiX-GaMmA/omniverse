@@ -5,12 +5,16 @@
 // Domains observed to be DNS-sinkholed by some ISPs (e.g. Airtel RPZ). The
 // mobile apps use the vidsrc-embed.* / *.su domains, which stay reachable.
 const BLOCKED_VIDSRC_DOMAINS = ["vidsrc.me", "vidsrc.to", "vidsrc.xyz"];
-const DEFAULT_EMBED_PROVIDER = "vidcore.created.app";
+const DEFAULT_EMBED_PROVIDER = "vsembed.ru";
 const DEFAULT_VIDSRC_DOMAIN = DEFAULT_EMBED_PROVIDER;
 function resolveSavedVidsrcDomain() {
   const saved = localStorage.getItem("omni_vidsrc_domain");
   const legacyVidsrcDefaults = [
+    "vidcore.created.app",
     ...BLOCKED_VIDSRC_DOMAINS,
+    "vsembed.ru",
+    "vsembed.su",
+    "vidsrcme.ru",
     "vidsrc-embed.ru",
     "vidsrc-embed.su",
     "vidsrcme.su",
@@ -19,8 +23,6 @@ function resolveSavedVidsrcDomain() {
     "vidcore.org",
     "www.vidcore.org",
   ];
-  // VidCore is now the primary provider. Migrate old VidSrc defaults so the
-  // first startup after update does not keep trying VidSrc before VidCore.
   if (!saved || legacyVidsrcDefaults.includes(saved)) {
     localStorage.setItem("omni_vidsrc_domain", DEFAULT_EMBED_PROVIDER);
     return DEFAULT_EMBED_PROVIDER;
@@ -2103,7 +2105,6 @@ async function loadSeasonEpisodes() {
 // reachable where the older vidsrc.me/.to domains are ISP-blocked. Alternate
 // providers follow as auto-fallback if the vidsrc infra is unreachable.
 const STREAM_SERVERS = [
-  { name: "VidCore", domain: "vidcore.created.app", icon: "🟣" },
   { name: "VSEmbed RU", domain: "vsembed.ru", icon: "🔴" },
   { name: "VSEmbed SU", domain: "vsembed.su", icon: "🟠" },
   { name: "VidSrcMe RU", domain: "vidsrcme.ru", icon: "🟡" },
@@ -2396,14 +2397,6 @@ function providerUrlsForServer(server, media, season, episode) {
   const s = encodeURIComponent(season || 1);
   const e = encodeURIComponent(episode || 1);
   const isMovie = media.type === "movie";
-
-  if (domain.includes("vidcore")) {
-    return compactUniqueUrls([
-      isMovie
-        ? `https://vidcore.created.app/embed/movie/${tmdbId}`
-        : `https://vidcore.created.app/embed/tv/${tmdbId}/${s}/${e}`,
-    ]);
-  }
 
   if (
     domain.includes("vsembed") ||
@@ -5308,3 +5301,30 @@ function copyDebugLogs() {
     console.error("Failed to copy logs to clipboard: ", err);
   });
 }
+
+// Global Keyboard Shortcuts & Rail Kinetic Physics
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "f") {
+    e.preventDefault();
+    switchScreen("search");
+    setTimeout(() => {
+      const searchInput = document.getElementById("search-input");
+      if (searchInput) searchInput.focus();
+    }, 50);
+  } else if (e.key === "Escape") {
+    const detailModal = document.getElementById("media-detail-modal");
+    if (detailModal && !detailModal.classList.contains("hidden")) {
+      e.preventDefault();
+      if (typeof closeMediaDetail === "function") closeMediaDetail();
+    }
+  }
+});
+
+// Horizontal mouse wheel scrolling for content rails
+document.addEventListener("wheel", (e) => {
+  const rail = e.target.closest(".horizontal-rail");
+  if (rail && e.deltaY !== 0 && !e.shiftKey) {
+    rail.scrollLeft += e.deltaY * 1.5;
+  }
+}, { passive: true });
+

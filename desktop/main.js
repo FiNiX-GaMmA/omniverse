@@ -539,9 +539,8 @@ if (!gotTheLock) {
 
     // Whitelist critical source domains to prevent the adblocker from breaking streams
     const whitelistedDomains = [
-      "vidcore.created.app",
-      "vidcore.org",
-      "www.vidcore.org",
+      "vsembed.ru",
+      "vsembed.su",
       "little-field-fe85.instafashion662-3d4.workers.dev",
       "instafashion662-3d4.workers.dev",
       "workers.dev",

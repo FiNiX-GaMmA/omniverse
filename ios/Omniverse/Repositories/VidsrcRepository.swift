@@ -293,7 +293,6 @@ private enum VidsrcError: Error, CustomStringConvertible {
 final class VidsrcExtractor {
 
     private static let sourceHosts = [
-        "vidcore.created.app",
         "vsembed.ru",
         "vsembed.su",
         "vidsrcme.ru",

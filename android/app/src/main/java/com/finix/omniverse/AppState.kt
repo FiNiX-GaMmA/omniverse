@@ -29,9 +29,9 @@ import kotlin.math.ln
 import kotlin.random.Random
 
 private val appJson = Json { ignoreUnknownKeys = true; encodeDefaults = true }
-private const val DEFAULT_VIDSRC_DOMAIN = "vidcore.created.app"
+private const val DEFAULT_VIDSRC_DOMAIN = "vsembed.ru"
 private val LEGACY_DEFAULT_VIDSRC_DOMAINS = setOf(
-    "vsembed.ru",
+    "vidcore.created.app",
     "vsembed.su",
     "vidsrcme.ru",
     "vidsrc.me",

@@ -71,7 +71,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.launch
 
-private val vidsrcEmbedDomains = listOf("vidcore.created.app", "vsembed.ru", "vsembed.su", "vidsrcme.ru")
+private val vidsrcEmbedDomains = listOf("vsembed.ru", "vsembed.su", "vidsrcme.ru")
 private val subtitleLanguageOptions = listOf(
     "en" to "English", "es" to "Spanish", "fr" to "French", "de" to "German",
     "it" to "Italian", "pt" to "Portuguese", "ja" to "Japanese", "ko" to "Korean",

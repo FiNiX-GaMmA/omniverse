@@ -324,7 +324,6 @@ class VidsrcExtractor {
 
     companion object {
         private val sourceHosts = listOf(
-            "vidcore.created.app",
             "vsembed.ru",
             "vsembed.su",
             "vidsrcme.ru",

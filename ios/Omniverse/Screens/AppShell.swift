@@ -5,7 +5,7 @@ import SwiftUI
 /// that adapts to size class, with a left rail on wide/landscape layouts.
 struct AppShell: View {
     @Environment(AppState.self) private var state
-    @State private var selection = 0
+    @State private var activeTabId: String = "home"
 
     struct Tab: Identifiable {
         let id: String
@@ -16,40 +16,46 @@ struct AppShell: View {
 
     private var tabs: [Tab] {
         var t: [Tab] = []
-        if state.settings.showMoviesTv && state.credentials.hasTmdb {
+        if state.settings.showMoviesTv {
             t.append(Tab(id: "home", title: "Home", icon: "house", selectedIcon: "house.fill"))
+            t.append(Tab(id: "movies", title: "Movies", icon: "film", selectedIcon: "film.fill"))
+            t.append(Tab(id: "shows", title: "Shows", icon: "tv", selectedIcon: "tv.fill"))
         }
         if state.settings.showLiveTv {
-            t.append(Tab(id: "livetv", title: "LiveTV", icon: "tv", selectedIcon: "tv.fill"))
+            t.append(Tab(id: "livetv", title: "Live TV", icon: "play.tv", selectedIcon: "play.tv.fill"))
         }
+        t.append(Tab(id: "search", title: "Search", icon: "magnifyingglass", selectedIcon: "magnifyingglass"))
         t.append(Tab(id: "settings", title: "Settings", icon: "gearshape", selectedIcon: "gearshape.fill"))
-        if state.credentials.hasTmdb {
-            t.append(Tab(id: "search", title: "Search", icon: "magnifyingglass", selectedIcon: "magnifyingglass"))
-        }
         return t
+    }
+
+    private var currentTabId: String {
+        let available = tabs
+        if available.contains(where: { $0.id == activeTabId }) {
+            return activeTabId
+        }
+        return available.first?.id ?? "settings"
     }
 
     var body: some View {
         GeometryReader { geo in
             let wide = geo.size.width >= 820
             let safeTabs = tabs
-            let idx = min(selection, max(0, safeTabs.count - 1))
-            let activeId = safeTabs.isEmpty ? "settings" : safeTabs[idx].id
+            let active = currentTabId
             ZStack(alignment: wide ? .top : .bottom) {
                 LiquidBackdrop()
-                // Home stays full-bleed so the glass top bar floats over the hero
-                // (Apple glass look). Other screens get a top inset so their
-                // headers/content aren't covered by the floating bar.
-                screen(for: activeId)
-                    .padding(.top, (wide && activeId != "home") ? 70 : 0)
+                screen(for: active)
+                    .transition(.opacity.combined(with: .scale(scale: 0.985)))
+                    .padding(.top, (wide && active != "home") ? 70 : 0)
+                    .animation(.spring(response: 0.38, dampingFraction: 0.80), value: active)
 
                 if wide {
-                    GlassTopBar(tabs: safeTabs, selection: $selection)
+                    GlassTopBar(tabs: safeTabs, activeTabId: $activeTabId)
                         .padding(.top, 8)
                 } else {
-                    GlassTabBar(tabs: safeTabs, selection: $selection)
-                        .padding(.horizontal, 18)
-                        .padding(.bottom, 8)
+                    GlassTabBar(tabs: safeTabs, activeTabId: $activeTabId)
+                        .padding(.horizontal, 14)
+                        .padding(.bottom, 10)
                 }
             }
         }
@@ -62,6 +68,8 @@ struct AppShell: View {
     private func screen(for id: String) -> some View {
         switch id {
         case "home": HomeScreen()
+        case "movies": HomeScreen()
+        case "shows": HomeScreen()
         case "livetv": LiveTvScreen()
         case "search": SearchScreen()
         default: SettingsScreen()
@@ -72,20 +80,22 @@ struct AppShell: View {
 /// Floating bottom glass tab bar (compact width).
 struct GlassTabBar: View {
     let tabs: [AppShell.Tab]
-    @Binding var selection: Int
+    @Binding var activeTabId: String
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                ForEach(Array(tabs.enumerated()), id: \.element.id) { i, tab in
-                    let selected = i == selection
+                ForEach(tabs) { tab in
+                    let selected = tab.id == activeTabId
                     Button {
-                        withAnimation(.spring(response: 0.42, dampingFraction: 0.78)) { selection = i }
+                        withAnimation(.spring(response: 0.40, dampingFraction: 0.78)) {
+                            activeTabId = tab.id
+                        }
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: selected ? tab.selectedIcon : tab.icon)
-                                .font(.system(size: 18, weight: .semibold))
-                                .frame(width: 20)
+                                .font(.system(size: 16, weight: .semibold))
+                                .frame(width: 18)
                             if selected {
                                 Text(tab.title)
                                     .font(.system(size: 13, weight: .heavy))
@@ -93,14 +103,14 @@ struct GlassTabBar: View {
                                     .transition(.opacity.combined(with: .scale))
                             }
                         }
-                        .foregroundStyle(selected ? LiquidColors.ink : Color.white.opacity(0.74))
+                        .foregroundStyle(selected ? LiquidColors.ink : Color.white.opacity(0.75))
                         .padding(.horizontal, selected ? 16 : 12)
-                        .frame(height: 44)
+                        .frame(height: 42)
                         .background {
                             if selected {
                                 Capsule()
                                     .fill(LiquidColors.cyan)
-                                    .shadow(color: LiquidColors.cyan.opacity(0.38), radius: 10, y: 3)
+                                    .shadow(color: LiquidColors.cyan.opacity(0.42), radius: 10, y: 3)
                             }
                         }
                     }
@@ -112,35 +122,35 @@ struct GlassTabBar: View {
         .scrollIndicators(.hidden)
         .padding(.vertical, 6)
         .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
-        .shadow(color: .black.opacity(0.35), radius: 22, y: 10)
+        .overlay(Capsule().strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
+        .shadow(color: .black.opacity(0.40), radius: 22, y: 10)
     }
 }
 
-/// Apple-TV style centered top navigation bar for iPad / landscape.
-/// Uniform centered icons floating in a vivid liquid-glass capsule; the selected
-/// tab "blows up" into a cyan pill that reveals its label with a spring.
+/// Centered top navigation bar for iPad / landscape.
 struct GlassTopBar: View {
     let tabs: [AppShell.Tab]
-    @Binding var selection: Int
+    @Binding var activeTabId: String
 
     var body: some View {
         HStack(spacing: 6) {
             Image("AppLogo")
                 .resizable().aspectRatio(contentMode: .fit)
-                .frame(width: 30, height: 30)
+                .frame(width: 28, height: 28)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .padding(.trailing, 6)
 
-            ForEach(Array(tabs.enumerated()), id: \.element.id) { i, tab in
-                let selected = i == selection
+            ForEach(tabs) { tab in
+                let selected = tab.id == activeTabId
                 Button {
-                    withAnimation(.spring(response: 0.42, dampingFraction: 0.78)) { selection = i }
+                    withAnimation(.spring(response: 0.40, dampingFraction: 0.78)) {
+                        activeTabId = tab.id
+                    }
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: selected ? tab.selectedIcon : tab.icon)
                             .font(.system(size: 18, weight: .semibold))
-                            .frame(width: 22)            // uniform icon column
+                            .frame(width: 22)
                         if selected {
                             Text(tab.title)
                                 .font(.system(size: 15, weight: .heavy))
