@@ -66,6 +66,7 @@ fun CaptchaScreen(args: CaptchaArgs, onClose: () -> Unit) {
                     // during the site's XHRs — that's third-party to this page.
                     // `this` here is the WebView (the apply receiver).
                     CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                    settings.userAgentString = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
                     webChromeClient = android.webkit.WebChromeClient()
                     setBackgroundColor(AndroidColor.WHITE)
                     webViewClient = object : WebViewClient() {
@@ -75,6 +76,22 @@ fun CaptchaScreen(args: CaptchaArgs, onClose: () -> Unit) {
                         override fun onPageFinished(view: WebView?, url: String?) {
                             loading = false
                             CookieManager.getInstance().flush()
+                            val autoSolveJS = """
+                                (function() {
+                                    function solve() {
+                                        const checkbox = document.querySelector('input[type="checkbox"]') ||
+                                                         document.querySelector('.ct-checkbox') ||
+                                                         document.querySelector('#challenge-stage input') ||
+                                                         document.querySelector('#challenge-stage label') ||
+                                                         document.querySelector('#challenge-stage span');
+                                        if (checkbox) {
+                                            checkbox.click();
+                                        }
+                                    }
+                                    setInterval(solve, 800);
+                                })();
+                            """.trimIndent()
+                            view?.evaluateJavascript(autoSolveJS, null)
                         }
                     }
                     loadUrl(args.url)

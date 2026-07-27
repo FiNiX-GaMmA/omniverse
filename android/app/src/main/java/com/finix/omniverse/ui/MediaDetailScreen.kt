@@ -230,17 +230,11 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
             sheetTitle =
                 if (episode != null) "${current.title} S${episode.seasonNumber}E${episode.episodeNumber}" else current.title
             pendingEpisode = episode
-            // one-click preferred-server bypass + anime direct auto-open
-            val preferAnimeDirect = current.type == MediaType.ANIME || current.isAnime
-            val animeSource =
-                if (preferAnimeDirect) s.firstOrNull { it.provider == "AllManga" } else null
-            val direct = if (preferAnimeDirect) s.firstOrNull { it.isDirect } else null
             val domain = state.settings.vidsrcDomain.trim()
             val match = if (domain.isNotEmpty()) s.firstOrNull { it.url.contains(domain) } else null
             when {
-                animeSource != null -> dispatch(animeSource, episode)
-                direct != null -> dispatch(direct, episode)
                 match != null -> dispatch(match, episode)
+                s.size == 1 -> dispatch(s.first(), episode)
                 else -> showSheet = true
             }
         } catch (t: AnimeRepositoryImpl.CaptchaRequiredException) {

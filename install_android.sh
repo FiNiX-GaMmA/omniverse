@@ -9,8 +9,12 @@
 
 set -eo pipefail
 
-# Force the Java Home to the embedded JDK inside Android Studio
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+# Force the Java Home to the embedded JDK inside Android Studio, or fallback to Homebrew openjdk@17
+if [ -d "/Applications/Android Studio.app/Contents/jbr/Contents/Home" ]; then
+    export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+elif [ -d "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home" ]; then
+    export JAVA_HOME="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+fi
 export PATH="$JAVA_HOME/bin:$PATH"
 
 # ANSI Color Codes
@@ -73,10 +77,19 @@ echo -e "         - Serial: ${CYAN}${DEVICE_ID}${NC}"
 echo -e "${BLUE}info:${NC} Compiling Kotlin/Compose Android app via Gradle..."
 (cd android && ./gradlew assembleDebug)
 
+# 4. Identifying and Installing the APK
+echo -e "${BLUE}info:${NC} Detecting compiled APK..."
 APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+if [ ! -f "$APK_PATH" ]; then
+    if [ -f "android/app/build/outputs/apk/debug/app-universal-debug.apk" ]; then
+        APK_PATH="android/app/build/outputs/apk/debug/app-universal-debug.apk"
+    elif [ -f "android/app/build/outputs/apk/debug/app-arm64-v8a-debug.apk" ]; then
+        APK_PATH="android/app/build/outputs/apk/debug/app-arm64-v8a-debug.apk"
+    fi
+fi
 
 if [ ! -f "$APK_PATH" ]; then
-    echo -e "${RED}error:${NC} Compiled APK bundle was not found at expected path: $APK_PATH"
+    echo -e "${RED}error:${NC} Compiled APK bundle was not found at expected path."
     exit 1
 fi
 

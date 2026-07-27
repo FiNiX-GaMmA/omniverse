@@ -108,7 +108,7 @@ final class AnimeRepository: AnimeRepositoryProtocol {
     /// flagged/VPN IPs with NEED_CAPTCHA; solving the captcha here banks a
     /// session cookie (`.allanime.day`) that the API honours on the retry.
     /// Tunable if the solvable host turns out to differ on-device.
-    static let captchaURL = "https://allmanga.to"
+    static let captchaURL = "https://api.allanime.day/api"
 
     /// Set when the most recent AllAnime episode call returned NEED_CAPTCHA.
     /// `resolveSource` reads and clears it to decide whether to prompt.

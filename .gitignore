@@ -70,3 +70,9 @@ ios/DerivedData/
 .pub/
 /coverage/
 *.png
+
+# Local Android SDK
+/android/sdk/
+
+# graphify Outputs & Caches
+/graphify-out/

@@ -52,6 +52,7 @@ class AnimeRepositoryImpl(
         // Share cookies with the WebView so a captcha solved in CaptchaScreen
         // authenticates AllAnime API calls. Mirrors iOS HTTPCookieStorage.shared.
         .cookieJar(WebViewCookieJar)
+        .dns(Http.dohDns)
         .build(),
 ) : AnimeRepository {
 
@@ -61,7 +62,7 @@ class AnimeRepositoryImpl(
     // Site loaded in the captcha WebView when AllAnime answers NEED_CAPTCHA.
     // Solving it banks a session cookie the API honours on retry. Tunable if the
     // solvable host turns out to differ on-device.
-    private val captchaUrl = "https://allmanga.to"
+    private val captchaUrl = "https://api.allanime.day/api"
 
     // Set when the most recent AllAnime episode call returned NEED_CAPTCHA.
     // resolveSource reads and clears it to decide whether to prompt.

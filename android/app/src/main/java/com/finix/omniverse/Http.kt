@@ -10,8 +10,11 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import okhttp3.Dns
+import java.net.InetAddress
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
@@ -58,6 +61,81 @@ object Http {
         resp
     }
 
+    private val bootstrapClient: OkHttpClient by lazy {
+        val sslContext = SSLContext.getInstance("TLS").apply {
+            init(null, arrayOf(trustAllManager), SecureRandom())
+        }
+        OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .sslSocketFactory(sslContext.socketFactory, trustAllManager)
+            .hostnameVerifier { _, _ -> true }
+            .build()
+    }
+
+    class DohDns(private val bootstrap: OkHttpClient) : Dns {
+        private val cache = ConcurrentHashMap<String, List<InetAddress>>()
+
+        override fun lookup(hostname: String): List<InetAddress> {
+            if (hostname == "localhost" || hostname == "1.1.1.1" || hostname == "8.8.8.8") {
+                return Dns.SYSTEM.lookup(hostname)
+            }
+            cache[hostname]?.let { return it }
+
+            // Try Cloudflare IP-based DoH (IPv4)
+            try {
+                val ips = resolveDoh("https://1.1.1.1/dns-query?name=$hostname&type=A")
+                if (ips.isNotEmpty()) {
+                    cache[hostname] = ips
+                    return ips
+                }
+            } catch (_: Throwable) {}
+
+            // Try Google IP-based DoH fallback (IPv4)
+            try {
+                val ips = resolveDoh("https://8.8.8.8/resolve?name=$hostname&type=A")
+                if (ips.isNotEmpty()) {
+                    cache[hostname] = ips
+                    return ips
+                }
+            } catch (_: Throwable) {}
+
+            return Dns.SYSTEM.lookup(hostname)
+        }
+
+        private fun resolveDoh(url: String): List<InetAddress> {
+            val request = Request.Builder()
+                .url(url)
+                .header("Accept", "application/dns-json")
+                .build()
+            bootstrap.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val body = response.body?.string() ?: ""
+                    val json = JSONObject(body)
+                    val answer = json.optJSONArray("Answer")
+                    if (answer != null && answer.length() > 0) {
+                        val list = ArrayList<InetAddress>()
+                        for (i in 0 until answer.length()) {
+                            val obj = answer.optJSONObject(i) ?: continue
+                            // Type 1 is A record (IPv4)
+                            if (obj.optInt("type") == 1) {
+                                val ip = obj.optString("data", "")
+                                if (ip.isNotEmpty()) {
+                                    list.add(InetAddress.getByName(ip))
+                                }
+                            }
+                        }
+                        if (list.isNotEmpty()) return list
+                    }
+                }
+            }
+            return emptyList()
+        }
+    }
+
+    val dohDns: Dns by lazy { DohDns(bootstrapClient) }
+
     private val client: OkHttpClient by lazy {
         val sslContext = SSLContext.getInstance("TLS").apply {
             init(null, arrayOf(trustAllManager), SecureRandom())
@@ -70,6 +148,7 @@ object Http {
             .sslSocketFactory(sslContext.socketFactory, trustAllManager)
             .hostnameVerifier { _, _ -> true }
             .addInterceptor(loggingInterceptor)
+            .dns(dohDns)
             .build()
     }
 
@@ -85,6 +164,7 @@ object Http {
             .readTimeout(30, TimeUnit.SECONDS)
             .sslSocketFactory(sslContext.socketFactory, trustAllManager)
             .hostnameVerifier { _, _ -> true }
+            .dns(dohDns)
             .build()
     }
 
