@@ -22,6 +22,10 @@ struct MediaDetailScreen: View {
     @State private var player: PlayerRoute?
     @State private var overviewExpanded = false
     @State private var webEmbed: WebRoute?
+    @State private var vidsrc: VidsrcRoute?
+    @State private var pendingFocusSeasonNumber: Int?
+    @State private var pendingFocusEpisodeNumber: Int?
+
     private var current: MediaItem { detailed ?? item }
     private var isSeries: Bool { current.type == .series }
 
@@ -54,12 +58,6 @@ struct MediaDetailScreen: View {
                                         applyEpisodeFocus(seasonNumber: episode?.seasonNumber, episodeNumber: episode?.episodeNumber)
                                     }
                                 })
-        }
-        .fullScreenCover(item: $captcha) { r in
-            CaptchaResolveScreen(url: r.url) {
-                captcha = nil
-                r.onSolved()
-            }
         }
         .sheet(isPresented: $showSourceSheet) { sourceSheet }
     }
