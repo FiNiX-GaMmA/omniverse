@@ -47,18 +47,6 @@ Trakt.tv handles scrobbling (tracking your watch progress in real-time), syncing
 
 ---
 
-## 🌸 3. AniList Sync Token (For Anime Tracking)
-AniList is utilized to search for anime metadata, fetch anime recommendations, and synchronize your progress when you watch anime episodes.
-
-### Steps to connect:
-1. Omniverse has **zero-configuration** support for AniList!
-2. Open **Settings** in the app and go to the **Cloud Sync** tab.
-3. Scroll to **AniList Sync Integration** and click **Connect AniList**.
-4. Authorize your account in the browser page that opens, and it will automatically redirect back and link your account.
-5. *Alternative (Manual Token Entry)*: If you prefer manual entry, authorize AniList directly via [this OAuth authorization page](https://anilist.co/api/v2/oauth/authorize?client_id=14187&response_type=token) and copy/paste the resulting token into the **AniList Access Token** field.
-
----
-
 ## 📦 4. Pixeldrain API Key (Optional)
 Pixeldrain can be used for direct stream links. Using an API key is recommended because it raises streaming/download rate limits and unlocks premium high-speed streaming.
 

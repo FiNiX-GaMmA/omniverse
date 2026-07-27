@@ -67,7 +67,7 @@
                 <button onclick="switchScreen('home')" id="nav-home" class="text-sm font-semibold text-white/70 hover:text-white transition">Home</button>
                 <button onclick="switchScreen('movies')" id="nav-movies" class="text-sm font-semibold text-white/70 hover:text-white transition">Movies</button>
                 <button onclick="switchScreen('tv')" id="nav-tv" class="text-sm font-semibold text-white/70 hover:text-white transition">Shows</button>
-                <button onclick="switchScreen('anime')" id="nav-anime" class="text-sm font-semibold text-white/70 hover:text-white transition">Anime</button>
+
                 <button onclick="switchScreen('livetv')" id="nav-livetv" class="text-sm font-semibold text-white/70 hover:text-white transition">Live TV</button>
 
                 <div class="w-[1px] h-4 bg-white/20 mx-2"></div>
@@ -100,7 +100,7 @@
                     <div id="hero-content" class="absolute bottom-20 left-16 max-w-3xl z-10 space-y-5">
                         <h1 id="hero-title" class="text-6xl font-black text-white drop-shadow-2xl tracking-tight">Syncing latest releases…</h1>
                         <p id="hero-overview" class="text-lg text-gray-300 line-clamp-3 drop-shadow-md max-w-2xl leading-relaxed">
-                            Pulling fresh movie, TV, and anime discovery data from live sources. Add your TMDB key in Settings to unlock movie and TV rails.
+                            Pulling fresh movie and TV discovery data from live sources. Add your TMDB key in Settings to unlock movie and TV rails.
                         </p>
                         <div class="flex items-center gap-4 pt-4">
                             <button id="hero-play-btn" class="bg-white text-black hover:bg-white/90 hover:scale-105 transition-transform duration-300 font-bold px-9 py-3 rounded-full flex items-center gap-2 shadow-lg tracking-wide">
@@ -283,32 +283,7 @@
                     </div>
                 </section>
 
-                <!-- ========================================== -->
-                <!-- SCREEN: ANIME CENTER                       -->
-                <!-- ========================================== -->
-                <section
-                    id="screen-anime"
-                    class="hidden animate-fade-in space-y-6 pt-24 px-12"
-                >
-                    <div
-                        class="flex items-center justify-between border-b border-white/[0.04] pb-4"
-                    >
-                        <div>
-                            <h1 class="text-xl font-black uppercase text-white">
-                                Anime Universe
-                            </h1>
-                            <p class="text-xs text-gray-500">
-                                Track and stream the finest anime series
-                            </p>
-                        </div>
-                    </div>
-                    <div
-                        id="grid-all-anime"
-                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6"
-                    >
-                        <!-- Dynamically populated -->
-                    </div>
-                </section>
+
 
                 <!-- ========================================== -->
                 <!-- SCREEN: PREMIUM LIVE TV PLAYER             -->
@@ -844,32 +819,18 @@
                                         </div>
                                     </div>
 
-                                    <!-- Pixeldrain & AniList Keys -->
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <div class="space-y-1.5">
-                                            <label
-                                                class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
-                                                >Pixeldrain API Key</label
-                                            >
-                                            <input
-                                                type="password"
-                                                id="pixeldrain-key-input"
-                                                placeholder="Not configured"
-                                                class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
-                                            />
-                                        </div>
-                                        <div class="space-y-1.5">
-                                            <label
-                                                class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
-                                                >AniList Access Token</label
-                                            >
-                                            <input
-                                                type="password"
-                                                id="anilist-token-input"
-                                                placeholder="Not configured"
-                                                class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
-                                            />
-                                        </div>
+                                    <!-- Pixeldrain Key -->
+                                    <div class="space-y-1.5">
+                                        <label
+                                            class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block"
+                                            >Pixeldrain API Key</label
+                                        >
+                                        <input
+                                            type="password"
+                                            id="pixeldrain-key-input"
+                                            placeholder="Not configured"
+                                            class="w-full bg-brandDark border border-white/[0.04] rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-brandCyan transition font-mono"
+                                        />
                                     </div>
 
                                     <!-- TVDB API Key & PIN -->
@@ -1018,38 +979,7 @@
                                 </p>
                             </div>
 
-                            <!-- Anime Server & CDN Latency Checker -->
-                            <div
-                                class="bg-brandSec p-5 rounded-xl border border-white/[0.04] space-y-4"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <i
-                                        data-lucide="zap"
-                                        class="w-5 h-5 text-brandCyan"
-                                    ></i>
-                                    <h3
-                                        class="font-extrabold text-sm uppercase tracking-wider text-white"
-                                    >
-                                        Anime Server Latency Control
-                                    </h3>
-                                </div>
-                                <p class="text-xs text-gray-400 leading-relaxed">
-                                    Ping anime servers and CDNs from FMHY in real-time. This checks latency and validates if the edge-case <strong>One Piece Episode 1088</strong> is actively listed and streamable.
-                                </p>
-                                <button
-                                    onclick="checkAnimeServerLatencies(this)"
-                                    class="btn-action-glow text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg flex items-center gap-2"
-                                >
-                                    <i data-lucide="zap" class="w-4 h-4"></i>
-                                    Test FMHY Sites &amp; One Piece 1088
-                                </button>
-                                <div
-                                    id="anime-latency-results"
-                                    class="hidden space-y-2 text-xs font-semibold text-gray-300 bg-brandDark p-4 rounded-lg border border-white/[0.04]"
-                                >
-                                    <!-- Results injected dynamically -->
-                                </div>
-                            </div>
+
 
                             <!-- System Debug Logs Console -->
                             <div
@@ -1323,8 +1253,7 @@
 
         <!-- Local QR generator (offline) for the auto-sync pairing code -->
         <script src="qrcode.min.js"></script>
-        <!-- Anime pipeline (AniList + AllAnime), loaded before the renderer -->
-        <script src="anime.js"></script>
+
         <!-- Main Renderer logic script -->
         <script src="renderer.js"></script>
     </body>

@@ -341,13 +341,12 @@ class TraktRepositoryImpl : TraktRepository {
         return when (item.type) {
             MediaType.MOVIE -> JSONObject().put("movies", JSONArray().put(entry))
             MediaType.SERIES -> JSONObject().put("shows", JSONArray().put(entry))
-            MediaType.ANIME -> JSONObject().put("shows", JSONArray().put(entry))
             MediaType.LIVE_TV -> null
         }
     }
 
     private fun bulkEntryFor(item: MediaItem): JSONObject? {
-        val ids = idsFor(item, includeTvdb = item.type == MediaType.SERIES || item.type == MediaType.ANIME)
+        val ids = idsFor(item, includeTvdb = item.type == MediaType.SERIES)
         if (ids.length() != 0) return JSONObject().put("ids", ids)
         val year = releaseYear(item.releaseDate) ?: return null
         return JSONObject().put("title", item.title).put("year", year)

@@ -79,7 +79,6 @@ class Repositories(
     val tvdb: TvdbRepository,
     val trakt: TraktRepository,
     val vidsrc: VidsrcRepository,
-    val anime: AnimeRepository,
     val liveTv: LiveTvRepository,
     val yarrlist: YarrlistRepository,
 ) {
@@ -89,8 +88,6 @@ class Repositories(
             tvdb = TvdbRepositoryImpl(),
             trakt = TraktRepositoryImpl(),
             vidsrc = VidsrcRepositoryImpl(),
-            // Provided by the crypto agent (AnimeRepositoryImpl.kt).
-            anime = AnimeRepositoryImpl(),
             liveTv = LiveTvRepositoryImpl(),
             yarrlist = YarrlistRepositoryImpl(),
         )

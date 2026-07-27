@@ -10,7 +10,7 @@ import java.net.URLEncoder
 class VidsrcRepositoryImpl : VidsrcRepository {
 
     override fun sourcesFor(item: MediaItem, settings: UserSettings, episode: MediaEpisode?): List<PlaybackSource> {
-        if (item.type == MediaType.LIVE_TV || item.type == MediaType.ANIME) return emptyList()
+        if (item.type == MediaType.LIVE_TV) return emptyList()
         if (idFor(item) == null) return emptyList()
 
         return orderedDomains(settings.vidsrcDomain).map { domain ->
@@ -125,7 +125,8 @@ class VidsrcRepositoryImpl : VidsrcRepository {
     private fun idFor(item: MediaItem): String? {
         val imdb = item.imdbId?.trim()
         if (!imdb.isNullOrEmpty()) return imdb
-        return item.tmdbId?.toString()
+        if (item.tmdbId != null) return item.tmdbId.toString()
+        return null
     }
 
     private fun orderedDomains(preferred: String): List<String> {
@@ -217,7 +218,7 @@ class VidsrcRepositoryImpl : VidsrcRepository {
     private fun enc(value: String): String = URLEncoder.encode(value, "UTF-8")
 
     companion object {
-        val EMBED_DOMAINS = listOf("vidcore.created.app", "vsembed.ru", "vsembed.su", "vidsrcme.ru")
+        val EMBED_DOMAINS = listOf("vidsrc.net", "vidsrc.me", "vidsrc.xyz", "vidsrc.in", "vidsrc.pm", "vidsrc.cc", "vidsrc.pro")
         private const val LISTING_DOMAIN = "vsembed.ru"
     }
 }

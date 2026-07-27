@@ -91,7 +91,7 @@ fun SearchScreen(nav: NavController) {
             OutlinedTextField(
                 value = query, onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search movies, TV shows, and anime", color = Color.White.copy(alpha = 0.54f)) },
+                placeholder = { Text("Search movies and TV shows", color = Color.White.copy(alpha = 0.54f)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null, tint = Color.White.copy(alpha = 0.7f)) },
                 singleLine = true,
                 shape = RoundedCornerShape(50),
@@ -121,7 +121,7 @@ fun SearchScreen(nav: NavController) {
                     fontWeight = FontWeight.Black
                 )
                 Text(
-                    "Type a movie, TV show, or anime title. We search Omniverse for matches and open the same detail screen as the home rows — sources included.",
+                    "Type a movie or TV show title. We search Omniverse for matches and open the same detail screen as the home rows — sources included.",
                     color = Color.White.copy(alpha = 0.7f), fontSize = 15.sp
                 )
             }

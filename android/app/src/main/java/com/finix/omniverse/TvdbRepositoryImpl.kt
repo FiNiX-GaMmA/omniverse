@@ -109,7 +109,7 @@ class TvdbRepositoryImpl : TvdbRepository {
             for (result in data.objects()) {
                 val type = (result.optStringOrNull("type") ?: "").lowercase()
                 val typeMatches = (item.type == MediaType.MOVIE && type.contains("movie")) ||
-                        ((item.type == MediaType.SERIES || item.type == MediaType.ANIME) && type.contains("series"))
+                        (item.type == MediaType.SERIES && type.contains("series"))
                 if (!typeMatches && type.isNotEmpty()) continue
                 (result.optIntOrNull("tvdb_id") ?: result.optIntOrNull("id"))?.let { return it }
             }

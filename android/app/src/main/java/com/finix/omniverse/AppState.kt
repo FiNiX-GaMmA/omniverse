@@ -69,6 +69,7 @@ class AppState(context: Context) {
     val animeCategories = mutableStateListOf<MediaCategory>()
     val liveTv = mutableStateListOf<LiveTvEntry>()
     val liveTvSources = mutableStateListOf<LiveTvSource>()
+    val yarrlistAnime = mutableStateListOf<LiveTvEntry>()
     val watchHistory = mutableStateListOf<WatchProgress>()
 
     var watchlist by mutableStateOf<Set<String>>(emptySet())
@@ -158,14 +159,11 @@ class AppState(context: Context) {
             loading = true
             message = null
             categories.clear()
-            animeCategories.clear()
             clearHeroCache()
         }
         val catsJob = async { refreshCategories() }
-        val animeJob = async { refreshAnime() }
         val watchlistJob = async { refreshTraktWatchlist() }
         catsJob.await()
-        animeJob.await()
         watchlistJob.await()
         settingsStore.setLastRefreshedTime(System.currentTimeMillis())
         if (isManual) loading = false
@@ -234,14 +232,7 @@ class AppState(context: Context) {
         notices.firstOrNull()?.let { message = it }
     }
 
-    suspend fun refreshAnime() {
-        try {
-            val cats = repos.anime.fetchAnimeCategories()
-            animeCategories.clear(); animeCategories.addAll(cats)
-        } catch (t: Throwable) {
-            message = "Could not refresh anime rows: $t"
-        }
-    }
+    suspend fun refreshAnime() {}
 
     suspend fun refreshTraktWatchlist() {
         if (!credentials.hasTraktUser) return
@@ -364,7 +355,6 @@ class AppState(context: Context) {
             .put("tvdb_api_key", credentials.tvdbApiKey)
             .put("tvdb_pin", credentials.tvdbPin)
             .put("pixeldrain_api_key", credentials.pixeldrainApiKey)
-            .put("anilist_access_token", credentials.anilistAccessToken)
             .put("trakt_client_id", credentials.traktClientId)
             .put("trakt_client_secret", credentials.traktClientSecret)
             .put("settings", settingsToJson(settings))
@@ -397,7 +387,6 @@ class AppState(context: Context) {
         obj.optStringOrNull("tvdb_api_key")?.let { c = c.copy(tvdbApiKey = it) }
         obj.optStringOrNull("tvdb_pin")?.let { c = c.copy(tvdbPin = it) }
         obj.optStringOrNull("pixeldrain_api_key")?.let { c = c.copy(pixeldrainApiKey = it) }
-        obj.optStringOrNull("anilist_access_token")?.let { c = c.copy(anilistAccessToken = it) }
         saveCredentials(c)
         obj.optObjectOrNull("settings")?.let { saveSettings(settingsFromJson(it)) }
         obj.optArrayOrNull("watch_history")?.let {
@@ -420,8 +409,6 @@ class AppState(context: Context) {
         obj.optStringOrNull("tvdb_api_key")?.takeIf { it.isNotEmpty() }?.let { c = c.copy(tvdbApiKey = it) }
         obj.optStringOrNull("tvdb_pin")?.let { c = c.copy(tvdbPin = it) }
         obj.optStringOrNull("pixeldrain_api_key")?.takeIf { it.isNotEmpty() }?.let { c = c.copy(pixeldrainApiKey = it) }
-        obj.optStringOrNull("anilist_access_token")?.takeIf { it.isNotEmpty() }
-            ?.let { c = c.copy(anilistAccessToken = it) }
         obj.optStringOrNull("trakt_client_id")?.takeIf { it.isNotEmpty() }?.let { c = c.copy(traktClientId = it) }
         obj.optStringOrNull("trakt_client_secret")?.takeIf { it.isNotEmpty() }
             ?.let { c = c.copy(traktClientSecret = it) }
@@ -518,7 +505,6 @@ class AppState(context: Context) {
         obj.optStringOrNull("tvdb_api_key")?.let { c = c.copy(tvdbApiKey = it) }
         obj.optStringOrNull("tvdb_pin")?.let { c = c.copy(tvdbPin = it) }
         obj.optStringOrNull("pixeldrain_api_key")?.let { c = c.copy(pixeldrainApiKey = it) }
-        obj.optStringOrNull("anilist_access_token")?.let { c = c.copy(anilistAccessToken = it) }
 
         credentials = c
         credentialsStore.save(c)
@@ -543,70 +529,13 @@ class AppState(context: Context) {
         repos.tmdb.searchMulti(query, credentials, settings)
 
     suspend fun detailsFor(item: MediaItem): MediaItem {
-        if (item.type == MediaType.ANIME) {
-            repos.anime.findByTitle(item.title)?.let { hydrated ->
-                return hydrated.copy(
-                    tmdbId = item.tmdbId ?: hydrated.tmdbId,
-                    tvdbId = item.tvdbId ?: hydrated.tvdbId,
-                    imdbId = item.imdbId ?: hydrated.imdbId,
-                    traktId = item.traktId ?: hydrated.traktId,
-                    posterPath = item.posterPath ?: hydrated.posterPath,
-                    backdropPath = item.backdropPath ?: hydrated.backdropPath,
-                    releaseDate = if (item.releaseDate.isNotBlank()) item.releaseDate else hydrated.releaseDate,
-                    genres = if (item.genres.isNotEmpty()) item.genres else hydrated.genres,
-                    originCountry = if (item.originCountry.isNotEmpty()) item.originCountry else hydrated.originCountry,
-                    seasons = if (item.seasons.isNotEmpty()) item.seasons else hydrated.seasons,
-                    episodes = if (item.episodes.isNotEmpty()) item.episodes else hydrated.episodes,
-                )
-            }
-            if (item.seasons.isNotEmpty()) return item
-        }
-        val detailed = repos.tmdb.fetchDetails(item, credentials, settings) ?: item
-        val enriched = repos.tvdb.enrichDetails(detailed, credentials)
-        if (enriched.isAnime && enriched.type != MediaType.ANIME) {
-            repos.anime.findByTitle(enriched.title)?.let { anilist ->
-                return anilist.copy(
-                    tmdbId = enriched.tmdbId ?: anilist.tmdbId,
-                    tvdbId = enriched.tvdbId ?: anilist.tvdbId,
-                    imdbId = enriched.imdbId ?: anilist.imdbId,
-                    traktId = enriched.traktId ?: anilist.traktId,
-                    posterPath = enriched.posterPath ?: anilist.posterPath,
-                    backdropPath = enriched.backdropPath ?: anilist.backdropPath,
-                    releaseDate = if (enriched.releaseDate.isNotBlank()) enriched.releaseDate else anilist.releaseDate,
-                    genres = if (enriched.genres.isNotEmpty()) enriched.genres else anilist.genres,
-                    originCountry = if (enriched.originCountry.isNotEmpty()) enriched.originCountry else anilist.originCountry,
-                    seasons = if (enriched.seasons.isNotEmpty()) enriched.seasons else anilist.seasons,
-                    episodes = if (enriched.episodes.isNotEmpty()) enriched.episodes else anilist.episodes,
-                )
-            }
-        }
-        return enriched
+        return repos.tmdb.fetchDetails(item, credentials, settings) ?: item
     }
 
     suspend fun seasonEpisodesFor(item: MediaItem, seasonNumber: Int): List<MediaEpisode> {
-        if (item.type == MediaType.ANIME) {
-            var eps = repos.anime.fetchEpisodes(item, seasonNumber)
-            if (item.tmdbId != null) {
-                val tmdbEps = repos.tmdb.fetchSeasonEpisodes(item, seasonNumber, credentials, settings)
-                if (tmdbEps.isNotEmpty()) {
-                    val byNum = tmdbEps.associateBy { it.episodeNumber }
-                    eps = eps.map { ep ->
-                        val t = byNum[ep.episodeNumber]
-                        if (t?.stillPath != null && (ep.stillPath
-                                ?: "").isEmpty()
-                        ) ep.copy(stillPath = t.stillPath) else ep
-                    }
-                }
-            }
-            return eps
-        }
         val eps = repos.tmdb.fetchSeasonEpisodes(item, seasonNumber, credentials, settings)
         if (eps.isNotEmpty() || !credentials.hasTvdb) return eps
         return repos.tvdb.fetchSeasonEpisodes(item, seasonNumber, credentials)
-    }
-
-    private fun isAnimePlaybackCandidate(item: MediaItem): Boolean {
-        return item.type == MediaType.ANIME || item.isAnime
     }
 
     private val onePieceSeasonStartEpisodes = mapOf(
@@ -673,29 +602,11 @@ class AppState(context: Context) {
     }
 
     fun aniSkipEpisodeFor(item: MediaItem?, episode: MediaEpisode?): Int? {
-        if (item == null || episode == null) return null
-        if (!isAnimePlaybackCandidate(item)) return null
-
-        return normalizeAnimeEpisodeLinkage(item, episode).episodeNumber
+        return null
     }
 
     private suspend fun hydrateAnimePlaybackItem(item: MediaItem): MediaItem {
-        if (item.type == MediaType.ANIME) return item
-        val hydrated = repos.anime.findByTitle(item.title) ?: return item
-        return hydrated.copy(
-            tmdbId = item.tmdbId ?: hydrated.tmdbId,
-            tvdbId = item.tvdbId ?: hydrated.tvdbId,
-            imdbId = item.imdbId ?: hydrated.imdbId,
-            traktId = item.traktId ?: hydrated.traktId,
-            posterPath = item.posterPath ?: hydrated.posterPath,
-            backdropPath = item.backdropPath ?: hydrated.backdropPath,
-            releaseDate = if (item.releaseDate.isNotBlank()) item.releaseDate else hydrated.releaseDate,
-            genres = if (item.genres.isNotEmpty()) item.genres else hydrated.genres,
-            originCountry = if (item.originCountry.isNotEmpty()) item.originCountry else hydrated.originCountry,
-            seasons = if (item.seasons.isNotEmpty()) item.seasons else hydrated.seasons,
-            episodes = if (item.episodes.isNotEmpty()) item.episodes else hydrated.episodes,
-            source = hydrated.source,
-        )
+        return item
     }
 
     suspend fun playbackSourcesFor(
@@ -704,16 +615,6 @@ class AppState(context: Context) {
         overrides: PlaybackOverrides = PlaybackOverrides()
     ): List<PlaybackSource> {
         val effective = settings.applying(overrides)
-
-        if (isAnimePlaybackCandidate(item)) {
-            val targetBase = episode ?: item.episodes.firstOrNull()
-            ?: MediaEpisode(seasonNumber = 1, episodeNumber = 1, title = "Episode 1")
-            val playbackItem = hydrateAnimePlaybackItem(item)
-            val target = normalizeAnimeEpisodeLinkage(playbackItem, targetBase)
-            val direct = repos.anime.resolveSource(playbackItem, target, effective)
-            return listOf(direct)
-        }
-
         return repos.vidsrc.sourcesFor(item, effective, episode)
     }
 
@@ -724,10 +625,6 @@ class AppState(context: Context) {
     /// AniList, movies/TV use TMDB.
     suspend fun recommendationsFor(item: MediaItem?): List<MediaItem> {
         if (item == null) return emptyList()
-        if ((item.type == MediaType.ANIME || item.isAnime) && item.anilistId != null) {
-            val recs = repos.anime.recommendations(item.anilistId!!)
-            if (recs.isNotEmpty()) return recs
-        }
         if (item.tmdbId != null) return repos.tmdb.fetchRecommendations(item, credentials, settings)
         return emptyList()
     }
@@ -758,8 +655,8 @@ class AppState(context: Context) {
 
     private fun watchlistKeys(item: MediaItem): Set<String> {
         val typeNames = mutableSetOf(item.type.wire)
-        if (item.type in listOf(MediaType.ANIME, MediaType.SERIES, MediaType.MOVIE)) {
-            typeNames.addAll(listOf("anime", "series", "movie"))
+        if (item.type in listOf(MediaType.SERIES, MediaType.MOVIE)) {
+            typeNames.addAll(listOf("series", "movie"))
         }
         val imdb = item.imdbId?.trim() ?: ""
         val keys = mutableSetOf(item.id)
@@ -782,20 +679,6 @@ class AppState(context: Context) {
 
     suspend fun stopTraktPlayback(item: MediaItem, progress: Double, episode: MediaEpisode?) {
         sendScrobble(item) { repos.trakt.stopScrobble(it, item, episode, progress) }
-        if (credentials.hasAnilist && episode != null) {
-            val isAnime = item.type == MediaType.ANIME || item.isAnime
-            val anilistId = item.anilistId
-            if (isAnime && anilistId != null) {
-                runCatching {
-                    repos.anime.updateAniListProgress(
-                        credentials.anilistAccessToken,
-                        anilistId,
-                        episode.episodeNumber,
-                        "CURRENT"
-                    )
-                }
-            }
-        }
     }
 
     private suspend fun sendScrobble(item: MediaItem, send: suspend (ApiCredentials) -> Unit) {
@@ -833,20 +716,6 @@ class AppState(context: Context) {
     }
 
     suspend fun handleIncomingUri(uri: Uri) {
-        // AniList token (fragment)
-        if (uri.scheme == "omniplay" && uri.host == "anilist" && uri.path == "/oauth") {
-            val frag = uri.fragment ?: uri.query ?: ""
-            val params = frag.split("&").mapNotNull {
-                val kv = it.split("=", limit = 2); if (kv.size == 2) kv[0] to kv[1] else null
-            }.toMap()
-            val token = params["access_token"]
-            if (!token.isNullOrEmpty()) {
-                credentials = credentials.copy(anilistAccessToken = token)
-                saveCredentials(credentials)
-                message = "AniList connected successfully!"
-            }
-            return
-        }
         if (uri.scheme != "omniplay" || uri.host != "trakt" || uri.path != "/oauth") return
         val code = uri.getQueryParameter("code")
         if (!code.isNullOrEmpty()) {
@@ -874,7 +743,6 @@ class AppState(context: Context) {
                 obj.optStringOrNull("tvdb_api_key")?.let { c = c.copy(tvdbApiKey = it) }
                 obj.optStringOrNull("tvdb_pin")?.let { c = c.copy(tvdbPin = it) }
                 obj.optStringOrNull("pixeldrain_api_key")?.let { c = c.copy(pixeldrainApiKey = it) }
-                obj.optStringOrNull("anilist_access_token")?.let { c = c.copy(anilistAccessToken = it) }
                 credentials = c; credentialsStore.save(c)
                 obj.optObjectOrNull("settings")
                     ?.let { settings = settingsFromJson(it); settingsStore.saveSettings(settings) }
@@ -902,8 +770,8 @@ class AppState(context: Context) {
             // arrives from TMDB/Trakt/VidSrc with different ids, so keying on id let
             // duplicates through. Key on type + tmdbId/imdbId/title instead.
             val byKey = LinkedHashMap<String, MediaItem>()
-            for (c in categories) if (c.type != MediaType.LIVE_TV && c.type != MediaType.ANIME) {
-                for (item in c.items) if (!item.isAnime) {
+            for (c in categories) if (c.type != MediaType.LIVE_TV) {
+                for (item in c.items) {
                     val key = "${item.type.wire}:" + (item.tmdbId?.toString() ?: item.imdbId ?: item.title.lowercase())
                     if (byKey[key] == null) byKey[key] = item
                 }

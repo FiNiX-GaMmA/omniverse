@@ -8,6 +8,7 @@ final class YarrlistRepository: YarrlistRepositoryProtocol {
     private static let moviesUrl = URL(string: "https://yarrlist.net/movies-and-tv-shows")!
     private static let liveTvUrl = URL(string: "https://yarrlist.net/live-tv-list")!
 
+
     func fetchLiveTvDirectory() async throws -> [LiveTvEntry] {
         let response = try await Http.shared.request(Self.liveTvUrl)
         if response.status >= 400 {

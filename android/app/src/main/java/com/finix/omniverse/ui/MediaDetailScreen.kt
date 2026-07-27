@@ -56,7 +56,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.finix.omniverse.AnimeRepositoryImpl
 import com.finix.omniverse.AppGraph
 import com.finix.omniverse.MediaEpisode
 import com.finix.omniverse.MediaItem
@@ -103,11 +102,11 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
     var showSheet by remember { mutableStateOf(false) }
 
     val current = detailed ?: item
-    val isSeries = current.type == MediaType.SERIES || current.type == MediaType.ANIME
+    val isSeries = current.type == MediaType.SERIES
 
     fun expandedSeasons(c: MediaItem): List<MediaSeason> {
         val out = ArrayList<MediaSeason>()
-        val limit = if (c.type == MediaType.ANIME) 100 else 50
+        val limit = 50
         for (s in c.seasons) {
             val total = maxOf(s.episodeCount, c.episodes.count { it.seasonNumber == s.seasonNumber })
             if (total > limit) {
@@ -126,7 +125,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
         if (seasonNumber == null) return null
         if (seasons.any { it.seasonNumber == seasonNumber }) return seasonNumber
         if (seasonNumber < 1000 && episodeNumber != null) {
-            val limit = if (c.type == MediaType.ANIME) 100 else 50
+            val limit = 50
             val chunkIndex = (episodeNumber - 1) / limit
             val virtualSeason = seasonNumber * 1000 + chunkIndex
             if (seasons.any { it.seasonNumber == virtualSeason }) return virtualSeason
@@ -136,7 +135,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
 
     suspend fun loadEpisodes(c: MediaItem, season: Int) {
         loadingEpisodes = true
-        val limit = if (c.type == MediaType.ANIME) 100 else 50
+        val limit = 50
         val result = if (season >= 1000) {
             val original = season / 1000;
             val chunk = season % 1000
@@ -154,7 +153,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
     LaunchedEffect(item.id) {
         val d = state.detailsFor(item)
         detailed = d
-        if (d.type == MediaType.SERIES || d.type == MediaType.ANIME) {
+        if (d.type == MediaType.SERIES) {
             val seasons = expandedSeasons(d)
             val prog = state.continueWatching.firstOrNull { it.itemId == d.id }
             var targetSeason =
@@ -181,9 +180,7 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
     }
 
     fun dispatch(source: PlaybackSource, episode: MediaEpisode?) {
-        if (current.type != MediaType.ANIME) {
-            scope.launch { state.recordProgress(current, 10000, 3600000, episode) }
-        }
+        scope.launch { state.recordProgress(current, 10000, 3600000, episode) }
         val resume =
             state.continueWatching.firstOrNull { it.itemId == current.id && it.episodeNumber == episode?.episodeNumber }?.positionMs
         when {
@@ -237,10 +234,6 @@ fun MediaDetailScreen(item: MediaItem, nav: NavController, initialFocus: DetailF
                 s.size == 1 -> dispatch(s.first(), episode)
                 else -> showSheet = true
             }
-        } catch (t: AnimeRepositoryImpl.CaptchaRequiredException) {
-            // AllAnime wants a captcha. Show it; retry this same call once solved.
-            RouteArgs.captcha = CaptchaArgs(t.url) { scope.launch { openSources(episode) } }
-            nav.navigate("captcha")
         } catch (t: Throwable) {
             state.message = "Could not load sources: $t"
         } finally {

@@ -35,7 +35,6 @@ struct SettingsScreen: View {
     @State private var traktId = ""
     @State private var traktSecret = ""
     @State private var pixeldrainApiKey = ""
-    @State private var anilistAccessToken = ""
 
     // Preferences
     @State private var language = ""
@@ -45,9 +44,7 @@ struct SettingsScreen: View {
     @State private var vidsrcDomain = "vidcore.created.app"
     @State private var includeAdult = false
     @State private var tvMode = false
-    @State private var preferDubbedAnime = false
     @State private var showMoviesTv = true
-    @State private var showAnime = true
     @State private var showLiveTv = true
 
     @State private var seeded = false
@@ -121,7 +118,6 @@ struct SettingsScreen: View {
                 SecretField(text: $tvdb, label: "TVDB v4 API key", hint: "E.g., tvdb_api_key_xxxxxxxx", logoUrl: "https://thetvdb.com/favicon.ico", onCopy: copy)
                 SecretField(text: $tvdbPin, label: "TVDB Subscriber PIN (optional)", hint: "Enter your custom subscriber pin", logoUrl: "https://thetvdb.com/favicon.ico", onCopy: copy)
                 SecretField(text: $pixeldrainApiKey, label: "Pixeldrain API key", hint: "Used for direct Pixeldrain video streams", logoUrl: "https://pixeldrain.net/favicon.ico", onCopy: copy)
-                SecretField(text: $anilistAccessToken, label: "AniList Access Token", hint: "Required for real-time completed scrobbling", logoUrl: "https://anilist.co/img/icons/android-chrome-512x512.png", onCopy: copy)
             }
             section("Trakt Developer Client Keys") {
                 SecretField(text: $traktId, label: "Trakt Client ID", hint: "Used to authorize Trakt.tv account syncing", logoUrl: "https://trakt.tv/favicon.ico", onCopy: copy)
@@ -151,11 +147,9 @@ struct SettingsScreen: View {
             }
             section("Display & Content Toggles") {
                 ToggleRow("Show Movies & TV shows", $showMoviesTv)
-                ToggleRow("Show Anime list", $showAnime)
                 ToggleRow("Enable Live TV channels", $showLiveTv)
                 ToggleRow("Include Adult content", $includeAdult)
                 ToggleRow("Enable TV / Landscape Mode", $tvMode)
-                ToggleRow("Prefer Dubbed Anime", $preferDubbedAnime)
             }
         }
         .padding(EdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24))
@@ -198,27 +192,6 @@ struct SettingsScreen: View {
                 glassChip("Scan Sync QR", system: "camera") { showScanner = true }
             }
 
-            syncCard(
-                title: "AniList Sync Integration",
-                isConnected: state.credentials.hasAnilist,
-                statusText: state.credentials.hasAnilist ? "Connected to AniList (Sync Active)" : "AniList disconnected (Sync disabled)",
-                iconName: "play.circle.fill",
-                iconColor: .blue,
-                logoUrl: "https://anilist.co/img/icons/android-chrome-512x512.png"
-            ) {
-                glassChip(state.credentials.hasAnilist ? "Refresh Login" : "Connect AniList", system: "person.crop.circle") {
-                    if let url = URL(string: "https://anilist.co/api/v2/oauth/authorize?client_id=14187&response_type=token") {
-                        UIApplication.shared.open(url)
-                    }
-                }
-                if state.credentials.hasAnilist {
-                    glassChip("Disconnect", system: "xmark.circle") {
-                        var c = state.credentials; c.anilistAccessToken = ""
-                        Task { await state.saveCredentials(c) }
-                    }
-                }
-            }
-
             if let statusMessage {
                 Text(statusMessage)
                     .font(.system(size: 15, weight: .bold))
@@ -227,7 +200,7 @@ struct SettingsScreen: View {
                     .frame(maxWidth: .infinity)
             }
 
-            Text("Trakt Redirect URI: omniplay://trakt/oauth\nAniList Redirect URI: omniplay://anilist/oauth")
+            Text("Trakt Redirect URI: omniplay://trakt/oauth")
                 .font(.system(size: 12))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
@@ -411,7 +384,6 @@ struct SettingsScreen: View {
         traktId = state.credentials.traktClientId
         traktSecret = state.credentials.traktClientSecret
         pixeldrainApiKey = state.credentials.pixeldrainApiKey
-        anilistAccessToken = state.credentials.anilistAccessToken
         language = state.settings.language
         region = state.settings.region
         subtitleUrl = state.settings.subtitleUrl
@@ -419,9 +391,7 @@ struct SettingsScreen: View {
         vidsrcDomain = vidsrcEmbedDomains.contains(state.settings.vidsrcDomain) ? state.settings.vidsrcDomain : vidsrcEmbedDomains[0]
         includeAdult = state.settings.includeAdult
         tvMode = state.settings.tvMode
-        preferDubbedAnime = state.settings.preferDubbedAnime
         showMoviesTv = state.settings.showMoviesTv
-        showAnime = state.settings.showAnime
         showLiveTv = state.settings.showLiveTv
         seeded = true
     }
@@ -442,7 +412,6 @@ struct SettingsScreen: View {
         c.traktClientId = traktId
         c.traktClientSecret = traktSecret
         c.pixeldrainApiKey = pixeldrainApiKey
-        c.anilistAccessToken = anilistAccessToken
         await state.saveCredentials(c)
 
         var s = state.settings
@@ -453,9 +422,7 @@ struct SettingsScreen: View {
         s.vidsrcDomain = vidsrcDomain
         s.subtitleUrl = subtitleUrl.trimmed
         s.subtitleLanguage = subtitleLanguage.trimmed.isEmpty ? "en" : subtitleLanguage.trimmed
-        s.preferDubbedAnime = preferDubbedAnime
         s.showMoviesTv = showMoviesTv
-        s.showAnime = showAnime
         s.showLiveTv = showLiveTv
         await state.saveSettings(s)
 

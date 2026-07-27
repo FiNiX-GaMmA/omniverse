@@ -18,9 +18,7 @@ Source of truth = the Dart files in `../lib/src/` (read them for exact logic).
 ## Subsystems (parity targets) — see Dart source for exact constants
 - TMDB (dual auth: Bearer if token starts `ey`, else `api_key`), TVDB v4 (login+pin→token), Trakt (web OAuth `omniplay://trakt/oauth`, device-code, refresh; scrobble; Base64(JSON) settings backup in a private list named "Omniplay Sync").
 - VidSrc: embed list + `embed/movie|tv`; extractor chain embed→`/rcp/{hash}`→`/prorcp/`→`file:'...'` m3u8; WebView Turnstile resolution (vidsrc_resolve).
-- AllAnime (ani-cli): AES-256-CTR decode, key=SHA256("Xot36i3lK3:v1"), 90-entry hex map, providerPriority.
-- Anime fallback providers removed: anime playback is ani-cli path only (AllAnime/AllManga direct sources).
-- AniList GraphQL (categories/search/episode meta/progress mutation), AniSkip (api.aniskip.com v2/v1).
+
 
 - Live TV: iptv-org json+m3u, yarrlist scrape, tv247.biz, HEAD-probe scanning.
 - Player: AVPlayer/ExoPlayer, scrobble thresholds (start on play, pause on pause, stop at complete/100%), 10s progress record, 12s stall recovery, AniSkip auto-skip, .ass/vtt captions, audio/sub sheets, drag-to-dismiss.

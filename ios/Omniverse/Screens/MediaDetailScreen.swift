@@ -22,13 +22,8 @@ struct MediaDetailScreen: View {
     @State private var player: PlayerRoute?
     @State private var overviewExpanded = false
     @State private var webEmbed: WebRoute?
-    @State private var vidsrc: VidsrcRoute?
-    @State private var captcha: CaptchaRoute?
-    @State private var pendingFocusSeasonNumber: Int?
-    @State private var pendingFocusEpisodeNumber: Int?
-
     private var current: MediaItem { detailed ?? item }
-    private var isSeries: Bool { current.type == .series || current.type == .anime }
+    private var isSeries: Bool { current.type == .series }
 
     var body: some View {
         content
@@ -185,7 +180,7 @@ struct MediaDetailScreen: View {
 
     private var expandedSeasons: [MediaSeason] {
         var out: [MediaSeason] = []
-        let limit = current.type == .anime ? 100 : 50
+        let limit = 50
         for s in current.seasons {
             let total = max(s.episodeCount, current.episodes.filter { $0.seasonNumber == s.seasonNumber }.count)
             if total > limit {
@@ -215,7 +210,7 @@ struct MediaDetailScreen: View {
             return seasonNumber
         }
         if seasonNumber < 1000, let episodeNumber {
-            let limit = current.type == .anime ? 100 : 50
+            let limit = 50
             let chunkIndex = (episodeNumber - 1) / limit
             let virtualSeason = seasonNumber * 1000 + chunkIndex
             if expandedSeasons.contains(where: { $0.seasonNumber == virtualSeason }) {
@@ -386,7 +381,7 @@ struct MediaDetailScreen: View {
         if season >= 1000 {
             let original = season / 1000, chunk = season % 1000
             var full = current.episodes.first?.seasonNumber == original ? current.episodes : await state.seasonEpisodesFor(current, seasonNumber: original)
-            let limit = current.type == .anime ? 100 : 50
+            let limit = 50
             let start = chunk * limit, end = min(full.count, (chunk + 1) * limit)
             if start < end { full = Array(full[start..<end]) } else { full = [] }
             episodes = full.map { var e = $0; e.seasonNumber = season; return e }
@@ -430,15 +425,7 @@ struct MediaDetailScreen: View {
         }
     }
 
-    /// Shared error handling for source loading. If AllAnime asked for a captcha,
-    /// present the WebView and retry the same request once it's solved; otherwise
-    /// surface the message. `retry` re-runs the exact call that failed.
     private func handleSourceError(_ error: Error, retry: @escaping () async -> Void) {
-        if case AnimeRepository.AnimeError.captchaRequired(let urlStr) = error,
-           let url = URL(string: urlStr) {
-            captcha = CaptchaRoute(url: url) { Task { await retry() } }
-            return
-        }
         state.message = "Could not load sources: \(error)"
     }
 
@@ -479,10 +466,7 @@ struct MediaDetailScreen: View {
     }
 
     private func openSource(_ source: PlaybackSource, episode: MediaEpisode?) {
-        // Movies/TV: stub progress so it appears in Continue Watching.
-        if current.type != .anime {
-            Task { await state.recordProgress(item: current, positionMs: 10000, durationMs: 3600000, episode: episode) }
-        }
+        Task { await state.recordProgress(item: current, positionMs: 10000, durationMs: 3600000, episode: episode) }
         let resume = state.continueWatching.first { $0.itemId == current.id && $0.episodeNumber == episode?.episodeNumber }?.positionMs
 
         if source.isEmbed && source.provider == "VidSrc" {
@@ -508,93 +492,3 @@ struct MediaDetailScreen: View {
 struct PlayerRoute: Identifiable { let id = UUID(); let title: String; let url: String; let headers: [String:String]; let item: MediaItem?; let episode: MediaEpisode?; let subtitleUrl: String; let startPositionMs: Int?; let aniSkipEpisode: Int? }
 struct WebRoute: Identifiable { let id = UUID(); let title: String; let url: String; let headers: [String:String]; let item: MediaItem?; let episode: MediaEpisode? }
 struct VidsrcRoute: Identifiable { let id = UUID(); let item: MediaItem; let title: String; let embedUrls: [URL]; let episode: MediaEpisode? }
-struct CaptchaRoute: Identifiable { let id = UUID(); let url: URL; let onSolved: () -> Void }
-
-// MARK: - Captcha resolution
-
-/// Full-screen WebView shown when AllAnime answers `NEED_CAPTCHA`.
-///
-/// The user solves the captcha on the AllAnime site inside a real WebView. The
-/// cookies WebKit banks are then copied into `HTTPCookieStorage.shared` — the
-/// same jar `Http.shared`'s URLSession attaches to outgoing requests — so the
-/// retried source call carries the freshly authenticated session. The session
-/// lives until AllAnime issues another `NEED_CAPTCHA`, at which point this
-/// screen is shown again.
-///
-/// Lives in this file (rather than its own) because the build machine has no
-/// XcodeGen: the committed .xcodeproj only compiles files it already lists, so a
-/// standalone new file wouldn't be picked up.
-struct CaptchaResolveScreen: View {
-    let url: URL
-    /// Called once cookies have been synced. The caller dismisses and retries.
-    let onSolved: () -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 34, height: 34)
-                        .background(.ultraThinMaterial, in: Circle())
-                }.buttonStyle(.plain)
-
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Verify to continue")
-                        .font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
-                    Text("Solve the check, then tap Done")
-                        .font(.system(size: 12)).foregroundStyle(.white.opacity(0.6))
-                }
-                Spacer()
-                Button {
-                    CaptchaCookieSync.syncToSharedStorage { onSolved() }
-                } label: {
-                    Text("Done")
-                        .font(.system(size: 15, weight: .bold)).foregroundStyle(.black)
-                        .padding(.horizontal, 22).padding(.vertical, 10)
-                        .background(.white, in: Capsule())
-                }.buttonStyle(.plain)
-            }
-            .padding(16)
-
-            CaptchaWebView(url: url)
-        }
-        .background(Color.black.ignoresSafeArea())
-    }
-}
-
-/// Thin WKWebView wrapper using the default (persistent) data store so its
-/// cookies can be copied into `HTTPCookieStorage.shared`.
-private struct CaptchaWebView: UIViewRepresentable {
-    let url: URL
-
-    func makeUIView(context: Context) -> WKWebView {
-        let cfg = WKWebViewConfiguration()
-        cfg.websiteDataStore = .default()
-        cfg.defaultWebpagePreferences.allowsContentJavaScript = true
-        cfg.allowsInlineMediaPlayback = true
-        let webView = WKWebView(frame: .zero, configuration: cfg)
-        webView.customUserAgent =
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 " +
-            "(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
-        webView.load(URLRequest(url: url))
-        return webView
-    }
-
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
-}
-
-/// Copies every cookie WebKit currently holds into the shared HTTP cookie jar
-/// used by `Http.shared`. It's domain-agnostic on purpose: whatever cookie the
-/// captcha flow set (e.g. a `.allanime.day` session) is carried over, and
-/// URLSession sends only the ones matching each request host.
-enum CaptchaCookieSync {
-    static func syncToSharedStorage(_ completion: @escaping () -> Void) {
-        WKWebsiteDataStore.default().httpCookieStore.getAllCookies { cookies in
-            for cookie in cookies { HTTPCookieStorage.shared.setCookie(cookie) }
-            DispatchQueue.main.async { completion() }
-        }
-    }
-}

@@ -11,25 +11,22 @@ enum class MediaType {
     @SerialName("series")
     SERIES,
 
-    @SerialName("anime")
-    ANIME,
-
     @SerialName("liveTv")
     LIVE_TV;
 
     val label: String
         get() = when (this) {
-            MOVIE -> "Movie"; SERIES -> "TV Show"; ANIME -> "Anime"; LIVE_TV -> "Live TV"
+            MOVIE -> "Movie"; SERIES -> "TV Show"; LIVE_TV -> "Live TV"
         }
     val tmdbPath: String get() = if (this == MOVIE) "movie" else "tv"
     val wire: String
         get() = when (this) {
-            MOVIE -> "movie"; SERIES -> "series"; ANIME -> "anime"; LIVE_TV -> "liveTv"
+            MOVIE -> "movie"; SERIES -> "series"; LIVE_TV -> "liveTv"
         }
 
     companion object {
         fun fromWire(s: String?) = when (s) {
-            "series" -> SERIES; "anime" -> ANIME; "liveTv" -> LIVE_TV; else -> MOVIE
+            "series" -> SERIES; "liveTv" -> LIVE_TV; else -> MOVIE
         }
     }
 }
@@ -59,14 +56,12 @@ data class ApiCredentials(
     val traktTokenExpiresAt: Long = 0,
     val traktUsername: String = "",
     val pixeldrainApiKey: String = "",
-    val anilistAccessToken: String = "",
 ) {
     val hasTmdb get() = tmdbToken.trim().isNotEmpty()
     val hasTvdb get() = tvdbApiKey.trim().isNotEmpty()
     val hasTraktApp get() = traktClientId.trim().isNotEmpty()
     val hasTraktUser get() = traktAccessToken.trim().isNotEmpty()
     val hasPixeldrain get() = pixeldrainApiKey.trim().isNotEmpty()
-    val hasAnilist get() = anilistAccessToken.trim().isNotEmpty()
     val canRefreshTrakt get() = traktRefreshToken.trim().isNotEmpty() && traktClientSecret.trim().isNotEmpty()
 }
 
@@ -79,10 +74,8 @@ data class UserSettings(
     val vidsrcDomain: String = "vidcore.created.app",
     val subtitleUrl: String = "",
     val subtitleLanguage: String = "en",
-    val preferDubbedAnime: Boolean = false,
     val liveTvCountry: String = "IN",
     val showMoviesTv: Boolean = true,
-    val showAnime: Boolean = true,
     val showLiveTv: Boolean = true,
     val stremioManifests: List<String> = emptyList(),
     val preferredSource: String = "vidsrc",
@@ -93,14 +86,12 @@ data class UserSettings(
     fun applying(o: PlaybackOverrides) = copy(
         subtitleLanguage = o.subtitleLanguage ?: subtitleLanguage,
         subtitleUrl = o.subtitleUrl ?: subtitleUrl,
-        preferDubbedAnime = o.preferDubbedAnime ?: preferDubbedAnime,
     )
 }
 
 data class PlaybackOverrides(
     val subtitleLanguage: String? = null,
     val subtitleUrl: String? = null,
-    val preferDubbedAnime: Boolean? = null,
 )
 
 @Serializable
@@ -151,21 +142,8 @@ data class MediaItem(
     val backdropUrl get() = imageUrl(backdropPath, "w1280")
     val heroBackdropUrl get() = imageUrl(backdropPath, "original")
 
-    val anilistId: Int?
-        get() {
-            if (!id.startsWith("anilist:")) return null
-            val parts = id.split(":"); if (parts.size < 3) return null
-            return parts.last().toIntOrNull()
-        }
-
-    val isAnime: Boolean
-        get() {
-            if (type == MediaType.ANIME) return true
-            if (type != MediaType.MOVIE && type != MediaType.SERIES) return false
-            val hasAnimation = genres.any { it.lowercase().contains("animation") }
-            val isJapanese = originCountry.any { it.uppercase() == "JP" }
-            return hasAnimation && isJapanese
-        }
+    val anilistId: Int? get() = null
+    val isAnime: Boolean get() = false
 }
 
 @Serializable

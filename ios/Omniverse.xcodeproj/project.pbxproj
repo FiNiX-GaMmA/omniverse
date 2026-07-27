@@ -15,7 +15,7 @@
 		28152517806110B333079052 /* SyncPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD623CC54E5A9952AA82575 /* SyncPayloadTests.swift */; };
 		2A497648C322AF0445BEAB2A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B9DE79D777B1AC1C13B7C4 /* Models.swift */; };
 		3C336A87AA8C3B19FB804832 /* Http.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAA23F4629A957505B6BE7AC /* Http.swift */; };
-		3F0F62B255B75F9700219AD3 /* AnimeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30EEC41F5BE5DCB3460A6AB /* AnimeRepository.swift */; };
+
 
 		50CCED14F72CF38C081A71C3 /* Repositories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67758C978CC2837209E83571 /* Repositories.swift */; };
 		6ABD78EB0366EB0923CF3555 /* AutoplayResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89065BB02F671F2FB4FC40E6 /* AutoplayResolver.swift */; };
@@ -85,7 +85,7 @@
 		D1E305D97700087B1BC0D58D /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		D4484D2C9556E6842C7C5D4C /* WebEmbedPlayerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebEmbedPlayerScreen.swift; sourceTree = "<group>"; };
 		DAA23F4629A957505B6BE7AC /* Http.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Http.swift; sourceTree = "<group>"; };
-		E30EEC41F5BE5DCB3460A6AB /* AnimeRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeRepository.swift; sourceTree = "<group>"; };
+
 		E56604E7184697AD1040472F /* VidsrcResolveScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VidsrcResolveScreen.swift; sourceTree = "<group>"; };
 		F65C1AA10BF5C2F6DE5694D6 /* RecommendationsEndOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationsEndOverlay.swift; sourceTree = "<group>"; };
 		F826764731B47B908379C757 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -196,7 +196,7 @@
 		96DE58C114DD1CEF3AE5178C /* Repositories */ = {
 			isa = PBXGroup;
 			children = (
-				E30EEC41F5BE5DCB3460A6AB /* AnimeRepository.swift */,
+
 
 				5ED9FE5A40D7E1C0D19D080B /* LiveTvRepository.swift */,
 				86FBA348377EC44BFBE7EC09 /* TmdbRepository.swift */,
@@ -319,7 +319,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3F0F62B255B75F9700219AD3 /* AnimeRepository.swift in Sources */,
+
 				EC10500401BB8496B67C9DB9 /* AppShell.swift in Sources */,
 				75390981040835483AC53F3A /* AppState.swift in Sources */,
 				6ABD78EB0366EB0923CF3555 /* AutoplayResolver.swift in Sources */,

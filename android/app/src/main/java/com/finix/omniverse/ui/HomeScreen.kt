@@ -520,30 +520,23 @@ private fun rememberHeroTextColor(url: String?): Color {
 @Composable
 private fun displayCategories(): List<MediaCategory> {
     val state = AppGraph.appState
-    return remember(state.categories.toList(), state.animeCategories.toList()) {
+    return remember(state.categories.toList()) {
         val movieCat = state.categories.firstOrNull { it.id == "trending_movies" || it.id == "trakt_trending_movies" }
         val seriesCat = state.categories.firstOrNull { it.id == "trending_series" || it.id == "trakt_trending_series" }
-        val animeCat =
-            state.animeCategories.firstOrNull { it.id == "anime_trending" || it.title.lowercase().contains("trending") }
         val movies = movieCat?.items ?: emptyList()
         val series = seriesCat?.items ?: emptyList()
-        val anime = animeCat?.items ?: emptyList()
 
         val out = ArrayList<MediaCategory>()
-        var mi = 0;
-        var si = 0;
-        var ai = 0
+        var mi = 0
+        var si = 0
         fun roundRobin(limit: Int): List<MediaItem> {
             val r = ArrayList<MediaItem>()
-            while (r.size < limit && (mi < movies.size || si < series.size || ai < anime.size)) {
+            while (r.size < limit && (mi < movies.size || si < series.size)) {
                 if (mi < movies.size) {
                     r.add(movies[mi]); mi++; if (r.size >= limit) break
                 }
                 if (si < series.size) {
                     r.add(series[si]); si++; if (r.size >= limit) break
-                }
-                if (ai < anime.size) {
-                    r.add(anime[ai]); ai++; if (r.size >= limit) break
                 }
             }
             return r
@@ -553,7 +546,7 @@ private fun displayCategories(): List<MediaCategory> {
         if (top10.isNotEmpty()) out.add(
             MediaCategory(
                 "top_10_trending", "Top 10 Trending", MediaType.MOVIE, top10,
-                "The most watched movies, TV shows, and anime this week"
+                "The most watched movies and TV shows this week"
             )
         )
         if (movies.isNotEmpty()) out.add(
@@ -572,23 +565,15 @@ private fun displayCategories(): List<MediaCategory> {
                 series.take(10)
             )
         )
-        if (anime.isNotEmpty()) out.add(
-            MediaCategory(
-                "top_10_trending_anime",
-                "Top 10 Trending Anime",
-                MediaType.ANIME,
-                anime.take(10)
-            )
-        )
         val trending = roundRobin(40)
         if (trending.isNotEmpty()) out.add(
             MediaCategory(
                 "trending_all", "Trending", MediaType.MOVIE, trending,
-                "Popular movies, TV shows, and anime this week"
+                "Popular movies and TV shows this week"
             )
         )
 
-        val allItems = movies + anime + series
+        val allItems = movies + series
         for (genre in listOf("Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery")) {
             val seen = HashSet<String>()
             val picks = ArrayList<MediaItem>()

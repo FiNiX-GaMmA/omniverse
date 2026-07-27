@@ -462,13 +462,12 @@ final class TraktRepository: TraktRepositoryProtocol {
         switch item.type {
         case .movie: return ["movies": [entry]]
         case .series: return ["shows": [entry]]
-        case .anime: return ["shows": [entry]]
         case .liveTv: return nil
         }
     }
 
     private func bulkEntryFor(_ item: MediaItem) -> [String: Any]? {
-        let ids = idsFor(item, includeTvdb: item.type == .series || item.type == .anime)
+        let ids = idsFor(item, includeTvdb: item.type == .series)
         if !ids.isEmpty { return ["ids": ids] }
         guard let year = releaseYear(item.releaseDate) else { return nil }
         return ["title": item.title, "year": year]

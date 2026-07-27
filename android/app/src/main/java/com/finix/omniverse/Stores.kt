@@ -29,7 +29,6 @@ class CredentialsStore(context: Context) {
         const val traktTokenExpiresAt = "trakt_token_expires_at"
         const val traktUsername = "trakt_username"
         const val pixeldrainApiKey = "pixeldrain_api_key"
-        const val anilistAccessToken = "anilist_access_token"
     }
 
     private val prefs: SharedPreferences = run {
@@ -62,7 +61,6 @@ class CredentialsStore(context: Context) {
         traktTokenExpiresAt = (prefs.getString(K.traktTokenExpiresAt, "") ?: "").toLongOrNull() ?: 0L,
         traktUsername = prefs.getString(K.traktUsername, "") ?: "",
         pixeldrainApiKey = prefs.getString(K.pixeldrainApiKey, "") ?: "",
-        anilistAccessToken = prefs.getString(K.anilistAccessToken, "") ?: "",
     )
 
     fun save(c: ApiCredentials) {
@@ -77,7 +75,6 @@ class CredentialsStore(context: Context) {
             putString(K.traktTokenExpiresAt, c.traktTokenExpiresAt.toString())
             putString(K.traktUsername, c.traktUsername.trim())
             putString(K.pixeldrainApiKey, c.pixeldrainApiKey.trim())
-            putString(K.anilistAccessToken, c.anilistAccessToken.trim())
         }.apply()
     }
 }

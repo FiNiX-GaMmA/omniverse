@@ -7,16 +7,19 @@ import Foundation
 final class VidsrcRepository: VidsrcRepositoryProtocol {
 
     static let embedDomains = [
-        "vidcore.created.app",
-        "vsembed.ru",
-        "vsembed.su",
-        "vidsrcme.ru",
+        "vidsrc.net",
+        "vidsrc.me",
+        "vidsrc.xyz",
+        "vidsrc.in",
+        "vidsrc.pm",
+        "vidsrc.cc",
+        "vidsrc.pro",
     ]
 
     private static let listingDomain = "vsembed.ru"
 
     func sourcesFor(_ item: MediaItem, settings: UserSettings, episode: MediaEpisode?) -> [PlaybackSource] {
-        if item.type == .liveTv || item.type == .anime { return [] }
+        if item.type == .liveTv { return [] }
         guard idFor(item) != nil else { return [] }
 
         return orderedDomains(settings.vidsrcDomain).map { domain in

@@ -167,9 +167,7 @@ fun OmniverseRoot() {
                         WebEmbedScreen(args) { returnToDetail("web", args.item, args.episode) }
                     }
                 }
-                composable("captcha") {
-                    RouteArgs.captcha?.let { CaptchaScreen(it) { nav.popBackStack() } }
-                }
+
                 composable("vidsrc") {
                     RouteArgs.vidsrc?.let { vargs ->
                         VidsrcResolveScreen(

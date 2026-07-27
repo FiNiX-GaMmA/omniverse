@@ -126,7 +126,7 @@ fun PlayerScreen(
         }
     }
 
-    val isAnime = args.item?.type == MediaType.ANIME || args.item?.isAnime == true
+    val isAnime = false
 
     // Build ExoPlayer with OkHttp datasource passing custom headers.
     val player = remember {

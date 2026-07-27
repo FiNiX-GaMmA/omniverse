@@ -21,7 +21,6 @@ final class AppState {
     var settings = UserSettings()
     var credentials = ApiCredentials()
     var categories: [MediaCategory] = []
-    var animeCategories: [MediaCategory] = []
     var liveTv: [LiveTvEntry] = []
     var liveTvSources: [LiveTvSource] = []
     var watchlist: Set<String> = []
@@ -156,9 +155,8 @@ final class AppState {
     func refreshAll(isManual: Bool = true) async {
         if isManual { loading = true; message = nil }
         async let cats: Void = refreshCategories()
-        async let anime: Void = refreshAnime()
         async let watchlist: Void = refreshTraktWatchlist()
-        _ = await (cats, anime, watchlist)
+        _ = await (cats, watchlist)
         settingsStore.setLastRefreshedTime(Int(Date().timeIntervalSince1970 * 1000))
         clearHeroCache()
         if isManual { loading = false }
@@ -230,10 +228,7 @@ final class AppState {
         if let first = notices.first { message = first }
     }
 
-    func refreshAnime() async {
-        do { animeCategories = try await repos.anime.fetchAnimeCategories() }
-        catch { message = "Could not refresh anime rows: \(error)" }
-    }
+
 
     func refreshTraktWatchlist() async {
         guard credentials.hasTraktUser else { return }
@@ -548,172 +543,22 @@ final class AppState {
     }
 
     func detailsFor(_ item: MediaItem) async -> MediaItem {
-        if item.type == .anime {
-            if let hydrated = await repos.anime.findByTitle(item.title) {
-                var h = hydrated
-                h.tmdbId = item.tmdbId ?? hydrated.tmdbId
-                h.tvdbId = item.tvdbId ?? hydrated.tvdbId
-                h.imdbId = item.imdbId ?? hydrated.imdbId
-                h.traktId = item.traktId ?? hydrated.traktId
-                h.posterPath = item.posterPath ?? hydrated.posterPath
-                h.backdropPath = item.backdropPath ?? hydrated.backdropPath
-                h.releaseDate = item.releaseDate.isEmpty ? hydrated.releaseDate : item.releaseDate
-                h.genres = item.genres.isEmpty ? hydrated.genres : item.genres
-                h.originCountry = item.originCountry.isEmpty ? hydrated.originCountry : item.originCountry
-                h.seasons = item.seasons.isEmpty ? hydrated.seasons : item.seasons
-                h.episodes = item.episodes.isEmpty ? hydrated.episodes : item.episodes
-                return h
-            }
-            if !item.seasons.isEmpty { return item }
-        }
         let detailed = await repos.tmdb.fetchDetails(item, credentials: credentials, settings: settings) ?? item
-        let enriched = await repos.tvdb.enrichDetails(detailed, credentials: credentials)
-        if enriched.isAnime && enriched.type != .anime, let anilist = await repos.anime.findByTitle(enriched.title) {
-            var a = anilist
-            a.tmdbId = enriched.tmdbId ?? anilist.tmdbId
-            a.tvdbId = enriched.tvdbId ?? anilist.tvdbId
-            a.imdbId = enriched.imdbId ?? anilist.imdbId
-            a.traktId = enriched.traktId ?? anilist.traktId
-            a.posterPath = enriched.posterPath ?? anilist.posterPath
-            a.backdropPath = enriched.backdropPath ?? anilist.backdropPath
-            a.releaseDate = enriched.releaseDate.isEmpty ? anilist.releaseDate : enriched.releaseDate
-            a.genres = enriched.genres.isEmpty ? anilist.genres : enriched.genres
-            a.originCountry = enriched.originCountry.isEmpty ? anilist.originCountry : enriched.originCountry
-            a.seasons = enriched.seasons.isEmpty ? anilist.seasons : enriched.seasons
-            a.episodes = enriched.episodes.isEmpty ? anilist.episodes : enriched.episodes
-            return a
-        }
-        return enriched
+        return await repos.tvdb.enrichDetails(detailed, credentials: credentials)
     }
 
     func seasonEpisodesFor(_ item: MediaItem, seasonNumber: Int) async -> [MediaEpisode] {
-        if item.type == .anime {
-            var eps = await repos.anime.fetchEpisodes(item, seasonNumber: seasonNumber)
-            if item.tmdbId != nil {
-                let tmdbEps = await repos.tmdb.fetchSeasonEpisodes(item, seasonNumber: seasonNumber, credentials: credentials, settings: settings)
-                if !tmdbEps.isEmpty {
-                    let byNum = Dictionary(tmdbEps.map { ($0.episodeNumber, $0) }, uniquingKeysWith: { a, _ in a })
-                    eps = eps.map { ep in
-                        if let t = byNum[ep.episodeNumber], let still = t.stillPath, (ep.stillPath ?? "").isEmpty {
-                            var e = ep; e.stillPath = still; return e
-                        }
-                        return ep
-                    }
-                }
-            }
-            return eps
-        }
         let eps = await repos.tmdb.fetchSeasonEpisodes(item, seasonNumber: seasonNumber, credentials: credentials, settings: settings)
         if !eps.isEmpty || !credentials.hasTvdb { return eps }
         return await repos.tvdb.fetchSeasonEpisodes(item, seasonNumber: seasonNumber, credentials: credentials)
     }
 
-    private func isAnimePlaybackCandidate(_ item: MediaItem) -> Bool {
-        item.type == .anime || item.isAnime
-    }
-
-    private let onePieceSeasonStartEpisodes: [Int: Int] = [
-        1: 1,
-        2: 62,
-        3: 78,
-        4: 92,
-        5: 131,
-        6: 144,
-        7: 196,
-        8: 229,
-        9: 264,
-        10: 326,
-        11: 384,
-        12: 425,
-        13: 457,
-        14: 491,
-        15: 517,
-        16: 579,
-        17: 629,
-        18: 747,
-        19: 783,
-        20: 878,
-        21: 892,
-        22: 1089,
-    ]
-
-    private func isOnePieceLike(_ item: MediaItem) -> Bool {
-        let t = item.title.lowercased()
-        return item.anilistId == 21 || t == "one piece" || t.contains("one piece")
-    }
-
-    private func hardMapOnePieceEpisode(seasonNumber: Int, episodeNumber: Int) -> Int? {
-        guard let start = onePieceSeasonStartEpisodes[seasonNumber], episodeNumber > 0 else { return nil }
-        return start + episodeNumber - 1
-    }
-
-    private func normalizeAnimeEpisodeLinkage(_ item: MediaItem, _ episode: MediaEpisode) -> MediaEpisode {
-        guard isOnePieceLike(item) else { return episode }
-        let epNum = episode.episodeNumber
-        let seasonNum = episode.seasonNumber
-        guard epNum > 0, seasonNum > 1, epNum < 400 else { return episode }
-
-        guard let currentSeason = item.seasons.first(where: { $0.seasonNumber == seasonNum && $0.episodeCount > 0 }) else {
-            guard let mapped = hardMapOnePieceEpisode(seasonNumber: seasonNum, episodeNumber: epNum) else { return episode }
-            var linked = episode
-            linked.episodeNumber = mapped
-            return linked
-        }
-        guard epNum <= currentSeason.episodeCount else { return episode }
-
-        let priorEpisodes = item.seasons
-            .filter { $0.seasonNumber > 0 && $0.seasonNumber < seasonNum }
-            .reduce(0) { $0 + max(0, $1.episodeCount) }
-
-        if priorEpisodes > 0 {
-            var linked = episode
-            linked.episodeNumber = priorEpisodes + epNum
-            return linked
-        }
-
-        guard let mapped = hardMapOnePieceEpisode(seasonNumber: seasonNum, episodeNumber: epNum) else { return episode }
-        var linked = episode
-        linked.episodeNumber = mapped
-        return linked
-    }
-
     func aniSkipEpisodeFor(item: MediaItem?, episode: MediaEpisode?) -> Int? {
-        guard let item, let episode else { return nil }
-        guard isAnimePlaybackCandidate(item) else { return nil }
-
-        return normalizeAnimeEpisodeLinkage(item, episode).episodeNumber
-    }
-
-    private func hydrateAnimePlaybackItem(_ item: MediaItem) async -> MediaItem {
-        if item.type == .anime { return item }
-        guard let hydrated = await repos.anime.findByTitle(item.title) else { return item }
-
-        var merged = hydrated
-        merged.tmdbId = item.tmdbId ?? hydrated.tmdbId
-        merged.tvdbId = item.tvdbId ?? hydrated.tvdbId
-        merged.imdbId = item.imdbId ?? hydrated.imdbId
-        merged.traktId = item.traktId ?? hydrated.traktId
-        merged.posterPath = item.posterPath ?? hydrated.posterPath
-        merged.backdropPath = item.backdropPath ?? hydrated.backdropPath
-        merged.releaseDate = item.releaseDate.isEmpty ? hydrated.releaseDate : item.releaseDate
-        merged.genres = item.genres.isEmpty ? hydrated.genres : item.genres
-        merged.originCountry = item.originCountry.isEmpty ? hydrated.originCountry : item.originCountry
-        merged.seasons = item.seasons.isEmpty ? hydrated.seasons : item.seasons
-        merged.episodes = item.episodes.isEmpty ? hydrated.episodes : item.episodes
-        return merged
+        nil
     }
 
     func playbackSourcesFor(_ item: MediaItem, episode: MediaEpisode? = nil, overrides: PlaybackOverrides = .init()) async throws -> [PlaybackSource] {
         let effective = settings.applying(overrides)
-
-        if isAnimePlaybackCandidate(item) {
-            let targetBase = episode ?? item.episodes.first ?? MediaEpisode(seasonNumber: 1, episodeNumber: 1, title: "Episode 1")
-            let playbackItem = await hydrateAnimePlaybackItem(item)
-            let target = normalizeAnimeEpisodeLinkage(playbackItem, targetBase)
-            let direct = try await repos.anime.resolveSource(item: playbackItem, episode: target, settings: effective)
-            return [direct]
-        }
-
         return repos.vidsrc.sourcesFor(item, settings: effective, episode: episode)
     }
 
@@ -724,10 +569,6 @@ final class AppState {
     /// AniList, movies/TV use TMDB.
     func recommendationsFor(_ item: MediaItem?) async -> [MediaItem] {
         guard let item else { return [] }
-        if item.type == .anime || item.isAnime, let anilistId = item.anilistId {
-            let recs = await repos.anime.recommendations(anilistId: anilistId)
-            if !recs.isEmpty { return recs }
-        }
         if item.tmdbId != nil {
             return await repos.tmdb.fetchRecommendations(item, credentials: credentials, settings: settings)
         }
@@ -758,7 +599,7 @@ final class AppState {
 
     private func watchlistKeys(_ item: MediaItem) -> Set<String> {
         var typeNames: Set<String> = [item.type.rawValue]
-        if [.anime, .series, .movie].contains(item.type) { typeNames.formUnion(["anime", "series", "movie"]) }
+        if [.series, .movie].contains(item.type) { typeNames.formUnion(["series", "movie"]) }
         let imdb = item.imdbId?.trimmed ?? ""
         var keys: Set<String> = [item.id]
         for name in typeNames {
@@ -780,13 +621,6 @@ final class AppState {
     }
     func stopTraktPlayback(_ item: MediaItem, _ progress: Double, episode: MediaEpisode?) async {
         await sendScrobble(item) { try await self.repos.trakt.stopScrobble($0, item, episode: episode, progress: progress) }
-        if credentials.hasAnilist, let episode {
-            let isAnime = item.type == .anime || item.isAnime
-            let anilistId = item.anilistId
-            if isAnime, let anilistId {
-                try? await repos.anime.updateAniListProgress(accessToken: credentials.anilistAccessToken, mediaId: anilistId, progress: episode.episodeNumber, status: "CURRENT")
-            }
-        }
     }
     private func sendScrobble(_ item: MediaItem, _ send: @escaping (ApiCredentials) async throws -> Void) async {
         guard credentials.hasTraktUser, item.type != .liveTv else { return }
@@ -820,20 +654,6 @@ final class AppState {
 
     func handleIncomingURL(_ url: URL) async {
         let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        // AniList token (fragment)
-        if url.scheme == "omniplay" && url.host == "anilist" && url.path == "/oauth" {
-            let frag = comps?.fragment ?? comps?.query ?? ""
-            let params = Dictionary(uniqueKeysWithValues: frag.split(separator: "&").compactMap { pair -> (String, String)? in
-                let kv = pair.split(separator: "=", maxSplits: 1); guard kv.count == 2 else { return nil }
-                return (String(kv[0]), String(kv[1]))
-            })
-            if let token = params["access_token"], !token.isEmpty {
-                credentials.anilistAccessToken = token
-                await saveCredentials(credentials)
-                message = "AniList connected successfully!"
-            }
-            return
-        }
         guard url.scheme == "omniplay", url.host == "trakt", url.path == "/oauth" else { return }
         let q = comps?.queryItems ?? []
         if let code = q.first(where: { $0.name == "code" })?.value, !code.isEmpty {
@@ -859,7 +679,6 @@ final class AppState {
             if let v = obj["tvdb_api_key"] as? String { c.tvdbApiKey = v }
             if let v = obj["tvdb_pin"] as? String { c.tvdbPin = v }
             if let v = obj["pixeldrain_api_key"] as? String { c.pixeldrainApiKey = v }
-            if let v = obj["anilist_access_token"] as? String { c.anilistAccessToken = v }
             credentials = c; credentialsStore.save(c)
             if let s = obj["settings"] as? [String: Any] {
                 settings = normalizeSettings(UserSettings.fromJSON(s))
@@ -882,8 +701,8 @@ final class AppState {
         // arrives from TMDB/Trakt/VidSrc with different ids, so keying on id let
         // duplicates through. Key on type + tmdbId/imdbId/title instead.
         var byKey: [String: MediaItem] = [:]
-        for c in categories where c.type != .liveTv && c.type != .anime {
-            for item in c.items where !item.isAnime {
+        for c in categories where c.type != .liveTv {
+            for item in c.items {
                 let key = "\(item.type.rawValue):" + (item.tmdbId.map(String.init) ?? item.imdbId ?? item.title.lowercased())
                 if byKey[key] == nil { byKey[key] = item }
             }

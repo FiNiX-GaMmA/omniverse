@@ -159,35 +159,32 @@ struct HomeScreen: View {
     private var displayCategories: [MediaCategory] {
         let movieCat = state.categories.first { $0.id == "trending_movies" || $0.id == "trakt_trending_movies" }
         let seriesCat = state.categories.first { $0.id == "trending_series" || $0.id == "trakt_trending_series" }
-        let animeCat = state.animeCategories.first { $0.id == "anime_trending" || $0.title.lowercased().contains("trending") }
-        let movies = movieCat?.items ?? [], series = seriesCat?.items ?? [], anime = animeCat?.items ?? []
+        let movies = movieCat?.items ?? [], series = seriesCat?.items ?? []
 
         var out: [MediaCategory] = []
-        var mi = 0, si = 0, ai = 0
+        var mi = 0, si = 0
         func roundRobin(limit: Int) -> [MediaItem] {
             var r: [MediaItem] = []
-            while r.count < limit && (mi < movies.count || si < series.count || ai < anime.count) {
+            while r.count < limit && (mi < movies.count || si < series.count) {
                 if mi < movies.count { r.append(movies[mi]); mi += 1; if r.count >= limit { break } }
                 if si < series.count { r.append(series[si]); si += 1; if r.count >= limit { break } }
-                if ai < anime.count { r.append(anime[ai]); ai += 1; if r.count >= limit { break } }
             }
             return r
         }
         let top10 = roundRobin(limit: 10)
         if !top10.isEmpty {
             out.append(MediaCategory(id: "top_10_trending", title: "Top 10 Trending", type: .movie, items: top10,
-                                     description: "The most watched movies, TV shows, and anime this week"))
+                                     description: "The most watched movies and TV shows this week"))
         }
         if !movies.isEmpty { out.append(MediaCategory(id: "top_10_trending_movies", title: "Top 10 Trending Movies", type: .movie, items: Array(movies.prefix(10)))) }
         if !series.isEmpty { out.append(MediaCategory(id: "top_10_trending_series", title: "Top 10 Trending TV Shows", type: .series, items: Array(series.prefix(10)))) }
-        if !anime.isEmpty { out.append(MediaCategory(id: "top_10_trending_anime", title: "Top 10 Trending Anime", type: .anime, items: Array(anime.prefix(10)))) }
         let trending = roundRobin(limit: 40)
         if !trending.isEmpty {
             out.append(MediaCategory(id: "trending_all", title: "Trending", type: .movie, items: trending,
-                                     description: "Popular movies, TV shows, and anime this week"))
+                                     description: "Popular movies and TV shows this week"))
         }
         // Genre rows
-        let allItems = movies + anime + series
+        let allItems = movies + series
         for genre in ["Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery"] {
             var seen = Set<String>(); var picks: [MediaItem] = []
             for item in allItems where item.genres.contains(genre) {

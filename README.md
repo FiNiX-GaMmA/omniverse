@@ -49,16 +49,13 @@ No trackers, no central servers, and completely open source. Your watch history,
 
 ### 🍿 3. Clean "Continue Watching" Shelf
 *   **No Clutter**: Unlike other apps that list separate entries for every single episode you watched, Omniverse groups progress by show.
-*   **One Card Per Show**: You'll see exactly one unified card representing your favorite TV show, movie, or anime series, displaying a badge with your last watched progress. Simply select it to resume playback exactly from where you paused!
+*   **One Card Per Show**: You'll see exactly one unified card representing your favorite TV show or movie series, displaying a badge with your last watched progress. Simply select it to resume playback exactly from where you paused!
 
 ### 🔄 4. Silky 120Hz Fluid Rendering & Landscape-Lock
 *   **Silky Smooth**: Supports Apple ProMotion and Android high-refresh displays to render animations, transitions, and sliders at a beautiful, stutter-free **120 frames per second**.
 *   **Landscape Lock**: Tired of the video rotating back and forth when you lie down? The video player locks strictly into Landscape mode no matter how you hold your device, and restores your standard settings automatically when you exit.
 
-### 🌸 5. Dedicated Anime Support (ani-cli Path)
-*   **ani-cli Source Pipeline**: Anime streaming resolves through the direct AllAnime/AllManga path for consistent playback.
-*   **Auto-Skip Intros & Outros**: Features deep **AniSkip integration** to automatically skip intro scenes, recaps, and endings.
-*   **Pro Subtitles & Dual Audio**: Supports complex `.ass` subtitle files and dual-audio (Japanese subbed/English dubbed) stream switching natively.
+
 
 ### 📺 6. Real Android TV Leanback Support
 *   **TV Parity**: A gorgeous, dedicated layout designed for your TV screen. Focus halos, scale-up highlights, and full native support for your Android TV remote/D-pad.
@@ -130,7 +127,7 @@ Omniverse includes a premium, ultra-fast Electron-based desktop app supporting z
 
 ## 🔑 Required API Keys & Sync Configuration
 
-To keep Omniverse completely private, decentralized, and under your control, **the app connects directly to public media APIs using your own personal credentials**. You will need to provide your own API keys to enable core features like movie discovery, anime tracking, and cloud sync.
+To keep Omniverse completely private, decentralized, and under your control, **the app connects directly to public media APIs using your own personal credentials**. You will need to provide your own API keys to enable core features like movie discovery and cloud sync.
 
 For complete, step-by-step instructions on where to register and how to generate these keys, please refer to our dedicated guide:
 
@@ -139,7 +136,6 @@ For complete, step-by-step instructions on where to register and how to generate
 ### Overview of Supported Integrations:
 *   **TMDB Access Token** (*Required*): Movie & TV metadata, trending collections, poster art, and search results.
 *   **Trakt.tv Developer Keys** (*Highly Recommended*): Real-time play progress scrobbling, watchlist syncing, and fully encrypted configuration backup to your private account.
-*   **AniList Account** (*Highly Recommended for Anime*): Track watched anime episodes and sync listings.
 *   **Pixeldrain API Key** (*Optional*): Restores unrestricted streaming speeds for direct Pixeldrain-hosted streams.
 *   **TVDB API Key & PIN** (*Optional*): Extended TV series metadata and live TV guide schedules.
 
@@ -189,7 +185,7 @@ Omniverse is open-source software distributed under the [MIT License](LICENSE). 
 
 ## ⚖️ Legal Disclaimer
 
-**Omniverse does NOT host, store, stream, or distribute any media files, movies, TV shows, anime, or video files.**
+**Omniverse does NOT host, store, stream, or distribute any media files, movies, TV shows, or video files.**
 
 The application functions strictly as a client-side **media player, catalog organizer, and search index browser** that connects to public metadata directories (such as TMDB, TVDB, and Trakt.tv) and plays user-provided local streams or user-resolved public feeds. 
 

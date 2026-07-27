@@ -129,7 +129,7 @@ final class TvdbRepository: TvdbRepositoryProtocol {
                 let type = (result.str("type") ?? "").lowercased()
                 let typeMatches =
                     (item.type == .movie && type.contains("movie")) ||
-                    ((item.type == .series || item.type == .anime) && type.contains("series"))
+                    (item.type == .series && type.contains("series"))
                 if !typeMatches && !type.isEmpty { continue }
                 if let tvdbId = result.int("tvdb_id") ?? result.int("id") { return tvdbId }
             }

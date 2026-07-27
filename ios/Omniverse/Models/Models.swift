@@ -3,13 +3,12 @@ import Foundation
 // MARK: - MediaType
 
 enum MediaType: String, Codable, CaseIterable {
-    case movie, series, anime, liveTv
+    case movie, series, liveTv
 
     var label: String {
         switch self {
         case .movie: return "Movie"
         case .series: return "TV Show"
-        case .anime: return "Anime"
         case .liveTv: return "Live TV"
         }
     }
@@ -45,14 +44,12 @@ struct ApiCredentials: Codable, Equatable {
     var traktTokenExpiresAt = 0          // epoch milliseconds
     var traktUsername = ""
     var pixeldrainApiKey = ""
-    var anilistAccessToken = ""
 
     var hasTmdb: Bool { !tmdbToken.trimmed.isEmpty }
     var hasTvdb: Bool { !tvdbApiKey.trimmed.isEmpty }
     var hasTraktApp: Bool { !traktClientId.trimmed.isEmpty }
     var hasTraktUser: Bool { !traktAccessToken.trimmed.isEmpty }
     var hasPixeldrain: Bool { !pixeldrainApiKey.trimmed.isEmpty }
-    var hasAnilist: Bool { !anilistAccessToken.trimmed.isEmpty }
     var canRefreshTrakt: Bool { !traktRefreshToken.trimmed.isEmpty && !traktClientSecret.trimmed.isEmpty }
 }
 
@@ -66,10 +63,8 @@ struct UserSettings: Codable, Equatable {
     var vidsrcDomain = "vidcore.created.app"
     var subtitleUrl = ""
     var subtitleLanguage = "en"
-    var preferDubbedAnime = false
     var liveTvCountry = "IN"
     var showMoviesTv = true
-    var showAnime = true
     var showLiveTv = true
     var stremioManifests: [String] = []
     var preferredSource = "vidsrc"
@@ -77,12 +72,11 @@ struct UserSettings: Codable, Equatable {
     var stremioServerUrl = "http://localhost:11470"
     var enableStremioService = true
 
-    /// Apply per-playback overrides (subtitle url/lang, dub preference).
+    /// Apply per-playback overrides (subtitle url/lang).
     func applying(_ o: PlaybackOverrides) -> UserSettings {
         var s = self
         if let v = o.subtitleLanguage { s.subtitleLanguage = v }
         if let v = o.subtitleUrl { s.subtitleUrl = v }
-        if let v = o.preferDubbedAnime { s.preferDubbedAnime = v }
         return s
     }
 }
@@ -90,7 +84,6 @@ struct UserSettings: Codable, Equatable {
 struct PlaybackOverrides {
     var subtitleLanguage: String?
     var subtitleUrl: String?
-    var preferDubbedAnime: Bool?
 }
 
 // MARK: - MediaSeason / MediaEpisode
@@ -143,22 +136,8 @@ struct MediaItem: Codable, Equatable, Identifiable, Hashable {
     var backdropUrl: String? { imageUrl(backdropPath, size: "w1280") }
     var heroBackdropUrl: String? { imageUrl(backdropPath, size: "original") }
 
-    /// AniList id when sourced from AniList ("anilist:anime:{id}").
-    var anilistId: Int? {
-        guard id.hasPrefix("anilist:") else { return nil }
-        let parts = id.split(separator: ":")
-        guard parts.count >= 3 else { return nil }
-        return Int(parts.last!)
-    }
+    var anilistId: Int? { nil }
 
-    /// Japanese animation routes through AniList + AllManga instead of VidSrc.
-    var isAnime: Bool {
-        if type == .anime { return true }
-        guard type == .movie || type == .series else { return false }
-        let hasAnimation = genres.contains { $0.lowercased().contains("animation") }
-        let isJapanese = originCountry.contains { $0.uppercased() == "JP" }
-        return hasAnimation && isJapanese
-    }
 
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
     static func == (lhs: MediaItem, rhs: MediaItem) -> Bool { lhs.id == rhs.id }

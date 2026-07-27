@@ -297,7 +297,7 @@ private final class PlaybackEngine {
     private let assetTrust = PermissiveAssetTrust()
     private let assetTrustQueue = DispatchQueue(label: "com.aryaroop.omniverse.assetloader")
 
-    private var isAnime: Bool { item?.type == .anime || item?.isAnime == true }
+
 
     init(title: String, url: String, headers: [String: String], item: MediaItem?,
          episode: MediaEpisode?, subtitleUrl: String, startPositionMs: Int?,
@@ -750,7 +750,7 @@ private final class PlaybackEngine {
     /// Manual Skip Intro: +85s (parity with Dart `onSeekBy(85s)`).
     func skipIntro() { seekBy(85) }
 
-    var showManualSkipIntro: Bool { isAnime && skipIntervals.isEmpty }
+    var showManualSkipIntro: Bool { false }
 
     // MARK: Captions
 
@@ -838,7 +838,7 @@ struct PlayerScreen: View {
     private var title: String { route.title }
     private var item: MediaItem? { route.item }
     private var episode: MediaEpisode? { route.episode }
-    private var isAnime: Bool { item?.type == .anime || item?.isAnime == true }
+
 
     private func requestClose() {
         onRequestClose?(route.item, route.episode)
@@ -878,9 +878,7 @@ struct PlayerScreen: View {
             engine = e
             e.start()
             // Initial audio label parity with didChangeDependencies.
-            selectedAudio = isAnime
-                ? (appState.settings.preferDubbedAnime ? "English (Dubbed)" : "Japanese (Subbed)")
-                : "Original Stereo"
+            selectedAudio = "Original Stereo"
             scheduleControlsHide()
         }
         .onAppear {
@@ -1224,7 +1222,7 @@ struct PlayerScreen: View {
             }
         }
         .sheet(isPresented: $showAudioSheet) {
-            AudioSheet(current: selectedAudio, isAnime: isAnime) { sel in
+            AudioSheet(current: selectedAudio) { sel in
                 selectedAudio = sel
             }
             .presentationDetents([.height(220)])
@@ -1465,18 +1463,12 @@ private struct Scrubber: View {
 
 private struct AudioSheet: View {
     let current: String
-    let isAnime: Bool
     let onSelect: (String) -> Void
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         sheetContainer(title: "Audio") {
-            if isAnime {
-                optionTile("Japanese (Subbed)", selected: current == "Japanese (Subbed)") { pick("Japanese (Subbed)") }
-                optionTile("English (Dubbed)", selected: current == "English (Dubbed)") { pick("English (Dubbed)") }
-            } else {
-                optionTile("Original Stereo", selected: true) { pick("Original Stereo") }
-            }
+            optionTile("Original Stereo", selected: true) { pick("Original Stereo") }
         }
     }
 

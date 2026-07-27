@@ -43,15 +43,6 @@ protocol VidsrcRepositoryProtocol {
     func fetchLatestCategories() async -> [MediaCategory]
 }
 
-protocol AnimeRepositoryProtocol {
-    func fetchAnimeCategories() async throws -> [MediaCategory]
-    func findByTitle(_ title: String) async -> MediaItem?
-    func fetchEpisodes(_ item: MediaItem, seasonNumber: Int) async -> [MediaEpisode]
-    func resolveSource(item: MediaItem, episode: MediaEpisode, settings: UserSettings) async throws -> PlaybackSource
-    func updateAniListProgress(accessToken: String, mediaId: Int, progress: Int, status: String) async throws
-    func recommendations(anilistId: Int) async -> [MediaItem]
-}
-
 protocol LiveTvRepositoryProtocol {
     func fetchSource(_ source: LiveTvSource) async throws -> [LiveTvEntry]
 }
@@ -67,7 +58,6 @@ struct Repositories {
     var tvdb: TvdbRepositoryProtocol
     var trakt: TraktRepositoryProtocol
     var vidsrc: VidsrcRepositoryProtocol
-    var anime: AnimeRepositoryProtocol
     var liveTv: LiveTvRepositoryProtocol
     var yarrlist: YarrlistRepositoryProtocol
 
@@ -77,7 +67,6 @@ struct Repositories {
             tvdb: TvdbRepository(),
             trakt: TraktRepository(),
             vidsrc: VidsrcRepository(),
-            anime: AnimeRepository(),
             liveTv: LiveTvRepository(),
             yarrlist: YarrlistRepository()
         )

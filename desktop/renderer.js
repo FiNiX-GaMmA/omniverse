@@ -433,29 +433,7 @@ function mapTmdbItem(item, type) {
 // Heuristic: a TMDB title that is Japanese + Animation is almost certainly
 // anime, so it should play via the AllAnime path rather than a vidsrc embed.
 function isLikelyAnime(media) {
-  if (!media) return false;
-  if (media.type === "anime") return true;
-
-  // Explicitly identify One Piece (both TMDB and AniList variants)
-  const title = (media.title || media.name || media.showTitle || "").toLowerCase();
-  const tmdbId = parseInt(media.tmdbId || media.id || "0", 10);
-  if (
-    title === "one piece" || 
-    title.includes("one piece") || 
-    tmdbId === 37854 || 
-    (media.id && (media.id === "anilist:anime:21" || media.id.includes("onepiece")))
-  ) {
-    return true;
-  }
-
-  const genres = media.genres || [];
-  return (
-    media.originalLanguage === "ja" &&
-    genres.some((g) => {
-      const name = typeof g === "string" ? g : (g && g.name) || "";
-      return name.toLowerCase() === "animation";
-    })
-  );
+  return false;
 }
 
 function showGridLoading(containerId, label = "Pulling latest titles…") {
@@ -629,128 +607,8 @@ async function loadMoreTmdbGrid(type = "movie") {
   }
 }
 
-function mapAniListItem(item) {
-  if (!item) return null;
-  const titleObj = item.title || {};
-  const title =
-    titleObj.english || titleObj.romaji || titleObj.native || "Anime";
-  const cover = item.coverImage || {};
-  const poster = cover.extraLarge || cover.large || mediaPlaceholder(title);
-  const releaseYear =
-    (item.startDate && item.startDate.year) || item.seasonYear || "—";
-  return {
-    id: `anilist:anime:${item.id}`,
-    anilistId: item.id,
-    type: "anime",
-    title,
-    overview: (item.description || "").replace(/<[^>]*>/g, "").trim(),
-    poster,
-    backdrop: item.bannerImage || poster,
-    year: String(releaseYear),
-    rating: ((item.averageScore || 0) / 10 || 0).toFixed(1),
-    genres: item.genres || [],
-    originalLanguage: "ja",
-  };
-}
-
-async function fetchAniListDiscoverPage(page = 1) {
-  const query = `
-    query($page:Int!, $perPage:Int!) {
-      Page(page: $page, perPage: $perPage) {
-        pageInfo { currentPage hasNextPage }
-        media(type: ANIME, sort: [TRENDING_DESC, POPULARITY_DESC], isAdult: false) {
-          id
-          title { romaji english native }
-          description(asHtml: false)
-          coverImage { extraLarge large }
-          bannerImage
-          genres
-          averageScore
-          seasonYear
-          startDate { year }
-        }
-      }
-    }
-  `;
-
-  const res = await appFetch(
-    ANILIST_GRAPHQL,
-    "POST",
-    { "Content-Type": "application/json", Accept: "application/json" },
-    JSON.stringify({ query, variables: { page, perPage: 24 } }),
-  );
-
-  if (!res || !res.ok || !res.html) return null;
-
-  try {
-    const parsed = JSON.parse(res.html);
-    return parsed && parsed.data && parsed.data.Page ? parsed.data.Page : null;
-  } catch {
-    return null;
-  }
-}
-
-async function fetchAniListRecommendations(anilistId) {
-  if (!anilistId) return [];
-  const query = `
-    query($id:Int!) {
-      Media(id: $id, type: ANIME) {
-        recommendations(sort: RATING_DESC, perPage: 24) {
-          nodes {
-            mediaRecommendation {
-              id
-              title { romaji english native }
-              description(asHtml: false)
-              coverImage { extraLarge large }
-              bannerImage
-              genres
-              averageScore
-              seasonYear
-              startDate { year }
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const res = await appFetch(
-    ANILIST_GRAPHQL,
-    "POST",
-    { "Content-Type": "application/json", Accept: "application/json" },
-    JSON.stringify({ query, variables: { id: Number(anilistId) } }),
-  );
-
-  if (!res || !res.ok || !res.html) return [];
-
-  try {
-    const parsed = JSON.parse(res.html);
-    const nodes =
-      parsed?.data?.Media?.recommendations?.nodes &&
-      Array.isArray(parsed.data.Media.recommendations.nodes)
-        ? parsed.data.Media.recommendations.nodes
-        : [];
-
-    return nodes
-      .map((n) =>
-        n && n.mediaRecommendation
-          ? mapAniListItem(n.mediaRecommendation)
-          : null,
-      )
-      .filter((m) => m && (m.poster || m.backdrop));
-  } catch {
-    return [];
-  }
-}
-
 async function fetchDesktopRecommendationsFor(media) {
   if (!media) return [];
-
-  if ((media.type === "anime" || isLikelyAnime(media)) && media.anilistId) {
-    const aniListRecs = await fetchAniListRecommendations(media.anilistId);
-    if (aniListRecs.length) return aniListRecs;
-  }
-
   if (media.tmdbId) {
     const tmdbType = media.type === "movie" ? "movie" : "tv";
     const recData = await fetchTmdb(
@@ -758,7 +616,6 @@ async function fetchDesktopRecommendationsFor(media) {
     );
     return mapTmdbResults(recData, tmdbType);
   }
-
   return [];
 }
 
@@ -1203,51 +1060,8 @@ async function renderCatalogFeeds(skipAnimeLoad = false) {
   if (window.lucide) lucide.createIcons();
 }
 
-// Populate the anime grid from AniList — parity with the mobile anime discovery.
 async function loadAnimeCatalog() {
-  if (!window.OmniAnime) {
-    showGridMessage(
-      "grid-all-anime",
-      "Anime source unavailable",
-      "The AniList/AllAnime module did not load, so no anime catalogue can be pulled yet.",
-      "wifi-off",
-    );
-    return;
-  }
-  try {
-    const cats = await window.OmniAnime.fetchAnimeCategories();
-    // Merge de-duplicated items across live AniList categories into the anime grid.
-    const seen = new Set();
-    const items = [];
-    for (const c of cats) {
-      for (const it of c.items || []) {
-        if (it.poster && !seen.has(it.id)) {
-          seen.add(it.id);
-          items.push(it);
-        }
-      }
-    }
-    state.animeCatalog = items;
-    if (items.length) {
-      renderGrid("grid-all-anime", items, true);
-      renderCatalogFeeds(true);
-    } else {
-      showGridMessage(
-        "grid-all-anime",
-        "No live anime returned",
-        "AniList responded, but did not return image-backed anime entries for this request.",
-        "radar",
-      );
-    }
-  } catch (e) {
-    console.warn("[Omniverse] AniList anime catalog failed:", e);
-    showGridMessage(
-      "grid-all-anime",
-      "Anime sync failed",
-      "Could not reach AniList right now. Refresh once the network is available.",
-      "wifi-off",
-    );
-  }
+  state.animeCatalog = [];
 }
 
 let cardRevealObserver = null;
@@ -3245,7 +3059,8 @@ async function playAnimeStream(
     });
     state.animeResume = { media, episode: selectedEpisode };
     if (src && src.kind === "embed") {
-      throw new Error("Anime embed sources are disabled. Direct ani-cli source required.");
+      playAnimeEmbed(container, media, selectedEpisode, src);
+      return;
     }
 
     const explicitStartMs =
@@ -3414,10 +3229,8 @@ function playDirectVideo(
 }
 
 async function fetchDesktopAniSkip(anilistId, episode, durationSec) {
-  const aniList = parsePositiveIntOrNull(anilistId);
-  const ep = parsePositiveIntOrNull(episode);
-  const length = parsePositiveIntOrNull(durationSec) || 1440;
-  if (!aniList || !ep) return [];
+  return [];
+}
 
   const parseIntervals = (raw) => {
     if (!raw) return [];
@@ -5371,9 +5184,7 @@ async function forceSyncNow() {
   }
 }
 
-async function checkAnimeServerLatencies(btn) {
-  const container = document.getElementById("anime-latency-results");
-  if (!container) return;
+async function checkAnimeServerLatencies(btn) {}
 
   const originalHtml = btn.innerHTML;
   btn.disabled = true;

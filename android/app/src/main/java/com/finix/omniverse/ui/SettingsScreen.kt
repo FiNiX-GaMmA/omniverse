@@ -96,7 +96,6 @@ fun SettingsScreen() {
     var traktId by remember { mutableStateOf(state.credentials.traktClientId) }
     var traktSecret by remember { mutableStateOf(state.credentials.traktClientSecret) }
     var pixeldrain by remember { mutableStateOf(state.credentials.pixeldrainApiKey) }
-    var anilist by remember { mutableStateOf(state.credentials.anilistAccessToken) }
 
     var language by remember { mutableStateOf(state.settings.language) }
     var region by remember { mutableStateOf(state.settings.region) }
@@ -105,9 +104,7 @@ fun SettingsScreen() {
     var vidsrcDomain by remember { mutableStateOf(if (state.settings.vidsrcDomain in vidsrcEmbedDomains) state.settings.vidsrcDomain else vidsrcEmbedDomains[0]) }
     var includeAdult by remember { mutableStateOf(state.settings.includeAdult) }
     var tvMode by remember { mutableStateOf(state.settings.tvMode) }
-    var preferDubbed by remember { mutableStateOf(state.settings.preferDubbedAnime) }
     var showMoviesTv by remember { mutableStateOf(state.settings.showMoviesTv) }
-    var showAnime by remember { mutableStateOf(state.settings.showAnime) }
     var showLiveTv by remember { mutableStateOf(state.settings.showLiveTv) }
 
     var showSyncQr by remember { mutableStateOf(false) }
@@ -116,7 +113,6 @@ fun SettingsScreen() {
     var tmdbError by remember { mutableStateOf(false) }
     var tvdbError by remember { mutableStateOf(false) }
     var pixeldrainError by remember { mutableStateOf(false) }
-    var anilistError by remember { mutableStateOf(false) }
 
     fun openUrl(url: String) = context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
 
@@ -157,7 +153,7 @@ fun SettingsScreen() {
         var c = state.credentials.copy(
             tmdbToken = tmdb, tvdbApiKey = tvdb, tvdbPin = tvdbPin,
             traktClientId = traktId, traktClientSecret = traktSecret,
-            pixeldrainApiKey = pixeldrain, anilistAccessToken = anilist,
+            pixeldrainApiKey = pixeldrain,
         )
         state.saveCredentials(c)
         val s = state.settings.copy(
@@ -168,9 +164,7 @@ fun SettingsScreen() {
             vidsrcDomain = vidsrcDomain,
             subtitleUrl = subtitleUrl.trim(),
             subtitleLanguage = subtitleLanguage.trim().ifEmpty { "en" },
-            preferDubbedAnime = preferDubbed,
             showMoviesTv = showMoviesTv,
-            showAnime = showAnime,
             showLiveTv = showLiveTv,
         )
         state.saveSettings(s)
@@ -237,13 +231,6 @@ fun SettingsScreen() {
                                 "https://pixeldrain.net/favicon.ico",
                                 isError = pixeldrainError
                             )
-                            SecretField(
-                                anilist,
-                                { anilist = it; anilistError = false },
-                                "AniList Access Token",
-                                "https://anilist.co/img/icons/android-chrome-512x512.png",
-                                isError = anilistError
-                            )
                         }
                         Section("Trakt Developer Client Keys") {
                             SecretField(traktId, { traktId = it }, "Trakt Client ID", "https://trakt.tv/favicon.ico")
@@ -283,27 +270,14 @@ fun SettingsScreen() {
                                             r.status == 200
                                         }.getOrDefault(false)
 
-                                        val anilistOk = anilist.trim().isEmpty() || runCatching {
-                                            val query = "query { Viewer { id name } }"
-                                            val payload = org.json.JSONObject().put("query", query)
-                                            val r = com.finix.omniverse.Http.postJson(
-                                                "https://graphql.anilist.co",
-                                                payload,
-                                                headers = mapOf("Authorization" to "Bearer $anilist")
-                                            )
-                                            r.status == 200
-                                        }.getOrDefault(false)
-
                                         tmdbError = tmdb.trim().isNotEmpty() && !tmdbOk
                                         tvdbError = tvdb.trim().isNotEmpty() && !tvdbOk
                                         pixeldrainError = pixeldrain.trim().isNotEmpty() && !pixeldrainOk
-                                        anilistError = anilist.trim().isNotEmpty() && !anilistOk
 
                                         val failedKeys = ArrayList<String>()
                                         if (tmdbError) failedKeys.add("TheMovieDB (TMDB) token")
                                         if (tvdbError) failedKeys.add("TVDB v4 API key")
                                         if (pixeldrainError) failedKeys.add("Pixeldrain API key")
-                                        if (anilistError) failedKeys.add("AniList Access Token")
 
                                         if (failedKeys.isEmpty()) {
                                             Toast.makeText(
@@ -394,11 +368,9 @@ fun SettingsScreen() {
                         }
                         Section("Display & Content Toggles") {
                             ToggleRow("Show Movies & TV shows", showMoviesTv) { showMoviesTv = it }
-                            ToggleRow("Show Anime list", showAnime) { showAnime = it }
                             ToggleRow("Enable Live TV channels", showLiveTv) { showLiveTv = it }
                             ToggleRow("Include Adult content", includeAdult) { includeAdult = it }
                             ToggleRow("Enable TV / Landscape Mode", tvMode) { tvMode = it }
-                            ToggleRow("Prefer Dubbed Anime", preferDubbed) { preferDubbed = it }
                         }
                     }
 
@@ -429,22 +401,7 @@ fun SettingsScreen() {
                         SyncCard("App Updates", true, "Check for a newer version of Omniverse.", null) {
                             Chip("Check for updates") { checkForUpdates() }
                         }
-                        SyncCard(
-                            "AniList Sync Integration", state.credentials.hasAnilist,
-                            if (state.credentials.hasAnilist) "Connected to AniList (Sync Active)" else "AniList disconnected (Sync disabled)",
-                            "https://anilist.co/img/icons/android-chrome-512x512.png",
-                        ) {
-                            Chip(if (state.credentials.hasAnilist) "Refresh Login" else "Connect AniList") {
-                                openUrl("https://anilist.co/api/v2/oauth/authorize?client_id=14187&response_type=token")
-                            }
-                            if (state.credentials.hasAnilist) Chip("Disconnect") {
-                                scope.launch {
-                                    state.saveCredentials(
-                                        state.credentials.copy(anilistAccessToken = "")
-                                    )
-                                }
-                            }
-                        }
+
                         SyncCard(
                             "Manual Sync",
                             true,
@@ -469,7 +426,6 @@ fun SettingsScreen() {
                                             traktId = state.credentials.traktClientId
                                             traktSecret = state.credentials.traktClientSecret
                                             pixeldrain = state.credentials.pixeldrainApiKey
-                                            anilist = state.credentials.anilistAccessToken
                                             language = state.settings.language
                                             region = state.settings.region
                                             subtitleUrl = state.settings.subtitleUrl
@@ -478,9 +434,7 @@ fun SettingsScreen() {
                                                 if (state.settings.vidsrcDomain in vidsrcEmbedDomains) state.settings.vidsrcDomain else vidsrcEmbedDomains[0]
                                             includeAdult = state.settings.includeAdult
                                             tvMode = state.settings.tvMode
-                                            preferDubbed = state.settings.preferDubbedAnime
                                             showMoviesTv = state.settings.showMoviesTv
-                                            showAnime = state.settings.showAnime
                                             showLiveTv = state.settings.showLiveTv
                                             state.message = "Restored from cloud."
                                             Toast.makeText(context, "Restored from cloud.", Toast.LENGTH_SHORT).show()
