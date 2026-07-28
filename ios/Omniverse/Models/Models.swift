@@ -132,14 +132,56 @@ struct MediaItem: Codable, Equatable, Identifiable, Hashable {
     var tvdbId: Int?
     var traktId: Int?
     var imdbId: String?
-    var source: String = "tmdb"
+    init(
+        id: String,
+        type: MediaType,
+        title: String,
+        overview: String = "",
+        posterPath: String? = nil,
+        backdropPath: String? = nil,
+        releaseDate: String = "",
+        rating: Double = 0,
+        voteCount: Int = 0,
+        genres: [String] = [],
+        originCountry: [String] = [],
+        cast: [String] = [],
+        directors: [String] = [],
+        runtimeMinutes: Int? = nil,
+        seasons: [MediaSeason] = [],
+        episodes: [MediaEpisode] = [],
+        tmdbId: Int? = nil,
+        tvdbId: Int? = nil,
+        traktId: Int? = nil,
+        imdbId: String? = nil,
+        source: String = "tmdb"
+    ) {
+        self.id = id
+        self.type = type
+        self.title = title
+        self.overview = overview
+        self.posterPath = posterPath
+        self.backdropPath = backdropPath
+        self.releaseDate = releaseDate
+        self.rating = rating
+        self.voteCount = voteCount
+        self.genres = genres
+        self.originCountry = originCountry
+        self.cast = cast
+        self.directors = directors
+        self.runtimeMinutes = runtimeMinutes
+        self.seasons = seasons
+        self.episodes = episodes
+        self.tmdbId = tmdbId
+        self.tvdbId = tvdbId
+        self.traktId = traktId
+        self.imdbId = imdbId
+        self.source = source
+    }
 
     var posterUrl: String? { imageUrl(posterPath, size: "w342") }
     var backdropUrl: String? { imageUrl(backdropPath, size: "w1280") }
     var heroBackdropUrl: String? { imageUrl(backdropPath, size: "original") }
-
     var anilistId: Int? { nil }
-
 
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
     static func == (lhs: MediaItem, rhs: MediaItem) -> Bool { lhs.id == rhs.id }
