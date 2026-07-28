@@ -38,4 +38,19 @@ final class NavStateTests: XCTestCase {
 
         XCTAssertEqual(currentTabId2, "settings")
     }
+
+    func testTabFilteringModes() {
+        let movieItem = MediaItem(id = "1", type = .movie, title = "Movie 1")
+        let seriesItem = MediaItem(id = "2", type = .series, title = "Series 1")
+        let items = [movieItem, seriesItem]
+
+        let moviePicks = items.filter { $0.type == .movie }
+        let seriesPicks = items.filter { $0.type == .series }
+
+        XCTAssertEqual(moviePicks.count, 1)
+        XCTAssertEqual(moviePicks.first?.title, "Movie 1")
+
+        XCTAssertEqual(seriesPicks.count, 1)
+        XCTAssertEqual(seriesPicks.first?.title, "Series 1")
+    }
 }

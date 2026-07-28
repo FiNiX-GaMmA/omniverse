@@ -10,7 +10,11 @@
 
 ## Graph Freshness
 - Built from commit: `f1724fd` (Fix RouteArgs.detailItem reference in Android MediaDetailScreen)
-- Codebase status: Cleaned & Refactored via Ponytail Minimalist Skill
+- Codebase status: Updated Tab Navigation, Desktop Scroll Reset & Mobile Tab Content Filtering
+- Updated Component Nodes:
+  - `desktop/renderer.js`: `switchScreen` now enforces `#content-viewport.scrollTop = 0` on every tab change (Home, Movies, TV, Anime, Live TV, Search, Settings) and provider sub-tab switch.
+  - `ios/Omniverse/Screens/HomeScreen.swift` & `AppShell.swift`: `HomeScreen` accepts `filterMode` (`home`, `movies`, `shows`), filtering hero picks, continue watching, top 10s, and genre rows.
+  - `android/app/.../HomeScreen.kt` & `OmniverseRoot.kt`: `HomeScreen` accepts `filterMode` (`home`, `movies`, `shows`), filtering hero picks, continue watching, top 10s, and genre rows.
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 
 ## Community Hubs (Navigation)

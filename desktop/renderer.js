@@ -1294,6 +1294,8 @@ async function switchProviderSection(type = "movie") {
   if (!state.activeStudio) return;
   infiniteState.provider.activeType = type === "tv" ? "tv" : "movie";
   setProviderTabUi(type);
+  const viewport = document.getElementById("content-viewport");
+  if (viewport) viewport.scrollTop = 0;
   await loadProviderSection(infiniteState.provider.activeType, false);
 }
 
@@ -1329,6 +1331,10 @@ function switchScreen(screenName) {
   const activeBtn = document.getElementById(`nav-${screenName}`);
   if (activeBtn) activeBtn.classList.add("nav-active");
 
+  // Always reset scroll position to top when moving to any tab
+  const viewport = document.getElementById("content-viewport");
+  if (viewport) viewport.scrollTop = 0;
+
   if (screenName === "movies") {
     setMoviesProviderMode(false);
   }
@@ -1338,8 +1344,6 @@ function switchScreen(screenName) {
     const player = document.getElementById("livetv-player");
     if (player) player.pause();
   }
-
-
 }
 
 // Studio Filtering logic

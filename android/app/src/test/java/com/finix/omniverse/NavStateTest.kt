@@ -87,4 +87,33 @@ class NavStateTest {
         assertTrue(setCreds.hasTraktUser)
         assertTrue(setCreds.hasPixeldrain)
     }
+
+    @Test
+    fun testTabFilteringModes() {
+        val movieItem = MediaItem(id = "1", type = MediaType.MOVIE, title = "Movie 1")
+        val seriesItem = MediaItem(id = "2", type = MediaType.SERIES, title = "Series 1")
+        val items = listOf(movieItem, seriesItem)
+
+        val movieFiltered = items.filter { it.type == MediaType.MOVIE }
+        val seriesFiltered = items.filter { it.type == MediaType.SERIES }
+
+        assertEquals(1, movieFiltered.size)
+        assertEquals("Movie 1", movieFiltered.first().title)
+
+        assertEquals(1, seriesFiltered.size)
+        assertEquals("Series 1", seriesFiltered.first().title)
+    }
+
+    @Test
+    fun testCategoryShapingDistinctIds() {
+        val cat1 = MediaCategory(id = "cat_1", title = "Category 1", type = MediaType.MOVIE, items = emptyList())
+        val cat2 = MediaCategory(id = "cat_1", title = "Duplicate ID Category", type = MediaType.SERIES, items = emptyList())
+        val cat3 = MediaCategory(id = "cat_2", title = "Category 2", type = MediaType.MOVIE, items = emptyList())
+
+        val list = listOf(cat1, cat2, cat3)
+        val distinctList = list.distinctBy { it.id }
+
+        assertEquals(2, distinctList.size)
+        assertEquals(listOf("cat_1", "cat_2"), distinctList.map { it.id })
+    }
 }

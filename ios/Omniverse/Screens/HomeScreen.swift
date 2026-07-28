@@ -1,19 +1,66 @@
 import SwiftUI
 
 struct HomeScreen: View {
+    var filterMode: String = "home"
     @Environment(AppState.self) private var state
     @State private var path = NavigationPath()
-    // Playback presentation hoisted to screen level so Continue Watching can
-    // open the player reliably (a nested fullScreenCover inside the lazy row
-    // does not present).
     @State private var player: PlayerRoute?
     @State private var web: WebRoute?
     @State private var vidsrc: VidsrcRoute?
     @State private var selectedStudio: String? = nil
-    // Continue Watching: tapping a card opens a glass bottom sheet that surfaces
-    // the title/progress and gates resolution behind explicit Resume buttons.
-    // Wrapped so the sheet has a stable identity (WatchProgress.id can be nil).
     @State private var resumeTarget: ResumeTarget?
+
+    private var filteredPicks: [MediaItem] {
+        switch filterMode {
+        case "movies":
+            return state.heroPicks.filter { $0.type == .movie }
+        case "shows":
+            return state.heroPicks.filter { $0.type == .series }
+        default:
+            return state.heroPicks
+        }
+    }
+
+    private var continueWatchingFilter: MediaType? {
+        switch filterMode {
+        case "movies": return .movie
+        case "shows": return .series
+        default: return nil
+        }
+    }
+
+    @ViewBuilder
+    private var tabHeaderBadge: some View {
+        if filterMode == "movies" {
+            HStack(spacing: 8) {
+                Image(systemName: "film.fill")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(LiquidColors.cyan)
+                Text("MOVIES CATALOGUE")
+                    .font(.system(size: 13, weight: .black, design: .rounded))
+                    .kerning(1.2)
+                    .foregroundStyle(.white)
+                Spacer()
+            }
+            .padding(.horizontal, 28)
+            .padding(.top, 16)
+            .padding(.bottom, 8)
+        } else if filterMode == "shows" {
+            HStack(spacing: 8) {
+                Image(systemName: "tv.fill")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(LiquidColors.cyan)
+                Text("TV SERIES CATALOGUE")
+                    .font(.system(size: 13, weight: .black, design: .rounded))
+                    .kerning(1.2)
+                    .foregroundStyle(.white)
+                Spacer()
+            }
+            .padding(.horizontal, 28)
+            .padding(.top, 16)
+            .padding(.bottom, 8)
+        }
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -22,9 +69,10 @@ struct HomeScreen: View {
                 let portrait = geo.size.height > geo.size.width
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
-                        HeroCarousel(picks: state.heroPicks, wide: wide, portrait: portrait) { path.append($0) }
+                        tabHeaderBadge
+                        HeroCarousel(picks: filteredPicks.isEmpty ? state.heroPicks : filteredPicks, wide: wide, portrait: portrait) { path.append($0) }
                             .frame(height: heroHeight(geo))
-                        ContinueWatchingRow(filter: nil, onResume: { entry in resumeTarget = ResumeTarget(entry: entry) })
+                        ContinueWatchingRow(filter: continueWatchingFilter, onResume: { entry in resumeTarget = ResumeTarget(entry: entry) })
                         StudiosRow { studioName in
                             selectedStudio = studioName.lowercased()
                         }
@@ -161,6 +209,55 @@ struct HomeScreen: View {
         let seriesCat = state.categories.first { $0.id == "trending_series" || $0.id == "trakt_trending_series" }
         let movies = movieCat?.items ?? [], series = seriesCat?.items ?? []
 
+        if filterMode == "movies" {
+            var out: [MediaCategory] = []
+            if !movies.isEmpty {
+                out.append(MediaCategory(id: "top_10_trending_movies", title: "Top 10 Movies", type: .movie, items: Array(movies.prefix(10)), description: "Top trending feature films this week"))
+                out.append(MediaCategory(id: "trending_movies_all", title: "Popular Movies", type: .movie, items: movies, description: "Popular movies to stream now"))
+            }
+            for genre in ["Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery"] {
+                var seen = Set<String>(); var picks: [MediaItem] = []
+                for item in movies where item.genres.contains(genre) {
+                    if seen.insert(item.id).inserted { picks.append(item) }
+                }
+                if picks.count >= 2 {
+                    out.append(MediaCategory(id: "movie_genre_\(genre.lowercased().replacingOccurrences(of: " ", with: "_"))",
+                                             title: "Trending \(genre) Movies", type: .movie, items: Array(picks.prefix(15)),
+                                             description: "Popular \(genre) feature films"))
+                }
+            }
+            if out.isEmpty {
+                return state.categories.map { cat in
+                    MediaCategory(id: cat.id, title: cat.title, type: .movie, items: cat.items.filter { $0.type == .movie }, description: cat.description)
+                }.filter { !$0.items.isEmpty }
+            }
+            return out
+        } else if filterMode == "shows" {
+            var out: [MediaCategory] = []
+            if !series.isEmpty {
+                out.append(MediaCategory(id: "top_10_trending_series", title: "Top 10 TV Shows", type: .series, items: Array(series.prefix(10)), description: "Top trending series this week"))
+                out.append(MediaCategory(id: "trending_series_all", title: "Popular Series", type: .series, items: series, description: "Popular TV shows to binge now"))
+            }
+            for genre in ["Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery"] {
+                var seen = Set<String>(); var picks: [MediaItem] = []
+                for item in series where item.genres.contains(genre) {
+                    if seen.insert(item.id).inserted { picks.append(item) }
+                }
+                if picks.count >= 2 {
+                    out.append(MediaCategory(id: "series_genre_\(genre.lowercased().replacingOccurrences(of: " ", with: "_"))",
+                                             title: "Trending \(genre) Series", type: .series, items: Array(picks.prefix(15)),
+                                             description: "Popular \(genre) television series"))
+                }
+            }
+            if out.isEmpty {
+                return state.categories.map { cat in
+                    MediaCategory(id: cat.id, title: cat.title, type: .series, items: cat.items.filter { $0.type == .series }, description: cat.description)
+                }.filter { !$0.items.isEmpty }
+            }
+            return out
+        }
+
+        // Home mode (mixed feed)
         var out: [MediaCategory] = []
         var mi = 0, si = 0
         func roundRobin(limit: Int) -> [MediaItem] {

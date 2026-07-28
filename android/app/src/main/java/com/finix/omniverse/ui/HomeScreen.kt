@@ -73,7 +73,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(nav: NavController) {
+fun HomeScreen(nav: NavController, filterMode: String = "home") {
     val state = AppGraph.appState
     val scope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -99,8 +99,6 @@ fun HomeScreen(nav: NavController) {
         return item
     }
 
-    /// Resolve a Continue Watching entry and navigate to the player at [startPositionMs].
-    /// Returns true on a successful resolve+navigate, false if it fell back to detail.
     suspend fun resolveAndPlay(entry: WatchProgress, startPositionMs: Int): Boolean {
         val item = mediaItemFor(entry)
         val episode = if (entry.seasonNumber != null && entry.episodeNumber != null)
@@ -148,8 +146,6 @@ fun HomeScreen(nav: NavController) {
         }
     }
 
-    // Tapping a Continue Watching card shows an intuitive popup (Resume / Play from
-    // beginning / Details) rather than silently resolving + navigating.
     var sheetEntry by remember { mutableStateOf<WatchProgress?>(null) }
 
     PullToRefreshBox(
@@ -157,24 +153,48 @@ fun HomeScreen(nav: NavController) {
         onRefresh = {
             scope.launch {
                 isRefreshing = true
-                state.refreshAll(isManual = true)
+                state.refreshAll()
                 isRefreshing = false
             }
         },
         modifier = Modifier.fillMaxSize()
     ) {
-        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
-            val wide = maxWidth >= 900.dp
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val wide = maxWidth >= 800.dp
             val landscape = maxWidth > maxHeight
-            // Hero banner enlarged by 20% over the previous sizing.
             val heroH: Dp =
                 if (landscape) minOf(maxWidth * 9f / 16f, maxHeight * 0.86f) * 1.2f   // 16:9 widescreen banner
                 else minOf(maxWidth * 1.5f, maxHeight * 0.72f) * 1.2f                 // tall poster area
-            val cats = displayCategories()
+            val cats = displayCategories(filterMode)
+
+            val filteredPicks = remember(state.heroPicks.toList(), filterMode) {
+                when (filterMode) {
+                    "movies" -> state.heroPicks.filter { it.type == MediaType.MOVIE }
+                    "shows" -> state.heroPicks.filter { it.type == MediaType.SERIES }
+                    else -> state.heroPicks
+                }
+            }
+
+            val heroPicks = if (filteredPicks.isNotEmpty()) filteredPicks else state.heroPicks
 
             LazyColumn(Modifier.fillMaxSize()) {
+                if (filterMode == "movies" || filterMode == "shows") {
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (filterMode == "movies") "MOVIES CATALOGUE" else "TV SERIES CATALOGUE",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Black,
+                                color = LiquidColors.Cyan
+                            )
+                        }
+                    }
+                }
                 item {
-                    HeroCarousel(state.heroPicks, wide, heroH, !landscape, onSelect = ::openDetail)
+                    HeroCarousel(heroPicks, wide, heroH, !landscape, onSelect = ::openDetail)
                 }
                 item {
                     StudiosRow(wide) { studio ->
@@ -182,9 +202,14 @@ fun HomeScreen(nav: NavController) {
                     }
                 }
                 item {
-                    val entries = remember(state.watchHistory.toList()) {
+                    val entries = remember(state.watchHistory.toList(), filterMode) {
                         val seen = HashSet<String>()
-                        state.continueWatching.filter { it.type != MediaType.LIVE_TV && seen.add(it.itemId) }
+                        val base = state.continueWatching.filter { it.type != MediaType.LIVE_TV && seen.add(it.itemId) }
+                        when (filterMode) {
+                            "movies" -> base.filter { it.type == MediaType.MOVIE }
+                            "shows" -> base.filter { it.type == MediaType.SERIES }
+                            else -> base
+                        }
                     }
                     ContinueWatchingRow(entries) { entry -> sheetEntry = entry }
                 }
@@ -518,76 +543,81 @@ private fun rememberHeroTextColor(url: String?): Color {
 
 /// Top10 + genre-row shaping, ported from the Swift HomeScreen displayCategories.
 @Composable
-private fun displayCategories(): List<MediaCategory> {
+private fun displayCategories(filterMode: String = "home"): List<MediaCategory> {
     val state = AppGraph.appState
-    return remember(state.categories.toList()) {
+    return remember(state.categories.toList(), filterMode) {
         val movieCat = state.categories.firstOrNull { it.id == "trending_movies" || it.id == "trakt_trending_movies" }
         val seriesCat = state.categories.firstOrNull { it.id == "trending_series" || it.id == "trakt_trending_series" }
         val movies = movieCat?.items ?: emptyList()
         val series = seriesCat?.items ?: emptyList()
 
-        val out = ArrayList<MediaCategory>()
-        var mi = 0
-        var si = 0
-        fun roundRobin(limit: Int): List<MediaItem> {
-            val r = ArrayList<MediaItem>()
-            while (r.size < limit && (mi < movies.size || si < series.size)) {
-                if (mi < movies.size) {
-                    r.add(movies[mi]); mi++; if (r.size >= limit) break
-                }
-                if (si < series.size) {
-                    r.add(series[si]); si++; if (r.size >= limit) break
+        if (filterMode == "movies") {
+            val out = ArrayList<MediaCategory>()
+            if (movies.isNotEmpty()) {
+                out.add(MediaCategory("top_10_trending_movies", "Top 10 Movies", MediaType.MOVIE, movies.take(10), "Top trending feature films this week"))
+                out.add(MediaCategory("trending_movies_all", "Popular Movies", MediaType.MOVIE, movies, "Popular movies to stream now"))
+            }
+            for (genre in listOf("Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery")) {
+                val seen = HashSet<String>()
+                val picks = ArrayList<MediaItem>()
+                for (item in movies) if (item.genres.contains(genre) && seen.add(item.id)) picks.add(item)
+                if (picks.size >= 2) {
+                    out.add(MediaCategory("movie_genre_${genre.lowercase().replace(" ", "_")}", "Trending $genre Movies", MediaType.MOVIE, picks.take(15), "Popular $genre feature films"))
                 }
             }
-            return r
-        }
+            if (out.isEmpty()) state.categories.map { cat -> cat.copy(items = cat.items.filter { it.type == MediaType.MOVIE }) }.filter { it.items.isNotEmpty() } else out
+        } else if (filterMode == "shows") {
+            val out = ArrayList<MediaCategory>()
+            if (series.isNotEmpty()) {
+                out.add(MediaCategory("top_10_trending_series", "Top 10 TV Shows", MediaType.SERIES, series.take(10), "Top trending series this week"))
+                out.add(MediaCategory("trending_series_all", "Popular Series", MediaType.SERIES, series, "Popular TV shows to binge now"))
+            }
+            for (genre in listOf("Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery")) {
+                val seen = HashSet<String>()
+                val picks = ArrayList<MediaItem>()
+                for (item in series) if (item.genres.contains(genre) && seen.add(item.id)) picks.add(item)
+                if (picks.size >= 2) {
+                    out.add(MediaCategory("series_genre_${genre.lowercase().replace(" ", "_")}", "Trending $genre Series", MediaType.SERIES, picks.take(15), "Popular $genre television series"))
+                }
+            }
+            if (out.isEmpty()) state.categories.map { cat -> cat.copy(items = cat.items.filter { it.type == MediaType.SERIES }) }.filter { it.items.isNotEmpty() } else out
+        } else {
+            // Home mode
+            val out = ArrayList<MediaCategory>()
+            var mi = 0
+            var si = 0
+            fun roundRobin(limit: Int): List<MediaItem> {
+                val r = ArrayList<MediaItem>()
+                while (r.size < limit && (mi < movies.size || si < series.size)) {
+                    if (mi < movies.size) { r.add(movies[mi]); mi++; if (r.size >= limit) break }
+                    if (si < series.size) { r.add(series[si]); si++; if (r.size >= limit) break }
+                }
+                return r
+            }
 
-        val top10 = roundRobin(10)
-        if (top10.isNotEmpty()) out.add(
-            MediaCategory(
-                "top_10_trending", "Top 10 Trending", MediaType.MOVIE, top10,
-                "The most watched movies and TV shows this week"
-            )
-        )
-        if (movies.isNotEmpty()) out.add(
-            MediaCategory(
-                "top_10_trending_movies",
-                "Top 10 Trending Movies",
-                MediaType.MOVIE,
-                movies.take(10)
-            )
-        )
-        if (series.isNotEmpty()) out.add(
-            MediaCategory(
-                "top_10_trending_series",
-                "Top 10 Trending TV Shows",
-                MediaType.SERIES,
-                series.take(10)
-            )
-        )
-        val trending = roundRobin(40)
-        if (trending.isNotEmpty()) out.add(
-            MediaCategory(
-                "trending_all", "Trending", MediaType.MOVIE, trending,
-                "Popular movies and TV shows this week"
-            )
-        )
+            val top10 = roundRobin(10)
+            if (top10.isNotEmpty()) out.add(MediaCategory("top_10_trending", "Top 10 Trending", MediaType.MOVIE, top10, "The most watched movies and TV shows this week"))
+            if (movies.isNotEmpty()) out.add(MediaCategory("top_10_trending_movies", "Top 10 Trending Movies", MediaType.MOVIE, movies.take(10)))
+            if (series.isNotEmpty()) out.add(MediaCategory("top_10_trending_series", "Top 10 Trending TV Shows", MediaType.SERIES, series.take(10)))
+            val trending = roundRobin(40)
+            if (trending.isNotEmpty()) out.add(MediaCategory("trending_all", "Trending", MediaType.MOVIE, trending, "Popular movies and TV shows this week"))
 
-        val allItems = movies + series
-        for (genre in listOf("Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery")) {
-            val seen = HashSet<String>()
-            val picks = ArrayList<MediaItem>()
-            for (item in allItems) if (item.genres.contains(genre) && seen.add(item.id)) picks.add(item)
-            if (picks.size >= 4) {
-                out.add(
-                    MediaCategory(
-                        "genre_${genre.lowercase().replace(" ", "_")}", "Trending $genre", MediaType.MOVIE,
-                        picks.take(15), "Popular $genre titles to watch this week",
+            val allItems = movies + series
+            for (genre in listOf("Action", "Comedy", "Drama", "Science Fiction", "Animation", "Horror", "Mystery")) {
+                val seen = HashSet<String>()
+                val picks = ArrayList<MediaItem>()
+                for (item in allItems) if (item.genres.contains(genre) && seen.add(item.id)) picks.add(item)
+                if (picks.size >= 4) {
+                    out.add(
+                        MediaCategory(
+                            "genre_${genre.lowercase().replace(" ", "_")}", "Trending $genre", MediaType.MOVIE,
+                            picks.take(15), "Popular $genre titles to watch this week",
+                        )
                     )
-                )
+                }
             }
+            if (out.isEmpty()) state.categories.distinctBy { it.id } else out.distinctBy { it.id }
         }
-        if (out.isEmpty()) state.categories.toList() else out
     }
 }
 

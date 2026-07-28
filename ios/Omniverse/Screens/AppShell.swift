@@ -67,9 +67,9 @@ struct AppShell: View {
     @ViewBuilder
     private func screen(for id: String) -> some View {
         switch id {
-        case "home": HomeScreen()
-        case "movies": HomeScreen()
-        case "shows": HomeScreen()
+        case "home": HomeScreen(filterMode: "home")
+        case "movies": HomeScreen(filterMode: "movies")
+        case "shows": HomeScreen(filterMode: "shows")
         case "livetv": LiveTvScreen()
         case "search": SearchScreen()
         default: SettingsScreen()

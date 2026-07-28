@@ -271,9 +271,9 @@ private fun Shell(nav: androidx.navigation.NavController) {
                     label = "screenTransition"
                 ) { target ->
                     when (target) {
-                        "home" -> HomeScreen(nav)
-                        "movies" -> HomeScreen(nav)
-                        "shows" -> HomeScreen(nav)
+                        "home" -> HomeScreen(nav, filterMode = "home")
+                        "movies" -> HomeScreen(nav, filterMode = "movies")
+                        "shows" -> HomeScreen(nav, filterMode = "shows")
                         "livetv" -> LiveTvScreen(nav)
                         "search" -> SearchScreen(nav)
                         else -> SettingsScreen()

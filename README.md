@@ -1,23 +1,56 @@
-# <p align="center"><img src="assets/branding/omniplay_icon_1024.png" alt="Omniverse Logo" width="120" height="120"/><br>🚀 Omniverse</p>
+<p align="center">
+  <img src="assets/branding/omniplay_icon_1024.png" alt="Omniverse Logo" width="130" height="130" />
+  <br>
+  <h1 align="center">🚀 Omniverse</h1>
+</p>
 
 <p align="center">
   <strong>The ultimate, ultra-premium multi-platform media companion app. Completely native, blazing fast, private, and zero-ads.</strong>
 </p>
 
+<p align="center">
+  <a href="https://github.com/FiNiX-GaMmA/omniverse/stargazers">
+    <img src="https://img.shields.io/github/stars/FiNiX-GaMmA/omniverse?style=for-the-badge&logo=github&color=f59e0b" alt="GitHub Stars" />
+  </a>
+  <a href="https://github.com/FiNiX-GaMmA/omniverse/network/members">
+    <img src="https://img.shields.io/github/forks/FiNiX-GaMmA/omniverse?style=for-the-badge&logo=github&color=3b82f6" alt="GitHub Forks" />
+  </a>
+  <a href="https://github.com/FiNiX-GaMmA/omniverse/releases">
+    <img src="https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/total?style=for-the-badge&logo=github&color=06b6d4" alt="Total Downloads" />
+  </a>
+  <a href="https://github.com/FiNiX-GaMmA/omniverse/releases/latest">
+    <img src="https://img.shields.io/github/v/release/FiNiX-GaMmA/omniverse?style=for-the-badge&logo=github&color=10b981" alt="Latest Release" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge" alt="License" />
+  </a>
+</p>
+
+---
+
+## 📊 Repository Growth & Activity Graphs
+
 <div align="center">
 
-### 💎 Repository Metadata & Build Badges
+### ⭐ Stars Over Time
+[![Stars over time](https://starchart.cc/FiNiX-GaMmA/omniverse.svg?variant=adaptive)](https://starchart.cc/FiNiX-GaMmA/omniverse)
+
+### 📈 Repository Activity & Engagement
+![GitHub Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=FiNiX-GaMmA&repo=omniverse&theme=react-dark&bg_color=0d1117&color=38bdf8&line=0284c7&point=f59e0b&area=true&hide_border=true)
+
+</div>
+
+---
+
+## 💎 Build Status & Tech Stack Matrix
 
 | Category | Badges |
 | :--- | :--- |
-| **License** | [![License](https://img.shields.io/badge/License-MIT-4fc921?style=flat-square)](LICENSE) |
+| **CI/CD Build** | [![Native Enterprise Build Artifacts](https://github.com/FiNiX-GaMmA/omniverse/actions/workflows/build.yml/badge.svg)](https://github.com/FiNiX-GaMmA/omniverse/actions) |
 | **Downloads** | [![Total Downloads](https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/total?style=flat-square&logo=github&color=06b6d4)](https://github.com/FiNiX-GaMmA/omniverse/releases) [![Latest Release Downloads](https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/latest/total?style=flat-square&logo=github&color=10b981)](https://github.com/FiNiX-GaMmA/omniverse/releases) |
 | **Platforms** | [![Platforms](https://img.shields.io/badge/Platforms-Android%20%7C%20iOS%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-E3008C?style=flat-square)](#-platform-support--download-matrix) |
 | **Languages** | [![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org) [![Swift](https://img.shields.io/badge/Swift-5.9+-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org) [![JavaScript](https://img.shields.io/badge/Node-20+-F7DF1E?style=flat-square&logo=nodedotjs&logoColor=black)](https://nodejs.org) |
 | **Frameworks** | [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-3DDC84?style=flat-square&logo=android&logoColor=white)](#) [![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-007ACC?style=flat-square&logo=swift&logoColor=white)](#) [![Electron](https://img.shields.io/badge/UI-Electron-47848F?style=flat-square&logo=electron&logoColor=white)](#) |
-| **CI/CD Build** | [![Native Enterprise Build Artifacts](https://github.com/FiNiX-GaMmA/omniverse/actions/workflows/build.yml/badge.svg)](https://github.com/FiNiX-GaMmA/omniverse/actions) |
-
-</div>
 
 ---
 
@@ -56,11 +89,15 @@ No trackers, no telemetry, no mandatory central servers, and completely open sou
 * **One Show, One Card**: Groups progress intelligently by series so your home screen stays clean and uncluttered.
 * **Exact Timestamp Resume**: Click any card to pick up playback down to the exact frame.
 
-### 🔄 4. Silky 120Hz Liquid Rendering & Landscape Lock
+### 🎬 4. Tab-Specific Catalogues
+* **Tab Separation**: Home, Movies, and TV Series tabs present content curated specifically for each section.
+* **Instant Top Reset**: Desktop and mobile viewports automatically scroll to top on tab switch.
+
+### 🔄 5. Silky 120Hz Liquid Rendering & Landscape Lock
 * **ProMotion & High Refresh**: Fluid animations at 120 FPS on supported Apple ProMotion and Android displays.
 * **Auto Landscape-Lock**: Player automatically locks to landscape mode regardless of system rotation, restoring your orientation on exit.
 
-### 🚀 5. In-App OTA Update Engine
+### 🚀 6. In-App OTA Update Engine
 * **Continuous Updates**: Direct check against GitHub releases API with progress indicator and animated installer launcher.
 * **Native Release Notes Markdown**: Formatted release notes rendered directly in-app.
 
