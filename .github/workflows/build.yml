@@ -242,10 +242,14 @@ jobs:
           cp out_linux/*.AppImage release_assets/
           cp out_linux/*.deb release_assets/
 
-      - name: Get Latest Commit Message
+      - name: Extract Release Notes
         run: |
-          echo "COMMIT_MSG<<EOF" >> $GITHUB_ENV
-          git log -1 --pretty=%B >> $GITHUB_ENV
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          if [ -f CHANGELOG.md ]; then
+            sed -n '/^## /,$p' CHANGELOG.md | sed -n '1,/^---$/p' | head -n -1 >> $GITHUB_ENV || git log -1 --pretty=%B >> $GITHUB_ENV
+          else
+            git log -1 --pretty=%B >> $GITHUB_ENV
+          fi
           echo "EOF" >> $GITHUB_ENV
 
       - name: Create or Update GitHub Release
@@ -261,7 +265,7 @@ jobs:
             ---
 
             ### 🚀 Highlights & Release Notes
-            ${{ env.COMMIT_MSG }}
+            ${{ env.RELEASE_NOTES }}
 
             ---
 
