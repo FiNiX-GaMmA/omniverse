@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [v2.1.78] - 2026-07-28
+
+> **Commit**: `fix(desktop): prevent play button redirect loop by isolating player webviews and locking main frame navigation`
+
+### 🎥 Player Webview Isolation & Frame Navigation Security
+- **Electron Webview Recovery**: Replaced hardcoded `useElectronWebview = false` in [`desktop/renderer.js`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/renderer.js#L2655) with dynamic Electron environment detection. Movie, TV show, and anime stream embeds now run inside an isolated `<webview partition="persist:player">` container rather than a raw `<iframe>`.
+- **Top-Level Hijack Defusal**: Isolated `window.top` inside the `<webview>` context so cross-origin stream providers and ad scripts cannot execute top-level navigation hijacks (`top.location = ...`).
+- **Iframe Sandbox Fallback**: Enforced `sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-media-type"` on `<iframe>` web fallbacks, explicitly omitting `allow-top-navigation`.
+- **Main Window Shell Lock**: Updated `mainWindow.webContents.on("will-navigate")` in [`desktop/main.js`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/main.js#L187) to prevent all top-level window navigation attempts away from the initialized SPA shell, eliminating the issue where clicking PLAY reloaded `index.html` and returned the user to the homepage.
+
+---
+
 ## 🚀 [v2.1.77] - 2026-07-28
 
 > **Commit**: `feat(sync): restore Desktop Continue Watching shelf, simplify Trakt last-seen sync, and update release logs`
@@ -39,10 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Component | Target File | Type | Changes Description |
 | :--- | :--- | :---: | :--- |
-| **Desktop** | [`desktop/index.html`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/index.html) | ✨ Feature | Restored `#continue-watching-section` & `#grid-continue-watching` |
-| **Desktop** | [`desktop/renderer.js`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/renderer.js) | ✨ Feature | Card rail styling & simplified last-seen `recordWatchProgress` |
-| **Android** | [`android/app/src/main/java/com/finix/omniverse/AppState.kt`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/android/app/src/main/java/com/finix/omniverse/AppState.kt) | ✨ Feature | Simplified `recordProgress` & auto Trakt sync |
-| **iOS** | [`ios/Omniverse/State/AppState.swift`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/ios/Omniverse/State/AppState.swift) | ✨ Feature | Simplified `recordProgress` & auto Trakt sync |
+| **Desktop Main** | [`desktop/main.js`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/main.js) | 🐛 Fix | Locked `will-navigate` on top-level window to prevent embed redirects |
+| **Desktop Renderer** | [`desktop/renderer.js`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/renderer.js) | 🐛 Fix | Restored Electron `<webview>` isolation & set iframe sandboxing |
 
 ---
 

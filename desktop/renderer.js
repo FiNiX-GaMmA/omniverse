@@ -2652,9 +2652,16 @@ function playStreamEmbed(
     return;
   }
 
-  // Use iframe path for all providers to keep embed sizing/rendering consistent.
-  const useElectronWebview = false;
-  const webview = document.createElement("iframe");
+  const useElectronWebview = !!(
+    window.electron ||
+    (typeof process !== "undefined" &&
+      process.versions &&
+      process.versions.electron) ||
+    navigator.userAgent.includes("Electron")
+  );
+  const webview = document.createElement(
+    useElectronWebview ? "webview" : "iframe",
+  );
   webview.id = "active-player-webview";
   webview.className = "webview-player";
   webview.setAttribute("allowfullscreen", "true");
@@ -2673,7 +2680,10 @@ function playStreamEmbed(
       "allow",
       "autoplay; fullscreen; picture-in-picture; encrypted-media",
     );
-
+    webview.setAttribute(
+      "sandbox",
+      "allow-scripts allow-same-origin allow-forms allow-presentation allow-media-type",
+    );
     webview.setAttribute("referrerpolicy", "origin-when-cross-origin");
     webview.setAttribute("frameborder", "0");
     webview.setAttribute("scrolling", "no");
@@ -3010,19 +3020,40 @@ function playAnimeEmbed(container, media, episode, src) {
   state.activeWebview = null;
   container.innerHTML = "";
 
-  const frame = document.createElement("iframe");
+  const useElectronWebview = !!(
+    window.electron ||
+    (typeof process !== "undefined" &&
+      process.versions &&
+      process.versions.electron) ||
+    navigator.userAgent.includes("Electron")
+  );
+  const frame = document.createElement(
+    useElectronWebview ? "webview" : "iframe",
+  );
   frame.id = "active-player-webview";
   frame.className = "webview-player";
   frame.setAttribute("allowfullscreen", "true");
-  frame.setAttribute(
-    "allow",
-    "autoplay; fullscreen; picture-in-picture; encrypted-media",
-  );
-  frame.setAttribute("referrerpolicy", "origin-when-cross-origin");
-  frame.setAttribute("frameborder", "0");
-  frame.setAttribute("scrolling", "no");
-  frame.setAttribute("width", "100%");
-  frame.setAttribute("height", "100%");
+  if (useElectronWebview) {
+    frame.setAttribute("partition", "persist:player");
+    frame.setAttribute(
+      "webpreferences",
+      "allowRunningInsecureContent=yes, autoplayPolicy=no-user-gesture-required",
+    );
+  } else {
+    frame.setAttribute(
+      "allow",
+      "autoplay; fullscreen; picture-in-picture; encrypted-media",
+    );
+    frame.setAttribute(
+      "sandbox",
+      "allow-scripts allow-same-origin allow-forms allow-presentation allow-media-type",
+    );
+    frame.setAttribute("referrerpolicy", "origin-when-cross-origin");
+    frame.setAttribute("frameborder", "0");
+    frame.setAttribute("scrolling", "no");
+    frame.setAttribute("width", "100%");
+    frame.setAttribute("height", "100%");
+  }
   frame.setAttribute("src", src.url);
 
   container.appendChild(frame);

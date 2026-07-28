@@ -186,7 +186,7 @@ async function createWindow() {
 
   // Prevent top-level navigation hijacks away from our app shell.
   mainWindow.webContents.on("will-navigate", (event, url) => {
-    if (!url || url.startsWith("file://")) return;
+    // Single-page Electron app shell should never navigate the main BrowserWindow top-level frame.
     event.preventDefault();
     adBlockStats.adsBlocked++;
     if (mainWindow && !mainWindow.isDestroyed()) {
