@@ -260,6 +260,49 @@ function loadSavedPreferences() {
   if (document.getElementById("anilist-token-input"))
     document.getElementById("anilist-token-input").value =
       state.anilistAccessToken;
+
+  updateTraktUiStatus();
+}
+
+function updateTraktUiStatus() {
+  const dot = document.getElementById("trakt-status-dot");
+  const label = document.getElementById("trakt-status-label");
+  const disconnectBtn = document.getElementById("btn-disconnect-trakt");
+  const connectBtn = document.getElementById("btn-connect-trakt");
+
+  const isConnected = !!(state.traktToken || state.traktUsername);
+  const isConfigured = !!(state.traktClientId);
+
+  if (dot) {
+    dot.className = isConnected
+      ? "w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+      : isConfigured
+      ? "w-2.5 h-2.5 bg-amber-500 rounded-full"
+      : "w-2.5 h-2.5 bg-gray-500 rounded-full";
+  }
+
+  if (label) {
+    label.textContent = isConnected
+      ? (state.traktUsername ? `Connected as: ${state.traktUsername}` : "Connected to Trakt")
+      : isConfigured
+      ? "Configured (Awaiting Sign-in)"
+      : "Trakt Disconnected";
+  }
+
+  if (disconnectBtn) {
+    if (isConnected || isConfigured) {
+      disconnectBtn.classList.remove("hidden");
+    } else {
+      disconnectBtn.classList.add("hidden");
+    }
+  }
+
+  if (connectBtn) {
+    const span = connectBtn.querySelector("span");
+    if (span) {
+      span.textContent = isConnected ? "Refresh Login" : "Connect Trakt (OAuth)";
+    }
+  }
 }
 
 async function hydrateProviderRailLogos() {
@@ -4008,12 +4051,25 @@ async function disconnectTrakt() {
   state.traktRefreshToken = "";
   state.traktTokenExpiresAt = 0;
   state.traktUsername = "";
+  state.traktClientId = "";
+  state.traktClientSecret = "";
+
   localStorage.removeItem("omni_trakt_token");
   localStorage.removeItem("omni_trakt_refresh_token");
   localStorage.removeItem("omni_trakt_expires_at");
   localStorage.removeItem("omni_trakt_username");
+  localStorage.removeItem("omni_trakt_client_id");
+  localStorage.removeItem("omni_trakt_client_secret");
+
+  const clientIdInput = document.getElementById("trakt-client-id-input");
+  const clientSecretInput = document.getElementById("trakt-client-secret-input");
+  const tokenInput = document.getElementById("trakt-token-input");
+  if (clientIdInput) clientIdInput.value = "";
+  if (clientSecretInput) clientSecretInput.value = "";
+  if (tokenInput) tokenInput.value = "";
+
   loadSavedPreferences();
-  window.electron.showNotification("Trakt Disconnected", "Trakt sync channel closed.");
+  window.electron.showNotification("Trakt Disconnected", "Trakt sync channel closed and credentials cleared.");
 }
 
 async function startTraktAuth() {

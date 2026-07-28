@@ -710,7 +710,14 @@ class AppState(context: Context) {
     fun disconnectTrakt() {
         pendingTraktState = null; traktConnecting = false
         credentials =
-            credentials.copy(traktAccessToken = "", traktRefreshToken = "", traktTokenExpiresAt = 0, traktUsername = "")
+            credentials.copy(
+                traktAccessToken = "",
+                traktRefreshToken = "",
+                traktTokenExpiresAt = 0,
+                traktUsername = "",
+                traktClientId = "",
+                traktClientSecret = ""
+            )
         credentialsStore.save(credentials)
         message = "Trakt disconnected."
     }

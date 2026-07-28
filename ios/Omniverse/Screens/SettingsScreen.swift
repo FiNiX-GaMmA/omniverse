@@ -173,8 +173,12 @@ struct SettingsScreen: View {
             ) {
                 glassChip(state.credentials.hasTraktUser ? "Refresh Login" : "Connect Trakt",
                           system: "person.crop.circle", loading: state.traktConnecting) { connectTrakt() }
-                if state.credentials.hasTraktUser {
-                    glassChip("Disconnect", system: "xmark.circle") { state.disconnectTrakt() }
+                if state.credentials.hasTraktUser || state.credentials.hasTraktApp {
+                    glassChip("Disconnect", system: "xmark.circle") {
+                        state.disconnectTrakt()
+                        traktId = ""
+                        traktSecret = ""
+                    }
                 }
             }
 

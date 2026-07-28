@@ -396,8 +396,12 @@ fun SettingsScreen() {
                                     saveAll(); state.startTraktBrowserAuth()?.let { openUrl(it.toString()) }
                                 }
                             }
-                            if (state.credentials.hasTraktUser) {
-                                Chip("Disconnect") { state.disconnectTrakt() }
+                            if (state.credentials.hasTraktUser || state.credentials.hasTraktApp) {
+                                Chip("Disconnect") {
+                                    state.disconnectTrakt()
+                                    traktId = ""
+                                    traktSecret = ""
+                                }
                             }
                         }
                         SyncCard(

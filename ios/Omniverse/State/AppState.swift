@@ -648,6 +648,7 @@ final class AppState {
         pendingTraktState = nil; traktConnecting = false
         credentials.traktAccessToken = ""; credentials.traktRefreshToken = ""
         credentials.traktTokenExpiresAt = 0; credentials.traktUsername = ""
+        credentials.traktClientId = ""; credentials.traktClientSecret = ""
         credentialsStore.save(credentials)
         message = "Trakt disconnected."
     }
