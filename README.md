@@ -24,6 +24,9 @@
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge" alt="License" />
   </a>
+  <a href="CHANGELOG.md">
+    <img src="https://img.shields.io/badge/Changelog-v2.1.5-ec4899?style=for-the-badge&logo=git&logoColor=white" alt="Changelog" />
+  </a>
 </p>
 
 ---
