@@ -7,21 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## 🚀 [v2.1.5] - 2026-07-28
+## 🚀 [v2.1.77] - 2026-07-28
 
-> **Commit**: `d625c50` — `feat(auth): standardize Trakt API integration and sanitize OAuth credentials across platforms`
+> **Commit**: `feat(sync): restore Desktop Continue Watching shelf, simplify Trakt last-seen sync, and update release logs`
 
-### 🔑 Authentication & Trakt API Standardization
-- **Unified Trakt HTTP Headers**: Enforced standard Trakt headers (`trakt-api-version: 2`, `trakt-api-key`, and `User-Agent: Omniverse/2.1`) across Desktop, Android, and iOS for all endpoints including OAuth exchange, device authentication, token refresh, pull, and push.
-- **Robust OAuth Code Extraction**: Implemented regular expression regex matching on Android and iOS to extract clean authorization tokens when raw deep-link callback strings containing `code=...` are received.
-- **Whitespace & Token Sanitization**: Applied strict `.trim()` string sanitization to client IDs, client secrets, and access tokens across JS (`renderer.js`), Kotlin (`TraktRepositoryImpl.kt`), and Swift (`TraktRepository.swift`) to eliminate authentication failures caused by trailing/leading whitespace.
+### 📺 Desktop Continue Watching Shelf
+- **Restored Home Shelf**: Added `#continue-watching-section` and `#grid-continue-watching` markup back into [`desktop/index.html`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/index.html#L175-L188) above Trending Movies.
+- **Responsive Card Rail**: Applied `shrink-0 w-44` styling to Continue Watching cards in [`desktop/renderer.js`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/renderer.js#L4968) for smooth horizontal scrolling.
 
-### 📱 iOS & Desktop Core Improvements
-- **Media Models**: Added default `source` field (`"tmdb"`) to `MediaItem` struct in `Models.swift`.
-- **Unit Test Fixes**: Corrected constructor syntax errors in `NavStateTests.swift` (`id = "1"` -> `id: "1"`).
+### 🔄 Simplified Continue Watching & Multi-Device Trakt Sync
+- **Vidsrc Timestamp Delegation**: Removed strict millisecond timestamp / position fraction checks in `recordProgress()` across Android (`AppState.kt`), iOS (`AppState.swift`), and Desktop (`renderer.js`). Media items and episodes are now recorded as "last seen" immediately when played (since Vidsrc embeds manage exact playback timestamps internally).
+- **Cross-Device Sync**: Automatically triggers background Trakt list sync (`syncSettingsToTrakt` / `pushToTrakt`) and QR pairing state updates so Continue Watching items stay synchronized across all devices connected to the same Trakt Client ID or account.
 
-### 🎨 Android UI & Layout Enhancements
-- **Jetpack Compose**: Added `BoxWithConstraints` import to `HomeScreen.kt` to lay foundation for adaptive dynamic container layouts.
+### 🛡️ Trakt 403 Error Muting & Disconnect Purge
+- **Eliminated 10s Error Toast Loop**: Muted background exception toasts on 401, 403, 409, and 429 Trakt scrobble responses across Android, iOS, and Desktop.
+- **Scrobble Auto-Pause**: Player tickers on Android and iOS now automatically pause active scrobble requests when a remote scrobble call returns non-200.
+- **Complete Credential Reset**: Updated `disconnectTrakt()` across Desktop, Android, and iOS to clear `traktClientId` and `traktClientSecret` in state and persistent storage, restoring clean onboarding input fields.
+
+---
+
+## 🚀 [v2.1.76] - 2026-07-28
+
+> **Baseline Release**: `v2.1.76 Release`
+
+- **Authentication Standardization**: Standardized Trakt HTTP headers (`trakt-api-version: 2`, `trakt-api-key`, `User-Agent`) across Desktop, Android, and iOS.
+- **OAuth Extraction**: Added regex extraction for raw `code=...` deep-link authorization callbacks and string whitespace sanitization.
 
 ---
 
@@ -29,12 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Component | Target File | Type | Changes Description |
 | :--- | :--- | :---: | :--- |
-| **Desktop** | [`desktop/renderer.js`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/renderer.js) | ⚡ Fix | Standardized Trakt API headers & added token string trimming |
-| **Android** | [`android/app/src/main/java/com/finix/omniverse/TraktRepositoryImpl.kt`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/android/app/src/main/java/com/finix/omniverse/TraktRepositoryImpl.kt) | ⚡ Fix | OAuth regex code parsing, header uniformity & credential sanitization |
-| **Android** | [`android/app/src/main/java/com/finix/omniverse/ui/HomeScreen.kt`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/android/app/src/main/java/com/finix/omniverse/ui/HomeScreen.kt) | ✨ Feature | Jetpack Compose dynamic constraints import |
-| **iOS** | [`ios/Omniverse/Repositories/TraktRepository.swift`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/ios/Omniverse/Repositories/TraktRepository.swift) | ⚡ Fix | Robust OAuth code parsing & header consistency |
-| **iOS** | [`ios/Omniverse/Models/Models.swift`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/ios/Omniverse/Models/Models.swift) | ✨ Feature | Added `source` property to `MediaItem` |
-| **iOS** | [`ios/OmniverseTests/NavStateTests.swift`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/ios/OmniverseTests/NavStateTests.swift) | 🛠️ Test | Fixed test initializer parameter syntax |
+| **Desktop** | [`desktop/index.html`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/index.html) | ✨ Feature | Restored `#continue-watching-section` & `#grid-continue-watching` |
+| **Desktop** | [`desktop/renderer.js`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/desktop/renderer.js) | ✨ Feature | Card rail styling & simplified last-seen `recordWatchProgress` |
+| **Android** | [`android/app/src/main/java/com/finix/omniverse/AppState.kt`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/android/app/src/main/java/com/finix/omniverse/AppState.kt) | ✨ Feature | Simplified `recordProgress` & auto Trakt sync |
+| **iOS** | [`ios/Omniverse/State/AppState.swift`](file:///c%3A/Users/the-geeky-couldron/Documents/GitHub/omniverse/ios/Omniverse/State/AppState.swift) | ✨ Feature | Simplified `recordProgress` & auto Trakt sync |
 
 ---
 

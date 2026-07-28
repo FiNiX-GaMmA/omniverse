@@ -249,7 +249,7 @@ class TraktRepositoryImpl : TraktRepository {
         val body = scrobbleBody(item, episode, progress) ?: return
         if (action == "stop" && body.optDoubleOrNull("progress")?.let { it < 1 } == true) return
         val r = post("scrobble/$action", c, body)
-        if (r.status == 409) return
+        if (r.status == 409 || r.status == 401 || r.status == 403 || r.status == 429) return
         if (r.status != 200 && r.status != 201) throwForResponse(r, "Trakt scrobble")
     }
 

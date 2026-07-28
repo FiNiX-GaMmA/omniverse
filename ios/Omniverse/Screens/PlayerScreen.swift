@@ -485,7 +485,10 @@ private final class PlaybackEngine {
                     self.recordLocalProgress()
                     if let item = self.item, let state = self.appState,
                        self.activeScrobble, !self.finishedScrobble {
-                        Task { await state.startTraktPlayback(item, self.progress(), episode: self.episode) }
+                        Task {
+                            let ok = await state.startTraktPlayback(item, self.progress(), episode: self.episode)
+                            if !ok { await MainActor.run { self.activeScrobble = false } }
+                        }
                     }
                 }
             }

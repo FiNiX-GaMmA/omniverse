@@ -354,7 +354,7 @@ final class TraktRepository: TraktRepositoryProtocol {
         guard let body = scrobbleBody(item, episode, progress) else { return }
         if action == "stop", let p = body["progress"] as? Double, p < 1 { return }
         let r = try await post("scrobble/\(action)", c, body: body)
-        if r.status == 409 { return }
+        if r.status == 409 || r.status == 401 || r.status == 403 || r.status == 429 { return }
         if r.status != 200 && r.status != 201 {
             try throwForResponse(r, "Trakt scrobble")
         }

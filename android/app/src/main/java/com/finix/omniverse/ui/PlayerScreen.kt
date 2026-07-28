@@ -329,11 +329,14 @@ fun PlayerScreen(
             delay(10_000)
             if (args.item != null && durationMs > 0) {
                 appState.recordProgress(args.item, positionMs, durationMs, args.episode)
-                if (activeScrobble && !finishedScrobble) appState.startTraktPlayback(
-                    args.item,
-                    progressPct(),
-                    args.episode
-                )
+                if (activeScrobble && !finishedScrobble) {
+                    val ok = appState.startTraktPlayback(
+                        args.item,
+                        progressPct(),
+                        args.episode
+                    )
+                    if (!ok) activeScrobble = false
+                }
             }
         }
     }

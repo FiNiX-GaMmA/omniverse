@@ -284,18 +284,12 @@ class AppState(context: Context) {
         settingsStore.saveWatchHistory(merged)
     }
 
-    suspend fun recordProgress(item: MediaItem, positionMs: Int, durationMs: Int, episode: MediaEpisode?) {
-        if (durationMs <= 0) return
-        val fraction = positionMs.toDouble() / durationMs
-        if (positionMs < 5000 || fraction >= 0.95) {
-            if (fraction >= 0.95) removeProgressEntry(item, episode)
-            return
-        }
+    suspend fun recordProgress(item: MediaItem, positionMs: Int = 0, durationMs: Int = 0, episode: MediaEpisode?) {
         val entry = WatchProgress(
             id = null, itemId = item.id, title = item.title, type = item.type,
             posterPath = item.posterPath, backdropPath = item.backdropPath,
             seasonNumber = episode?.seasonNumber, episodeNumber = episode?.episodeNumber,
-            episodeTitle = episode?.title, positionMs = positionMs, durationMs = durationMs,
+            episodeTitle = episode?.title, positionMs = 0, durationMs = 0,
             lastWatchedAt = System.currentTimeMillis(),
         )
         val next = ArrayList<WatchProgress>()
@@ -304,6 +298,9 @@ class AppState(context: Context) {
         val capped = next.take(30)
         watchHistory.clear(); watchHistory.addAll(capped)
         settingsStore.saveWatchHistory(capped)
+        if (credentials.hasTraktUser) {
+            scope.launch { runCatching { syncSettingsToTrakt(silent = true) } }
+        }
     }
 
     private fun removeProgressEntry(item: MediaItem, episode: MediaEpisode?) {
@@ -671,22 +668,23 @@ class AppState(context: Context) {
 
     // MARK: - Scrobble
 
-    suspend fun startTraktPlayback(item: MediaItem, progress: Double, episode: MediaEpisode?) =
+    suspend fun startTraktPlayback(item: MediaItem, progress: Double, episode: MediaEpisode?): Boolean =
         sendScrobble(item) { repos.trakt.startScrobble(it, item, episode, progress) }
 
-    suspend fun pauseTraktPlayback(item: MediaItem, progress: Double, episode: MediaEpisode?) =
+    suspend fun pauseTraktPlayback(item: MediaItem, progress: Double, episode: MediaEpisode?): Boolean =
         sendScrobble(item) { repos.trakt.pauseScrobble(it, item, episode, progress) }
 
-    suspend fun stopTraktPlayback(item: MediaItem, progress: Double, episode: MediaEpisode?) {
+    suspend fun stopTraktPlayback(item: MediaItem, progress: Double, episode: MediaEpisode?): Boolean =
         sendScrobble(item) { repos.trakt.stopScrobble(it, item, episode, progress) }
-    }
 
-    private suspend fun sendScrobble(item: MediaItem, send: suspend (ApiCredentials) -> Unit) {
-        if (!credentials.hasTraktUser || item.type == MediaType.LIVE_TV) return
-        try {
-            refreshTraktCredentialsIfNeeded(); send(credentials)
-        } catch (t: Throwable) {
-            message = "Could not update Trakt playback: $t"
+    private suspend fun sendScrobble(item: MediaItem, send: suspend (ApiCredentials) -> Unit): Boolean {
+        if (!credentials.hasTraktUser || item.type == MediaType.LIVE_TV) return false
+        return try {
+            refreshTraktCredentialsIfNeeded()
+            send(credentials)
+            true
+        } catch (_: Throwable) {
+            false
         }
     }
 

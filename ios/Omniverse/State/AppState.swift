@@ -275,23 +275,20 @@ final class AppState {
         settingsStore.saveWatchHistory(watchHistory)
     }
 
-    func recordProgress(item: MediaItem, positionMs: Int, durationMs: Int, episode: MediaEpisode?) async {
-        guard durationMs > 0 else { return }
-        let fraction = Double(positionMs) / Double(durationMs)
-        if positionMs < 5000 || fraction >= 0.95 {
-            if fraction >= 0.95 { removeProgressEntry(item, episode) }
-            return
-        }
+    func recordProgress(item: MediaItem, positionMs: Int = 0, durationMs: Int = 0, episode: MediaEpisode?) async {
         let entry = WatchProgress(
             id: nil, itemId: item.id, title: item.title, type: item.type,
             posterPath: item.posterPath, backdropPath: item.backdropPath,
             seasonNumber: episode?.seasonNumber, episodeNumber: episode?.episodeNumber,
-            episodeTitle: episode?.title, positionMs: positionMs, durationMs: durationMs,
+            episodeTitle: episode?.title, positionMs: 0, durationMs: 0,
             lastWatchedAt: Int(Date().timeIntervalSince1970 * 1000))
         var next = [entry]
         next.append(contentsOf: watchHistory.filter { $0.progressKey != entry.progressKey })
         watchHistory = Array(next.prefix(30))
         settingsStore.saveWatchHistory(watchHistory)
+        if credentials.hasTraktUser {
+            Task { try? await syncSettingsToTrakt(silent: true) }
+        }
     }
 
     private func removeProgressEntry(_ item: MediaItem, _ episode: MediaEpisode?) {
@@ -613,19 +610,27 @@ final class AppState {
 
     // MARK: - Scrobble
 
-    func startTraktPlayback(_ item: MediaItem, _ progress: Double, episode: MediaEpisode?) async {
+    @discardableResult
+    func startTraktPlayback(_ item: MediaItem, _ progress: Double, episode: MediaEpisode?) async -> Bool {
         await sendScrobble(item) { try await self.repos.trakt.startScrobble($0, item, episode: episode, progress: progress) }
     }
-    func pauseTraktPlayback(_ item: MediaItem, _ progress: Double, episode: MediaEpisode?) async {
+    @discardableResult
+    func pauseTraktPlayback(_ item: MediaItem, _ progress: Double, episode: MediaEpisode?) async -> Bool {
         await sendScrobble(item) { try await self.repos.trakt.pauseScrobble($0, item, episode: episode, progress: progress) }
     }
-    func stopTraktPlayback(_ item: MediaItem, _ progress: Double, episode: MediaEpisode?) async {
+    @discardableResult
+    func stopTraktPlayback(_ item: MediaItem, _ progress: Double, episode: MediaEpisode?) async -> Bool {
         await sendScrobble(item) { try await self.repos.trakt.stopScrobble($0, item, episode: episode, progress: progress) }
     }
-    private func sendScrobble(_ item: MediaItem, _ send: @escaping (ApiCredentials) async throws -> Void) async {
-        guard credentials.hasTraktUser, item.type != .liveTv else { return }
-        do { try await refreshTraktCredentialsIfNeeded(); try await send(credentials) }
-        catch { message = "Could not update Trakt playback: \(error)" }
+    private func sendScrobble(_ item: MediaItem, _ send: @escaping (ApiCredentials) async throws -> Void) async -> Bool {
+        guard credentials.hasTraktUser, item.type != .liveTv else { return false }
+        do {
+            try await refreshTraktCredentialsIfNeeded()
+            try await send(credentials)
+            return true
+        } catch {
+            return false
+        }
     }
 
     private func refreshTraktCredentialsIfNeeded() async throws {

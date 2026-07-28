@@ -1464,28 +1464,16 @@ function removeWatchProgressByItemId(itemId, options = {}) {
 
 function recordWatchProgress(
   media,
-  positionMs,
-  durationMs,
+  positionMs = 0,
+  durationMs = 0,
   episodeContext = {},
   options = {},
 ) {
-  const { syncRemote = false } = options;
+  const { syncRemote = true } = options;
   if (!media || !media.id) return false;
 
   const type = normalizeWatchType(media.type);
   if (!type || type === "livetv") return false;
-
-  const duration = Math.round(Number(durationMs) || 0);
-  if (duration <= 0) return false;
-
-  const position = Math.max(0, Math.round(Number(positionMs) || 0));
-  const fraction = position / duration;
-  if (position < 5000 || fraction >= 0.95) {
-    if (fraction >= 0.95) {
-      removeWatchProgressByItemId(media.id, { syncRemote });
-    }
-    return false;
-  }
 
   const seasonNumber = parsePositiveIntOrNull(episodeContext.seasonNumber);
   const episodeNumber = parsePositiveIntOrNull(episodeContext.episodeNumber);
@@ -4968,7 +4956,7 @@ function renderContinueWatching() {
   grouped.forEach((item) => {
     const card = document.createElement("div");
     card.className =
-      "media-card bg-brandSec rounded-xl border border-white/[0.04] p-2 hover:border-brandCyan/20 cursor-pointer text-left relative";
+      "media-card bg-brandSec rounded-xl border border-white/[0.04] p-2 hover:border-brandCyan/20 cursor-pointer text-left relative shrink-0 w-44";
     card.onclick = () => showContinueWatchingSheet(item);
 
     const progressPercent = Math.round((item.progress || 0) * 100);
@@ -5181,7 +5169,7 @@ async function pushToTrakt() {
       );
     }
   } catch (err) {
-    console.error("Trakt push error: ", err);
+    console.warn("Trakt push skipped:", err);
   } finally {
     isPushing = false;
   }
