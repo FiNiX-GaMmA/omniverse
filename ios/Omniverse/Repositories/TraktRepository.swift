@@ -56,8 +56,15 @@ final class TraktRepository: TraktRepositoryProtocol {
         guard c.hasTraktApp, !c.traktClientSecret.trimmed.isEmpty else {
             throw TraktError.state("Save your Trakt client ID and client secret first.")
         }
+        var cleanCode = code.trimmed
+        if cleanCode.contains("code=") {
+            if let range = cleanCode.range(of: #"code=([^&]+)"#, options: .regularExpression) {
+                let match = String(cleanCode[range])
+                cleanCode = match.replacingOccurrences(of: "code=", with: "")
+            }
+        }
         return try await exchangeToken(c, body: [
-            "code": code,
+            "code": cleanCode,
             "client_id": c.traktClientId.trimmed,
             "client_secret": c.traktClientSecret.trimmed,
             "redirect_uri": Self.redirectUri,
@@ -82,10 +89,17 @@ final class TraktRepository: TraktRepositoryProtocol {
         guard c.hasTraktApp else {
             throw TraktError.state("Save a Trakt client ID first.")
         }
-        // NOTE: client_id is NOT trimmed here, matching the Dart implementation.
+        var h: [String: String] = [
+            "Content-Type": "application/json",
+            "trakt-api-version": "2",
+            "User-Agent": "Omniverse/2.1",
+        ]
+        if c.hasTraktApp {
+            h["trakt-api-key"] = c.traktClientId.trimmed
+        }
         let r = try await postRaw("oauth/device/code",
-                                  body: ["client_id": c.traktClientId],
-                                  headers: ["Content-Type": "application/json"])
+                                  body: ["client_id": c.traktClientId.trimmed],
+                                  headers: h)
         if r.status >= 400 {
             throw TraktError.state("Trakt device auth returned \(r.status)")
         }
@@ -498,8 +512,15 @@ final class TraktRepository: TraktRepositoryProtocol {
                                path: String = "oauth/token",
                                body: [String: Any],
                                failureLabel: String) async throws -> ApiCredentials {
-        // Token endpoints use Content-Type only (no api-key / auth headers).
-        let r = try await postRaw(path, body: body, headers: ["Content-Type": "application/json"])
+        var headers: [String: String] = [
+            "Content-Type": "application/json",
+            "trakt-api-version": "2",
+            "User-Agent": "Omniverse/2.1",
+        ]
+        if c.hasTraktApp {
+            headers["trakt-api-key"] = c.traktClientId.trimmed
+        }
+        let r = try await postRaw(path, body: body, headers: headers)
         try throwForResponse(r, failureLabel)
         let json = r.jsonObject()
         return credentialsFromToken(c, json)
@@ -562,6 +583,7 @@ final class TraktRepository: TraktRepositoryProtocol {
         var h: [String: String] = [
             "Content-Type": "application/json",
             "trakt-api-version": "2",
+            "User-Agent": "Omniverse/2.1",
         ]
         if c.hasTraktApp {
             h["trakt-api-key"] = c.traktClientId.trimmed

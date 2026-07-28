@@ -132,6 +132,7 @@ struct MediaItem: Codable, Equatable, Identifiable, Hashable {
     var tvdbId: Int?
     var traktId: Int?
     var imdbId: String?
+    var source: String = "tmdb"
     init(
         id: String,
         type: MediaType,

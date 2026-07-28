@@ -47,8 +47,12 @@ class TraktRepositoryImpl : TraktRepository {
         if (!c.hasTraktApp || c.traktClientSecret.trim().isEmpty()) {
             throw TraktException("Save your Trakt client ID and client secret first.")
         }
+        var cleanCode = code.trim()
+        if (cleanCode.contains("code=")) {
+            cleanCode = Regex("code=([^&]+)").find(cleanCode)?.groupValues?.get(1) ?: cleanCode
+        }
         val body = JSONObject()
-            .put("code", code.trim())
+            .put("code", cleanCode)
             .put("client_id", c.traktClientId.trim())
             .put("client_secret", c.traktClientSecret.trim())
             .put("redirect_uri", REDIRECT_URI)
@@ -69,8 +73,13 @@ class TraktRepositoryImpl : TraktRepository {
 
     override suspend fun startDeviceAuth(c: ApiCredentials): TraktDeviceCode {
         if (!c.hasTraktApp) throw TraktException("Save a Trakt client ID first.")
-        val r = postRaw("oauth/device/code", JSONObject().put("client_id", c.traktClientId.trim()),
-            mapOf("Content-Type" to "application/json", "trakt-api-version" to "2", "User-Agent" to "Omniverse/2.1"))
+        val headers = mapOf(
+            "Content-Type" to "application/json",
+            "trakt-api-version" to "2",
+            "trakt-api-key" to c.traktClientId.trim(),
+            "User-Agent" to "Omniverse/2.1"
+        )
+        val r = postRaw("oauth/device/code", JSONObject().put("client_id", c.traktClientId.trim()), headers)
         if (r.status >= 400) throw TraktException("Trakt device auth returned ${r.status}")
         val json = r.jsonObject()
         return TraktDeviceCode(
@@ -371,8 +380,12 @@ class TraktRepositoryImpl : TraktRepository {
     // MARK: - Token exchange
 
     private suspend fun exchangeToken(c: ApiCredentials, path: String = "oauth/token", body: JSONObject, failureLabel: String): ApiCredentials {
-        // Token endpoints use Content-Type only (no api-key / auth headers).
-        val r = postRaw(path, body, mapOf("Content-Type" to "application/json"))
+        val h = HashMap<String, String>()
+        h["Content-Type"] = "application/json"
+        h["trakt-api-version"] = "2"
+        h["User-Agent"] = "Omniverse/2.1"
+        if (c.hasTraktApp) h["trakt-api-key"] = c.traktClientId.trim()
+        val r = postRaw(path, body, h)
         throwForResponse(r, failureLabel)
         return credentialsFromToken(c, r.jsonObject())
     }
@@ -415,6 +428,7 @@ class TraktRepositoryImpl : TraktRepository {
         val h = HashMap<String, String>()
         h["Content-Type"] = "application/json"
         h["trakt-api-version"] = "2"
+        h["User-Agent"] = "Omniverse/2.1"
         if (c.hasTraktApp) h["trakt-api-key"] = c.traktClientId.trim()
         if (includeAuth && c.hasTraktUser) h["Authorization"] = "Bearer ${c.traktAccessToken.trim()}"
         return h

@@ -3970,6 +3970,9 @@ async function ensureFreshTraktToken() {
     };
     const headers = {
       "Content-Type": "application/json",
+      "trakt-api-version": "2",
+      "trakt-api-key": state.traktClientId.trim(),
+      "User-Agent": "Omniverse/2.1",
     };
 
     const res = await appFetch(url, "POST", headers, body);
@@ -4017,8 +4020,8 @@ async function startTraktAuth() {
   const clientIdInput = document.getElementById("trakt-client-id-input");
   const clientSecretInput = document.getElementById("trakt-client-secret-input");
 
-  const clientId = (clientIdInput ? clientIdInput.value : "").trim() || state.traktClientId || "";
-  const clientSecret = (clientSecretInput ? clientSecretInput.value : "").trim() || state.traktClientSecret || "";
+  const clientId = (clientIdInput ? clientIdInput.value : "").trim() || (state.traktClientId || "").trim();
+  const clientSecret = (clientSecretInput ? clientSecretInput.value : "").trim() || (state.traktClientSecret || "").trim();
 
   if (!clientId) {
     window.electron.showNotification(
@@ -4107,12 +4110,17 @@ async function exchangeTraktOAuthCode() {
     const url = "https://api.trakt.tv/oauth/token";
     const body = {
       code: rawCode,
-      client_id: state.traktClientId,
-      client_secret: state.traktClientSecret,
+      client_id: (state.traktClientId || "").trim(),
+      client_secret: (state.traktClientSecret || "").trim(),
       redirect_uri: "omniplay://trakt/oauth",
       grant_type: "authorization_code",
     };
-    const headers = { "Content-Type": "application/json" };
+    const headers = {
+      "Content-Type": "application/json",
+      "trakt-api-version": "2",
+      "trakt-api-key": (state.traktClientId || "").trim(),
+      "User-Agent": "Omniverse/2.1",
+    };
 
     const res = await appFetch(url, "POST", headers, body);
     if (!res.ok) {
@@ -4180,6 +4188,7 @@ async function refreshTraktLoginState() {
       Authorization: `Bearer ${token}`,
       "trakt-api-version": "2",
       "trakt-api-key": clientId,
+      "User-Agent": "Omniverse/2.1",
     };
 
     const res = await appFetch(url, "GET", headers);
@@ -4985,9 +4994,10 @@ async function pullFromTrakt() {
     const listsUrl = "https://api.trakt.tv/users/me/lists";
     const headers = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${state.traktToken}`,
+      Authorization: `Bearer ${state.traktToken.trim()}`,
       "trakt-api-version": "2",
-      "trakt-api-key": state.traktClientId,
+      "trakt-api-key": (state.traktClientId || "").trim(),
+      "User-Agent": "Omniverse/2.1",
     };
 
     const res = await appFetch(listsUrl, "GET", headers);
@@ -5063,9 +5073,10 @@ async function pushToTrakt() {
     const listsUrl = "https://api.trakt.tv/users/me/lists";
     const headers = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${state.traktToken}`,
+      Authorization: `Bearer ${state.traktToken.trim()}`,
       "trakt-api-version": "2",
-      "trakt-api-key": state.traktClientId,
+      "trakt-api-key": (state.traktClientId || "").trim(),
+      "User-Agent": "Omniverse/2.1",
     };
 
     const res = await appFetch(listsUrl, "GET", headers);
