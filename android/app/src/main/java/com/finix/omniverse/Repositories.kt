@@ -35,6 +35,7 @@ interface TvdbRepository {
 }
 
 interface TraktRepository {
+    suspend fun validateClientId(c: ApiCredentials): Boolean
     suspend fun fetchUserSettings(c: ApiCredentials): ApiCredentials
     suspend fun fetchDiscoveryCategories(c: ApiCredentials): List<MediaCategory>
     suspend fun fetchWatchlist(c: ApiCredentials): List<MediaItem>

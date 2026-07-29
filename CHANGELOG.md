@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [v2.1.85] - 2026-07-29
+
+> **Commit**: `fix(auth): make Trakt reauthentication resilient across every platform`
+
+### 🔐 Reliable Trakt Reauthentication
+- **Client ID Preflight**: Android, iOS, macOS, Windows, and Linux now verify the configured Trakt Client ID before opening OAuth, replacing Trakt's misleading `invalid_client / client_id is required` page with an actionable in-app explanation.
+- **Clipboard-Safe Credentials**: Removes whitespace, line breaks, byte-order marks, and zero-width formatting characters that mobile and desktop clipboards can silently add to Client IDs, secrets, and OAuth tokens.
+- **Automatic Session Repair**: Clears rejected, expired, or mismatched user tokens after Trakt returns `400`, `401`, or `403`, while preserving the developer Client ID and Client Secret for a clean reconnect.
+- **Fresh Login Guarantees**: A manual Connect or Refresh Login now retires the stale OAuth session before starting its replacement, preventing watchlist and playback sync from looping on invalid authorization.
+
+### 🌍 Native Platform Parity
+- **Android Diagnostics**: The existing API verification panel now tests the Trakt Client ID alongside TMDB, TVDB, and Pixeldrain and highlights the exact invalid field.
+- **iOS Recovery UX**: Onboarding and Settings preserve Trakt's actionable validation message instead of replacing it with a generic browser-opening error.
+- **Desktop OAuth Core**: Adds a packaged, shared Trakt authentication helper for deterministic URL construction, credential normalization, and consistent rejection handling across every Electron desktop target.
+
+### ✅ Authentication Regression Coverage
+- Added Android, iOS, and desktop cases for invisible-character cleanup and non-empty, correctly encoded OAuth `client_id`, redirect URI, and state parameters.
+- Android unit tests and compilation pass, all 18 desktop tests pass, and the complete Swift source parses with the non-UI iOS authentication core type-checking successfully.
+
+---
+
 ## 🚀 [v2.1.83] - 2026-07-29
 
 > **Commit**: `fix(android): preserve the release identity in secure CI builds`

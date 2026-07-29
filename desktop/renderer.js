@@ -7,6 +7,12 @@
 const BLOCKED_VIDSRC_DOMAINS = ["vidsrc.me", "vidsrc.to", "vidsrc.xyz"];
 const DEFAULT_EMBED_PROVIDER = "vsembed.ru";
 const DEFAULT_VIDSRC_DOMAIN = DEFAULT_EMBED_PROVIDER;
+const {
+  REDIRECT_URI: TRAKT_REDIRECT_URI,
+  buildTraktAuthorizeUrl,
+  isTraktCredentialRejection,
+  normalizeTraktCredential,
+} = globalThis.TraktAuth;
 function resolveSavedVidsrcDomain() {
   const saved = localStorage.getItem("omni_vidsrc_domain");
   const legacyVidsrcDefaults = [
@@ -50,13 +56,13 @@ let state = {
   filteredIptvChannels: [],
 
   // Trakt Sync credentials
-  traktToken: localStorage.getItem("omni_trakt_token") || "",
-  traktRefreshToken: localStorage.getItem("omni_trakt_refresh_token") || "",
+  traktToken: normalizeTraktCredential(localStorage.getItem("omni_trakt_token")),
+  traktRefreshToken: normalizeTraktCredential(localStorage.getItem("omni_trakt_refresh_token")),
   traktTokenExpiresAt:
     parseInt(localStorage.getItem("omni_trakt_expires_at") || "0") || 0,
   traktUsername: localStorage.getItem("omni_trakt_username") || "",
-  traktClientId: localStorage.getItem("omni_trakt_client_id") || "",
-  traktClientSecret: localStorage.getItem("omni_trakt_client_secret") || "",
+  traktClientId: normalizeTraktCredential(localStorage.getItem("omni_trakt_client_id")),
+  traktClientSecret: normalizeTraktCredential(localStorage.getItem("omni_trakt_client_secret")),
   pixeldrainApiKey: localStorage.getItem("omni_pixeldrain_key") || "",
 
   // TVDB & AniList credentials
@@ -3916,13 +3922,15 @@ function saveAllApiKeys() {
   const oldClientId = state.traktClientId;
   const oldClientSecret = state.traktClientSecret;
 
-  state.traktToken = document.getElementById("trakt-token-input").value.trim();
-  state.traktClientId = document
-    .getElementById("trakt-client-id-input")
-    .value.trim();
-  state.traktClientSecret = document
-    .getElementById("trakt-client-secret-input")
-    .value.trim();
+  state.traktToken = normalizeTraktCredential(
+    document.getElementById("trakt-token-input").value,
+  );
+  state.traktClientId = normalizeTraktCredential(
+    document.getElementById("trakt-client-id-input").value,
+  );
+  state.traktClientSecret = normalizeTraktCredential(
+    document.getElementById("trakt-client-secret-input").value,
+  );
   state.pixeldrainApiKey = document
     .getElementById("pixeldrain-key-input")
     .value.trim();
@@ -3936,9 +3944,11 @@ function saveAllApiKeys() {
     state.traktClientId !== oldClientId ||
     state.traktClientSecret !== oldClientSecret
   ) {
+    state.traktToken = "";
     state.traktRefreshToken = "";
     state.traktTokenExpiresAt = 0;
     state.traktUsername = "";
+    localStorage.removeItem("omni_trakt_token");
     localStorage.removeItem("omni_trakt_refresh_token");
     localStorage.removeItem("omni_trakt_expires_at");
     localStorage.removeItem("omni_trakt_username");
@@ -4092,7 +4102,7 @@ async function ensureFreshTraktToken() {
       refresh_token: state.traktRefreshToken.trim(),
       client_id: state.traktClientId.trim(),
       client_secret: state.traktClientSecret.trim(),
-      redirect_uri: "omniplay://trakt/oauth",
+      redirect_uri: TRAKT_REDIRECT_URI,
       grant_type: "refresh_token",
     };
     const headers = {
@@ -4104,8 +4114,16 @@ async function ensureFreshTraktToken() {
 
     const res = await appFetch(url, "POST", headers, body);
     if (!res.ok) {
+      if (res.status === 400 || isTraktCredentialRejection(res.status)) {
+        clearTraktUserSession(
+          res.status === 403
+            ? "Trakt rejected the saved Client ID. Re-copy it from your Trakt app settings, then connect again."
+            : "Your Trakt login expired. Connect Trakt again.",
+        );
+        return;
+      }
       throw new Error(
-        `Trakt token refresh failed with status ${res.status}: ${res.error || ""}`,
+        `Trakt token refresh failed with status ${res.status}: ${res.html || res.error || ""}`,
       );
     }
 
@@ -4127,6 +4145,43 @@ async function ensureFreshTraktToken() {
     console.log("Trakt token refreshed successfully.");
   } catch (err) {
     console.error("Failed to refresh Trakt access token:", err);
+  }
+}
+
+function clearTraktUserSession(notificationBody = "") {
+  state.traktToken = "";
+  state.traktRefreshToken = "";
+  state.traktTokenExpiresAt = 0;
+  state.traktUsername = "";
+  localStorage.removeItem("omni_trakt_token");
+  localStorage.removeItem("omni_trakt_refresh_token");
+  localStorage.removeItem("omni_trakt_expires_at");
+  localStorage.removeItem("omni_trakt_username");
+  loadSavedPreferences();
+  if (notificationBody) {
+    window.electron.showNotification("Trakt Sign-in Required", notificationBody);
+  }
+}
+
+async function validateTraktClientId(clientId) {
+  const normalized = normalizeTraktCredential(clientId);
+  if (!normalized) return false;
+  try {
+    const res = await appFetch(
+      "https://api.trakt.tv/movies/trending?limit=1",
+      "GET",
+      {
+        "Content-Type": "application/json",
+        "trakt-api-version": "2",
+        "trakt-api-key": normalized,
+        "User-Agent": "Omniverse/2.1",
+      },
+    );
+    return !isTraktCredentialRejection(res.status);
+  } catch (err) {
+    // A transient connectivity failure does not prove that the saved key is bad.
+    console.warn("Could not preflight the Trakt Client ID:", err);
+    return true;
   }
 }
 
@@ -4160,8 +4215,12 @@ async function startTraktAuth() {
   const clientIdInput = document.getElementById("trakt-client-id-input");
   const clientSecretInput = document.getElementById("trakt-client-secret-input");
 
-  const clientId = (clientIdInput ? clientIdInput.value : "").trim() || (state.traktClientId || "").trim();
-  const clientSecret = (clientSecretInput ? clientSecretInput.value : "").trim() || (state.traktClientSecret || "").trim();
+  const clientId = normalizeTraktCredential(
+    (clientIdInput ? clientIdInput.value : "") || state.traktClientId,
+  );
+  const clientSecret = normalizeTraktCredential(
+    (clientSecretInput ? clientSecretInput.value : "") || state.traktClientSecret,
+  );
 
   if (!clientId) {
     window.electron.showNotification(
@@ -4177,11 +4236,24 @@ async function startTraktAuth() {
   localStorage.setItem("omni_trakt_client_id", clientId);
   localStorage.setItem("omni_trakt_client_secret", clientSecret);
 
-  const stateToken = Math.random().toString(36).substring(2, 10);
-  const redirectUri = "omniplay://trakt/oauth";
-  const authUrl = `https://trakt.tv/oauth/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${stateToken}`;
+  if (!(await validateTraktClientId(clientId))) {
+    clearTraktUserSession();
+    window.electron.showNotification(
+      "Trakt Client ID Rejected",
+      "Copy the Client ID (not the Client Secret) from your Trakt app settings and try again.",
+    );
+    if (clientIdInput) clientIdInput.focus();
+    return;
+  }
 
-  window.electron.openExternal(authUrl);
+  // Refresh Login starts a replacement OAuth session; stop using the stale
+  // access token while that browser flow is in progress.
+  clearTraktUserSession();
+
+  const stateToken = Math.random().toString(36).substring(2, 10);
+  const authUrl = buildTraktAuthorizeUrl(clientId, stateToken);
+
+  await window.electron.openExternal(authUrl);
   showTraktCodePromptModal();
 }
 
@@ -4252,7 +4324,7 @@ async function exchangeTraktOAuthCode() {
       code: rawCode,
       client_id: (state.traktClientId || "").trim(),
       client_secret: (state.traktClientSecret || "").trim(),
-      redirect_uri: "omniplay://trakt/oauth",
+      redirect_uri: TRAKT_REDIRECT_URI,
       grant_type: "authorization_code",
     };
     const headers = {
@@ -4332,6 +4404,14 @@ async function refreshTraktLoginState() {
     };
 
     const res = await appFetch(url, "GET", headers);
+    if (isTraktCredentialRejection(res.status)) {
+      clearTraktUserSession(
+        res.status === 403
+          ? "Trakt rejected the saved Client ID. Re-copy it from your Trakt app settings, then connect again."
+          : "Your Trakt login expired. Connect Trakt again.",
+      );
+      return;
+    }
     if (res.ok && res.html) {
       const data = JSON.parse(res.html);
       const username = data.user && data.user.username ? data.user.username : "";
@@ -5153,6 +5233,14 @@ async function pullFromTrakt() {
     };
 
     const res = await appFetch(listsUrl, "GET", headers);
+    if (isTraktCredentialRejection(res.status)) {
+      clearTraktUserSession(
+        res.status === 403
+          ? "Trakt rejected the saved Client ID. Re-copy it from your Trakt app settings, then connect again."
+          : "Your Trakt login expired. Connect Trakt again.",
+      );
+      return;
+    }
     if (!res.ok) throw new Error("Could not fetch Trakt lists");
 
     const lists = JSON.parse(res.html);
@@ -5232,6 +5320,14 @@ async function pushToTrakt() {
     };
 
     const res = await appFetch(listsUrl, "GET", headers);
+    if (isTraktCredentialRejection(res.status)) {
+      clearTraktUserSession(
+        res.status === 403
+          ? "Trakt rejected the saved Client ID. Re-copy it from your Trakt app settings, then connect again."
+          : "Your Trakt login expired. Connect Trakt again.",
+      );
+      return;
+    }
     if (!res.ok) throw new Error("Could not check lists");
 
     const lists = JSON.parse(res.html);

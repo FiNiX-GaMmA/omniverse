@@ -33,17 +33,18 @@ struct CredentialsStore {
         c.traktUsername = read(K.traktUsername) ?? ""
         c.pixeldrainApiKey = read(K.pixeldrainApiKey) ?? ""
         c.anilistAccessToken = read(K.anilistAccessToken) ?? ""
-        return c
+        return c.normalizedTraktCredentials
     }
 
     func save(_ c: ApiCredentials) {
+        let normalized = c.normalizedTraktCredentials
         write(K.tmdbToken, c.tmdbToken.trimmed)
         write(K.tvdbKey, c.tvdbApiKey.trimmed)
         write(K.tvdbPin, c.tvdbPin.trimmed)
-        write(K.traktClientId, c.traktClientId.trimmed)
-        write(K.traktClientSecret, c.traktClientSecret.trimmed)
-        write(K.traktAccessToken, c.traktAccessToken.trimmed)
-        write(K.traktRefreshToken, c.traktRefreshToken.trimmed)
+        write(K.traktClientId, normalized.traktClientId)
+        write(K.traktClientSecret, normalized.traktClientSecret)
+        write(K.traktAccessToken, normalized.traktAccessToken)
+        write(K.traktRefreshToken, normalized.traktRefreshToken)
         write(K.traktTokenExpiresAt, String(c.traktTokenExpiresAt))
         write(K.traktUsername, c.traktUsername.trimmed)
         write(K.pixeldrainApiKey, c.pixeldrainApiKey.trimmed)

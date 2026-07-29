@@ -61,17 +61,18 @@ class CredentialsStore(context: Context) {
         traktTokenExpiresAt = (prefs.getString(K.traktTokenExpiresAt, "") ?: "").toLongOrNull() ?: 0L,
         traktUsername = prefs.getString(K.traktUsername, "") ?: "",
         pixeldrainApiKey = prefs.getString(K.pixeldrainApiKey, "") ?: "",
-    )
+    ).normalizedTraktCredentials()
 
     fun save(c: ApiCredentials) {
+        val normalized = c.normalizedTraktCredentials()
         prefs.edit().apply {
             putString(K.tmdbToken, c.tmdbToken.trim())
             putString(K.tvdbKey, c.tvdbApiKey.trim())
             putString(K.tvdbPin, c.tvdbPin.trim())
-            putString(K.traktClientId, c.traktClientId.trim())
-            putString(K.traktClientSecret, c.traktClientSecret.trim())
-            putString(K.traktAccessToken, c.traktAccessToken.trim())
-            putString(K.traktRefreshToken, c.traktRefreshToken.trim())
+            putString(K.traktClientId, normalized.traktClientId)
+            putString(K.traktClientSecret, normalized.traktClientSecret)
+            putString(K.traktAccessToken, normalized.traktAccessToken)
+            putString(K.traktRefreshToken, normalized.traktRefreshToken)
             putString(K.traktTokenExpiresAt, c.traktTokenExpiresAt.toString())
             putString(K.traktUsername, c.traktUsername.trim())
             putString(K.pixeldrainApiKey, c.pixeldrainApiKey.trim())

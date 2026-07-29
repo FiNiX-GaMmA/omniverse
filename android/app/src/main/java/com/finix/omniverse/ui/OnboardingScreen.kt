@@ -132,7 +132,7 @@ fun OnboardingScreen() {
                 state.saveCredentials(state.credentials.copy(traktClientId = clientId.trim(), traktClientSecret = clientSecret.trim()))
             }
             val uri = state.startTraktBrowserAuth()
-            if (uri == null) { error = "Could not open Trakt sign in." }
+            if (uri == null) { error = state.message ?: "Could not open Trakt sign in." }
             else context.startActivity(Intent(Intent.ACTION_VIEW, uri))
         }
     }

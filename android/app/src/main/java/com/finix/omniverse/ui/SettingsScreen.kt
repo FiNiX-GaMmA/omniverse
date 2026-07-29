@@ -68,6 +68,7 @@ import androidx.core.content.ContextCompat
 import com.finix.omniverse.AppGraph
 import com.finix.omniverse.SyncCenter
 import com.finix.omniverse.UpdateChecker
+import com.finix.omniverse.normalizedTraktCredential
 import com.finix.omniverse.ui.theme.LiquidColors
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
@@ -117,6 +118,7 @@ fun SettingsScreen() {
     var tmdbError by remember { mutableStateOf(false) }
     var tvdbError by remember { mutableStateOf(false) }
     var pixeldrainError by remember { mutableStateOf(false) }
+    var traktError by remember { mutableStateOf(false) }
 
     fun openUrl(url: String) = context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
 
@@ -243,7 +245,13 @@ fun SettingsScreen() {
                                 color = Color.White.copy(alpha = 0.6f),
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
-                            SecretField(traktId, { traktId = it }, "Trakt Client ID", "https://trakt.tv/favicon.ico")
+                            SecretField(
+                                traktId,
+                                { traktId = it; traktError = false },
+                                "Trakt Client ID",
+                                "https://trakt.tv/favicon.ico",
+                                isError = traktError,
+                            )
                             SecretField(
                                 traktSecret,
                                 { traktSecret = it },
@@ -267,6 +275,9 @@ fun SettingsScreen() {
                                         )
                                         val tvdbOk =
                                             tvdb.trim().isEmpty() || state.repos.tvdb.validate(state.credentials)
+                                        val traktOk = traktId.normalizedTraktCredential().isEmpty() || runCatching {
+                                            state.repos.trakt.validateClientId(state.credentials)
+                                        }.getOrDefault(false)
 
                                         val pixeldrainOk = pixeldrain.trim().isEmpty() || runCatching {
                                             val basic = android.util.Base64.encodeToString(
@@ -283,11 +294,13 @@ fun SettingsScreen() {
                                         tmdbError = tmdb.trim().isNotEmpty() && !tmdbOk
                                         tvdbError = tvdb.trim().isNotEmpty() && !tvdbOk
                                         pixeldrainError = pixeldrain.trim().isNotEmpty() && !pixeldrainOk
+                                        traktError = traktId.normalizedTraktCredential().isNotEmpty() && !traktOk
 
                                         val failedKeys = ArrayList<String>()
                                         if (tmdbError) failedKeys.add("TheMovieDB (TMDB) token")
                                         if (tvdbError) failedKeys.add("TVDB v4 API key")
                                         if (pixeldrainError) failedKeys.add("Pixeldrain API key")
+                                        if (traktError) failedKeys.add("Trakt Client ID")
 
                                         if (failedKeys.isEmpty()) {
                                             Toast.makeText(

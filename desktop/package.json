@@ -39,6 +39,7 @@
       "macUpdater.js",
       "preload.js",
       "securityPolicy.js",
+      "traktAuth.js",
       "index.html",
       "renderer.js",
       "qrcode.min.js",

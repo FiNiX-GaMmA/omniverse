@@ -19,15 +19,30 @@ class TraktRepositoryImpl : TraktRepository {
 
     private val base = "https://api.trakt.tv/"
 
-    class TraktException(message: String) : Exception(message)
+    class TraktException(message: String, val status: Int? = null) : Exception(message)
 
     // MARK: - OAuth
 
+    override suspend fun validateClientId(c: ApiCredentials): Boolean {
+        val normalized = c.normalizedTraktCredentials()
+        if (!normalized.hasTraktApp) return false
+        val r = get(
+            "movies/trending",
+            normalized,
+            includeAuth = false,
+            query = mapOf("limit" to "1"),
+        )
+        // Trakt uses 403 for a missing, revoked, or incorrect API key. Other
+        // statuses (including a temporary rate limit) do not prove the key bad.
+        return r.status != 401 && r.status != 403
+    }
+
     override fun buildOAuthAuthorizeUri(c: ApiCredentials, state: String): String? {
-        if (!c.hasTraktApp) return null
+        val normalized = c.normalizedTraktCredentials()
+        if (!normalized.hasTraktApp) return null
         val params = listOf(
             "response_type" to "code",
-            "client_id" to c.traktClientId.trim(),
+            "client_id" to normalized.traktClientId,
             "redirect_uri" to REDIRECT_URI,
             "state" to state,
         )
@@ -436,7 +451,7 @@ class TraktRepositoryImpl : TraktRepository {
 
     private fun throwForResponse(r: Http.Response, label: String) {
         if (r.status < 400) return
-        throw TraktException("$label returned ${r.status}: ${r.body}")
+        throw TraktException("$label returned ${r.status}: ${r.body}", status = r.status)
     }
 
     private fun enc(value: String): String = URLEncoder.encode(value, "UTF-8")

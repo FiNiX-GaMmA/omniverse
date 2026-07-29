@@ -23,19 +23,38 @@ final class TraktRepository: TraktRepositoryProtocol {
                 return "\(label) returned \(status): \(body)"
             }
         }
+        var statusCode: Int? {
+            if case .response(_, let status, _) = self { return status }
+            return nil
+        }
     }
 
     // MARK: - OAuth
 
+    func validateClientId(_ c: ApiCredentials) async throws -> Bool {
+        let normalized = c.normalizedTraktCredentials
+        guard normalized.hasTraktApp else { return false }
+        let r = try await get(
+            "movies/trending",
+            normalized,
+            query: ["limit": "1"],
+            includeAuth: false
+        )
+        // A rejected Trakt API key is reported as 403. Other responses (such as
+        // a temporary rate limit) do not prove that the key itself is invalid.
+        return r.status != 401 && r.status != 403
+    }
+
     func buildOAuthAuthorizeUri(_ c: ApiCredentials, state: String) -> URL? {
-        guard c.hasTraktApp else { return nil }
+        let normalized = c.normalizedTraktCredentials
+        guard normalized.hasTraktApp else { return nil }
         var comps = URLComponents()
         comps.scheme = "https"
         comps.host = "trakt.tv"
         comps.path = "/oauth/authorize"
         comps.queryItems = [
             URLQueryItem(name: "response_type", value: "code"),
-            URLQueryItem(name: "client_id", value: c.traktClientId.trimmed),
+            URLQueryItem(name: "client_id", value: normalized.traktClientId),
             URLQueryItem(name: "redirect_uri", value: Self.redirectUri),
             URLQueryItem(name: "state", value: state),
         ]

@@ -239,7 +239,11 @@ final class AppState {
             for item in items { next.formUnion(watchlistKeys(item)) }
             watchlist = next
             settingsStore.saveWatchlist(next)
-        } catch { message = "Could not sync Trakt watchlist: \(error)" }
+        } catch {
+            if !recoverRejectedTraktSession(error) {
+                message = "Could not sync Trakt watchlist: \(error)"
+            }
+        }
         await refreshTraktPlayback()
     }
 
@@ -507,7 +511,7 @@ final class AppState {
     // MARK: - Credentials / settings
 
     func saveCredentials(_ next: ApiCredentials) async {
-        var n = next
+        var n = next.normalizedTraktCredentials
         let changed = n.traktClientId.trimmed != credentials.traktClientId.trimmed
             || n.traktClientSecret.trimmed != credentials.traktClientSecret.trimmed
         if changed { n.traktAccessToken = ""; n.traktRefreshToken = ""; n.traktTokenExpiresAt = 0; n.traktUsername = "" }
@@ -642,7 +646,19 @@ final class AppState {
 
     // MARK: - Trakt connect
 
-    func startTraktBrowserAuth() -> URL? {
+    func startTraktBrowserAuth() async -> URL? {
+        credentials = credentials.normalizedTraktCredentials
+        credentialsStore.save(credentials)
+        let rejected = (try? await repos.trakt.validateClientId(credentials)) == false
+        if rejected {
+            clearTraktUserSession()
+            message = "Trakt rejected this Client ID. Copy the Client ID (not the Client Secret) from your Trakt app settings and try again."
+            return nil
+        }
+
+        // A manual Connect/Refresh Login starts a new OAuth session. Stop using
+        // the stale access token while the replacement login is in progress.
+        clearTraktUserSession()
         pendingTraktState = randomState()
         traktConnecting = true
         message = "Opening Trakt sign in..."
@@ -656,6 +672,31 @@ final class AppState {
         credentials.traktClientId = ""; credentials.traktClientSecret = ""
         credentialsStore.save(credentials)
         message = "Trakt disconnected."
+    }
+
+    private func clearTraktUserSession() {
+        credentials.traktAccessToken = ""
+        credentials.traktRefreshToken = ""
+        credentials.traktTokenExpiresAt = 0
+        credentials.traktUsername = ""
+        credentialsStore.save(credentials)
+    }
+
+    private func recoverRejectedTraktSession(_ error: Error) -> Bool {
+        guard let traktError = error as? TraktRepository.TraktError,
+              let status = traktError.statusCode else { return false }
+        let expiredRefresh: Bool
+        if case .response(let label, _, _) = traktError {
+            expiredRefresh = status == 400 && label == "Trakt token refresh"
+        } else {
+            expiredRefresh = false
+        }
+        guard status == 401 || status == 403 || expiredRefresh else { return false }
+        clearTraktUserSession()
+        message = status == 403
+            ? "Trakt rejected the saved Client ID. Re-copy it from your Trakt app settings, then connect again."
+            : "Your Trakt login expired. Connect Trakt again."
+        return true
     }
 
     func handleIncomingURL(_ url: URL) async {

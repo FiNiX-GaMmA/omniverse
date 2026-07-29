@@ -9,6 +9,25 @@ import org.junit.Test
 class NavStateTest {
 
     @Test
+    fun traktCredentialsRemoveClipboardFormattingNoise() {
+        val raw = "  abcd\u200B ef\n12\uFEFF34  "
+        assertEquals("abcdef1234", raw.normalizedTraktCredential())
+    }
+
+    @Test
+    fun traktAuthorizeUrlAlwaysCarriesNormalizedClientId() {
+        val uri = TraktRepositoryImpl().buildOAuthAuthorizeUri(
+            ApiCredentials(traktClientId = " abcd\u200B1234 "),
+            state = "state-token",
+        )
+
+        assertTrue(uri != null)
+        assertTrue(uri!!.contains("client_id=abcd1234"))
+        assertTrue(uri.contains("redirect_uri=omniplay%3A%2F%2Ftrakt%2Foauth"))
+        assertTrue(uri.contains("state=state-token"))
+    }
+
+    @Test
     fun testResolveAvailableTabsDefault() {
         val settings = UserSettings(showMoviesTv = true, showLiveTv = true)
         val tabs = resolveAvailableTabs(settings)

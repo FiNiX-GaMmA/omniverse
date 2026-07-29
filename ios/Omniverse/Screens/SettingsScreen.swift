@@ -436,13 +436,13 @@ struct SettingsScreen: View {
     private func connectTrakt() {
         Task {
             await save()
-            if let url = state.startTraktBrowserAuth() {
+            if let url = await state.startTraktBrowserAuth() {
                 let opened = await UIApplication.shared.open(url)
                 localMessage = opened
                     ? "Sign in to Trakt in the browser. Omniverse will reconnect automatically."
                     : "Could not open Trakt sign in."
             } else {
-                localMessage = "Could not open Trakt sign in."
+                localMessage = state.message ?? "Could not open Trakt sign in."
             }
         }
     }

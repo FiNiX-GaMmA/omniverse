@@ -211,8 +211,8 @@ struct TraktOnboardingScreen: View {
                 c.traktClientSecret = clientSecret.trimmed
                 await state.saveCredentials(c)
             }
-            guard let url = state.startTraktBrowserAuth() else {
-                errorMessage = "Could not open Trakt sign in."
+            guard let url = await state.startTraktBrowserAuth() else {
+                errorMessage = state.message ?? "Could not open Trakt sign in."
                 return
             }
             let opened = await UIApplication.shared.open(url)

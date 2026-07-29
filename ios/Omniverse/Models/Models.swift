@@ -53,6 +53,15 @@ struct ApiCredentials: Codable, Equatable {
     var hasPixeldrain: Bool { !pixeldrainApiKey.trimmed.isEmpty }
     var hasAnilist: Bool { !anilistAccessToken.trimmed.isEmpty }
     var canRefreshTrakt: Bool { !traktRefreshToken.trimmed.isEmpty && !traktClientSecret.trimmed.isEmpty }
+
+    var normalizedTraktCredentials: ApiCredentials {
+        var copy = self
+        copy.traktClientId = traktClientId.normalizedTraktCredential
+        copy.traktClientSecret = traktClientSecret.normalizedTraktCredential
+        copy.traktAccessToken = traktAccessToken.normalizedTraktCredential
+        copy.traktRefreshToken = traktRefreshToken.normalizedTraktCredential
+        return copy
+    }
 }
 
 // MARK: - UserSettings
@@ -291,4 +300,14 @@ struct WatchProgress: Codable, Equatable, Identifiable {
 
 extension String {
     var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    /// Removes copy/paste formatting that Trakt credentials never contain. Trakt
+    /// otherwise reports the altered value as a missing client ID.
+    var normalizedTraktCredential: String {
+        let invisible = CharacterSet(charactersIn: "\u{200B}\u{200C}\u{200D}\u{2060}\u{FEFF}")
+        return unicodeScalars
+            .filter { !CharacterSet.whitespacesAndNewlines.contains($0) && !invisible.contains($0) }
+            .map(String.init)
+            .joined()
+    }
 }

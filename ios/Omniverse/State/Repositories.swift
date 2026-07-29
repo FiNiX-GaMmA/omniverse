@@ -20,6 +20,7 @@ protocol TvdbRepositoryProtocol {
 }
 
 protocol TraktRepositoryProtocol {
+    func validateClientId(_ c: ApiCredentials) async throws -> Bool
     func fetchUserSettings(_ c: ApiCredentials) async throws -> ApiCredentials
     func fetchDiscoveryCategories(_ c: ApiCredentials) async throws -> [MediaCategory]
     func fetchWatchlist(_ c: ApiCredentials) async throws -> [MediaItem]

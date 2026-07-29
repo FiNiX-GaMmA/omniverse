@@ -67,6 +67,23 @@ data class ApiCredentials(
     val canRefreshTrakt get() = traktRefreshToken.trim().isNotEmpty() && traktClientSecret.trim().isNotEmpty()
 }
 
+private val traktCredentialNoise = Regex("[\\s\\u200B\\u200C\\u200D\\u2060\\uFEFF]")
+
+/**
+ * Trakt credentials are opaque, whitespace-free values. Clipboard providers on
+ * mobile occasionally insert line breaks or zero-width formatting characters;
+ * Trakt reports those values as a missing/invalid client ID instead of explaining
+ * that the pasted value was changed.
+ */
+fun String.normalizedTraktCredential(): String = replace(traktCredentialNoise, "")
+
+fun ApiCredentials.normalizedTraktCredentials(): ApiCredentials = copy(
+    traktClientId = traktClientId.normalizedTraktCredential(),
+    traktClientSecret = traktClientSecret.normalizedTraktCredential(),
+    traktAccessToken = traktAccessToken.normalizedTraktCredential(),
+    traktRefreshToken = traktRefreshToken.normalizedTraktCredential(),
+)
+
 @Serializable
 data class UserSettings(
     val language: String = "en-US",

@@ -3,6 +3,22 @@ import XCTest
 
 final class NavStateTests: XCTestCase {
 
+    func testTraktCredentialsRemoveClipboardFormattingNoise() {
+        XCTAssertEqual("  abcd\u{200B} ef\n12\u{FEFF}34  ".normalizedTraktCredential, "abcdef1234")
+    }
+
+    func testTraktAuthorizeUrlAlwaysCarriesNormalizedClientId() {
+        var credentials = ApiCredentials()
+        credentials.traktClientId = " abcd\u{200B}1234 "
+        let url = TraktRepository().buildOAuthAuthorizeUri(credentials, state: "state-token")
+        let components = url.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false) }
+        let query = Dictionary(uniqueKeysWithValues: (components?.queryItems ?? []).map { ($0.name, $0.value ?? "") })
+
+        XCTAssertEqual(query["client_id"], "abcd1234")
+        XCTAssertEqual(query["redirect_uri"], "omniplay://trakt/oauth")
+        XCTAssertEqual(query["state"], "state-token")
+    }
+
     func testDefaultUserSettings() {
         let settings = UserSettings()
         XCTAssertTrue(settings.showMoviesTv)

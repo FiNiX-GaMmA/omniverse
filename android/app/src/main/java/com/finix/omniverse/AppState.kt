@@ -244,7 +244,9 @@ class AppState(context: Context) {
             watchlist = next
             settingsStore.saveWatchlist(next)
         } catch (t: Throwable) {
-            message = "Could not sync Trakt watchlist: $t"
+            if (!recoverRejectedTraktSession(t)) {
+                message = "Could not sync Trakt watchlist: ${t.message ?: t.toString()}"
+            }
         }
         refreshTraktPlayback()
     }
@@ -419,7 +421,7 @@ class AppState(context: Context) {
     // MARK: - Credentials / settings
 
     suspend fun saveCredentials(next: ApiCredentials) {
-        var n = next
+        var n = next.normalizedTraktCredentials()
         val changed = n.traktClientId.trim() != credentials.traktClientId.trim() ||
                 n.traktClientSecret.trim() != credentials.traktClientSecret.trim()
         if (changed) n =
@@ -697,7 +699,19 @@ class AppState(context: Context) {
 
     // MARK: - Trakt connect
 
-    fun startTraktBrowserAuth(): Uri? {
+    suspend fun startTraktBrowserAuth(): Uri? {
+        credentials = credentials.normalizedTraktCredentials()
+        credentialsStore.save(credentials)
+        val rejected = runCatching { !repos.trakt.validateClientId(credentials) }.getOrDefault(false)
+        if (rejected) {
+            clearTraktUserSession()
+            message = "Trakt rejected this Client ID. Copy the Client ID (not the Client Secret) from your Trakt app settings and try again."
+            return null
+        }
+
+        // A manual Connect/Refresh Login starts a new OAuth session. Do not let
+        // the old token continue producing 401/403 responses while it is replaced.
+        clearTraktUserSession()
         val state = randomState()
         pendingTraktState = state
         traktConnecting = true
@@ -718,6 +732,29 @@ class AppState(context: Context) {
             )
         credentialsStore.save(credentials)
         message = "Trakt disconnected."
+    }
+
+    private fun clearTraktUserSession() {
+        credentials = credentials.copy(
+            traktAccessToken = "",
+            traktRefreshToken = "",
+            traktTokenExpiresAt = 0,
+            traktUsername = "",
+        )
+        credentialsStore.save(credentials)
+    }
+
+    private fun recoverRejectedTraktSession(t: Throwable): Boolean {
+        val status = (t as? TraktRepositoryImpl.TraktException)?.status
+        val expiredRefresh = status == 400 && t.message?.startsWith("Trakt token refresh returned") == true
+        if (status != 401 && status != 403 && !expiredRefresh) return false
+        clearTraktUserSession()
+        message = if (status == 403) {
+            "Trakt rejected the saved Client ID. Re-copy it from your Trakt app settings, then connect again."
+        } else {
+            "Your Trakt login expired. Connect Trakt again."
+        }
+        return true
     }
 
     suspend fun handleIncomingUri(uri: Uri) {
