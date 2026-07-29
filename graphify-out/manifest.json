@@ -1,473 +1,503 @@
 {
   "android/app/build.gradle.kts": {
-    "mtime": 1785156129.4979463,
-    "ast_hash": "8f858fc351a2d6c2191c5b12488ac201",
-    "semantic_hash": "8f858fc351a2d6c2191c5b12488ac201"
-  },
-  "android/app/src/main/java/com/finix/omniverse/AnimeRepositoryImpl.kt": {
-    "mtime": 1785161910.612571,
-    "ast_hash": "24c80b292a0f71f5980b07b1c989f02d",
-    "semantic_hash": "24c80b292a0f71f5980b07b1c989f02d"
+    "mtime": 1785301900.895362,
+    "ast_hash": "5004e6d507816e965ee8f8ad4033c81e",
+    "semantic_hash": "5004e6d507816e965ee8f8ad4033c81e"
   },
   "android/app/src/main/java/com/finix/omniverse/AppState.kt": {
-    "mtime": 1785157105.786055,
-    "ast_hash": "3dfdfb0023e71b8a634e6c1ab0174147",
-    "semantic_hash": "3dfdfb0023e71b8a634e6c1ab0174147"
+    "mtime": 1785298729.5384982,
+    "ast_hash": "bbaf1da034dddd836f0d034c203b2fbb",
+    "semantic_hash": "bbaf1da034dddd836f0d034c203b2fbb"
   },
   "android/app/src/main/java/com/finix/omniverse/Http.kt": {
-    "mtime": 1785156129.5030968,
-    "ast_hash": "5222a9ca2853d4386bfb3c521489c40b",
-    "semantic_hash": "5222a9ca2853d4386bfb3c521489c40b"
+    "mtime": 1785301876.1985385,
+    "ast_hash": "5515e6c47129f69d20611de7c1b7b5f9",
+    "semantic_hash": "5515e6c47129f69d20611de7c1b7b5f9"
   },
   "android/app/src/main/java/com/finix/omniverse/LiveTvRepositoryImpl.kt": {
-    "mtime": 1785156129.5040972,
-    "ast_hash": "cec56a57838c233ac081c565ef62ad96",
-    "semantic_hash": "cec56a57838c233ac081c565ef62ad96"
+    "mtime": 1783349580.5375688,
+    "ast_hash": "cef3d14067abc34276edff4b4f314083",
+    "semantic_hash": "cef3d14067abc34276edff4b4f314083"
   },
   "android/app/src/main/java/com/finix/omniverse/MainActivity.kt": {
-    "mtime": 1785156129.5050948,
-    "ast_hash": "debce39dea0b99995a764006f4671b88",
-    "semantic_hash": "debce39dea0b99995a764006f4671b88"
+    "mtime": 1783349580.5376534,
+    "ast_hash": "e013a129a3849cfa9e07562357598147",
+    "semantic_hash": "e013a129a3849cfa9e07562357598147"
   },
   "android/app/src/main/java/com/finix/omniverse/Models.kt": {
-    "mtime": 1785156129.5050948,
-    "ast_hash": "0515ece15f1dffef311ca36af82ed3d0",
-    "semantic_hash": "0515ece15f1dffef311ca36af82ed3d0"
+    "mtime": 1785301381.9042401,
+    "ast_hash": "f84754be7059fc077dcde7fe122ddfb6",
+    "semantic_hash": "f84754be7059fc077dcde7fe122ddfb6"
   },
   "android/app/src/main/java/com/finix/omniverse/OmniverseApplication.kt": {
-    "mtime": 1785156129.5060956,
-    "ast_hash": "50626350ddb3d5794afbafdbbfa39384",
-    "semantic_hash": "50626350ddb3d5794afbafdbbfa39384"
+    "mtime": 1783349580.5378497,
+    "ast_hash": "f3e9dd5cb6b6f9657f4f19cd20f1f1c0",
+    "semantic_hash": "f3e9dd5cb6b6f9657f4f19cd20f1f1c0"
   },
   "android/app/src/main/java/com/finix/omniverse/Repositories.kt": {
-    "mtime": 1785157058.0679226,
-    "ast_hash": "0a5a7270351c205f06bfee03c54f1846",
-    "semantic_hash": "0a5a7270351c205f06bfee03c54f1846"
+    "mtime": 1785169176.3342845,
+    "ast_hash": "9a3f0798e7a28af82e40cec66ee8fb32",
+    "semantic_hash": "9a3f0798e7a28af82e40cec66ee8fb32"
   },
   "android/app/src/main/java/com/finix/omniverse/Stores.kt": {
-    "mtime": 1785156129.5070965,
-    "ast_hash": "a07ee8627d62e616d7c2386c68835fa9",
-    "semantic_hash": "a07ee8627d62e616d7c2386c68835fa9"
+    "mtime": 1785169176.3345888,
+    "ast_hash": "47a94a3246ac4cb5e448b6fc1a204c2a",
+    "semantic_hash": "47a94a3246ac4cb5e448b6fc1a204c2a"
   },
   "android/app/src/main/java/com/finix/omniverse/SyncCenter.kt": {
-    "mtime": 1785156129.508093,
-    "ast_hash": "2cce4a7c9b88d644921d94999bf34c45",
-    "semantic_hash": "2cce4a7c9b88d644921d94999bf34c45"
+    "mtime": 1785301361.9482958,
+    "ast_hash": "17d01e0560ed8c13021e957edac7e7b9",
+    "semantic_hash": "17d01e0560ed8c13021e957edac7e7b9"
   },
   "android/app/src/main/java/com/finix/omniverse/TmdbRepositoryImpl.kt": {
-    "mtime": 1785156129.5090947,
-    "ast_hash": "68aad985b2b0e0d682d698f0423a7f09",
-    "semantic_hash": "68aad985b2b0e0d682d698f0423a7f09"
+    "mtime": 1783949459.9964962,
+    "ast_hash": "1734d419321f45e2ce7723360a4bbb46",
+    "semantic_hash": "1734d419321f45e2ce7723360a4bbb46"
   },
   "android/app/src/main/java/com/finix/omniverse/TraktRepositoryImpl.kt": {
-    "mtime": 1785156129.510095,
-    "ast_hash": "5bdf5944f68da190c95e008d82a2828e",
-    "semantic_hash": "5bdf5944f68da190c95e008d82a2828e"
+    "mtime": 1785298729.5390959,
+    "ast_hash": "7bceccadf5f885e0037b6169644a2720",
+    "semantic_hash": "7bceccadf5f885e0037b6169644a2720"
   },
   "android/app/src/main/java/com/finix/omniverse/TvdbRepositoryImpl.kt": {
-    "mtime": 1785156129.5107262,
-    "ast_hash": "b580ea0d8b8eebe0f83d339129b56e24",
-    "semantic_hash": "b580ea0d8b8eebe0f83d339129b56e24"
+    "mtime": 1785169176.3352737,
+    "ast_hash": "ce422ef93002d88229f3e06f102b3d92",
+    "semantic_hash": "ce422ef93002d88229f3e06f102b3d92"
   },
   "android/app/src/main/java/com/finix/omniverse/UpdateChecker.kt": {
-    "mtime": 1785156129.5117345,
-    "ast_hash": "2e3cf9a2aff8f55707a0e4628eefa641",
-    "semantic_hash": "2e3cf9a2aff8f55707a0e4628eefa641"
+    "mtime": 1785301347.291364,
+    "ast_hash": "dccd0321e3d390ffe2076d3ccc67a2c0",
+    "semantic_hash": "dccd0321e3d390ffe2076d3ccc67a2c0"
   },
   "android/app/src/main/java/com/finix/omniverse/VidsrcRepositoryImpl.kt": {
-    "mtime": 1785161878.341174,
-    "ast_hash": "950d7bd6a231e222bd1dc0e42959f503",
-    "semantic_hash": "950d7bd6a231e222bd1dc0e42959f503"
+    "mtime": 1785169176.3358393,
+    "ast_hash": "5ae9232c1f0b5bf090b7e3f82b30b266",
+    "semantic_hash": "5ae9232c1f0b5bf090b7e3f82b30b266"
   },
   "android/app/src/main/java/com/finix/omniverse/WebViewCookieJar.kt": {
-    "mtime": 1785156129.5127325,
-    "ast_hash": "326d5515726ca600a84af9233531a1f2",
-    "semantic_hash": "326d5515726ca600a84af9233531a1f2"
+    "mtime": 1783361156.1006775,
+    "ast_hash": "99173914bab1ef7a81aedd67fcd8c119",
+    "semantic_hash": "99173914bab1ef7a81aedd67fcd8c119"
   },
   "android/app/src/main/java/com/finix/omniverse/YarrlistRepositoryImpl.kt": {
-    "mtime": 1785157065.4056427,
-    "ast_hash": "553e7b474534787fe8f6bba5163dc6f2",
-    "semantic_hash": "553e7b474534787fe8f6bba5163dc6f2"
+    "mtime": 1783349580.5390344,
+    "ast_hash": "7120798d6546839b45ff00bcaf9317b3",
+    "semantic_hash": "7120798d6546839b45ff00bcaf9317b3"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/AnimatedSplash.kt": {
-    "mtime": 1785156129.5137334,
-    "ast_hash": "1733bc54dde144db029b7289f06efa69",
-    "semantic_hash": "1733bc54dde144db029b7289f06efa69"
+    "mtime": 1783349580.5392034,
+    "ast_hash": "5f8582036d643dba101408dd7b320c61",
+    "semantic_hash": "5f8582036d643dba101408dd7b320c61"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/Autoplay.kt": {
-    "mtime": 1785156129.5137334,
-    "ast_hash": "f2e560c6ed184423780ff999ae62dd7e",
-    "semantic_hash": "f2e560c6ed184423780ff999ae62dd7e"
-  },
-  "android/app/src/main/java/com/finix/omniverse/ui/CaptchaScreen.kt": {
-    "mtime": 1785156129.5147355,
-    "ast_hash": "1187df601316573d7801573ccfb6b379",
-    "semantic_hash": "1187df601316573d7801573ccfb6b379"
+    "mtime": 1784006861.026913,
+    "ast_hash": "46bc210c9bc27aca9b0afeb3e8ded067",
+    "semantic_hash": "46bc210c9bc27aca9b0afeb3e8ded067"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/Components.kt": {
-    "mtime": 1785156129.5147355,
-    "ast_hash": "a7c489d6458968b67fe2cb92f4de20db",
-    "semantic_hash": "a7c489d6458968b67fe2cb92f4de20db"
+    "mtime": 1785299726.3777788,
+    "ast_hash": "22d1f6010231c1bcb0c9c2318a5179ff",
+    "semantic_hash": "22d1f6010231c1bcb0c9c2318a5179ff"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/HomeScreen.kt": {
-    "mtime": 1785156129.5157394,
-    "ast_hash": "8c9f0e0105a4ec81bd3b7cae509f26d8",
-    "semantic_hash": "8c9f0e0105a4ec81bd3b7cae509f26d8"
+    "mtime": 1785301785.991799,
+    "ast_hash": "3ff7a0d246815a2b4df751399ef07998",
+    "semantic_hash": "3ff7a0d246815a2b4df751399ef07998"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/LiveTvScreen.kt": {
-    "mtime": 1785156129.5167372,
-    "ast_hash": "bd0a3d3e4ce408eed48b9b57973326be",
-    "semantic_hash": "bd0a3d3e4ce408eed48b9b57973326be"
+    "mtime": 1783949459.9981923,
+    "ast_hash": "dab7b86601fe8c6c2b6b222309d617ef",
+    "semantic_hash": "dab7b86601fe8c6c2b6b222309d617ef"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/MediaDetailScreen.kt": {
-    "mtime": 1785156129.5167372,
-    "ast_hash": "d49ba04ae2c97c419a80126e2bc054f6",
-    "semantic_hash": "d49ba04ae2c97c419a80126e2bc054f6"
+    "mtime": 1785299853.1211522,
+    "ast_hash": "0d416ca8224fc1f79af3677101c99dc3",
+    "semantic_hash": "0d416ca8224fc1f79af3677101c99dc3"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/OmniverseRoot.kt": {
-    "mtime": 1785156129.5177398,
-    "ast_hash": "04e4ee657a46f633546333c9885bed4e",
-    "semantic_hash": "04e4ee657a46f633546333c9885bed4e"
+    "mtime": 1785299966.5503907,
+    "ast_hash": "16815a67219adf12aa38bc9f5afe2cf3",
+    "semantic_hash": "16815a67219adf12aa38bc9f5afe2cf3"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/OnboardingScreen.kt": {
-    "mtime": 1785156129.5187364,
-    "ast_hash": "448dcdf0e9a088bc8962850ded24cf1f",
-    "semantic_hash": "448dcdf0e9a088bc8962850ded24cf1f"
+    "mtime": 1783349580.5398853,
+    "ast_hash": "d51574c08818503194d2facd72954761",
+    "semantic_hash": "d51574c08818503194d2facd72954761"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/PlayerScreen.kt": {
-    "mtime": 1785156129.5187364,
-    "ast_hash": "f5b379b73756d7fef3f49e75d00835e0",
-    "semantic_hash": "f5b379b73756d7fef3f49e75d00835e0"
+    "mtime": 1785298729.5396612,
+    "ast_hash": "55df03e12461539dd3199afd45cddd58",
+    "semantic_hash": "55df03e12461539dd3199afd45cddd58"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/SearchScreen.kt": {
-    "mtime": 1785156129.5197375,
-    "ast_hash": "c61b4d447b2eb4bbe293698fa33ec882",
-    "semantic_hash": "c61b4d447b2eb4bbe293698fa33ec882"
+    "mtime": 1785299835.7277768,
+    "ast_hash": "4b788dab221dc561722990954aaf0bbd",
+    "semantic_hash": "4b788dab221dc561722990954aaf0bbd"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/SettingsScreen.kt": {
-    "mtime": 1785156129.5197375,
-    "ast_hash": "7d295f6786f99d4aa646a4e662f6b4ab",
-    "semantic_hash": "7d295f6786f99d4aa646a4e662f6b4ab"
+    "mtime": 1785298729.5400138,
+    "ast_hash": "199ecae0ae1b88df12f926530021a1db",
+    "semantic_hash": "199ecae0ae1b88df12f926530021a1db"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/VidsrcResolveScreen.kt": {
-    "mtime": 1785156129.5213587,
-    "ast_hash": "98352ab7f8caa56ff47c2c3ace759746",
-    "semantic_hash": "98352ab7f8caa56ff47c2c3ace759746"
+    "mtime": 1784006861.0277169,
+    "ast_hash": "181cdbe2e8a1067f5452225b5fedbe71",
+    "semantic_hash": "181cdbe2e8a1067f5452225b5fedbe71"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/WebEmbedScreen.kt": {
-    "mtime": 1785156129.5213587,
-    "ast_hash": "9c1ba2dd61460aff058b8586f5770976",
-    "semantic_hash": "9c1ba2dd61460aff058b8586f5770976"
+    "mtime": 1783949459.999723,
+    "ast_hash": "3c68e0606bc3cd62522e110ee021ab9f",
+    "semantic_hash": "3c68e0606bc3cd62522e110ee021ab9f"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/WebGuards.kt": {
-    "mtime": 1785156129.5223703,
-    "ast_hash": "5cd7a1167c75a637f1ae6c71840442d3",
-    "semantic_hash": "5cd7a1167c75a637f1ae6c71840442d3"
+    "mtime": 1783949459.9998782,
+    "ast_hash": "2ffe557c4ccea9728ebadc964696962b",
+    "semantic_hash": "2ffe557c4ccea9728ebadc964696962b"
   },
   "android/app/src/main/java/com/finix/omniverse/ui/theme/Theme.kt": {
-    "mtime": 1785156129.523371,
-    "ast_hash": "9a00a940717492903660d8b57dd10a3e",
-    "semantic_hash": "9a00a940717492903660d8b57dd10a3e"
+    "mtime": 1785299674.7177303,
+    "ast_hash": "acbbebe67ac0855f87410830d6b57ba1",
+    "semantic_hash": "acbbebe67ac0855f87410830d6b57ba1"
+  },
+  "android/app/src/test/java/com/finix/omniverse/NavStateTest.kt": {
+    "mtime": 1785301347.2931058,
+    "ast_hash": "69811cc88ba2d5fecc873f596c1f8e14",
+    "semantic_hash": "69811cc88ba2d5fecc873f596c1f8e14"
   },
   "android/app/src/test/java/com/finix/omniverse/SyncCenterTest.kt": {
-    "mtime": 1785156129.543327,
-    "ast_hash": "53e7a89cde885b2700faf1cf93321f39",
-    "semantic_hash": "53e7a89cde885b2700faf1cf93321f39"
+    "mtime": 1785301361.949552,
+    "ast_hash": "6315c04425b7ed3148fe45bcb69a195c",
+    "semantic_hash": "6315c04425b7ed3148fe45bcb69a195c"
+  },
+  "android/app/src/test/java/com/finix/omniverse/UpdateCheckerTest.kt": {
+    "mtime": 1785301347.2917674,
+    "ast_hash": "7efc58b2b7e69a580a0932d14aa137ff",
+    "semantic_hash": "7efc58b2b7e69a580a0932d14aa137ff"
   },
   "android/build.gradle.kts": {
-    "mtime": 1785156129.543327,
-    "ast_hash": "6572c4cff30b51acf4be935b6970fc8a",
-    "semantic_hash": "6572c4cff30b51acf4be935b6970fc8a"
+    "mtime": 1783349580.5458577,
+    "ast_hash": "6f2189b794cc542848623d300a016df5",
+    "semantic_hash": "6f2189b794cc542848623d300a016df5"
   },
   "android/gradlew": {
-    "mtime": 1785156129.549642,
-    "ast_hash": "2499a554dff111d1e3cba902f7147dc0",
-    "semantic_hash": "2499a554dff111d1e3cba902f7147dc0"
+    "mtime": 1783349580.5474224,
+    "ast_hash": "65578da0358a01f31a6a78dfcf47e2bf",
+    "semantic_hash": "65578da0358a01f31a6a78dfcf47e2bf"
   },
   "android/settings.gradle.kts": {
-    "mtime": 1785156129.552157,
-    "ast_hash": "63910a95b7069f96bee1f86dc6fee65c",
-    "semantic_hash": "63910a95b7069f96bee1f86dc6fee65c"
-  },
-  "anime_tester.py": {
-    "mtime": 1785157051.0459378,
-    "ast_hash": "09029afe89a6700aef35c4ed0978ffa5",
-    "semantic_hash": "09029afe89a6700aef35c4ed0978ffa5"
+    "mtime": 1783349580.54768,
+    "ast_hash": "40099493e6ca6ebb24473977420babec",
+    "semantic_hash": "40099493e6ca6ebb24473977420babec"
   },
   "assets/branding/omniverse_lottie.json": {
-    "mtime": 1785156129.5578005,
-    "ast_hash": "03d76cfc929722ec28f5906b2d3f97d8",
-    "semantic_hash": "03d76cfc929722ec28f5906b2d3f97d8"
+    "mtime": 1783349580.549526,
+    "ast_hash": "50a07cf32dfaf9bd97a33ce573a979a3",
+    "semantic_hash": "50a07cf32dfaf9bd97a33ce573a979a3"
   },
   "build.sh": {
-    "mtime": 1785156129.5588036,
-    "ast_hash": "8ae2668ac6e3e802e20aedf8fdb75d12",
-    "semantic_hash": "8ae2668ac6e3e802e20aedf8fdb75d12"
+    "mtime": 1784006859.0608287,
+    "ast_hash": "a22468c7d697b1afbcf25b0f84bea368",
+    "semantic_hash": "a22468c7d697b1afbcf25b0f84bea368"
   },
-  "desktop/anime.js": {
-    "mtime": 1785161944.5246444,
-    "ast_hash": "6e0f966abd47e77304ac87d8dc314982",
-    "semantic_hash": "6e0f966abd47e77304ac87d8dc314982"
+  "desktop/adShieldStats.js": {
+    "mtime": 1785301196.9584146,
+    "ast_hash": "34e7f1c2f8b8ffd6435f6124267135bb",
+    "semantic_hash": "34e7f1c2f8b8ffd6435f6124267135bb"
   },
   "desktop/app.py": {
-    "mtime": 1785156129.5609798,
-    "ast_hash": "91fee70dcc4186ecc813b3616583ea47",
-    "semantic_hash": "91fee70dcc4186ecc813b3616583ea47"
+    "mtime": 1783357076.8020842,
+    "ast_hash": "c23760c80b3a394c6ee45c0ffa57d553",
+    "semantic_hash": "c23760c80b3a394c6ee45c0ffa57d553"
   },
   "desktop/get_lordflix.js": {
-    "mtime": 1785156129.5609798,
-    "ast_hash": "23183c58da3df8d2057a4553aa37b7d0",
-    "semantic_hash": "23183c58da3df8d2057a4553aa37b7d0"
+    "mtime": 1783949460.0007327,
+    "ast_hash": "37632d86e0354bc76bf4b50885995518",
+    "semantic_hash": "37632d86e0354bc76bf4b50885995518"
+  },
+  "desktop/macUpdater.js": {
+    "mtime": 1785301196.9592023,
+    "ast_hash": "63c19a3806e62222147c8810c301d558",
+    "semantic_hash": "63c19a3806e62222147c8810c301d558"
   },
   "desktop/main.js": {
-    "mtime": 1785161956.1780758,
-    "ast_hash": "c1daf1c9020701dde9f797752879a010",
-    "semantic_hash": "c1daf1c9020701dde9f797752879a010"
+    "mtime": 1785301900.8988879,
+    "ast_hash": "2a6e6328afe1f42eeb88d0ed1bbc1c77",
+    "semantic_hash": "2a6e6328afe1f42eeb88d0ed1bbc1c77"
   },
   "desktop/package.json": {
-    "mtime": 1785156129.5671182,
-    "ast_hash": "ebeabf681f5c51bb348d7ad7dc7a9106",
-    "semantic_hash": "ebeabf681f5c51bb348d7ad7dc7a9106"
+    "mtime": 1785302642.1161423,
+    "ast_hash": "7ab5296fc86f6b318e420ec6dea6c44f",
+    "semantic_hash": "7ab5296fc86f6b318e420ec6dea6c44f"
   },
   "desktop/preload.js": {
-    "mtime": 1785156129.5681193,
-    "ast_hash": "4e5020be9b8c5c6208692f59957defe8",
-    "semantic_hash": "4e5020be9b8c5c6208692f59957defe8"
+    "mtime": 1785301196.9605775,
+    "ast_hash": "30bbc27e993538324431535d3558af78",
+    "semantic_hash": "30bbc27e993538324431535d3558af78"
   },
   "desktop/qrcode.min.js": {
-    "mtime": 1785156129.5691187,
+    "mtime": 1783363478.211159,
     "ast_hash": "517b55d3688ce9ef1085a3d9632bcb97",
     "semantic_hash": "517b55d3688ce9ef1085a3d9632bcb97"
   },
   "desktop/renderer.js": {
-    "mtime": 1785158601.360887,
-    "ast_hash": "9b273cf8ef9d28f08ee67fb91b593348",
-    "semantic_hash": "9b273cf8ef9d28f08ee67fb91b593348"
+    "mtime": 1785301216.5870683,
+    "ast_hash": "dfc7cd0bcc9873e80edd7666b0bfca3d",
+    "semantic_hash": "dfc7cd0bcc9873e80edd7666b0bfca3d"
   },
   "desktop/scripts/afterPack.js": {
-    "mtime": 1785156129.5721164,
-    "ast_hash": "d17d909b55a955223d5f5ec04e28ee23",
-    "semantic_hash": "d17d909b55a955223d5f5ec04e28ee23"
+    "mtime": 1785302642.115513,
+    "ast_hash": "2f29222e9a17b7feda3005228402d564",
+    "semantic_hash": "2f29222e9a17b7feda3005228402d564"
+  },
+  "desktop/securityPolicy.js": {
+    "mtime": 1785302208.4304903,
+    "ast_hash": "ec56999384842c8b334b611bc52f2d76",
+    "semantic_hash": "ec56999384842c8b334b611bc52f2d76"
+  },
+  "desktop/test/adShieldStats.test.js": {
+    "mtime": 1785301405.8534908,
+    "ast_hash": "e60373de865b1fa459ed530e248d9c64",
+    "semantic_hash": "e60373de865b1fa459ed530e248d9c64"
+  },
+  "desktop/test/afterPack.test.js": {
+    "mtime": 1785302642.1172156,
+    "ast_hash": "eaff13446cd3c3e60a78fdc5696a79e0",
+    "semantic_hash": "eaff13446cd3c3e60a78fdc5696a79e0"
+  },
+  "desktop/test/macUpdater.test.js": {
+    "mtime": 1785301405.8544004,
+    "ast_hash": "3f8755514c832b5fc93a4605c6d680ae",
+    "semantic_hash": "3f8755514c832b5fc93a4605c6d680ae"
+  },
+  "desktop/test/security.test.js": {
+    "mtime": 1785302308.1904228,
+    "ast_hash": "3d871e0cdc9b2151fa65df1bdac2c160",
+    "semantic_hash": "3d871e0cdc9b2151fa65df1bdac2c160"
   },
   "install_android.sh": {
-    "mtime": 1785156129.6179388,
-    "ast_hash": "59e271a023da95f2e9818d209583ce8a",
-    "semantic_hash": "59e271a023da95f2e9818d209583ce8a"
+    "mtime": 1785148585.8583417,
+    "ast_hash": "97401708d2413638d4bed36dc5a1b992",
+    "semantic_hash": "97401708d2413638d4bed36dc5a1b992"
   },
   "install_ipad.sh": {
-    "mtime": 1785156129.618931,
-    "ast_hash": "9d0c1c6115191a96d9c43f33170c82b9",
-    "semantic_hash": "9d0c1c6115191a96d9c43f33170c82b9"
+    "mtime": 1783356056.2367663,
+    "ast_hash": "70579c0e079d93165a4351afb355ae00",
+    "semantic_hash": "70579c0e079d93165a4351afb355ae00"
   },
   "install_mac.sh": {
-    "mtime": 1785156129.6199355,
-    "ast_hash": "f6ce9633e34b8f6339e4a51cc7878ede",
-    "semantic_hash": "f6ce9633e34b8f6339e4a51cc7878ede"
+    "mtime": 1784006859.0611074,
+    "ast_hash": "33a3f4e8024093d444892ed8a6ada8c8",
+    "semantic_hash": "33a3f4e8024093d444892ed8a6ada8c8"
   },
   "ios/Omniverse/Assets.xcassets/AppIcon.appiconset/Contents.json": {
-    "mtime": 1785156129.622933,
-    "ast_hash": "47d0d86bd32fd78c57dabf4dfa6caf32",
-    "semantic_hash": "47d0d86bd32fd78c57dabf4dfa6caf32"
+    "mtime": 1783349580.5522966,
+    "ast_hash": "2d653615ea07882f99ae5bc24ae2e7a3",
+    "semantic_hash": "2d653615ea07882f99ae5bc24ae2e7a3"
   },
   "ios/Omniverse/Assets.xcassets/AppLogo.imageset/Contents.json": {
-    "mtime": 1785156129.6259327,
-    "ast_hash": "cb70ad669f6d1501a5e4eb2db72efdae",
-    "semantic_hash": "cb70ad669f6d1501a5e4eb2db72efdae"
+    "mtime": 1783349580.5561974,
+    "ast_hash": "7810184c0f780c6d203343c6afc62692",
+    "semantic_hash": "7810184c0f780c6d203343c6afc62692"
   },
   "ios/Omniverse/Assets.xcassets/Contents.json": {
-    "mtime": 1785156129.630038,
-    "ast_hash": "e228f8c08c479963fdf7d601d0a4b924",
-    "semantic_hash": "e228f8c08c479963fdf7d601d0a4b924"
+    "mtime": 1783349580.5573373,
+    "ast_hash": "0274c95478fad391485598930f9655f9",
+    "semantic_hash": "0274c95478fad391485598930f9655f9"
   },
   "ios/Omniverse/Assets.xcassets/LaunchBackground.colorset/Contents.json": {
-    "mtime": 1785156129.630038,
-    "ast_hash": "c9323699753e3f898c5d7717b705badd",
-    "semantic_hash": "c9323699753e3f898c5d7717b705badd"
+    "mtime": 1783349580.5576258,
+    "ast_hash": "d0ac5266edbe2aeeca4ada4a7f17deed",
+    "semantic_hash": "d0ac5266edbe2aeeca4ada4a7f17deed"
   },
   "ios/Omniverse/DesignSystem/LiquidGlass.swift": {
-    "mtime": 1785156129.6320362,
-    "ast_hash": "ea8500e23293335c5910193d1f0ceadc",
-    "semantic_hash": "ea8500e23293335c5910193d1f0ceadc"
+    "mtime": 1785299682.991088,
+    "ast_hash": "ddf8f1dacef0d7f401979b6cf9a610ac",
+    "semantic_hash": "ddf8f1dacef0d7f401979b6cf9a610ac"
   },
   "ios/Omniverse/Models/Models.swift": {
-    "mtime": 1785156129.6330347,
-    "ast_hash": "e77188a3f29c1edb7d0f6d64eabb3237",
-    "semantic_hash": "e77188a3f29c1edb7d0f6d64eabb3237"
+    "mtime": 1785301381.9036071,
+    "ast_hash": "c1509b51f4f2759df3c653ed07e25bb4",
+    "semantic_hash": "c1509b51f4f2759df3c653ed07e25bb4"
   },
   "ios/Omniverse/Networking/Http.swift": {
-    "mtime": 1785156129.6340337,
-    "ast_hash": "6afe4b1bb307a7a242b5957eb251aa75",
-    "semantic_hash": "6afe4b1bb307a7a242b5957eb251aa75"
+    "mtime": 1783349580.5582552,
+    "ast_hash": "8539cca721bb4f49c9d23ebe8866c5d3",
+    "semantic_hash": "8539cca721bb4f49c9d23ebe8866c5d3"
   },
   "ios/Omniverse/OmniverseApp.swift": {
-    "mtime": 1785156129.6350365,
-    "ast_hash": "dc7aaa8c340e39b2d32cf0f776ab4432",
-    "semantic_hash": "dc7aaa8c340e39b2d32cf0f776ab4432"
+    "mtime": 1783349580.5583389,
+    "ast_hash": "70badc3ad240cd8837fe7744eb80b28f",
+    "semantic_hash": "70badc3ad240cd8837fe7744eb80b28f"
   },
   "ios/Omniverse/Platform/DeviceTuning.swift": {
-    "mtime": 1785156129.636039,
-    "ast_hash": "bd4e356c8d212432841638e53e86cae6",
-    "semantic_hash": "bd4e356c8d212432841638e53e86cae6"
-  },
-  "ios/Omniverse/Repositories/AnimeRepository.swift": {
-    "mtime": 1785161983.502451,
-    "ast_hash": "6ed82e425d248cb2d8282fd7768e02f2",
-    "semantic_hash": "6ed82e425d248cb2d8282fd7768e02f2"
+    "mtime": 1783349580.5584607,
+    "ast_hash": "8bcfcc6b188c7a17aced85fd89b45f72",
+    "semantic_hash": "8bcfcc6b188c7a17aced85fd89b45f72"
   },
   "ios/Omniverse/Repositories/LiveTvRepository.swift": {
-    "mtime": 1785156129.6385531,
-    "ast_hash": "2227b277a3c3b2adf30a3256fb5fb47d",
-    "semantic_hash": "2227b277a3c3b2adf30a3256fb5fb47d"
+    "mtime": 1783349580.5589557,
+    "ast_hash": "9bc8b4628b6716e87945e7e9302484d5",
+    "semantic_hash": "9bc8b4628b6716e87945e7e9302484d5"
   },
   "ios/Omniverse/Repositories/TmdbRepository.swift": {
-    "mtime": 1785156129.6395545,
-    "ast_hash": "62cb8ee8e455760e1d42d8af88acbf3b",
-    "semantic_hash": "62cb8ee8e455760e1d42d8af88acbf3b"
+    "mtime": 1783949460.0038562,
+    "ast_hash": "7ddd377dd801b1d77cff4afcaf00793f",
+    "semantic_hash": "7ddd377dd801b1d77cff4afcaf00793f"
   },
   "ios/Omniverse/Repositories/TraktRepository.swift": {
-    "mtime": 1785156129.6395545,
-    "ast_hash": "885f19095532b4394a4e8b29a8100153",
-    "semantic_hash": "885f19095532b4394a4e8b29a8100153"
+    "mtime": 1785298729.5417013,
+    "ast_hash": "08e5b6db80c9f7e09908b6201b7155f2",
+    "semantic_hash": "08e5b6db80c9f7e09908b6201b7155f2"
   },
   "ios/Omniverse/Repositories/TvdbRepository.swift": {
-    "mtime": 1785156129.640554,
-    "ast_hash": "698e4ef4696a18212a44305db5aae172",
-    "semantic_hash": "698e4ef4696a18212a44305db5aae172"
+    "mtime": 1785169176.3711102,
+    "ast_hash": "48887f3bf752a689e211bf75c0052edf",
+    "semantic_hash": "48887f3bf752a689e211bf75c0052edf"
   },
   "ios/Omniverse/Repositories/VidsrcRepository.swift": {
-    "mtime": 1785161967.6030679,
-    "ast_hash": "bc35217c93cb71851b3b064047617026",
-    "semantic_hash": "bc35217c93cb71851b3b064047617026"
+    "mtime": 1785169176.3725631,
+    "ast_hash": "17c7a42ed849768ecf201d08be8f515e",
+    "semantic_hash": "17c7a42ed849768ecf201d08be8f515e"
   },
   "ios/Omniverse/Repositories/YarrlistRepository.swift": {
-    "mtime": 1785157120.1642532,
-    "ast_hash": "944c3d5d3c82843fb057e6515c756752",
-    "semantic_hash": "944c3d5d3c82843fb057e6515c756752"
+    "mtime": 1785169176.3726833,
+    "ast_hash": "03c0d7e3cdbb0b96923e4940cd6f4e7e",
+    "semantic_hash": "03c0d7e3cdbb0b96923e4940cd6f4e7e"
   },
   "ios/Omniverse/Screens/AppShell.swift": {
-    "mtime": 1785156129.6415555,
-    "ast_hash": "08a5800d5700dbbca267855f61aac561",
-    "semantic_hash": "08a5800d5700dbbca267855f61aac561"
+    "mtime": 1785299708.1577613,
+    "ast_hash": "82a87c4e1e12866cad2cc41ece1bd150",
+    "semantic_hash": "82a87c4e1e12866cad2cc41ece1bd150"
   },
   "ios/Omniverse/Screens/AutoplayResolver.swift": {
-    "mtime": 1785156129.6415555,
-    "ast_hash": "d0aaf7a44d429048494c6cfa77327ff0",
-    "semantic_hash": "d0aaf7a44d429048494c6cfa77327ff0"
+    "mtime": 1784006861.0297353,
+    "ast_hash": "daf403bcd843cc335f60942379fc4740",
+    "semantic_hash": "daf403bcd843cc335f60942379fc4740"
   },
   "ios/Omniverse/Screens/Components.swift": {
-    "mtime": 1785156129.6430616,
-    "ast_hash": "182d7f9ff208b8f2a49d545b1e902cc0",
-    "semantic_hash": "182d7f9ff208b8f2a49d545b1e902cc0"
+    "mtime": 1785299745.3837216,
+    "ast_hash": "d87b61a84dd72ef650f8fecff4ddfde1",
+    "semantic_hash": "d87b61a84dd72ef650f8fecff4ddfde1"
   },
   "ios/Omniverse/Screens/HomeScreen.swift": {
-    "mtime": 1785156129.6440735,
-    "ast_hash": "ca742a6f1292e1ea3def7025d492870f",
-    "semantic_hash": "ca742a6f1292e1ea3def7025d492870f"
+    "mtime": 1785299825.8805811,
+    "ast_hash": "4b73c6992cc260a848cb1665ec056cb1",
+    "semantic_hash": "4b73c6992cc260a848cb1665ec056cb1"
   },
   "ios/Omniverse/Screens/LiveTvScreen.swift": {
-    "mtime": 1785156129.6440735,
-    "ast_hash": "78999b3bd4bb7ac7d940a0cc012b996b",
-    "semantic_hash": "78999b3bd4bb7ac7d940a0cc012b996b"
+    "mtime": 1783349580.5615864,
+    "ast_hash": "383ee6768862caeaff29cc8db5bac293",
+    "semantic_hash": "383ee6768862caeaff29cc8db5bac293"
   },
   "ios/Omniverse/Screens/MediaDetailScreen.swift": {
-    "mtime": 1785156129.6450677,
-    "ast_hash": "5dbb2bb66c790872479eba38e5ef8292",
-    "semantic_hash": "5dbb2bb66c790872479eba38e5ef8292"
+    "mtime": 1785299853.1218085,
+    "ast_hash": "918bc3f74c5536626c296771f802b803",
+    "semantic_hash": "918bc3f74c5536626c296771f802b803"
   },
   "ios/Omniverse/Screens/PlayerScreen.swift": {
-    "mtime": 1785156129.6450677,
-    "ast_hash": "1a6632d3e376aa3fed3d25ddf6b79292",
-    "semantic_hash": "1a6632d3e376aa3fed3d25ddf6b79292"
+    "mtime": 1785298729.5424247,
+    "ast_hash": "0e9a93244acdfff1c4a48b245762ce10",
+    "semantic_hash": "0e9a93244acdfff1c4a48b245762ce10"
   },
   "ios/Omniverse/Screens/RecommendationsEndOverlay.swift": {
-    "mtime": 1785156129.647229,
-    "ast_hash": "9edcb2a54ff2f6de86383e53600a5b1e",
-    "semantic_hash": "9edcb2a54ff2f6de86383e53600a5b1e"
+    "mtime": 1783349580.562203,
+    "ast_hash": "f998d25608e671528a2d67e4f523fa13",
+    "semantic_hash": "f998d25608e671528a2d67e4f523fa13"
   },
   "ios/Omniverse/Screens/SearchScreen.swift": {
-    "mtime": 1785156129.647229,
-    "ast_hash": "7fbddce9755bde9b54b34fac9f407c9d",
-    "semantic_hash": "7fbddce9755bde9b54b34fac9f407c9d"
+    "mtime": 1785299844.1497169,
+    "ast_hash": "8f729292e8b30d2d1bc5641b555c1ed3",
+    "semantic_hash": "8f729292e8b30d2d1bc5641b555c1ed3"
   },
   "ios/Omniverse/Screens/SettingsScreen.swift": {
-    "mtime": 1785156129.64824,
-    "ast_hash": "392376aa9ebaf2d3c7ab6ae40a3034ac",
-    "semantic_hash": "392376aa9ebaf2d3c7ab6ae40a3034ac"
+    "mtime": 1785298729.5426505,
+    "ast_hash": "8e9e1fa563e0fb41ea2f03317d08ff0d",
+    "semantic_hash": "8e9e1fa563e0fb41ea2f03317d08ff0d"
   },
   "ios/Omniverse/Screens/SyncCenter.swift": {
-    "mtime": 1785156129.64824,
-    "ast_hash": "217c13ee56f41b83e92c0d9976ef9cb1",
-    "semantic_hash": "217c13ee56f41b83e92c0d9976ef9cb1"
+    "mtime": 1783349580.5624804,
+    "ast_hash": "2eaf5dbd19bf1d4f763e10629e75f65d",
+    "semantic_hash": "2eaf5dbd19bf1d4f763e10629e75f65d"
   },
   "ios/Omniverse/Screens/TraktOnboardingScreen.swift": {
-    "mtime": 1785156129.649238,
-    "ast_hash": "7a6e2f17608ca56de34a6755757f911c",
-    "semantic_hash": "7a6e2f17608ca56de34a6755757f911c"
+    "mtime": 1783349580.5626009,
+    "ast_hash": "95d383ee8dfe889079c2eef9aa99cda4",
+    "semantic_hash": "95d383ee8dfe889079c2eef9aa99cda4"
   },
   "ios/Omniverse/Screens/VidsrcResolveScreen.swift": {
-    "mtime": 1785156129.649238,
-    "ast_hash": "2a6fe1cf67d5325d13b4825f01d443b6",
-    "semantic_hash": "2a6fe1cf67d5325d13b4825f01d443b6"
+    "mtime": 1784006861.0304153,
+    "ast_hash": "34190a6b49519791b59ca94e83f7063f",
+    "semantic_hash": "34190a6b49519791b59ca94e83f7063f"
   },
   "ios/Omniverse/Screens/WebEmbedPlayerScreen.swift": {
-    "mtime": 1785156129.6502354,
-    "ast_hash": "45003044c298124c43b1b5c2141b6623",
-    "semantic_hash": "45003044c298124c43b1b5c2141b6623"
+    "mtime": 1783949460.0099318,
+    "ast_hash": "43141dc765b06c1d227b2a58f09b0699",
+    "semantic_hash": "43141dc765b06c1d227b2a58f09b0699"
   },
   "ios/Omniverse/State/AppState.swift": {
-    "mtime": 1785157141.1942213,
-    "ast_hash": "8730ce0e938cd6cd2f56af890a6d2da1",
-    "semantic_hash": "8730ce0e938cd6cd2f56af890a6d2da1"
+    "mtime": 1785298729.542893,
+    "ast_hash": "2aca4960cc69a4ce65cd1c5bfbf29505",
+    "semantic_hash": "2aca4960cc69a4ce65cd1c5bfbf29505"
   },
   "ios/Omniverse/State/Repositories.swift": {
-    "mtime": 1785157112.5324569,
-    "ast_hash": "cf9fda9620e934efc89662076706900d",
-    "semantic_hash": "cf9fda9620e934efc89662076706900d"
+    "mtime": 1785169176.3775895,
+    "ast_hash": "c46893f945343333f1cdee7aeb2c0449",
+    "semantic_hash": "c46893f945343333f1cdee7aeb2c0449"
   },
   "ios/Omniverse/Storage/Stores.swift": {
-    "mtime": 1785156129.6522353,
-    "ast_hash": "36027f485dea114c5bedb98f90551d0f",
-    "semantic_hash": "36027f485dea114c5bedb98f90551d0f"
+    "mtime": 1783349580.563239,
+    "ast_hash": "628b6bc760eb911ceb9801a4faf1649b",
+    "semantic_hash": "628b6bc760eb911ceb9801a4faf1649b"
+  },
+  "ios/OmniverseTests/NavStateTests.swift": {
+    "mtime": 1785301381.9026277,
+    "ast_hash": "0c7fd69ab56d4792035a077f3a8caba9",
+    "semantic_hash": "0c7fd69ab56d4792035a077f3a8caba9"
   },
   "ios/OmniverseTests/SyncPayloadTests.swift": {
-    "mtime": 1785156129.6532354,
-    "ast_hash": "957d15e6fccbd80e46ad503c865a649a",
-    "semantic_hash": "957d15e6fccbd80e46ad503c865a649a"
+    "mtime": 1785301381.9019506,
+    "ast_hash": "3cda3187c0cbda33ac6308e68df89c2a",
+    "semantic_hash": "3cda3187c0cbda33ac6308e68df89c2a"
   },
   "live_logger.py": {
-    "mtime": 1785156131.2187185,
-    "ast_hash": "c2dabeb4b2e348101e2c6f8040fe41dd",
-    "semantic_hash": "c2dabeb4b2e348101e2c6f8040fe41dd"
+    "mtime": 1783349582.6940315,
+    "ast_hash": "ef08b7e67f24d38210810f4e1bdb113e",
+    "semantic_hash": "ef08b7e67f24d38210810f4e1bdb113e"
   },
   "uninstall_android.sh": {
-    "mtime": 1785156131.2187185,
-    "ast_hash": "2af4f53ab6a0ac49633005e85dde598b",
-    "semantic_hash": "2af4f53ab6a0ac49633005e85dde598b"
+    "mtime": 1783349582.6942546,
+    "ast_hash": "2907dc4a8d6000dae45a40b3387ea525",
+    "semantic_hash": "2907dc4a8d6000dae45a40b3387ea525"
   },
   "uninstall_ipad.sh": {
-    "mtime": 1785156131.2197304,
-    "ast_hash": "1f98f7ff02bedd0aa8fe71accdcb078f",
-    "semantic_hash": "1f98f7ff02bedd0aa8fe71accdcb078f"
+    "mtime": 1783349582.6943543,
+    "ast_hash": "9573d19c0652fb57fca5babf49b67cf3",
+    "semantic_hash": "9573d19c0652fb57fca5babf49b67cf3"
   },
   ".github/workflows/build.yml": {
-    "mtime": 1784006861.0248473,
-    "ast_hash": "87bf2b0ecfb1029c554a0a8b25dc0915",
-    "semantic_hash": "87bf2b0ecfb1029c554a0a8b25dc0915"
+    "mtime": 1785302080.8083787,
+    "ast_hash": "39463c6827519e7ad4261c6c9ff6a38f",
+    "semantic_hash": "39463c6827519e7ad4261c6c9ff6a38f"
   },
   "API_SETUP.md": {
-    "mtime": 1784006861.0250626,
-    "ast_hash": "e1e80d36920d64a4a4ad12fac533dacb",
-    "semantic_hash": "e1e80d36920d64a4a4ad12fac533dacb"
+    "mtime": 1785169176.3327556,
+    "ast_hash": "bcb44922ef47bc0e86ede73a9818772a",
+    "semantic_hash": "bcb44922ef47bc0e86ede73a9818772a"
   },
   "BUILD_PLAN.md": {
-    "mtime": 1784006861.025285,
-    "ast_hash": "a51fdd1eae7cd19af41eb325ccfd6e1e",
-    "semantic_hash": "a51fdd1eae7cd19af41eb325ccfd6e1e"
+    "mtime": 1785169176.3328536,
+    "ast_hash": "6aa736ad8ddd07c66af5ea44bd0bfc9e",
+    "semantic_hash": "6aa736ad8ddd07c66af5ea44bd0bfc9e"
+  },
+  "CHANGELOG.md": {
+    "mtime": 1785302744.4248614,
+    "ast_hash": "577c37459e78aa9c98e4ffb826a7154b",
+    "semantic_hash": "577c37459e78aa9c98e4ffb826a7154b"
   },
   "README.md": {
-    "mtime": 1784006861.025574,
-    "ast_hash": "76ab3e2a0fbdaca007f995f6f5629c82",
-    "semantic_hash": "76ab3e2a0fbdaca007f995f6f5629c82"
+    "mtime": 1785303130.2489142,
+    "ast_hash": "c831c75be0f37f4b0b02ef720ff9b725",
+    "semantic_hash": "c831c75be0f37f4b0b02ef720ff9b725"
   },
   "SYNC_SPEC.md": {
     "mtime": 1783349580.53611,
@@ -475,18 +505,88 @@
     "semantic_hash": "ef5ffb586822b583ea8f1e7fcb675a4b"
   },
   "desktop/index.html": {
-    "mtime": 1784006861.0283298,
-    "ast_hash": "58919d3f7b8f4fce7dfec0a09b257bd6",
-    "semantic_hash": "58919d3f7b8f4fce7dfec0a09b257bd6"
+    "mtime": 1785301216.5853236,
+    "ast_hash": "7404a8e56fe4611a108c446dc8f41e1c",
+    "semantic_hash": "7404a8e56fe4611a108c446dc8f41e1c"
+  },
+  "graphify-out/memory/query_20260729_044222_do_a_full_ui_and_ux_resign_of_the_mobile_variants.md": {
+    "mtime": 1785300142.0509737,
+    "ast_hash": "61fef0884e9a209ea795dd46edb77ac3",
+    "semantic_hash": "61fef0884e9a209ea795dd46edb77ac3"
+  },
+  "graphify-out/memory/query_20260729_045541_also_make_a_beatifully_presented_readme_md_file_th.md": {
+    "mtime": 1785300941.1591725,
+    "ast_hash": "0ab02ccd84e4eeff8f901cb6ba8c20e6",
+    "semantic_hash": "0ab02ccd84e4eeff8f901cb6ba8c20e6"
+  },
+  "graphify-out/memory/query_20260729_052409_which_omniverse_surfaces_and_update_paths_must_rem.md": {
+    "mtime": 1785302649.2047067,
+    "ast_hash": "c8e77d5a64d4b1dea2944e403b1738ac",
+    "semantic_hash": "c8e77d5a64d4b1dea2944e403b1738ac"
+  },
+  "graphify-out/memory/query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th.md": {
+    "mtime": 1785303453.9441378,
+    "ast_hash": "a9358b48ebb42009b27532d9a781f225",
+    "semantic_hash": "a9358b48ebb42009b27532d9a781f225"
   },
   "ios/project.yml": {
-    "mtime": 1783350094.866834,
-    "ast_hash": "6c8636d06668c6769788442d2647961c",
-    "semantic_hash": "6c8636d06668c6769788442d2647961c"
+    "mtime": 1785301900.89671,
+    "ast_hash": "60a3e8392bf7ad1667f9ace7c9e0da3a",
+    "semantic_hash": "60a3e8392bf7ad1667f9ace7c9e0da3a"
   },
-  "scratch_ani_cli.sh": {
-    "mtime": 1785161659.0102503,
-    "ast_hash": "942fb0ca6fe9bb3ac9f2fed1a8181319",
-    "semantic_hash": "942fb0ca6fe9bb3ac9f2fed1a8181319"
+  "docs/readme/architecture.svg": {
+    "mtime": 1785301969.2544153,
+    "ast_hash": "38c3f21617ebc5375a3d2f43ccad1ff5",
+    "semantic_hash": "38c3f21617ebc5375a3d2f43ccad1ff5"
+  },
+  "docs/readme/desktop-home.webp": {
+    "mtime": 1785300877.841364,
+    "ast_hash": "22280192f34a68577a7d3602155dea42",
+    "semantic_hash": "22280192f34a68577a7d3602155dea42"
+  },
+  "docs/readme/desktop-live-tv.webp": {
+    "mtime": 1785300877.892335,
+    "ast_hash": "0441b0f122911c8123549e18e68fb385",
+    "semantic_hash": "0441b0f122911c8123549e18e68fb385"
+  },
+  "docs/readme/desktop-movies.webp": {
+    "mtime": 1785300878.0053709,
+    "ast_hash": "aba20a63f1b27f336ec9ab40da287db2",
+    "semantic_hash": "aba20a63f1b27f336ec9ab40da287db2"
+  },
+  "docs/readme/desktop-search.webp": {
+    "mtime": 1785300878.0586207,
+    "ast_hash": "cb24dd34431e1b5c6092593ef5a93284",
+    "semantic_hash": "cb24dd34431e1b5c6092593ef5a93284"
+  },
+  "docs/readme/desktop-shows.webp": {
+    "mtime": 1785300878.175231,
+    "ast_hash": "920fdfc4022668dc384478dcbf9fea58",
+    "semantic_hash": "920fdfc4022668dc384478dcbf9fea58"
+  },
+  "docs/readme/desktop-surfaces.webp": {
+    "mtime": 1785300878.3663561,
+    "ast_hash": "03e24b3088e8411259516a50f678e701",
+    "semantic_hash": "03e24b3088e8411259516a50f678e701"
+  },
+  "docs/readme/feature-navigation.webp": {
+    "mtime": 1785300878.476706,
+    "ast_hash": "fee4231b576588243ae5fc5928697315",
+    "semantic_hash": "fee4231b576588243ae5fc5928697315"
+  },
+  "docs/readme/mobile-onboarding.webp": {
+    "mtime": 1785300967.6300108,
+    "ast_hash": "3bf0890bd7d68189eb24bafe68166f62",
+    "semantic_hash": "3bf0890bd7d68189eb24bafe68166f62"
+  },
+  "docs/readme/omniverse-showcase.webp": {
+    "mtime": 1785300967.8680592,
+    "ast_hash": "b25669ec2cf73b01971c63b589a30e01",
+    "semantic_hash": "b25669ec2cf73b01971c63b589a30e01"
+  },
+  "docs/readme/quality-dashboard.svg": {
+    "mtime": 1785301969.2539098,
+    "ast_hash": "4929eceba6ff52da61debc9645fb3c27",
+    "semantic_hash": "4929eceba6ff52da61debc9645fb3c27"
   }
 }

@@ -1,904 +1,623 @@
-# Graph Report - .  (2026-07-27)
+# Graph Report - .  (2026-07-29)
 
 ## Corpus Check
-- cluster-only mode — file stats not available
+- 118 files · ~160,773 words
+- Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2480 nodes · 4883 edges · 446 communities (98 shown, 348 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 197 edges (avg confidence: 0.79)
-- Token cost: 0 input · 0 output
-
-## Graph Freshness
-- Built from commit: `f1724fd` (Fix RouteArgs.detailItem reference in Android MediaDetailScreen)
-- Codebase status: Updated Tab Navigation, Desktop Scroll Reset & Mobile Tab Content Filtering
-- Updated Component Nodes:
-  - `desktop/renderer.js`: `switchScreen` now enforces `#content-viewport.scrollTop = 0` on every tab change (Home, Movies, TV, Anime, Live TV, Search, Settings) and provider sub-tab switch.
-  - `ios/Omniverse/Screens/HomeScreen.swift` & `AppShell.swift`: `HomeScreen` accepts `filterMode` (`home`, `movies`, `shows`), filtering hero picks, continue watching, top 10s, and genre rows.
-  - `android/app/.../HomeScreen.kt` & `OmniverseRoot.kt`: `HomeScreen` accepts `filterMode` (`home`, `movies`, `shows`), filtering hero picks, continue watching, top 10s, and genre rows.
-- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- 2226 nodes · 5077 edges · 136 communities (105 shown, 31 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 214 edges (avg confidence: 0.79)
+- Token cost: 4,150 input · 5,795 output
 
 ## Community Hubs (Navigation)
-- AppState
-- ApiCredentials
-- MediaDetailScreen
-- .body
-- AnimeRepositoryImpl
-- VidsrcRepositoryImpl
-- TraktRepository
-- TmdbRepository
-- TraktRepositoryImpl
-- String
-- Http.kt
-- ScannerController
-- TmdbRepositoryImpl
-- renderer.js
-- LiveTvScreen
-- VidsrcExtractor
-- PlaybackEngine
-- UserSettingsStore
-- Response
-- anime.js
-- SettingsScreen
-- UserSettingsStore
-- renderCatalogFeeds
-- scratch_ani_cli.sh
-- Omniverse API Keys & Sync Configuration Guide
-- PlayerScreen
-- View
-- PosterImage
-- Error
-- OmniverseRoot.kt
-- appFetch
-- TvdbRepository
-- Coordinator
-- PlayerScreen.kt
-- GlassPanel
-- LiveTvRepository
-- playStreamEmbed
-- AppShell
-- SearchScreen
-- VidsrcResolver
-- AppState
-- SettingsScreen.kt
-- Foundation
-- openDetailModal
-- MediaItem
-- HomeScreen.kt
-- TvdbRepositoryImpl
-- PlayerContainerView
-- main.js
-- renderContinueWatching
-- VidsrcRepository
-- YarrlistRepository
-- WebEmbedPlayerScreen
-- DeviceTuning.swift
-- .fetchSource
-- MainActivity
-- parseDirectory
-- .__init__
-- build
-- Identifiable
-- SwiftUI
-- Int
-- resolveNextEpisode
-- .webView
-- qrcode.min.js
-- SplashView
-- VidsrcResolveScreen
-- LiveTvScreen.kt
-- UpdateChecker
-- package.json
-- VidsrcResolveScreen.swift
-- live_logger.py
-- .makeItem
-- files
-- CMTime
-- scripts
-- ApiCredentials
-- .init
-- WebViewCookieJar
-- build.sh
-- Tab
-- Codable
-- dependencies
-- nsis
-- MediaType
-- Any
-- Theme.kt
-- VidsrcResolveScreen
-- WatchProgress
-- OnboardingScreen
-- get_lordflix.js
-- devDependencies
-- gradlew
-- linux
-- afterPack.js
-- AnimatedSplash
-- WebGuards
-- anime_tester.py
-- Omniverse iOS Target
-- install_android.sh
-- install_ipad.sh
-- install_mac.sh
-- uninstall_ipad.sh
-- Desktop App Interface
-- preload.js
-- uninstall_android.sh
-- _AddressOfReturnAddress
-- Any
-- Boolean
-- Int
-- List
-- Long
-- Map
-- Boolean
-- Double
-- Int
-- List
-- Set
-- Throwable
-- Boolean
-- Double
-- Int
-- List
-- Long
-- Map
-- List
-- Boolean
-- Boolean
-- Double
-- Int
-- Boolean
-- Double
-- Int
-- List
-- Map
-- List
-- Long
-- Set
-- Boolean
-- Boolean
-- Double
-- Int
-- List
-- Long
-- Map
-- Pair
-- Throwable
-- Boolean
-- Double
-- Int
-- List
-- Long
-- Map
-- Boolean
-- Int
-- List
-- Long
-- Map
-- Boolean
-- Float
-- Int
-- List
-- Boolean
-- List
-- Double
-- List
-- Pair
-- Boolean
-- Int
-- List
-- Int
-- Boolean
-- Float
-- Int
-- List
-- Pair
-- Boolean
-- Int
-- List
-- Pair
-- Float
-- Int
-- Boolean
-- Boolean
-- Any
-- Boolean
-- Int
-- List
-- List
-- Boolean
-- List
-- __ATTRS_o_ai
-- vector
-- __m128
-- __m128d
-- __m128i
-- __m128
-- __m128d
-- __m128i
-- __m256
-- __m256d
-- __m256i
-- __m128i
-- __m256i
-- __m512i
-- __mmask16
-- __mmask32
-- __mmask64
-- __m512i
-- __mmask16
-- __mmask8
-- __m128
-- __m128d
-- __m128i
-- __m256
-- __m256i
-- __m512
-- __m512d
-- __m512i
-- __mmask16
-- __mmask8
-- __m128
-- __m128d
-- __m128i
-- __m256
-- __m256d
-- __m256i
-- __m512
-- __m512d
-- __m512i
-- __mmask16
-- __mmask8
-- __m512i
-- __mmask8
-- __m128i
-- __m256i
-- __mmask8
-- __m512i
-- __mmask64
-- __m128i
-- __m256i
-- __mmask16
-- __mmask32
-- __m128i
-- __m256i
-- __mmask16
-- __mmask32
-- __mmask8
-- __m128i
-- __m256i
-- __mmask16
-- __mmask8
-- __m128
-- __m128d
-- __m128i
-- __m256
-- __m256d
-- __m256i
-- __mmask8
-- __m128
-- __m128d
-- __m128i
-- __m256
-- __m256d
-- __m256i
-- __mmask16
-- __mmask8
-- __m128
-- __m128d
-- __m128i
-- __m256
-- __m256d
-- __m256i
-- __DEVICE__
-- __device__
-- __device__
-- __m128
-- __m128d
-- __m128i
-- __m64
-- __m128
-- __m128i
-- __m128
-- __m128d
-- __m256
-- __m256d
-- __m128
-- __m128d
-- __m256
-- __m256d
-- __m128i
-- __m256
-- __m64
-- __m64
-- __m128
-- __m128d
-- __m128i
-- __m128i
-- __m128
-- __m128d
-- __m128i
-- __m128i
-- __m64
-- __ATTRS_o_ai
-- vector
-- __m128i
-- __m128
-- __m64
-- __m128
-- __m128d
-- __m128i
-- __m256
-- __m256d
-- __m256i
-- AIBinder
-- binder_status_t
-- string
-- T
-- AIBinder
-- binder_status_t
-- string
-- T
-- AParcel
-- binder_status_t
-- optional
-- string
-- T
-- vector
-- AParcel
-- binder_status_t
-- optional
-- T
-- string
-- _T
-- AParcel
-- set
-- string
-- T
-- vector
-- APersistableBundle
-- array
-- __ATTRS_ai
-- binder_exception_t
-- char2
-- char4
-- CHILD
-- Desktop Home Screen View
-- double2
-- Exception
-- false_type
-- __faststorefence
-- float2
-- float4
-- __halt
-- int2
-- int4
-- __int64
-- INTERFACE
-- AVAssetResourceLoaderDelegate
-- NSObject
-- NSURLSessionDelegate
-- UIApplicationDelegate
-- AVAssetResourceLoaderDelegate
-- NSObject
-- NSURLSessionDelegate
-- UIApplicationDelegate
-- Float
-- ApiCredentials
-- MediaEpisode
-- PlaybackOverrides
-- PlaybackSource
-- URL
-- UserSettings
-- Void
-- __last
-- longlong2
-- _m_femms
-- __mask
-- _mm256_setzero_pd
-- _mm256_setzero_ps
-- _mm256_setzero_si256
-- _mm256_undefined_pd
-- _mm256_undefined_ps
-- _mm256_undefined_si256
-- _mm256_zeroall
-- _mm256_zeroupper
-- _mm512_setzero_hi
-- _mm512_setzero_pd
-- _mm512_setzero_ps
-- _mm512_setzero_qi
-- _mm512_setzero_si512
-- _mm512_undefined
-- _mm512_undefined_epi32
-- _mm512_undefined_pd
-- _mm512_undefined_ps
-- _mm_empty
-- _mm_getcsr
-- _mm_lfence
-- _mm_mfence
-- _mm_pause
-- _mm_setzero_hi
-- _mm_setzero_pd
-- _mm_setzero_ps
-- _mm_setzero_si128
-- _mm_setzero_si64
-- _mm_sfence
-- _mm_undefined_pd
-- _mm_undefined_ps
-- _mm_undefined_si128
-- mutex
-- N
-- nullptr_t
-- P
-- parcelable_stability_t
-- PersistableBundle
-- _rdpkru_u32
-- _ReadBarrier
-- _ReadWriteBarrier
-- _ReturnAddress
-- __scalar
-- ScopedAIBinder_Weak
-- ScopedAResource<AParcel*, AParcel_delete, nullptr>
-- ScopedFileDescriptor
-- shared_ptr
-- short2
-- short4
-- string_view
-- _TG_ATTRS
-- true_type
-- uchar2
-- uchar4
-- uint2
-- uint4
-- ulonglong2
-- unique_ptr
-- Unit
-- _Unwind_Word
-- ushort2
-- ushort4
-- _WriteBarrier
-- _xbegin
-- _xend
+- [[_COMMUNITY_AppState|AppState]]
+- [[_COMMUNITY_Http.kt|Http.kt]]
+- [[_COMMUNITY_TvdbRepositoryImpl|TvdbRepositoryImpl]]
+- [[_COMMUNITY_Map|Map]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_MainActivity|MainActivity]]
+- [[_COMMUNITY_NavStateTest|NavStateTest]]
+- [[_COMMUNITY_Models.kt|Models.kt]]
+- [[_COMMUNITY_.init|.init]]
+- [[_COMMUNITY_ApiCredentials|ApiCredentials]]
+- [[_COMMUNITY_UserSettingsStore|UserSettingsStore]]
+- [[_COMMUNITY_ApiCredentials|ApiCredentials]]
+- [[_COMMUNITY_SyncCenter|SyncCenter]]
+- [[_COMMUNITY_TmdbRepositoryImpl|TmdbRepositoryImpl]]
+- [[_COMMUNITY_TraktRepositoryImpl|TraktRepositoryImpl]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_VidsrcRepositoryImpl|VidsrcRepositoryImpl]]
+- [[_COMMUNITY_WebViewCookieJar|WebViewCookieJar]]
+- [[_COMMUNITY_AnimatedSplash.kt|AnimatedSplash.kt]]
+- [[_COMMUNITY_resolveNextEpisode|resolveNextEpisode]]
+- [[_COMMUNITY_PosterImage|PosterImage]]
+- [[_COMMUNITY_OmniverseRoot.kt|OmniverseRoot.kt]]
+- [[_COMMUNITY_androidx|androidx]]
+- [[_COMMUNITY_qrBitmap|qrBitmap]]
+- [[_COMMUNITY_PlayerScreen.kt|PlayerScreen.kt]]
+- [[_COMMUNITY_SettingsScreen.kt|SettingsScreen.kt]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Theme.kt|Theme.kt]]
+- [[_COMMUNITY_gradlew|gradlew]]
+- [[_COMMUNITY_build.sh|build.sh]]
+- [[_COMMUNITY_.__init__|.__init__]]
+- [[_COMMUNITY_get_lordflix.js|get_lordflix.js]]
+- [[_COMMUNITY_qrcode.min.js|qrcode.min.js]]
+- [[_COMMUNITY_install_android.sh|install_android.sh]]
+- [[_COMMUNITY_install_ipad.sh|install_ipad.sh]]
+- [[_COMMUNITY_install_mac.sh|install_mac.sh]]
+- [[_COMMUNITY_SwiftUI|SwiftUI]]
+- [[_COMMUNITY_LiquidGlass.swift|LiquidGlass.swift]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Content|Content]]
+- [[_COMMUNITY_Models.swift|Models.swift]]
+- [[_COMMUNITY_SettingsScreen|SettingsScreen]]
+- [[_COMMUNITY_Response|Response]]
+- [[_COMMUNITY_SplashView|SplashView]]
+- [[_COMMUNITY_AppState|AppState]]
+- [[_COMMUNITY_VidsrcRepository|VidsrcRepository]]
+- [[_COMMUNITY_Error|Error]]
+- [[_COMMUNITY_PlayerScreen.swift|PlayerScreen.swift]]
+- [[_COMMUNITY_DeviceTuning.swift|DeviceTuning.swift]]
+- [[_COMMUNITY_State|State]]
+- [[_COMMUNITY_TmdbRepository|TmdbRepository]]
+- [[_COMMUNITY_TraktRepository|TraktRepository]]
+- [[_COMMUNITY_TvdbRepository|TvdbRepository]]
+- [[_COMMUNITY_YarrlistRepository|YarrlistRepository]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_.resolveNext|.resolveNext]]
+- [[_COMMUNITY_CategoryRow|CategoryRow]]
+- [[_COMMUNITY_HomeScreen|HomeScreen]]
+- [[_COMMUNITY_MediaType|MediaType]]
+- [[_COMMUNITY_GeometryProxy|GeometryProxy]]
+- [[_COMMUNITY_.heroHeight|.heroHeight]]
+- [[_COMMUNITY_LiveTvScreen|LiveTvScreen]]
+- [[_COMMUNITY_Coordinator|Coordinator]]
+- [[_COMMUNITY_MediaDetailScreen|MediaDetailScreen]]
+- [[_COMMUNITY_PlaybackSource|PlaybackSource]]
+- [[_COMMUNITY_MediaSeason|MediaSeason]]
+- [[_COMMUNITY_URL|URL]]
+- [[_COMMUNITY_ScannerController|ScannerController]]
+- [[_COMMUNITY_PlayerOrientation|PlayerOrientation]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_PlayerContainerView|PlayerContainerView]]
+- [[_COMMUNITY_.webView|.webView]]
+- [[_COMMUNITY_PlaybackEngine|PlaybackEngine]]
+- [[_COMMUNITY_SearchScreen|SearchScreen]]
+- [[_COMMUNITY_Task|Task]]
+- [[_COMMUNITY_Never|Never]]
+- [[_COMMUNITY_VidsrcResolveScreen.swift|VidsrcResolveScreen.swift]]
+- [[_COMMUNITY_VidsrcResolver|VidsrcResolver]]
+- [[_COMMUNITY_VidsrcResolveScreen|VidsrcResolveScreen]]
+- [[_COMMUNITY_WebEmbedPlayerScreen|WebEmbedPlayerScreen]]
+- [[_COMMUNITY_UserSettingsStore|UserSettingsStore]]
+- [[_COMMUNITY_NSObject|NSObject]]
+- [[_COMMUNITY_UIApplicationDelegate|UIApplicationDelegate]]
+- [[_COMMUNITY_NSURLSessionDelegate|NSURLSessionDelegate]]
+- [[_COMMUNITY_AVAssetResourceLoaderDelegate|AVAssetResourceLoaderDelegate]]
+- [[_COMMUNITY_NSObject|NSObject]]
+- [[_COMMUNITY_UIApplicationDelegate|UIApplicationDelegate]]
+- [[_COMMUNITY_NSURLSessionDelegate|NSURLSessionDelegate]]
+- [[_COMMUNITY_AVAssetResourceLoaderDelegate|AVAssetResourceLoaderDelegate]]
+- [[_COMMUNITY_live_logger.py|live_logger.py]]
+- [[_COMMUNITY_uninstall_android.sh|uninstall_android.sh]]
+- [[_COMMUNITY_uninstall_ipad.sh|uninstall_ipad.sh]]
+- [[_COMMUNITY_Omniverse Cross-Device Sync Protocol|Omniverse Cross-Device Sync Protocol]]
+- [[_COMMUNITY_Decentralized Client-Side Serverless Architecture|Decentralized Client-Side Serverless Architecture]]
+- [[_COMMUNITY_Omniverse Native Rewrite|Omniverse Native Rewrite]]
+- [[_COMMUNITY_UpdateCheckerTest|UpdateCheckerTest]]
+- [[_COMMUNITY_main.js|main.js]]
+- [[_COMMUNITY_package.json|package.json]]
+- [[_COMMUNITY_scripts|scripts]]
+- [[_COMMUNITY_devDependencies|devDependencies]]
+- [[_COMMUNITY_build|build]]
+- [[_COMMUNITY_mac|mac]]
+- [[_COMMUNITY_nsis|nsis]]
+- [[_COMMUNITY_linux|linux]]
+- [[_COMMUNITY_dependencies|dependencies]]
+- [[_COMMUNITY_preload.js|preload.js]]
+- [[_COMMUNITY_renderer.js|renderer.js]]
+- [[_COMMUNITY_renderCatalogFeeds|renderCatalogFeeds]]
+- [[_COMMUNITY_appFetch|appFetch]]
+- [[_COMMUNITY_playStream|playStream]]
+- [[_COMMUNITY_parsePositiveIntOrNull|parsePositiveIntOrNull]]
+- [[_COMMUNITY_afterPack.js|afterPack.js]]
+- [[_COMMUNITY_Native Android Build Job|Native Android Build Job]]
+- [[_COMMUNITY_Security and Update Hardening|Security and Update Hardening]]
+- [[_COMMUNITY_Omniverse v2.1.80|Omniverse v2.1.80]]
+- [[_COMMUNITY_Settings and Synchronization Center|Settings and Synchronization Center]]
+- [[_COMMUNITY_Omniverse|Omniverse]]
+- [[_COMMUNITY_Shared Cinematic Crimson Design System|Shared Cinematic Crimson Design System]]
+- [[_COMMUNITY_Omniverse iOS Application Target|Omniverse iOS Application Target]]
+- [[_COMMUNITY_Shared Product Concepts|Shared Product Concepts]]
+- [[_COMMUNITY_Cinematic Feature Hero|Cinematic Feature Hero]]
+- [[_COMMUNITY_Premium IPTV Center Screen|Premium IPTV Center Screen]]
+- [[_COMMUNITY_Movie Poster Grid|Movie Poster Grid]]
+- [[_COMMUNITY_Desktop Search Screen|Desktop Search Screen]]
+- [[_COMMUNITY_TV Shows & Series Surface|TV Shows & Series Surface]]
+- [[_COMMUNITY_Desktop Surface Collection|Desktop Surface Collection]]
+- [[_COMMUNITY_One Shared Shell|One Shared Shell]]
+- [[_COMMUNITY_Mobile Onboarding Surface|Mobile Onboarding Surface]]
+- [[_COMMUNITY_Omniverse Platform Showcase|Omniverse Platform Showcase]]
+- [[_COMMUNITY_Verified Quality Signals|Verified Quality Signals]]
+- [[_COMMUNITY_README Presentation Redesign Query|README Presentation Redesign Query]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `AppState` - 75 edges
-2. `PlaybackEngine` - 66 edges
-3. `PlayerScreen` - 50 edges
-4. `AnimeRepository` - 46 edges
-5. `AnimeRepositoryImpl` - 45 edges
-6. `MediaDetailScreen` - 43 edges
-7. `TraktRepositoryImpl` - 42 edges
-8. `TraktRepository` - 42 edges
-9. `VidsrcResolver` - 36 edges
-10. `TmdbRepositoryImpl` - 33 edges
+1. `String` - 433 edges
+2. `AppState` - 76 edges
+3. `AppState` - 70 edges
+4. `PlaybackEngine` - 63 edges
+5. `TraktRepositoryImpl` - 41 edges
+6. `TraktRepository` - 41 edges
+7. `VidsrcResolver` - 35 edges
+8. `View` - 35 edges
+9. `PlayerScreen` - 33 edges
+10. `TmdbRepositoryImpl` - 31 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Zero-Config QR Sync` --semantically_similar_to--> `Omniverse Cross-Device Sync Protocol`  [INFERRED] [semantically similar]
-  API_SETUP.md → SYNC_SPEC.md
-- `QR Payload JSON Schema` --shares_data_with--> `Omniverse API Keys & Sync Configuration Guide`  [INFERRED]
-  SYNC_SPEC.md → API_SETUP.md
-- `Cross-Platform Camera QR Scanner` --rationale_for--> `Zero-Config QR Sync`  [INFERRED]
-  SYNC_SPEC.md → API_SETUP.md
-- `iOS Native App Subsystem` --conceptually_related_to--> `iOS CI Build Job`  [INFERRED]
-  BUILD_PLAN.md → .github/workflows/build.yml
-- `Android Native App Subsystem` --conceptually_related_to--> `Android CI Build Job`  [INFERRED]
-  BUILD_PLAN.md → .github/workflows/build.yml
+- `Native Mobile Cinematic Design` --semantically_similar_to--> `Shared Cinematic Crimson Design System`  [INFERRED] [semantically similar]
+  README.md → graphify-out/memory/query_20260729_044222_do_a_full_ui_and_ux_resign_of_the_mobile_variants.md
+- `Cinematic Mobile Redesign` --semantically_similar_to--> `Shared Cinematic Crimson Design System`  [INFERRED] [semantically similar]
+  CHANGELOG.md → graphify-out/memory/query_20260729_044222_do_a_full_ui_and_ux_resign_of_the_mobile_variants.md
+- `Bottom-Docked Navigation Pill` --semantically_similar_to--> `Glass Tab Navigation`  [INFERRED] [semantically similar]
+  desktop/index.html → graphify-out/memory/query_20260729_044222_do_a_full_ui_and_ux_resign_of_the_mobile_variants.md
+- `Secret-Backed Android Release Signing` --semantically_similar_to--> `Secret-Safe Android Signing`  [INFERRED] [semantically similar]
+  .github/workflows/build.yml → CHANGELOG.md
+- `Live AdShield Dashboard` --semantically_similar_to--> `Live AdShield Telemetry Dashboard`  [INFERRED] [semantically similar]
+  CHANGELOG.md → desktop/index.html
 
 ## Import Cycles
 - None detected.
 
 ## Hyperedges (group relationships)
+- **Corrected README Visual System** — graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_real_installed_app_captures, graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_mermaid_experience_flow, graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_architecture_svg, graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_quality_dashboard_svg, graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_compact_mobile_showcase [EXTRACTED 1.00]
+- **README Source Node Set** — graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_omniverse, graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_native_multiplatform_architecture, graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_appshell, graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_homescreen, graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_playbackengine, graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_traktrepository, graphify_out_memory_query_20260729_053733_also_make_a_beatifully_presented_readme_md_file_th_livetvscreen [EXTRACTED 1.00]
+- **Multiplatform Release Pipeline** — _github_workflows_build_android_build, _github_workflows_build_ios_build, _github_workflows_build_desktop_build, _github_workflows_build_publish_release [EXTRACTED 1.00]
+- **v2.1.80 Reliability Program** — changelog_cinematic_mobile_redesign, changelog_live_adshield_dashboard, changelog_security_update_hardening, changelog_quality_matrix, changelog_readme_showcase [EXTRACTED 1.00]
+- **Mobile Cinematic Surface System** — graphify_out_memory_query_20260729_044222_do_a_full_ui_and_ux_resign_of_the_mobile_variants_mobile_app_shells, graphify_out_memory_query_20260729_044222_do_a_full_ui_and_ux_resign_of_the_mobile_variants_home_hero_surface, graphify_out_memory_query_20260729_044222_do_a_full_ui_and_ux_resign_of_the_mobile_variants_glass_tab_navigation, graphify_out_memory_query_20260729_044222_do_a_full_ui_and_ux_resign_of_the_mobile_variants_media_poster_cards, graphify_out_memory_query_20260729_044222_do_a_full_ui_and_ux_resign_of_the_mobile_variants_search_detail_surfaces [EXTRACTED 1.00]
+- **Three Platform Clients** — docs_readme_architecture_ios_ipados_client, docs_readme_architecture_android_tv_client, docs_readme_architecture_desktop_client [EXTRACTED 1.00]
+- **User-Configured Product Capabilities** — docs_readme_architecture_discovery_services, docs_readme_architecture_continuity_services, docs_readme_architecture_playback_services [EXTRACTED 1.00]
+- **Home Discovery Surface** — docs_readme_desktop_home_cinematic_feature_hero, docs_readme_desktop_home_provider_rail, docs_readme_desktop_home_persistent_bottom_navigation [EXTRACTED 1.00]
+- **Live Channel Discovery and Playback Flow** — docs_readme_desktop_live_tv_region_selector, docs_readme_desktop_live_tv_channel_filter, docs_readme_desktop_live_tv_channel_index, docs_readme_desktop_live_tv_playback_pane [EXTRACTED 1.00]
+- **Search Query-to-Results Flow** — docs_readme_desktop_search_centered_search_field, docs_readme_desktop_search_top_results_region, docs_readme_desktop_search_empty_search_state [INFERRED 0.85]
+- **Series Browsing Composition** — docs_readme_desktop_shows_tv_shows_series_surface, docs_readme_desktop_shows_poster_catalog_grid, docs_readme_desktop_shows_persistent_bottom_navigation, docs_readme_desktop_shows_active_shows_destination [EXTRACTED 1.00]
+- **Four Core Desktop Surfaces** — docs_readme_desktop_surfaces_movies_surface, docs_readme_desktop_surfaces_shows_surface, docs_readme_desktop_surfaces_live_tv_surface, docs_readme_desktop_surfaces_search_surface [EXTRACTED 1.00]
+- **Shared Desktop Shell** — docs_readme_desktop_surfaces_movies_surface, docs_readme_desktop_surfaces_shows_surface, docs_readme_desktop_surfaces_live_tv_surface, docs_readme_desktop_surfaces_search_surface, docs_readme_desktop_surfaces_shared_bottom_navigation [INFERRED 0.85]
+- **Supported Input Methods** — docs_readme_feature_navigation_pointer_input, docs_readme_feature_navigation_touch_input, docs_readme_feature_navigation_keyboard_input, docs_readme_feature_navigation_dpad_input [EXTRACTED 1.00]
+- **Adaptive Navigation Pattern** — docs_readme_feature_navigation_adaptive_multiplatform_navigation, docs_readme_feature_navigation_one_shared_shell, docs_readme_feature_navigation_floating_navigation_bar, docs_readme_feature_navigation_movies_search_live_tv_surfaces [INFERRED 0.85]
+- **Secure Sync Onboarding** — docs_readme_mobile_onboarding_redacted_pairing_code, docs_readme_mobile_onboarding_fresh_code_per_launch, docs_readme_mobile_onboarding_private_scan_warning, docs_readme_mobile_onboarding_scan_another_sync_qr, docs_readme_mobile_onboarding_privacy_preserving_pairing [INFERRED 0.95]
+- **Cross-platform Product Story** — docs_readme_omniverse_showcase_omniverse_platform_showcase, docs_readme_omniverse_showcase_desktop_hero_experience, docs_readme_omniverse_showcase_mobile_sync_onboarding, docs_readme_omniverse_showcase_cross_platform_targets [EXTRACTED 1.00]
+- **Cross-platform Test Distribution** — docs_readme_quality_dashboard_total_48_tests, docs_readme_quality_dashboard_desktop_14_tests, docs_readme_quality_dashboard_android_20_tests, docs_readme_quality_dashboard_ios_14_tests [EXTRACTED 1.00]
+- **Security and Static Analysis Gate** — docs_readme_quality_dashboard_zero_npm_vulnerabilities, docs_readme_quality_dashboard_zero_android_lint_errors, docs_readme_quality_dashboard_xcode_analyze_passed, docs_readme_quality_dashboard_electron_signed_packaging_passed, docs_readme_quality_dashboard_release_verification_gate [INFERRED 0.95]
 - **Client-Side Peer-to-Peer QR Sync Flow** — api_setup_qr_sync, sync_spec_qr_sync_protocol, sync_spec_qr_payload, sync_spec_restore_logic, sync_spec_camera_scanner [EXTRACTED 1.00]
-- **Decentralized Public API Dependencies** — api_setup_tmdb_token, api_setup_trakt_keys, api_setup_anilist_sync, api_setup_pixeldrain_key, api_setup_tvdb_key [EXTRACTED 1.00]
-- **Dual Native Sideload & Deployment Subsystems** — build_plan_ios_app, build_plan_android_app, readme_desktop_app [INFERRED 0.95]
-- **Cross-Device Pairing and Syncing Flow** — desktop_index_pairing_qr, ios_project_omniverse [INFERRED 0.95]
-- **Cross-Platform Anime Pipeline** — desktop_index [INFERRED 0.95]
+- **Native Feature-Parity Subsystems** — build_plan_tmdb_dual_auth, build_plan_tvdb_v4_auth, build_plan_trakt_sync, build_plan_vidsrc_resolver_chain, build_plan_live_tv_aggregation, build_plan_player_subsystem [EXTRACTED 1.00]
 
-## Communities (446 total, 348 thin omitted)
+## Communities (136 total, 31 thin omitted)
 
-### Community 0 - "AppState"
+### Community 1 - "AppState"
 Cohesion: 0.06
-Nodes (16): AppState, ApiCredentials, JSONObject, LiveTvEntry, LiveTvSource, MediaCategory, MediaEpisode, MediaItem (+8 more)
+Nodes (22): AppState, Repositories, Boolean, List, MediaItem, Job, WatchProgress, Int (+14 more)
 
-### Community 1 - "ApiCredentials"
-Cohesion: 0.06
-Nodes (25): ApiCredentials, Exception, LiveTvEntry, LiveTvSource, MediaCategory, MediaEpisode, MediaItem, PlaybackSource (+17 more)
-
-### Community 2 - "MediaDetailScreen"
-Cohesion: 0.07
-Nodes (43): AutoplayResolver, Next, player, vidsrc, AppState, MediaEpisode, MediaItem, CaptchaCookieSync (+35 more)
-
-### Community 3 - ".body"
-Cohesion: 0.07
-Nodes (48): CGSize, ContentMode, .body, CategoryRow, .body, MediaPosterCard, .body, .subtitle (+40 more)
-
-### Community 4 - "AnimeRepositoryImpl"
-Cohesion: 0.09
-Nodes (18): AllAnimeSource, AnilistEpisodeMeta, AnimeCategorySpec, AnimeException, AnimeRepository, AnimeRepositoryImpl, CaptchaRequiredException, CurrentSeason (+10 more)
-
-### Community 5 - "VidsrcRepositoryImpl"
-Cohesion: 0.06
-Nodes (30): ApiCredentials, PlaybackOverrides, LiveTvEntry, LiveTvSource, MediaCategory, MediaEpisode, MediaItem, MediaSeason (+22 more)
-
-### Community 6 - "TraktRepository"
+### Community 17 - "Http.kt"
 Cohesion: 0.11
-Nodes (19): Any, ApiCredentials, Bool, Double, Http, Int, MediaCategory, MediaEpisode (+11 more)
+Nodes (28): Boolean, JSONObject, JSONArray, OkHttpClient, Dns, List, InetAddress, RequestBody (+20 more)
 
-### Community 7 - "TmdbRepository"
-Cohesion: 0.10
-Nodes (22): CheckedContinuation, CachedResponse, MediaItem, State, Any, ApiCredentials, Bool, Date (+14 more)
-
-### Community 8 - "TraktRepositoryImpl"
-Cohesion: 0.12
-Nodes (13): ApiCredentials, Exception, Http, JSONObject, MediaCategory, MediaEpisode, MediaItem, MediaType (+5 more)
-
-### Community 9 - "String"
-Cohesion: 0.11
-Nodes (20): String, .trimmed, AllAnimeSource, AnilistEpisodeMeta, AnimeCategorySpec, status, AnimeRepository, .allanime (+12 more)
-
-### Community 10 - "Http.kt"
+### Community 9 - "TvdbRepositoryImpl"
 Cohesion: 0.07
-Nodes (22): DohDns, Http, HttpError, Exception, JSONObject, objects(), optArrayOrNull(), optObjectOrNull() (+14 more)
+Nodes (37): Exception, LiveTvRepositoryImpl, LiveTvRepository, LiveTvSource, List, LiveTvEntry, parseM3u(), URI (+29 more)
 
-### Community 11 - "ScannerController"
-Cohesion: 0.06
-Nodes (30): AVCaptureConnection, AVCaptureMetadataOutput, AVCaptureMetadataOutputObjectsDelegate, AVCaptureVideoPreviewLayer, AVFoundation, AVMetadataObject, CoreImage.CIFilterBuiltins, Coordinator (+22 more)
+### Community 35 - "MainActivity"
+Cohesion: 0.15
+Nodes (9): MainActivity, ComponentActivity, Bundle, Intent, Boolean, KeepScreenOn(), VServer, VStage (+1 more)
 
-### Community 12 - "TmdbRepositoryImpl"
-Cohesion: 0.13
-Nodes (16): CachedResponse, ApiCredentials, Exception, Http, JSONObject, MediaCategory, MediaEpisode, MediaItem (+8 more)
-
-### Community 13 - "renderer.js"
-Cohesion: 0.06
-Nodes (31): BLOCKED_VIDSRC_DOMAINS, buildEmbedAttemptQueue(), buildEmbedUrls(), checkAppUpdates(), compactUniqueUrls(), EMBED_HEALTH_PROBE, heroSlides, infiniteState (+23 more)
-
-### Community 14 - "LiveTvScreen"
-Cohesion: 0.10
-Nodes (27): attribute(), categoriesFor(), ChannelLogo, .body, .logoUrls, formatCategory(), LiveTvCard, .body (+19 more)
-
-### Community 15 - "VidsrcExtractor"
-Cohesion: 0.17
-Nodes (11): ParsedEmbed, Server, MediaEpisode, MediaItem, PlaybackSource, URL, UserSettings, VidsrcExtractor (+3 more)
-
-### Community 16 - "PlaybackEngine"
+### Community 34 - "NavStateTest"
 Cohesion: 0.14
-Nodes (11): PlaybackEngine, .isAnime, .showManualSkipIntro, Any, Date, Set, Task, TimeInterval (+3 more)
+Nodes (5): PlaybackOverrides, ApiCredentials, UserSettings, NavStateTest, SyncCenterTest
 
-### Community 17 - "UserSettingsStore"
-Cohesion: 0.09
-Nodes (13): CredentialsStore, K, ApiCredentials, Int, LiveTvEntry, LiveTvSource, MediaCategory, Set (+5 more)
-
-### Community 18 - "Response"
-Cohesion: 0.11
-Nodes (20): Data, Dictionary, Http, HttpError, .description, status, transport, Response (+12 more)
-
-### Community 19 - "anime.js"
-Cohesion: 0.13
-Nodes (32): allmangaEpisodeCount(), anilistEpisodeMeta(), anilistSeasonTitle(), aniSkipEpisodeFor(), b64ToBytes(), bestAllmangaMatch(), CaptchaRequiredError, cleanDescription() (+24 more)
-
-### Community 20 - "SettingsScreen"
+### Community 31 - "Models.kt"
 Cohesion: 0.10
-Nodes (25): C, EdgeInsets, FlowChips, .body, LabeledField, .body, PickerField, .body (+17 more)
+Nodes (17): Int, Boolean, Double, MediaType, imageUrl(), PlaybackOverrides, MediaSeason, MediaEpisode (+9 more)
+
+### Community 77 - ".init"
+Cohesion: 0.43
+Nodes (4): OmniverseApplication, Application, AppGraph, AppState
+
+### Community 2 - "ApiCredentials"
+Cohesion: 0.07
+Nodes (27): TmdbRepository, ApiCredentials, UserSettings, List, MediaCategory, MediaItem, Int, MediaEpisode (+19 more)
 
 ### Community 21 - "UserSettingsStore"
 Cohesion: 0.11
-Nodes (12): CredentialsStore, K, ApiCredentials, LiveTvEntry, LiveTvSource, MediaCategory, T, UserSettings (+4 more)
+Nodes (15): CredentialsStore, K, SharedPreferences, ApiCredentials, UserSettingsStore, UserSettings, List, LiveTvSource (+7 more)
 
-### Community 22 - "renderCatalogFeeds"
+### Community 40 - "SyncCenter"
+Cohesion: 0.10
+Nodes (17): UserSettings, Boolean, JSONObject, ByteArray, Boolean, Float, SyncCenter, ApiCredentials (+9 more)
+
+### Community 10 - "TmdbRepositoryImpl"
 Cohesion: 0.12
-Nodes (30): appendMediaCards(), applyCardStaggerAnimation(), createMediaPosterCard(), ensureCardRevealObserver(), fetchAniListDiscoverPage(), fetchTmdbDiscover(), filterByStudio(), loadAnimeCatalog() (+22 more)
+Nodes (23): TmdbNetworkException, mediaItemFromTmdb(), JSONObject, MediaType, Map, Int, MediaItem, TmdbRepositoryImpl (+15 more)
 
-### Community 23 - "scratch_ani_cli.sh"
-Cohesion: 0.13
-Nodes (20): cleanup(), dep_ch(), dep_ch_failover(), die(), external_menu(), fetch_keys(), generate_link(), get_episode_url() (+12 more)
+### Community 6 - "TraktRepositoryImpl"
+Cohesion: 0.12
+Nodes (18): TraktRepositoryImpl, TraktRepository, TraktException, ApiCredentials, TraktDeviceCode, List, MediaCategory, MediaType (+10 more)
 
-### Community 24 - "Omniverse API Keys & Sync Configuration Guide"
-Cohesion: 0.09
-Nodes (28): Android CI Build Job, Native Enterprise Build Workflow, Desktop CI Build Job, iOS CI Build Job, Production Release Publisher Job, AniList Sync Token, Omniverse API Keys & Sync Configuration Guide, Pixeldrain API Key (+20 more)
-
-### Community 25 - "PlayerScreen"
-Cohesion: 0.15
-Nodes (14): Gesture, PlayerScreen, .body, .displayTitle, .dragToDismiss, .episode, .isAnime, .metaText (+6 more)
-
-### Community 26 - "View"
-Cohesion: 0.18
-Nodes (17): AVKit, AudioSheet, .body, formatTime(), optionTile(), PlayerErrorView, PlayerLoadingView, .body (+9 more)
-
-### Community 27 - "PosterImage"
-Cohesion: 0.15
-Nodes (21): CategoryRow(), ContinueWatchingRow(), GlassChip(), FocusRequester, MediaCategory, MediaItem, Modifier, WatchProgress (+13 more)
-
-### Community 28 - "Error"
-Cohesion: 0.11
-Nodes (19): Error, CustomStringConvertible, AnimeError, captchaRequired, .description, noSource, MediaEpisode, PlaybackSource (+11 more)
-
-### Community 29 - "OmniverseRoot.kt"
-Cohesion: 0.16
-Nodes (18): CaptchaScreen(), CaptchaArgs, DetailFocusArgs, GlassRail(), GlassTabBar(), androidx, FocusRequester, MediaItem (+10 more)
-
-### Community 30 - "appFetch"
-Cohesion: 0.15
-Nodes (19): appFetch(), checkAnimeServerLatencies(), decryptAES(), ensureFreshTraktToken(), filterIptvChannels(), hydrateProviderRailLogos(), importSyncCode(), loadIptvChannels() (+11 more)
-
-### Community 31 - "TvdbRepository"
-Cohesion: 0.18
-Nodes (11): Any, ApiCredentials, Bool, Date, Int, MediaEpisode, MediaItem, TokenStore (+3 more)
-
-### Community 32 - "Coordinator"
-Cohesion: 0.14
-Nodes (16): Coordinator, EmbedWebView, shouldBlock(), Bool, Context, Coordinator, Void, WKNavigation (+8 more)
-
-### Community 33 - "PlayerScreen.kt"
+### Community 23 - "VidsrcRepositoryImpl"
 Cohesion: 0.17
-Nodes (20): isTvDevice(), CaptionCue, captionRange(), captionTime(), CircleBtn(), fetchAniSkip(), formatTime(), androidx (+12 more)
+Nodes (12): VidsrcRepositoryImpl, VidsrcRepository, MediaItem, UserSettings, MediaEpisode, List, PlaybackSource, MediaCategory (+4 more)
 
-### Community 34 - "GlassPanel"
-Cohesion: 0.11
-Nodes (19): ButtonStyle, Configuration, AccentButtonStyle, Color, GlassCapsule, .body, GlassIconButton, .body (+11 more)
+### Community 68 - "WebViewCookieJar"
+Cohesion: 0.36
+Nodes (5): WebViewCookieJar, CookieJar, HttpUrl, List, Cookie
 
-### Community 35 - "LiveTvRepository"
-Cohesion: 0.18
-Nodes (12): LiveTvRepository, LiveTvEntry, LiveTvSource, URL, AnimeRepositoryProtocol, LiveTvRepositoryProtocol, Repositories, TmdbRepositoryProtocol (+4 more)
-
-### Community 36 - "playStreamEmbed"
-Cohesion: 0.14
-Nodes (29): captureReturnToDetailContext(), closeDetailModal(), createEmbedStatusOverlay(), ensurePlaybackIds(), exitPlayer(), fetchDesktopAniSkip(), findResumePositionMs(), isLikelyAnime() (+21 more)
-
-### Community 37 - "AppShell"
-Cohesion: 0.20
-Nodes (16): AppShell, .body, .tabs, GlassRail, .body, .expanded, GlassTabBar, .body (+8 more)
-
-### Community 38 - "SearchScreen"
-Cohesion: 0.16
-Nodes (14): GridPoster, .body, SearchScreen, .body, .emptyHints, .resultsGrid, .searchBar, Bool (+6 more)
-
-### Community 39 - "VidsrcResolver"
-Cohesion: 0.23
-Nodes (5): Int, Never, Task, UInt64, VidsrcResolver
-
-### Community 40 - "AppState"
-Cohesion: 0.13
-Nodes (12): AppState, .needsSetup, Bool, Double, LiveTvEntry, LiveTvSource, MediaCategory, MediaItem (+4 more)
-
-### Community 41 - "SettingsScreen.kt"
-Cohesion: 0.20
-Nodes (17): Chip(), Bitmap, Modifier, LabeledField(), MarkdownText(), parseInlineMarkdown(), PickerField(), qrBitmap() (+9 more)
-
-### Community 42 - "Foundation"
-Cohesion: 0.13
-Nodes (9): CommonCrypto, CryptoKit, Foundation, TraktOnboardingScreen, .body, DetailEpisodeFocusContext, Int, Observation (+1 more)
-
-### Community 43 - "openDetailModal"
-Cohesion: 0.15
-Nodes (19): appendEpisodeRow(), closeContinueWatchingSheet(), enableHorizontalWheelScroll(), escapeHtml(), fetchAniListRecommendations(), fetchDesktopRecommendationsFor(), fetchTmdb(), focusContinueEpisodeInDetail() (+11 more)
-
-### Community 44 - "MediaItem"
-Cohesion: 0.18
-Nodes (16): Hashable, Hasher, imageUrl(), MediaEpisode, .id, .stillUrl, MediaItem, .anilistId (+8 more)
-
-### Community 45 - "HomeScreen.kt"
-Cohesion: 0.20
-Nodes (16): imageUrl(), ContinueWatchingSheet(), displayCategories(), HeroCarousel(), HeroPage(), HomeScreen(), MediaCategory, MediaItem (+8 more)
-
-### Community 46 - "TvdbRepositoryImpl"
-Cohesion: 0.26
-Nodes (8): ApiCredentials, Exception, JSONObject, MediaEpisode, MediaItem, TvdbException, TvdbRepositoryImpl, TvdbRepository
-
-### Community 47 - "PlayerContainerView"
-Cohesion: 0.15
-Nodes (13): AnyClass, AVPlayer, AVPlayerLayer, PlayerContainerView, .layerClass, .player, .playerLayer, AppState (+5 more)
-
-### Community 48 - "main.js"
-Cohesion: 0.15
-Nodes (16): adBlockStats, animeRefererHosts, {
-  app,
-  BrowserWindow,
-  ipcMain,
-  session,
-  shell,
-  Notification,
-}, attachBlockerToSession(), bindBlockerEventsOnce(), BLOCKED_KEYWORDS, blockerAttachedSessions, createWindow() (+8 more)
-
-### Community 49 - "renderContinueWatching"
-Cohesion: 0.21
-Nodes (12): clearWatchHistory(), forceSyncNow(), hideSyncProgressModal(), mergeWatchHistory(), pushToTrakt(), recordWatchProgress(), removeWatchProgressByItemId(), renderContinueWatching() (+4 more)
-
-### Community 50 - "VidsrcRepository"
-Cohesion: 0.27
-Nodes (4): Any, Int, MediaCategory, VidsrcRepository
-
-### Community 51 - "YarrlistRepository"
-Cohesion: 0.24
-Nodes (6): Anchor, Bool, LiveTvEntry, URL, message, YarrlistRepository
-
-### Community 52 - "WebEmbedPlayerScreen"
-Cohesion: 0.19
-Nodes (10): .body, PlayerOrientation, UIInterfaceOrientationMask, MediaEpisode, MediaItem, Never, Task, WebEmbedPlayerScreen (+2 more)
-
-### Community 53 - "DeviceTuning.swift"
-Cohesion: 0.17
-Nodes (10): CADisplayLink, Float, DeviceTuning, .maxRefreshRate, KeepAwakeModifier, Bool, Content, View (+2 more)
-
-### Community 54 - ".fetchSource"
-Cohesion: 0.25
-Nodes (11): attribute(), Exception, LiveTvEntry, LiveTvSource, URI, LiveTvException, LiveTvRepositoryImpl, parseM3u() (+3 more)
-
-### Community 55 - "MainActivity"
-Cohesion: 0.21
-Nodes (5): KeepScreenOn(), MainActivity, Bundle, ComponentActivity, Intent
-
-### Community 56 - "parseDirectory"
-Cohesion: 0.29
-Nodes (10): cleanTitle(), isNavigation(), Exception, LiveTvEntry, URI, parseDirectory(), resolve(), YarrlistException (+2 more)
-
-### Community 57 - ".__init__"
-Cohesion: 0.21
-Nodes (7): CustomWebEnginePage, main(), MainWindow, NetworkInterceptor, QMainWindow, QWebEnginePage, QWebEngineUrlRequestInterceptor
-
-### Community 58 - "build"
-Cohesion: 0.14
-Nodes (14): build, afterPack, appId, directories, mac, productName, publish, win (+6 more)
-
-### Community 59 - "Identifiable"
-Cohesion: 0.23
-Nodes (13): Equatable, Identifiable, LiveTvEntry, .id, .isDirectStream, LiveTvSource, .isDirectStream, MediaCategory (+5 more)
-
-### Community 60 - "SwiftUI"
-Cohesion: 0.11
-Nodes (15): App, AppDelegate, OmniverseApp, .body, UIInterfaceOrientationMask, RecommendationsEndOverlay, .body, Bool (+7 more)
-
-### Community 61 - "Int"
-Cohesion: 0.22
-Nodes (6): AniSkipApi, CaptionCue, CaptionParser, SkipInterval, Int, URL
-
-### Community 62 - "resolveNextEpisode"
-Cohesion: 0.37
-Nodes (12): AutoplayNext, Embed, AppState, MediaEpisode, MediaItem, nextEpisodeFor(), Play, prevEpisodeFor() (+4 more)
-
-### Community 63 - ".webView"
-Cohesion: 0.21
-Nodes (9): Context, URL, WKNavigation, WKNavigationAction, WKNavigationActionPolicy, WKWebView, WKWebViewConfiguration, WKWindowFeatures (+1 more)
-
-### Community 64 - "qrcode.min.js"
-Cohesion: 0.23
-Nodes (6): a(), b(), d(), g(), r(), s()
-
-### Community 66 - "SplashView"
-Cohesion: 0.23
-Nodes (10): Binding, LiquidBackdrop, .body, RootView, .body, SplashView, .body, CGFloat (+2 more)
-
-### Community 67 - "VidsrcResolveScreen"
-Cohesion: 0.38
-Nodes (5): MediaEpisode, MediaItem, Void, VidsrcResolveScreen, .body
-
-### Community 68 - "LiveTvScreen.kt"
-Cohesion: 0.38
-Nodes (8): categoriesFor(), groupByCategory(), LiveTvEntry, NavController, LiveTvCategoryRow(), LiveTvScreen(), ScanningView(), ScanPrompt()
-
-### Community 69 - "UpdateChecker"
-Cohesion: 0.31
-Nodes (6): Available, CheckResult, Context, UpdateChecker, UpdateInfo, UpToDate
-
-### Community 70 - "package.json"
-Cohesion: 0.20
-Nodes (9): author, description, license, main, name, repository, type, url (+1 more)
-
-### Community 71 - "VidsrcResolveScreen.swift"
-Cohesion: 0.27
-Nodes (8): EmbedProbe, PlayerProbe, Bool, VidsrcServer, VidsrcStage, done, embed, player
-
-### Community 72 - "live_logger.py"
-Cohesion: 0.29
-Nodes (9): find_touchscreen_device(), get_screen_size(), getevent_thread(), logcat_thread(), main(), Reads adb logcat and prints formatted API logs., Reads adb getevent and prints formatted TAP events mapped to pixels., Runs `adb shell wm size` and returns (width, height). (+1 more)
-
-### Community 73 - ".makeItem"
-Cohesion: 0.22
-Nodes (7): AVAssetResourceLoader, AVAssetResourceLoaderDelegate, AVPlayerItem, DispatchQueue, PermissiveAssetTrust, URLAuthenticationChallenge, URLCredential
-
-### Community 74 - "files"
-Cohesion: 0.22
-Nodes (9): files, anime.js, index.html, logo.png, main.js, preload.js, qrcode.min.js, renderer.js (+1 more)
-
-### Community 76 - "scripts"
-Cohesion: 0.25
-Nodes (8): scripts, debug, dist, dist:linux, dist:mac, dist:win, pack, start
-
-### Community 77 - "ApiCredentials"
-Cohesion: 0.25
-Nodes (8): ApiCredentials, .canRefreshTrakt, .hasAnilist, .hasPixeldrain, .hasTmdb, .hasTraktApp, .hasTraktUser, .hasTvdb
-
-### Community 78 - ".init"
-Cohesion: 0.43
-Nodes (4): AppGraph, AppState, OmniverseApplication, Application
-
-### Community 79 - "WebViewCookieJar"
-Cohesion: 0.38
-Nodes (4): WebViewCookieJar, Cookie, CookieJar, HttpUrl
-
-### Community 80 - "build.sh"
-Cohesion: 0.52
-Nodes (6): build.sh script, show_help(), target_android(), target_clean(), target_desktop(), target_ios()
-
-### Community 81 - "Tab"
-Cohesion: 0.29
-Nodes (7): CaseIterable, Int, Tab, apiKeys, cloudSync, preferences, .title
-
-### Community 82 - "Codable"
-Cohesion: 0.29
-Nodes (6): Codable, PlaybackSourceKind, direct, embed, PlaybackOverrides, UserSettings
-
-### Community 83 - "dependencies"
-Cohesion: 0.29
-Nodes (7): cross-fetch, dependencies, cross-fetch, @ghostery/adblocker-electron, playwright, @ghostery/adblocker-electron, playwright
-
-### Community 84 - "nsis"
-Cohesion: 0.29
-Nodes (7): nsis, allowToChangeInstallationDirectory, createDesktopShortcut, createStartMenuShortcut, oneClick, runAfterFinish, shortcutName
-
-### Community 85 - "MediaType"
-Cohesion: 0.29
-Nodes (7): MediaType, anime, .label, liveTv, movie, series, .tmdbPath
-
-### Community 86 - "Any"
-Cohesion: 0.38
-Nodes (3): Any, UserSettings, WatchProgress
-
-### Community 87 - "Theme.kt"
+### Community 51 - "resolveNextEpisode"
 Cohesion: 0.40
-Nodes (5): glassPanel(), Modifier, LiquidBackdrop(), LiquidColors, OmniverseTheme()
+Nodes (12): AutoplayNext, Play, Embed, nextEpisodeFor(), MediaItem, MediaEpisode, prevEpisodeFor(), resolveNextEpisode() (+4 more)
 
-### Community 88 - "VidsrcResolveScreen"
-Cohesion: 0.33
-Nodes (5): VidsrcResolveScreen(), VServer, VStage, EMBED, PLAYER
+### Community 13 - "PosterImage"
+Cohesion: 0.06
+Nodes (56): Int, Float, FocusRequester, Modifier, Boolean, ContentScale, MediaItem, MediaCategory (+48 more)
 
-### Community 89 - "WatchProgress"
-Cohesion: 0.33
-Nodes (6): Double, WatchProgress, .backdropUrl, .fraction, .posterUrl, .progressKey
+### Community 36 - "OmniverseRoot.kt"
+Cohesion: 0.16
+Nodes (19): MediaItem, UserSettings, List, FocusRequester, Modifier, NavController, WebEmbedScreen(), RouteArgs (+11 more)
 
-### Community 90 - "OnboardingScreen"
-Cohesion: 0.60
-Nodes (4): Bitmap, obColors(), OnboardingScreen(), qrBitmap()
+### Community 83 - "qrBitmap"
+Cohesion: 0.47
+Nodes (5): OnboardingScreen(), obColors(), qrBitmap(), Int, Bitmap
 
-### Community 91 - "get_lordflix.js"
+### Community 30 - "PlayerScreen.kt"
+Cohesion: 0.15
+Nodes (25): SkipInterval, CaptionCue, formatTime(), Int, PlayerScreen(), RecommendationsEndScreen(), List, MediaItem (+17 more)
+
+### Community 32 - "SettingsScreen.kt"
+Cohesion: 0.16
+Nodes (21): SettingsScreen(), Section(), SecretField(), Boolean, LabeledField(), PickerField(), List, Pair (+13 more)
+
+### Community 22 - "String"
+Cohesion: 0.16
+Nodes (13): WebGuards, Boolean, MediaItem, UserSettings, MediaEpisode, PlaybackSource, URL, VidsrcStream (+5 more)
+
+### Community 67 - "Theme.kt"
+Cohesion: 0.29
+Nodes (7): Modifier, Int, Float, LiquidColors, OmniverseTheme(), LiquidBackdrop(), glassPanel()
+
+### Community 90 - "gradlew"
+Cohesion: 0.83
+Nodes (3): gradlew script, warn(), die()
+
+### Community 79 - "build.sh"
+Cohesion: 0.52
+Nodes (6): build.sh script, show_help(), target_clean(), target_android(), target_ios(), target_desktop()
+
+### Community 49 - ".__init__"
+Cohesion: 0.21
+Nodes (7): NetworkInterceptor, QWebEngineUrlRequestInterceptor, CustomWebEnginePage, QWebEnginePage, MainWindow, QMainWindow, main()
+
+### Community 88 - "get_lordflix.js"
 Cohesion: 0.40
 Nodes (3): { chromium }, fs, path
 
-### Community 92 - "devDependencies"
-Cohesion: 0.40
-Nodes (5): devDependencies, electron, electron-builder, electron, electron-builder
+### Community 56 - "qrcode.min.js"
+Cohesion: 0.23
+Nodes (6): a(), b(), r(), s(), g(), d()
 
-### Community 93 - "gradlew"
-Cohesion: 0.83
-Nodes (3): gradlew script, die(), warn()
+### Community 131 - "SwiftUI"
+Cohesion: 0.17
+Nodes (7): SwiftUI, UIKit, RecommendationsEndOverlay, MediaItem, Bool, Void, TraktOnboardingScreen
 
-### Community 94 - "linux"
+### Community 37 - "LiquidGlass.swift"
+Cohesion: 0.13
+Nodes (15): UInt32, Double, ButtonStyle, Configuration, CGFloat, Bool, EdgeInsets, Void (+7 more)
+
+### Community 19 - "View"
+Cohesion: 0.18
+Nodes (11): View, PlayerScreen, CGFloat, GeometryProxy, Gesture, sheetContainer(), Content, C (+3 more)
+
+### Community 8 - "Models.swift"
+Cohesion: 0.08
+Nodes (34): Codable, Equatable, Bool, PlaybackOverrides, Hashable, Int, Identifiable, Double (+26 more)
+
+### Community 27 - "SettingsScreen"
+Cohesion: 0.12
+Nodes (14): CaseIterable, SettingsScreen, Tab, Int, apiKeys, preferences, cloudSync, Bool (+6 more)
+
+### Community 26 - "Response"
+Cohesion: 0.13
+Nodes (16): Http, URLSessionDelegate, URLSession, Response, Int, URL, Bool, Any (+8 more)
+
+### Community 33 - "SplashView"
+Cohesion: 0.14
+Nodes (11): NSObject, AppDelegate, UIApplicationDelegate, UIApplication, UIWindow, UIInterfaceOrientationMask, RootView, SplashView (+3 more)
+
+### Community 0 - "AppState"
+Cohesion: 0.05
+Nodes (34): Data, OmniverseApp, App, Scene, SyncPayload, ApiCredentials, UserSettings, UIImage (+26 more)
+
+### Community 39 - "VidsrcRepository"
+Cohesion: 0.29
+Nodes (4): VidsrcRepository, MediaCategory, Int, Any
+
+### Community 52 - "Error"
+Cohesion: 0.16
+Nodes (12): CustomStringConvertible, LiveTvRepository, LiveTvSource, LiveTvEntry, URL, LiveTvError, message, TmdbNetworkException (+4 more)
+
+### Community 58 - "PlayerScreen.swift"
+Cohesion: 0.18
+Nodes (15): URLCredential, AVKit, PermissiveAssetTrust, AVAssetResourceLoaderDelegate, AVAssetResourceLoader, URLAuthenticationChallenge, Bool, formatTime() (+7 more)
+
+### Community 66 - "DeviceTuning.swift"
+Cohesion: 0.20
+Nodes (9): DeviceTuning, Float, CADisplayLink, Bool, KeepAwakeModifier, ViewModifier, Content, View (+1 more)
+
+### Community 89 - "State"
+Cohesion: 0.20
+Nodes (8): CachedResponse, Http, Date, State, CheckedContinuation, Void, Never, TimeInterval
+
+### Community 5 - "TmdbRepository"
+Cohesion: 0.16
+Nodes (14): MediaItem, Any, MediaType, Int, TmdbRepository, ApiCredentials, UserSettings, MediaCategory (+6 more)
+
+### Community 7 - "TraktRepository"
+Cohesion: 0.12
+Nodes (18): TraktRepository, TraktError, state, response, Int, ApiCredentials, URL, TraktDeviceCode (+10 more)
+
+### Community 45 - "TvdbRepository"
+Cohesion: 0.19
+Nodes (11): TvdbRepository, TokenStore, Date, ApiCredentials, Bool, MediaItem, Int, MediaEpisode (+3 more)
+
+### Community 4 - "YarrlistRepository"
+Cohesion: 0.14
+Nodes (13): YarrlistRepository, LiveTvEntry, URL, Anchor, Bool, message, TmdbRepositoryProtocol, TvdbRepositoryProtocol (+5 more)
+
+### Community 44 - "View"
+Cohesion: 0.23
+Nodes (11): Int, CGFloat, Bool, LiquidBackdrop, View, AppShell, Tab, GlassTabBar (+3 more)
+
+### Community 57 - ".resolveNext"
+Cohesion: 0.33
+Nodes (7): AutoplayResolver, Next, player, vidsrc, MediaItem, MediaEpisode, AppState
+
+### Community 59 - "CategoryRow"
+Cohesion: 0.29
+Nodes (10): ContentMode, MediaItem, Bool, Void, Int, MediaCategory, PosterImage, MediaPosterCard (+2 more)
+
+### Community 38 - "HomeScreen"
+Cohesion: 0.16
+Nodes (17): MediaItem, WatchProgress, Bool, MediaEpisode, MediaCategory, Void, CGSize, LinearGradient (+9 more)
+
+### Community 24 - "LiveTvScreen"
+Cohesion: 0.14
+Nodes (18): LiveTvScreen, Double, Task, Void, Never, LiveTvEntry, Bool, parseM3u() (+10 more)
+
+### Community 12 - "Coordinator"
+Cohesion: 0.14
+Nodes (16): WebKit, WKNavigationDelegate, WKUIDelegate, shouldBlock(), Bool, EmbedWebView, Void, Coordinator (+8 more)
+
+### Community 29 - "MediaDetailScreen"
+Cohesion: 0.18
+Nodes (13): MediaItem, Int, MediaEpisode, Bool, ScrollViewProxy, Void, MediaDetailScreen, PlaybackSource (+5 more)
+
+### Community 25 - "ScannerController"
+Cohesion: 0.09
+Nodes (18): AVFoundation, CoreImage.CIFilterBuiltins, QRScannerView, UIViewControllerRepresentable, Void, Coordinator, Context, Coordinator (+10 more)
+
+### Community 86 - "PlayerOrientation"
+Cohesion: 0.47
+Nodes (3): PlayerOrientation, UIInterfaceOrientationMask, UIInterfaceOrientation
+
+### Community 47 - "Int"
+Cohesion: 0.19
+Nodes (9): SkipInterval, Int, AniSkipApi, URL, CaptionCue, CaptionParser, MediaItem, MediaEpisode (+1 more)
+
+### Community 46 - "PlayerContainerView"
+Cohesion: 0.31
+Nodes (7): PlayerContainerView, UIView, AnyClass, AVPlayerLayer, AVPlayer, VideoSurface, Context
+
+### Community 130 - ".webView"
+Cohesion: 0.19
+Nodes (10): UIViewRepresentable, URL, WKWebView, WKNavigationAction, WKNavigationActionPolicy, WKNavigation, WKWebViewConfiguration, WKWindowFeatures (+2 more)
+
+### Community 15 - "PlaybackEngine"
+Cohesion: 0.10
+Nodes (14): PlaybackEngine, Set, Any, Task, Never, NSKeyValueObservation, NSObjectProtocol, TimeInterval (+6 more)
+
+### Community 50 - "SearchScreen"
+Cohesion: 0.20
+Nodes (9): MediaItem, Void, Bool, CGFloat, Int, SearchScreen, Task, Never (+1 more)
+
+### Community 132 - "VidsrcResolveScreen.swift"
+Cohesion: 0.27
+Nodes (8): VidsrcStage, embed, player, done, VidsrcServer, EmbedProbe, Bool, PlayerProbe
+
+### Community 11 - "VidsrcResolver"
+Cohesion: 0.23
+Nodes (5): VidsrcResolver, UInt64, Task, Never, Int
+
+### Community 133 - "VidsrcResolveScreen"
+Cohesion: 0.39
+Nodes (4): Void, VidsrcResolveScreen, MediaItem, MediaEpisode
+
+### Community 134 - "WebEmbedPlayerScreen"
+Cohesion: 0.33
+Nodes (5): WebEmbedPlayerScreen, MediaItem, MediaEpisode, Task, Never
+
+### Community 20 - "UserSettingsStore"
+Cohesion: 0.09
+Nodes (13): Security, CredentialsStore, K, ApiCredentials, UserSettingsStore, UserSettings, LiveTvSource, MediaCategory (+5 more)
+
+### Community 65 - "live_logger.py"
+Cohesion: 0.29
+Nodes (9): get_screen_size(), find_touchscreen_device(), logcat_thread(), getevent_thread(), main(), Runs `adb shell wm size` and returns (width, height)., Runs `adb shell getevent -p` to find the device path for the touchscreen, and it, Reads adb logcat and prints formatted API logs. (+1 more)
+
+### Community 93 - "Omniverse Cross-Device Sync Protocol"
 Cohesion: 0.50
-Nodes (4): linux, category, icon, target
+Nodes (4): Omniverse Cross-Device Sync Protocol, QR Payload JSON Schema, QR Decode & Restore Pipeline, Cross-Platform Camera QR Scanner
 
-### Community 99 - "Omniverse iOS Target"
+### Community 78 - "Decentralized Client-Side Serverless Architecture"
+Cohesion: 0.38
+Nodes (7): Decentralized Client-Side Serverless Architecture, Zero-Config QR Sync, TMDB Read Access Token, Trakt Developer Keys and OAuth, Pixeldrain API Key, TVDB API Key and Subscriber PIN, AniList
+
+### Community 54 - "Omniverse Native Rewrite"
+Cohesion: 0.21
+Nodes (12): Omniverse Native Rewrite, SwiftUI iOS App, Jetpack Compose Android App, Flutter Omniplay Source of Truth, Maximum Refresh Rate Rendering, Keep Screen On During Playback, TMDB Dual Authentication, TVDB v4 Login and PIN Authentication (+4 more)
+
+### Community 3 - "main.js"
+Cohesion: 0.05
+Nodes (61): BLOCK_KINDS, COUNTER_BY_KIND, createAdShieldTelemetry(), fs, os, path, { execFile, spawn }, { promisify } (+53 more)
+
+### Community 55 - "package.json"
+Cohesion: 0.17
+Nodes (11): name, version, description, main, author, license, repository, type (+3 more)
+
+### Community 61 - "scripts"
+Cohesion: 0.18
+Nodes (11): scripts, start, debug, test, test:security, security:check, pack, dist (+3 more)
+
+### Community 95 - "devDependencies"
 Cohesion: 0.67
-Nodes (3): Desktop Sync Pairing QR Code Component, Omniverse iOS Target, iOS Project Configuration
+Nodes (3): devDependencies, electron, electron-builder
+
+### Community 60 - "build"
+Cohesion: 0.18
+Nodes (11): build, appId, productName, publish, afterPack, directories, output, files (+3 more)
+
+### Community 80 - "mac"
+Cohesion: 0.29
+Nodes (7): mac, identity, entitlements, entitlementsInherit, category, target, icon
+
+### Community 81 - "nsis"
+Cohesion: 0.29
+Nodes (7): nsis, oneClick, allowToChangeInstallationDirectory, createDesktopShortcut, createStartMenuShortcut, shortcutName, runAfterFinish
+
+### Community 91 - "linux"
+Cohesion: 0.50
+Nodes (4): linux, target, category, icon
+
+### Community 92 - "dependencies"
+Cohesion: 0.50
+Nodes (4): dependencies, @ghostery/adblocker-electron, cross-fetch, playwright
+
+### Community 14 - "renderer.js"
+Cohesion: 0.06
+Nodes (42): BLOCKED_VIDSRC_DOMAINS, state, STUDIO_PROVIDER_MAP, TMDB_PROVIDER_LOGO_OVERRIDES, screenScrollPositions, infiniteState, TMDB_GENRES, heroSlides (+34 more)
+
+### Community 16 - "renderCatalogFeeds"
+Cohesion: 0.10
+Nodes (41): getEffectiveTmdbToken(), hydrateProviderRailLogos(), fetchTmdb(), mediaPlaceholder(), mapTmdbItem(), showGridLoading(), showGridMessage(), setHeroMessage() (+33 more)
+
+### Community 28 - "appFetch"
+Cohesion: 0.12
+Nodes (27): loadSavedPreferences(), updateTraktUiStatus(), appFetch(), removeWatchProgressByItemId(), setupLiveTvCenter(), onIptvCountryChanged(), loadIptvChannels(), saveAllApiKeys() (+19 more)
+
+### Community 18 - "playStream"
+Cohesion: 0.17
+Nodes (20): isLikelyAnime(), stopActiveDirectPlayback(), captureReturnToDetailContext(), closeDetailModal(), sizeWebviewToWindow(), unsizeWebview(), playbackTitle(), createEmbedStatusOverlay() (+12 more)
+
+### Community 128 - "parsePositiveIntOrNull"
+Cohesion: 0.22
+Nodes (16): parsePositiveIntOrNull(), normalizeWatchType(), recordWatchProgress(), findResumePositionMs(), startDirectPlaybackTracking(), playDirectVideo(), fetchDesktopAniSkip(), showPlayerToast() (+8 more)
+
+### Community 41 - "afterPack.js"
+Cohesion: 0.16
+Nodes (15): { execFileSync }, fs, path, hasLocalAppleSigningIdentity(), collectCodeTargets(), hasCodeSignature(), needsElectronEntitlements(), signCodeTarget() (+7 more)
+
+### Community 63 - "Native Android Build Job"
+Cohesion: 0.24
+Nodes (10): Native Enterprise Build Artifacts, Native Android Build Job, Android Tests and Lint Gate, Native iOS Build Job, iOS Run-Number Version Stamp, iOS Tests and Static Analysis Gate, Cross-Platform Desktop Build Matrix, Desktop Tests and Dependency Audit Gate (+2 more)
+
+### Community 53 - "Security and Update Hardening"
+Cohesion: 0.17
+Nodes (12): Secret-Backed Android Release Signing, Security and Update Hardening, Trusted Update Boundaries, Platform TLS Restoration, Secret-Safe Android Signing, Sandboxed Desktop Playback Guests, Player Webview Isolation, Release Signing Configuration (+4 more)
+
+### Community 42 - "Omniverse v2.1.80"
+Cohesion: 0.13
+Nodes (16): Omniverse v2.1.80, Cinematic Mobile Redesign, Live AdShield Dashboard, Reliable AdShield Protection Pipeline, 48-Test Cross-Platform Quality Matrix, README Product Showcase, Cross-Device Continue Watching Sync, Verified Quality and Security (+8 more)
+
+### Community 84 - "Settings and Synchronization Center"
+Cohesion: 0.33
+Nodes (6): Omniverse v2.1.79, Native macOS In-App Updates, Settings and Synchronization Center, Zero-Config Sync Panel, Desktop In-App Update Engine, Sync QR Camera Access
+
+### Community 43 - "Omniverse"
+Cohesion: 0.13
+Nodes (16): Omniverse, Cinematic Multiscreen Experience, Native Mobile Cinematic Design, Discover-to-Continuity Experience Flow, Platform and Playback Matrix, Native Multiplatform Architecture, Real-App Product Tour, Privacy and Sync Model (+8 more)
+
+### Community 48 - "Shared Cinematic Crimson Design System"
+Cohesion: 0.14
+Nodes (15): Omniverse Desktop Shell, Lordflix-Inspired Visual System, Bottom-Docked Navigation Pill, Home Dashboard, Featured Hero Carousel, Provider and Content Rails, Continue Watching Shelf, Search Movies and TV Surfaces (+7 more)
+
+### Community 76 - "Omniverse iOS Application Target"
+Cohesion: 0.29
+Nodes (8): Omniverse iOS Project, Omniverse iOS Application Target, Omniverse iOS Unit Test Target, iOS 17 Deployment Baseline, Mac Catalyst Support, ProMotion Refresh Unlock, Omniplay and Omniverse OAuth URL Schemes, Background Audio Mode
+
+### Community 62 - "Shared Product Concepts"
+Cohesion: 0.18
+Nodes (11): Omniverse System Map, iOS and iPadOS Client, Android and TV Client, Desktop Client, Shared Product Concepts, Platform-Native Execution, User-Configured Discovery Services, User-Configured Continuity Services (+3 more)
+
+### Community 69 - "Cinematic Feature Hero"
+Cohesion: 0.25
+Nodes (8): Desktop Home Screen, Cinematic Feature Hero, Agent Kim Reactivated, Primary Play Action, Secondary Title Actions, Browse by Provider Rail, Persistent Bottom Navigation, Layered Cinematic Discovery
+
+### Community 70 - "Premium IPTV Center Screen"
+Cohesion: 0.32
+Nodes (8): Premium IPTV Center Screen, Region Selector, Channel Name Filter, Scrollable Channel Index, Live Playback Pane, Select a Channel Empty State, Persistent Bottom Navigation, Live TV Master-Detail Layout
+
+### Community 82 - "Movie Poster Grid"
+Cohesion: 0.29
+Nodes (7): Cinematic Movies Screen, Movie Poster Grid, Portrait Artwork Cards, Persistent Bottom Navigation, Active Movies Navigation State, Visual-First Movie Browsing, Responsive Catalog Density
+
+### Community 71 - "Desktop Search Screen"
+Cohesion: 0.25
+Nodes (8): Desktop Search Screen, Movie Night Search Prompt, Centered Movies and TV Search Field, Top Results Region, Empty Search State, Persistent Bottom Navigation, Active Search Navigation Control, Low-Distraction Query Entry
+
+### Community 85 - "TV Shows & Series Surface"
+Cohesion: 0.33
+Nodes (6): TV Shows & Series Surface, Poster Catalog Grid, Persistent Bottom Navigation, Active Shows Destination, Omniverse Brand Header, On-demand Series Discovery
+
+### Community 72 - "Desktop Surface Collection"
+Cohesion: 0.36
+Nodes (8): Desktop Surface Collection, Movies Surface, Shows Surface, Live TV Surface, Search Surface, Shared Bottom Navigation, Live macOS Build Captures, Cross-surface Visual Consistency
+
+### Community 73 - "One Shared Shell"
+Cohesion: 0.25
+Nodes (8): Adaptive Multiplatform Navigation, One Shared Shell, Pointer Input, Touch Input, Keyboard Input, D-pad Input, Floating Navigation Bar, Movies Search and Live TV Surfaces
+
+### Community 74 - "Mobile Onboarding Surface"
+Cohesion: 0.29
+Nodes (8): Mobile Onboarding Surface, Redacted Pairing Code, Fresh Code Per Launch, Private Scan Warning, Trakt Client Credentials, Scan Another Sync QR, Glass Card Presentation, Privacy-preserving Pairing
+
+### Community 75 - "Omniverse Platform Showcase"
+Cohesion: 0.29
+Nodes (8): Omniverse Platform Showcase, Cinematic Discovery, Native Playback, Every Screen, Desktop Hero Experience, Mobile Sync Onboarding, Provider Browsing Rail, Desktop iOS Android and TV Targets
+
+### Community 64 - "Verified Quality Signals"
+Cohesion: 0.20
+Nodes (10): Verified Quality Signals, 48 Total Tests, Desktop 14 Tests, Android 20 Tests, iOS 14 Tests, Zero npm Vulnerabilities, Zero Android Lint Errors, Xcode Analyze Passed (+2 more)
+
+### Community 129 - "README Presentation Redesign Query"
+Cohesion: 0.16
+Nodes (15): README Presentation Redesign Query, Real Installed-App Captures, GitHub-Rendered Mermaid Experience Flow, Architecture SVG Visualization, Verified Quality and Security Dashboard SVG, Cross-Preview Static Visualizations, Compact Mobile Redesign Showcase, iOS Companion Showcase (+7 more)
 
 ## Knowledge Gaps
-- **215 isolated node(s):** `The Movie Database (TMDB) Read Access Token`, `Trakt.tv Developer Client Keys`, `AniList Sync Token`, `Pixeldrain API Key`, `TVDB API Key & Subscriber PIN` (+210 more)
+- **229 isolated node(s):** `K`, `VServer`, `VStage`, `{ chromium }`, `fs` (+224 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **348 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **31 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `String` connect `String` to `MediaDetailScreen`, `.body`, `TraktRepository`, `TmdbRepository`, `ScannerController`, `LiveTvScreen`, `VidsrcExtractor`, `PlaybackEngine`, `UserSettingsStore`, `Response`, `SettingsScreen`, `PlayerScreen`, `View`, `Error`, `TvdbRepository`, `Coordinator`, `GlassPanel`, `LiveTvRepository`, `AppShell`, `SearchScreen`, `VidsrcResolver`, `AppState`, `Foundation`, `MediaItem`, `PlayerContainerView`, `VidsrcRepository`, `YarrlistRepository`, `WebEmbedPlayerScreen`, `Identifiable`, `SwiftUI`, `Int`, `VidsrcResolveScreen`, `VidsrcResolveScreen.swift`, `.makeItem`, `Tab`, `Codable`, `MediaType`, `Any`, `WatchProgress`?**
-  _High betweenness centrality (0.284) - this node is a cross-community bridge._
-- **Why does `Error` connect `Error` to `UpdateChecker`, `TraktRepository`, `VidsrcExtractor`, `Response`, `TvdbRepository`?**
-  _High betweenness centrality (0.214) - this node is a cross-community bridge._
-- **Are the 4 inferred relationships involving `PlayerScreen` (e.g. with `.body` and `.body`) actually correct?**
-  _`PlayerScreen` has 4 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `The Movie Database (TMDB) Read Access Token`, `Trakt.tv Developer Client Keys`, `AniList Sync Token` to the rest of the system?**
-  _215 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `String` connect `String` to `AppState`, `AppState`, `ApiCredentials`, `SwiftUI`, `YarrlistRepository`, `TmdbRepository`, `TraktRepositoryImpl`, `TraktRepository`, `VidsrcResolveScreen.swift`, `TvdbRepositoryImpl`, `TmdbRepositoryImpl`, `VidsrcResolver`, `VidsrcResolveScreen`, `PosterImage`, `Coordinator`, `PlaybackEngine`, `main.js`, `Http.kt`, `renderer.js`, `View`, `UserSettingsStore`, `UserSettingsStore`, `VidsrcRepositoryImpl`, `LiveTvScreen`, `ScannerController`, `Response`, `SettingsScreen`, `MediaDetailScreen`, `PlayerScreen.kt`, `Models.kt`, `SettingsScreen.kt`, `WebEmbedPlayerScreen`, `OmniverseRoot.kt`, `LiquidGlass.swift`, `HomeScreen`, `VidsrcRepository`, `SyncCenter`, `Models.swift`, `View`, `TvdbRepository`, `Int`, `SearchScreen`, `Error`, `PlayerScreen.swift`, `CategoryRow`, `qrBitmap`, `State`?**
+  _High betweenness centrality (0.652) - this node is a cross-community bridge._
+- **Why does `encryptAES()` connect `renderer.js` to `String`?**
+  _High betweenness centrality (0.103) - this node is a cross-community bridge._
+- **Why does `buildMacUpdateHelperScript()` connect `main.js` to `String`?**
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+- **Are the 8 inferred relationships involving `String` (e.g. with `.fetchDetails()` and `.fetchSeasonEpisodes()`) actually correct?**
+  _`String` has 8 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 3 inferred relationships involving `AppState` (e.g. with `OmniverseApp` and `CredentialsStore`) actually correct?**
+  _`AppState` has 3 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `K`, `VServer`, `VStage` to the rest of the system?**
+  _250 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `AppState` be split into smaller, more focused modules?**
-  _Cohesion score 0.05847803881511747 - nodes in this community are weakly interconnected._
-- **Should `ApiCredentials` be split into smaller, more focused modules?**
-  _Cohesion score 0.06354642313546423 - nodes in this community are weakly interconnected._
-- **Should `MediaDetailScreen` be split into smaller, more focused modules?**
-  _Cohesion score 0.06746031746031746 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05971173644474949 - nodes in this community are weakly interconnected._

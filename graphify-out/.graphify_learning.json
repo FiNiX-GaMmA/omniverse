@@ -1,0 +1,86 @@
+{
+  "generated_at": "2026-07-29T05:39:45.588375+00:00",
+  "nodes": {
+    "android_app_src_main_java_com_finix_omniverse_ui_omniverseroot_glasstabbar": {
+      "code_fingerprint": "942ae65112d176e8b3d72448e27f56ae6afcf8e8d57a37810b999c64cad3f45a",
+      "label": "GlassTabBar()",
+      "last": "2026-07-29T04:42:22.050346+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T04:42:22.050346+00:00",
+          "outcome": "useful",
+          "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
+        }
+      ],
+      "score": 0.99907956,
+      "source_file": "android/app/src/main/java/com/finix/omniverse/ui/OmniverseRoot.kt",
+      "status": "tentative",
+      "uses": 1
+    },
+    "android_app_src_main_java_com_finix_omniverse_ui_omniverseroot_shell": {
+      "code_fingerprint": "942ae65112d176e8b3d72448e27f56ae6afcf8e8d57a37810b999c64cad3f45a",
+      "label": "Shell()",
+      "last": "2026-07-29T04:42:22.050346+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T04:42:22.050346+00:00",
+          "outcome": "useful",
+          "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
+        }
+      ],
+      "score": 0.99907956,
+      "source_file": "android/app/src/main/java/com/finix/omniverse/ui/OmniverseRoot.kt",
+      "status": "tentative",
+      "uses": 1
+    },
+    "desktop_index_bottom_docked_navigation": {
+      "code_fingerprint": "8140c060c9a05fb4d2bd18773cca6a7fb5a3edfaad8b36fc94069d6de4e7989c",
+      "label": "Bottom-Docked Navigation Pill",
+      "last": "2026-07-29T04:42:22.050346+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T04:42:22.050346+00:00",
+          "outcome": "useful",
+          "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
+        }
+      ],
+      "score": 0.99907956,
+      "source_file": "desktop/index.html",
+      "status": "tentative",
+      "uses": 1
+    },
+    "ios_omniverse_screens_components_mediapostercard": {
+      "code_fingerprint": "76d2f32c2b84cdc130eae94bf7d40e3caf277449a1fb1663bf931518e44da5c5",
+      "label": "MediaPosterCard",
+      "last": "2026-07-29T04:42:22.050346+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T04:42:22.050346+00:00",
+          "outcome": "useful",
+          "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
+        }
+      ],
+      "score": 0.99907956,
+      "source_file": "ios/Omniverse/Screens/Components.swift",
+      "status": "tentative",
+      "uses": 1
+    },
+    "ios_omniverse_screens_homescreen_herocarousel": {
+      "code_fingerprint": "3739bb7cc63164ddee7080765713182129dd62826249de35721956e08677e8a5",
+      "label": "HeroCarousel",
+      "last": "2026-07-29T04:42:22.050346+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T04:42:22.050346+00:00",
+          "outcome": "useful",
+          "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
+        }
+      ],
+      "score": 0.99907956,
+      "source_file": "ios/Omniverse/Screens/HomeScreen.swift",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
+  "version": 1
+}

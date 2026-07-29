@@ -59,6 +59,7 @@ capture/
 ios/build/
 **/ios/build/
 ios/build_device/
+ios/build_mac/
 **/build_device/
 ios/DerivedData/
 **/DerivedData/
@@ -89,4 +90,10 @@ graphify-out/.graphify_extract.json
 graphify-out/.graphify_ast.json
 graphify-out/.graphify_semantic.json
 graphify-out/.graphify_analysis.json
+graphify-out/.graphify_incremental.json
+graphify-out/.graphify_old.json
+graphify-out/.graphify_semantic_new.json
+graphify-out/.graphify_uncached.txt
+graphify-out/.graphify_chunk_*.json
 graphify-out/cost.json
+graphify-out/20??-??-??/

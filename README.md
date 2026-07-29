@@ -151,6 +151,8 @@ omniverse/
 
 Explore the [interactive code graph](graphify-out/graph.html) or read the [architecture report](graphify-out/GRAPH_REPORT.md).
 
+Graphify's contributor memory is versioned alongside the graph: [`memory/`](graphify-out/memory/) preserves useful codebase queries, while [`reflections/LESSONS.md`](graphify-out/reflections/LESSONS.md) highlights preferred sources, corrections, and known dead ends for future investigations.
+
 </details>
 
 ## Quick start
