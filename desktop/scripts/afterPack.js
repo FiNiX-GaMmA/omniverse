@@ -30,6 +30,25 @@ function isMachO(filePath) {
   }
 }
 
+function sortCodeTargetsInsideOut(targets, appPath) {
+  const uniqueTargets = [...new Set(targets)];
+  const depth = (target) =>
+    path.resolve(target).split(path.sep).filter(Boolean).length;
+
+  return uniqueTargets.sort((left, right) => {
+    // The outer application seal must always be written last.
+    if (left === appPath) return 1;
+    if (right === appPath) return -1;
+
+    // codesign validates nested code while signing an enclosing framework or
+    // app. Sign the deepest binaries first so an unsigned helper can never
+    // invalidate its parent bundle (the x64 Electron archive exposes this).
+    const depthDifference = depth(right) - depth(left);
+    if (depthDifference !== 0) return depthDifference;
+    return left.localeCompare(right);
+  });
+}
+
 function collectCodeTargets(appPath) {
   const targets = [];
 
@@ -50,7 +69,7 @@ function collectCodeTargets(appPath) {
 
   visit(appPath);
   targets.push(appPath);
-  return [...new Set(targets)];
+  return sortCodeTargetsInsideOut(targets, appPath);
 }
 
 function hasCodeSignature(target) {
@@ -143,3 +162,4 @@ exports.default = async function afterPack(context) {
 
 exports.hasLocalAppleSigningIdentity = hasLocalAppleSigningIdentity;
 exports.collectCodeTargets = collectCodeTargets;
+exports.sortCodeTargetsInsideOut = sortCodeTargetsInsideOut;

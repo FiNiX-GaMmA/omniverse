@@ -196,9 +196,35 @@ jobs:
         if: matrix.os == 'macos-14'
         run: |
           cd desktop
-          npm run dist:mac
+          npm run dist:mac -- --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify macOS Signatures and Disk Images
+        if: matrix.os == 'macos-14'
+        shell: bash
+        run: |
+          apps=(
+            "desktop/dist/mac-arm64/Omniverse.app"
+            "desktop/dist/mac/Omniverse.app"
+          )
+          for app in "${apps[@]}"; do
+            test -d "$app"
+            codesign --verify --deep --strict --verbose=2 "$app"
+          done
+
+          file "${apps[0]}/Contents/MacOS/Omniverse" | grep -q arm64
+          file "${apps[1]}/Contents/MacOS/Omniverse" | grep -q x86_64
+
+          version="$(node -p "require('./desktop/package.json').version")"
+          dmgs=(
+            "desktop/dist/Omniverse-${version}-arm64.dmg"
+            "desktop/dist/Omniverse-${version}.dmg"
+          )
+          for dmg in "${dmgs[@]}"; do
+            test -f "$dmg"
+            hdiutil verify "$dmg"
+          done
 
       - name: Package Desktop Binary (Linux)
         if: matrix.os == 'ubuntu-latest'

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T05:39:45.588375+00:00",
+  "generated_at": "2026-07-29T05:45:30.994942+00:00",
   "nodes": {
     "android_app_src_main_java_com_finix_omniverse_ui_omniverseroot_glasstabbar": {
       "code_fingerprint": "942ae65112d176e8b3d72448e27f56ae6afcf8e8d57a37810b999c64cad3f45a",
@@ -12,7 +12,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.99907956,
+      "score": 0.998987282,
       "source_file": "android/app/src/main/java/com/finix/omniverse/ui/OmniverseRoot.kt",
       "status": "tentative",
       "uses": 1
@@ -28,7 +28,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.99907956,
+      "score": 0.998987282,
       "source_file": "android/app/src/main/java/com/finix/omniverse/ui/OmniverseRoot.kt",
       "status": "tentative",
       "uses": 1
@@ -44,8 +44,88 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.99907956,
+      "score": 0.998987282,
       "source_file": "desktop/index.html",
+      "status": "tentative",
+      "uses": 1
+    },
+    "desktop_scripts_afterpack_collectcodetargets": {
+      "code_fingerprint": "7fbbfa9f9c1eca76354c89d9f0372622d50b60deecb982babbd21eeb17313045",
+      "label": "collectCodeTargets()",
+      "last": "2026-07-29T05:45:30.936234+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T05:45:30.936234+00:00",
+          "outcome": "useful",
+          "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
+        }
+      ],
+      "score": 0.999999984,
+      "source_file": "desktop/scripts/afterPack.js",
+      "status": "tentative",
+      "uses": 1
+    },
+    "desktop_scripts_afterpack_signappinsideout": {
+      "code_fingerprint": "7fbbfa9f9c1eca76354c89d9f0372622d50b60deecb982babbd21eeb17313045",
+      "label": "signAppInsideOut()",
+      "last": "2026-07-29T05:45:30.936234+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T05:45:30.936234+00:00",
+          "outcome": "useful",
+          "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
+        }
+      ],
+      "score": 0.999999984,
+      "source_file": "desktop/scripts/afterPack.js",
+      "status": "tentative",
+      "uses": 1
+    },
+    "desktop_scripts_afterpack_sortcodetargetsinsideout": {
+      "code_fingerprint": "7fbbfa9f9c1eca76354c89d9f0372622d50b60deecb982babbd21eeb17313045",
+      "label": "sortCodeTargetsInsideOut()",
+      "last": "2026-07-29T05:45:30.936234+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T05:45:30.936234+00:00",
+          "outcome": "useful",
+          "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
+        }
+      ],
+      "score": 0.999999984,
+      "source_file": "desktop/scripts/afterPack.js",
+      "status": "tentative",
+      "uses": 1
+    },
+    "desktop_test_afterpack_test": {
+      "code_fingerprint": "99370fb7fd3b41ae71762e57b3537a828be171cb8d16379be03097e2e6d731f5",
+      "label": "afterPack.test.js",
+      "last": "2026-07-29T05:45:30.936234+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T05:45:30.936234+00:00",
+          "outcome": "useful",
+          "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
+        }
+      ],
+      "score": 0.999999984,
+      "source_file": "desktop/test/afterPack.test.js",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_readme_quality_dashboard_release_verification_gate": {
+      "code_fingerprint": "71339ac6109b52fa69158e98217320c3cbfaa1a53542697c966fb722fe4169a1",
+      "label": "Release Verification Gate",
+      "last": "2026-07-29T05:45:30.936234+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T05:45:30.936234+00:00",
+          "outcome": "useful",
+          "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
+        }
+      ],
+      "score": 0.999999984,
+      "source_file": "docs/readme/quality-dashboard.svg",
       "status": "tentative",
       "uses": 1
     },
@@ -60,7 +140,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.99907956,
+      "score": 0.998987282,
       "source_file": "ios/Omniverse/Screens/Components.swift",
       "status": "tentative",
       "uses": 1
@@ -76,7 +156,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.99907956,
+      "score": 0.998987282,
       "source_file": "ios/Omniverse/Screens/HomeScreen.swift",
       "status": "tentative",
       "uses": 1

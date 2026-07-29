@@ -245,9 +245,9 @@
     "semantic_hash": "dfc7cd0bcc9873e80edd7666b0bfca3d"
   },
   "desktop/scripts/afterPack.js": {
-    "mtime": 1785302642.115513,
-    "ast_hash": "2f29222e9a17b7feda3005228402d564",
-    "semantic_hash": "2f29222e9a17b7feda3005228402d564"
+    "mtime": 1785303754.7969267,
+    "ast_hash": "b9dc6ef72cf480ae9e49eec3a3e9a0d4",
+    "semantic_hash": "b9dc6ef72cf480ae9e49eec3a3e9a0d4"
   },
   "desktop/securityPolicy.js": {
     "mtime": 1785302208.4304903,
@@ -260,9 +260,9 @@
     "semantic_hash": "e60373de865b1fa459ed530e248d9c64"
   },
   "desktop/test/afterPack.test.js": {
-    "mtime": 1785302642.1172156,
-    "ast_hash": "eaff13446cd3c3e60a78fdc5696a79e0",
-    "semantic_hash": "eaff13446cd3c3e60a78fdc5696a79e0"
+    "mtime": 1785303754.7975025,
+    "ast_hash": "b4c3e7317b2192b99f94a30f31dd7cb3",
+    "semantic_hash": "b4c3e7317b2192b99f94a30f31dd7cb3"
   },
   "desktop/test/macUpdater.test.js": {
     "mtime": 1785301405.8544004,
@@ -475,9 +475,9 @@
     "semantic_hash": "9573d19c0652fb57fca5babf49b67cf3"
   },
   ".github/workflows/build.yml": {
-    "mtime": 1785302080.8083787,
-    "ast_hash": "39463c6827519e7ad4261c6c9ff6a38f",
-    "semantic_hash": "39463c6827519e7ad4261c6c9ff6a38f"
+    "mtime": 1785303963.9110494,
+    "ast_hash": "121006bd4d1eb97b9035384291c48a7b",
+    "semantic_hash": "121006bd4d1eb97b9035384291c48a7b"
   },
   "API_SETUP.md": {
     "mtime": 1785169176.3327556,
@@ -490,9 +490,9 @@
     "semantic_hash": "6aa736ad8ddd07c66af5ea44bd0bfc9e"
   },
   "CHANGELOG.md": {
-    "mtime": 1785302744.4248614,
-    "ast_hash": "577c37459e78aa9c98e4ffb826a7154b",
-    "semantic_hash": "577c37459e78aa9c98e4ffb826a7154b"
+    "mtime": 1785304024.879314,
+    "ast_hash": "c48fbb0fed13a14796db298423f7e9ac",
+    "semantic_hash": "c48fbb0fed13a14796db298423f7e9ac"
   },
   "README.md": {
     "mtime": 1785303130.2489142,
@@ -528,6 +528,11 @@
     "mtime": 1785303453.9441378,
     "ast_hash": "a9358b48ebb42009b27532d9a781f225",
     "semantic_hash": "a9358b48ebb42009b27532d9a781f225"
+  },
+  "graphify-out/memory/query_20260729_054530_why_did_the_github_actions_macos_dmg_job_fail_whil.md": {
+    "mtime": 1785303930.936618,
+    "ast_hash": "87f192dcc569f8db800702f6c4b9421b",
+    "semantic_hash": "87f192dcc569f8db800702f6c4b9421b"
   },
   "ios/project.yml": {
     "mtime": 1785301900.89671,
@@ -585,8 +590,8 @@
     "semantic_hash": "b25669ec2cf73b01971c63b589a30e01"
   },
   "docs/readme/quality-dashboard.svg": {
-    "mtime": 1785301969.2539098,
-    "ast_hash": "4929eceba6ff52da61debc9645fb3c27",
-    "semantic_hash": "4929eceba6ff52da61debc9645fb3c27"
+    "mtime": 1785304024.8807065,
+    "ast_hash": "9603a3ca8f6fb631f22eae8a2d6706fb",
+    "semantic_hash": "9603a3ca8f6fb631f22eae8a2d6706fb"
   }
 }

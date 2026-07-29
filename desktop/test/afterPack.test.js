@@ -5,6 +5,7 @@ const path = require("node:path");
 const {
   collectCodeTargets,
   hasLocalAppleSigningIdentity,
+  sortCodeTargetsInsideOut,
 } = require("../scripts/afterPack");
 
 test("detects usable local Apple signing identities", () => {
@@ -27,4 +28,50 @@ test("detects usable local Apple signing identities", () => {
     "utf8",
   );
   assert.match(entitlements, /com\.apple\.security\.cs\.allow-jit/);
+});
+
+test("signs nested Electron helpers before their enclosing bundles", () => {
+  const app = path.join(path.sep, "tmp", "Omniverse.app");
+  const framework = path.join(
+    app,
+    "Contents",
+    "Frameworks",
+    "Electron Framework.framework",
+  );
+  const frameworkBinary = path.join(
+    framework,
+    "Versions",
+    "A",
+    "Electron Framework",
+  );
+  const crashpad = path.join(
+    framework,
+    "Versions",
+    "A",
+    "Helpers",
+    "chrome_crashpad_handler",
+  );
+  const helperApp = path.join(
+    app,
+    "Contents",
+    "Frameworks",
+    "Omniverse Helper.app",
+  );
+  const helperBinary = path.join(
+    helperApp,
+    "Contents",
+    "MacOS",
+    "Omniverse Helper",
+  );
+
+  const ordered = sortCodeTargetsInsideOut(
+    [app, framework, frameworkBinary, crashpad, helperApp, helperBinary, crashpad],
+    app,
+  );
+
+  assert.equal(ordered.at(-1), app);
+  assert.equal(ordered.filter((target) => target === crashpad).length, 1);
+  assert.ok(ordered.indexOf(crashpad) < ordered.indexOf(frameworkBinary));
+  assert.ok(ordered.indexOf(frameworkBinary) < ordered.indexOf(framework));
+  assert.ok(ordered.indexOf(helperBinary) < ordered.indexOf(helperApp));
 });

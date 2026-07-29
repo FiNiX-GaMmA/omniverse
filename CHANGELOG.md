@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## 🚀 [v2.1.80] - 2026-07-29
+## 🚀 [v2.1.81] - 2026-07-29
 
-> **Commit**: `feat(reliability): redesign mobile, activate AdShield telemetry, and harden every release`
+> **Commit**: `fix(macos): sign nested Electron code before sealing DMGs`
+
+### 🍎 Reliable Dual-Architecture DMGs
+- **True Inside-Out Signing**: Sorts every Mach-O binary and bundle deepest-first so `chrome_crashpad_handler` is signed before its enclosing Electron framework on both Apple Silicon and Intel builds.
+- **Installer Integrity Gate**: GitHub Actions now verifies strict application signatures, confirms the expected `arm64` and `x86_64` executables, and validates both DMG checksums before upload.
+- **Single Release Publisher**: Disables electron-builder's implicit CI publishing for macOS; the dedicated release job remains the only artifact publisher.
 
 ### ✨ Cinematic Mobile Redesign
 - **Desktop-Level Atmosphere**: Rebuilt Android and iOS phone/tablet shells with edge-to-edge heroes, floating glass navigation, adaptive rails, refined search, and touch-native details inspired by modern living-room platforms.
@@ -27,11 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Secret-Safe Signing**: Removed Android signing files from source control, added a local template, and moved CI signing to masked repository secrets.
 - **Sandboxed Desktop Guests**: Enabled Chromium sandboxing and clamp playback webview preferences before attachment.
 
-### ✅ 48-Test Quality Matrix
-- **Desktop**: 14 Node tests covering AdShield, updater rollback/signing, URL trust, IPC protocols, Electron isolation, and tracked-secret detection.
+### ✅ 49-Test Quality Matrix
+- **Desktop**: 15 Node tests covering AdShield, updater rollback/signing, deterministic inside-out bundle ordering, URL trust, IPC protocols, Electron isolation, and tracked-secret detection.
 - **Android**: 20 JUnit tests covering navigation, models, sync interoperability, update versions/URLs, filename traversal, streams, and progress edges.
 - **iOS**: 14 XCTest cases covering credentials, sync payloads, legacy settings, malformed input, models, streams, and playback overrides.
-- **Static Verification**: Android Lint passes with zero errors, Xcode Analyze passes, the full npm audit reports zero vulnerabilities, and Electron packaging succeeds.
+- **Static Verification**: Android Lint passes with zero errors, Xcode Analyze passes, the full npm audit reports zero vulnerabilities, and both macOS DMGs pass signature and checksum verification.
 
 ### 📖 README Showcase
 - Replaced oversized hidden galleries and the stretched mobile table with a compact real-app product tour.
