@@ -22,6 +22,12 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 const { once } = require("events");
+const {
+  assertTrustedMacUpdateUrl,
+  findLocalAppleSigningIdentity,
+  launchMacUpdateHelper,
+  prepareMacUpdate,
+} = require("./macUpdater");
 
 // RAM / Performance optimization switches
 app.commandLine.appendSwitch(
@@ -297,12 +303,21 @@ ipcMain.handle("clear-cache", async () => {
 ipcMain.handle("get-app-version", () => app.getVersion());
 
 ipcMain.handle("download-update-file", async (event, url) => {
+  let downloadDir = null;
+  let preparedUpdate = null;
   try {
-    const tempDir = os.tmpdir();
     const parsed = new URL(url);
+    if (process.platform === "darwin") assertTrustedMacUpdateUrl(url);
+    const signingIdentity =
+      process.platform === "darwin"
+        ? await findLocalAppleSigningIdentity()
+        : null;
+    downloadDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "omniverse-download-"),
+    );
     const rawName = path.basename(parsed.pathname || "") || "omniverse-update";
-    const fileName = decodeURIComponent(rawName);
-    const downloadPath = path.join(tempDir, fileName);
+    const fileName = path.basename(decodeURIComponent(rawName));
+    const downloadPath = path.join(downloadDir, fileName);
 
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -322,7 +337,10 @@ ipcMain.handle("download-update-file", async (event, url) => {
         Math.min(100, Math.round((downloadedBytes / contentLength) * 100)),
       );
       try {
-        event.sender.send("update-progress", pct);
+        event.sender.send(
+          "update-progress",
+          process.platform === "darwin" ? Math.round(pct * 0.75) : pct,
+        );
       } catch (_) {}
     };
 
@@ -365,16 +383,52 @@ ipcMain.handle("download-update-file", async (event, url) => {
       throw streamErr;
     }
 
+    if (process.platform === "darwin") {
+      preparedUpdate = await prepareMacUpdate({
+        dmgPath: downloadPath,
+        currentExecutable: process.execPath,
+        currentVersion: app.getVersion(),
+        signingIdentity,
+        onProgress: (pct) => {
+          try {
+            event.sender.send("update-progress", pct);
+          } catch (_) {}
+        },
+      });
+      fs.rmSync(downloadDir, { recursive: true, force: true });
+      downloadDir = null;
+      await launchMacUpdateHelper(preparedUpdate, process.pid);
+      try {
+        event.sender.send("update-progress", 100);
+      } catch (_) {}
+      setTimeout(() => app.quit(), 250);
+      return {
+        ok: true,
+        mode: "in-app",
+        version: preparedUpdate.candidateVersion,
+        identity: preparedUpdate.identity.name,
+      };
+    }
+
     try {
       event.sender.send("update-progress", 100);
     } catch (_) {}
-
     const launchErr = await shell.openPath(downloadPath);
     if (launchErr) throw new Error(launchErr);
 
     app.quit();
     return { ok: true, path: downloadPath };
   } catch (err) {
+    if (process.platform === "darwin" && downloadDir) {
+      try {
+        fs.rmSync(downloadDir, { recursive: true, force: true });
+      } catch (_) {}
+    }
+    if (process.platform === "darwin" && preparedUpdate) {
+      try {
+        fs.rmSync(preparedUpdate.workDir, { recursive: true, force: true });
+      } catch (_) {}
+    }
     return { ok: false, error: err.message };
   }
 });

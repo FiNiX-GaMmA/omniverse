@@ -1699,7 +1699,6 @@ async function loadDetailRecommendations(media, reqToken) {
   }
 
   recRail.innerHTML = "";
-  enableHorizontalWheelScroll(recRail);
   appendMediaCards(recRail, filtered, 0, true);
 }
 
@@ -1901,7 +1900,6 @@ async function openDetailModal(media) {
       // Cast rail population
       const castRail = document.getElementById("modal-cast-rail");
       if (castRail && details.credits && details.credits.cast) {
-        enableHorizontalWheelScroll(castRail);
         castRail.innerHTML = "";
         details.credits.cast.slice(0, 15).forEach((actor) => {
           const prof = actor.profile_path
@@ -1968,7 +1966,11 @@ async function openDetailModal(media) {
   } else {
     episodeSection.classList.add("hidden");
     playBtn.classList.remove("hidden");
-    playBtn.onclick = () => playStream(media);
+    playBtn.onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void playStream(media);
+    };
   }
 
   document.getElementById("detail-modal").classList.remove("hidden");
@@ -2012,20 +2014,6 @@ function scrollCastRail(direction = 1) {
   scrollRailById("modal-cast-rail", direction);
 }
 
-function enableHorizontalWheelScroll(el) {
-  if (!el || el.dataset.horizontalWheelBound === "1") return;
-  el.addEventListener(
-    "wheel",
-    (e) => {
-      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
-      el.scrollLeft += e.deltaY;
-      e.preventDefault();
-    },
-    { passive: false },
-  );
-  el.dataset.horizontalWheelBound = "1";
-}
-
 function appendEpisodeRow(grid, media, seasonVal, ep, title, extras = {}) {
   const stillPath = extras.stillPath || null;
   const overview = extras.overview || "";
@@ -2064,7 +2052,6 @@ async function loadSeasonEpisodes() {
   const seasonSelect = document.getElementById("season-selector");
   const seasonVal = parseInt(seasonSelect.value) || 1;
   const grid = document.getElementById("episodes-grid");
-  enableHorizontalWheelScroll(grid);
   grid.innerHTML = "";
 
   // Anime: pull the real episode count + titles from AllAnime/AniList.
@@ -2593,7 +2580,41 @@ function playStreamEmbed(
   forceDomain = null,
 ) {
   captureReturnToDetailContext(media, season, episode);
+
+  const overlay = document.getElementById("player-overlay");
+  if (!overlay) {
+    console.error("[Omniverse] Cannot start playback: player overlay is missing");
+    return;
+  }
+
+  // Make the transition atomic. Previously the detail modal was closed before
+  // player setup completed, so any setup exception looked like back navigation.
+  overlay.classList.remove("hidden");
+  showPlayerStatus(
+    `<div class="w-10 h-10 rounded-full border-2 border-brandCyan border-t-transparent animate-spin"></div>
+     <h3 class="text-lg font-bold text-white">Opening player…</h3>
+     <p class="text-sm text-gray-400 max-w-md">Preparing a streaming source</p>`,
+  );
   closeDetailModal();
+
+  try {
+    startEmbedPlaybackSession(media, season, episode, forceDomain);
+  } catch (error) {
+    console.error("[Omniverse] Failed to initialize player:", error);
+    showPlayerStatus(
+      `<i data-lucide="alert-triangle" class="w-12 h-12 text-brandCyan"></i>
+       <h3 class="text-lg font-bold text-white">Could not open player</h3>
+       <p class="text-sm text-gray-400 max-w-md">The player could not be initialized. Go back and try again.</p>`,
+    );
+  }
+}
+
+function startEmbedPlaybackSession(
+  media,
+  season = null,
+  episode = null,
+  forceDomain = null,
+) {
 
   // Direct-player progress tracker applies to anime direct streams only; stop and
   // flush it before switching to an embed-based playback session.
@@ -2640,8 +2661,6 @@ function playStreamEmbed(
   const attempts = buildEmbedAttemptQueue(media, season, episode, forceDomain);
   state.currentPlayback = { media, season, episode, forceDomain };
   state.triedDomains = [];
-
-  document.getElementById("player-overlay").classList.remove("hidden");
 
   if (attempts.length === 0) {
     showPlayerStatus(
@@ -4479,11 +4498,23 @@ async function startOtaUpdate() {
 
   const pctLabel = document.getElementById("update-progress-pct");
   const progressBar = document.getElementById("update-progress-bar");
+  const progressStatus = document.getElementById("update-progress-status");
 
   // Listen for progress callbacks from Node.js process
   const unsubscribe = window.electron.onUpdateProgress((pct) => {
     if (pctLabel) pctLabel.textContent = `${pct}%`;
     if (progressBar) progressBar.style.width = `${pct}%`;
+    if (progressStatus) {
+      if (pct < 78) progressStatus.textContent = "Downloading package...";
+      else if (pct < 88) progressStatus.textContent = "Validating update...";
+      else if (pct < 94) {
+        progressStatus.textContent = "Signing with local Apple identity...";
+      } else if (pct < 100) {
+        progressStatus.textContent = "Clearing quarantine and verifying...";
+      } else {
+        progressStatus.textContent = "Installing and relaunching...";
+      }
+    }
   });
 
   try {
@@ -5470,11 +5501,27 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Horizontal mouse wheel scrolling for content rails
-document.addEventListener("wheel", (e) => {
-  const rail = e.target.closest(".horizontal-rail");
-  if (rail && e.deltaY !== 0 && !e.shiftKey) {
-    rail.scrollLeft += e.deltaY * 1.5;
-  }
-}, { passive: true });
+// Lock each gesture to one axis. Vertical wheel/trackpad input must continue to
+// the page when the pointer passes over a media rail. Chromium handles genuine
+// horizontal trackpad input natively; Shift+wheel is the explicit mouse-wheel
+// gesture for moving a rail sideways.
+document.addEventListener(
+  "wheel",
+  (e) => {
+    const rail = e.target.closest(".horizontal-rail");
+    if (!rail || !e.shiftKey || e.deltaY === 0) return;
 
+    const maxScrollLeft = Math.max(0, rail.scrollWidth - rail.clientWidth);
+    if (maxScrollLeft === 0) return;
+
+    const nextScrollLeft = Math.min(
+      maxScrollLeft,
+      Math.max(0, rail.scrollLeft + e.deltaY),
+    );
+    if (nextScrollLeft === rail.scrollLeft) return;
+
+    e.preventDefault();
+    rail.scrollLeft = nextScrollLeft;
+  },
+  { passive: false },
+);

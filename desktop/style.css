@@ -709,13 +709,22 @@ body {
     overflow: hidden !important;
 }
 
+/* Keep the desktop page on one vertical scroll chain. Chromium's native
+   momentum stays stable when the pointer passes over horizontal media rails. */
+#content-viewport {
+    overscroll-behavior-y: contain;
+    scroll-behavior: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* Elegant Custom Scrollbar and Scroll-behavior for Rails */
 .horizontal-rail {
     display: flex;
     overflow-x: auto;
     gap: 16px;
     padding-bottom: 12px;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
+    overscroll-behavior-x: contain;
 }
 
 .horizontal-rail::-webkit-scrollbar {

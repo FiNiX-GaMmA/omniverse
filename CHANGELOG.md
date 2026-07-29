@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [v2.1.79] - 2026-07-29
+
+> **Commit**: `feat(desktop): ship signed in-app macOS updates with fluid navigation`
+
+### 🍎 Native macOS Update Installation
+- **Fully In-App Updates**: macOS release images are now downloaded, mounted, validated, signed, installed, and relaunched entirely inside Omniverse—no external Terminal signing workflow is required.
+- **Trusted Release Validation**: The updater accepts only official Omniverse GitHub release DMGs, confirms the bundle identifier and version, and refuses stale or unexpected app bundles.
+- **Automatic Apple Identity Signing**: Omniverse discovers a local Apple Development identity first, preserves Electron hardened-runtime entitlements, removes quarantine metadata, and verifies the staged signature before installation.
+- **Safe Rollback & Relaunch**: The detached installer keeps a backup, validates the final installed bundle, restores the previous version if copying or launching fails, and records diagnostics in `~/Library/Logs/OmniverseUpdater.log`.
+
+### 📦 Deterministic macOS Packaging
+- **Single Signing Authority**: The packaging hook now owns the macOS signing pass, preventing electron-builder and recursive `codesign` operations from racing over sealed Electron frameworks.
+- **CI-Compatible Fallback**: Local builds use the available Apple identity, while certificate-free CI runners retain a safe ad-hoc signing fallback.
+- **Verified Distribution Bundle**: The packaged arm64 app retains its JIT and unsigned-executable-memory entitlements and validates against its designated requirement.
+
+### 🖱️ Fluid Desktop Navigation & Playback
+- **Axis-Locked Scrolling**: Vertical wheel and trackpad gestures continue scrolling the page when hovering over Top 10 and other horizontal rails; native horizontal gestures and Shift+wheel remain available for rail navigation.
+- **Stable Scroll Momentum**: Removed competing scripted smooth-scroll animations and contained overscroll at page and rail boundaries.
+- **Atomic Player Launch**: Playback now opens through a guarded loading transition so initialization failures stay visible instead of appearing as an unexpected return to the home screen.
+
+### ✅ Reliability Coverage
+- Added updater tests for trusted URLs, semantic version ordering, signing identity selection, helper script syntax, rollback behavior, quarantine removal, and explicit relaunch.
+- Added packaging-hook coverage for Apple Development and Developer ID Application identity detection.
+
+---
+
 ## 🚀 [v2.1.78] - 2026-07-28
 
 > **Commit**: `fix(desktop): prevent play button redirect loop by isolating player webviews and locking main frame navigation`

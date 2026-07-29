@@ -1,11 +1,12 @@
 {
   "name": "omniverse-desktop",
-  "version": "2.1.0",
+  "version": "2.1.79",
   "description": "The ultimate, ultra-premium media player and discovery desktop app. Zero ads, zero trackers, pure native performance.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "debug": "electron . --omni-debug",
+    "test": "node --test test/*.test.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
@@ -32,6 +33,7 @@
     },
     "files": [
       "main.js",
+      "macUpdater.js",
       "preload.js",
       "index.html",
       "renderer.js",
@@ -40,6 +42,7 @@
       "logo.png"
     ],
     "mac": {
+      "identity": null,
       "category": "public.app-category.entertainment",
       "target": [
         {

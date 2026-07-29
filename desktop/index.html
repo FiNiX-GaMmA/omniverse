@@ -736,7 +736,9 @@
                                         <div
                                             class="flex justify-between text-[9px] font-bold text-gray-500 uppercase tracking-wider"
                                         >
-                                            <span>Downloading package...</span>
+                                            <span id="update-progress-status"
+                                                >Downloading package...</span
+                                            >
                                             <span id="update-progress-pct"
                                                 >0%</span
                                             >
@@ -1070,7 +1072,7 @@
 
                     <!-- Action Buttons -->
                     <div class="flex items-center gap-4 mb-8">
-                        <button id="modal-play-btn" class="bg-white hover:scale-105 transition-transform duration-300 text-black font-bold py-3 px-8 rounded-full flex items-center gap-2 shadow-lg shadow-white/20">
+                        <button type="button" id="modal-play-btn" class="bg-white hover:scale-105 transition-transform duration-300 text-black font-bold py-3 px-8 rounded-full flex items-center gap-2 shadow-lg shadow-white/20">
                             <i data-lucide="play" class="fill-current w-5 h-5"></i> Play
                         </button>
                         <button class="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all hover:scale-105">
