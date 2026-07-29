@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [v2.1.83] - 2026-07-29
+
+> **Commit**: `fix(android): preserve the release identity in secure CI builds`
+
+### 🔏 Upgrade-Safe Android Signing
+- **Original Identity Only**: Adds a secret-safe exporter that reads and validates the existing ignored keystore; it has no key-generation or rotation mode.
+- **Certificate Continuity Pin**: Versions the public signing-certificate SHA-256 so local exports and CI reject a different keystore before an incompatible APK can ship.
+- **Paste-Ready GitHub Secrets**: Produces the four required Actions values in a private `0600` file outside the repository without printing credentials to the terminal.
+- **Fail-Closed CI**: Restores signing material under `umask 077`, verifies the alias and certificate, and removes the temporary keystore and properties even when a job fails.
+
+### ✅ Release Guardrail Coverage
+- **Five Exporter Tests**: Covers exact secret mapping, Base64 fidelity, overwrite refusal, `0600` permissions, malformed properties, certificate-pin validation, and JDK discovery.
+- **Signed APK Proof**: Android unit tests, Lint, release assembly, APK signature verification, and certificate-to-pin matching pass with the preserved release identity.
+- **Contributor Memory**: Records the direct-distribution signing contract in Graphify so future contributors know that rotating the key strands existing legacy users.
+
+---
+
 ## 🚀 [v2.1.82] - 2026-07-29
 
 > **Commit**: `docs(readme): map the codebase with Graphify intelligence`

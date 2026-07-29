@@ -38,6 +38,9 @@ jobs:
           cd android
           ./gradlew lintDebug
 
+      - name: Test signing secrets exporter
+        run: python3 android/test_export_github_signing_secrets.py
+
       - name: Configure Android release signing
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -53,6 +56,7 @@ jobs:
             exit 1
           fi
           mkdir -p keystore
+          umask 077
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > keystore/omniverse-release.jks
           {
             printf 'storeFile=../keystore/omniverse-release.jks\n'
@@ -60,6 +64,15 @@ jobs:
             printf 'keyAlias=%s\n' "$ANDROID_KEY_ALIAS"
             printf 'keyPassword=%s\n' "$ANDROID_KEY_PASSWORD"
           } > android/keystore.properties
+          actual_certificate="$(keytool -exportcert \
+            -keystore keystore/omniverse-release.jks \
+            -storepass:env ANDROID_KEYSTORE_PASSWORD \
+            -alias "$ANDROID_KEY_ALIAS" | sha256sum | awk '{print toupper($1)}')"
+          expected_certificate="$(tr -d '[:space:]:' < android/release-signing-cert.sha256 | tr '[:lower:]' '[:upper:]')"
+          if [ "$actual_certificate" != "$expected_certificate" ]; then
+            echo "Android keystore does not match the pinned release-signing certificate."
+            exit 1
+          fi
 
       - name: Compile signed APK (Release)
         run: |
@@ -72,6 +85,10 @@ jobs:
           name: Omniverse-android-release-apk
           path: android/app/build/outputs/apk/release/app-*.apk
           if-no-files-found: error
+
+      - name: Remove Android signing material
+        if: always()
+        run: rm -f keystore/omniverse-release.jks android/keystore.properties
 
   build-ios:
     name: Build Native iOS App

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T05:57:08.847837+00:00",
+  "generated_at": "2026-07-29T06:09:40.204528+00:00",
   "nodes": {
     "android_app_src_main_java_com_finix_omniverse_ui_omniverseroot_glasstabbar": {
       "code_fingerprint": "942ae65112d176e8b3d72448e27f56ae6afcf8e8d57a37810b999c64cad3f45a",
@@ -12,7 +12,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.99880087,
+      "score": 0.998600204,
       "source_file": "android/app/src/main/java/com/finix/omniverse/ui/OmniverseRoot.kt",
       "status": "tentative",
       "uses": 1
@@ -28,7 +28,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.99880087,
+      "score": 0.998600204,
       "source_file": "android/app/src/main/java/com/finix/omniverse/ui/OmniverseRoot.kt",
       "status": "tentative",
       "uses": 1
@@ -44,7 +44,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.99880087,
+      "score": 0.998600204,
       "source_file": "desktop/index.html",
       "status": "tentative",
       "uses": 1
@@ -60,7 +60,7 @@
           "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
         }
       ],
-      "score": 0.999813383,
+      "score": 0.999612515,
       "source_file": "desktop/scripts/afterPack.js",
       "status": "tentative",
       "uses": 1
@@ -76,7 +76,7 @@
           "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
         }
       ],
-      "score": 0.999813383,
+      "score": 0.999612515,
       "source_file": "desktop/scripts/afterPack.js",
       "status": "tentative",
       "uses": 1
@@ -92,7 +92,7 @@
           "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
         }
       ],
-      "score": 0.999813383,
+      "score": 0.999612515,
       "source_file": "desktop/scripts/afterPack.js",
       "status": "tentative",
       "uses": 1
@@ -108,8 +108,24 @@
           "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
         }
       ],
-      "score": 0.999813383,
+      "score": 0.999612515,
       "source_file": "desktop/test/afterPack.test.js",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_readme_architecture_github_actions_release_artifacts": {
+      "code_fingerprint": "099311de35a6b1aa32424445c1cb8888ca40cc06b8d2d789cbe30b4605e39ff4",
+      "label": "GitHub Actions Release Artifacts",
+      "last": "2026-07-29T06:07:29.298886+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T06:07:29.298886+00:00",
+          "outcome": "useful",
+          "q": "How does Omniverse preserve Android upgrade compatibility while exporting GitHub Actions signing secrets?"
+        }
+      ],
+      "score": 0.999964994,
+      "source_file": "docs/readme/architecture.svg",
       "status": "tentative",
       "uses": 1
     },
@@ -124,7 +140,7 @@
           "q": "How can the README expose the Graphify map in a technical, visually impressive way that communicates codebase complexity?"
         }
       ],
-      "score": 0.999999979,
+      "score": 0.999799073,
       "source_file": "docs/readme/architecture.svg",
       "status": "tentative",
       "uses": 1
@@ -140,7 +156,7 @@
           "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
         }
       ],
-      "score": 0.999813383,
+      "score": 0.999612515,
       "source_file": "docs/readme/quality-dashboard.svg",
       "status": "tentative",
       "uses": 1
@@ -156,8 +172,24 @@
           "q": "How can the README expose the Graphify map in a technical, visually impressive way that communicates codebase complexity?"
         }
       ],
-      "score": 0.999999979,
+      "score": 0.999799073,
       "source_file": "docs/readme/quality-dashboard.svg",
+      "status": "tentative",
+      "uses": 1
+    },
+    "graphify_out_memory_query_20260729_052409_which_omniverse_surfaces_and_update_paths_must_rem_compatibility_contract": {
+      "code_fingerprint": "f65360b52a862b8a4e73e62dc1b2ea913d44f5654e6f6049b56868b852ef0fad",
+      "label": "Cross-Platform Compatibility Contract",
+      "last": "2026-07-29T06:07:29.298886+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T06:07:29.298886+00:00",
+          "outcome": "useful",
+          "q": "How does Omniverse preserve Android upgrade compatibility while exporting GitHub Actions signing secrets?"
+        }
+      ],
+      "score": 0.999964994,
+      "source_file": "graphify-out/memory/query_20260729_052409_which_omniverse_surfaces_and_update_paths_must_rem.md",
       "status": "tentative",
       "uses": 1
     },
@@ -172,7 +204,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.99880087,
+      "score": 0.998600204,
       "source_file": "ios/Omniverse/Screens/Components.swift",
       "status": "tentative",
       "uses": 1
@@ -188,13 +220,13 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.99880087,
+      "score": 0.998600204,
       "source_file": "ios/Omniverse/Screens/HomeScreen.swift",
       "status": "tentative",
       "uses": 1
     },
     "readme": {
-      "code_fingerprint": "57707685fc0f30dfe6a428493a3729bae2ea308d333cf0537857b50d21cb8609",
+      "code_fingerprint": "dc275f6ecc70ce416ce1f6f296df2c31fa2639f7f0f2b27bdf31028c1ae67662",
       "label": "README.md",
       "last": "2026-07-29T05:57:08.768732+00:00",
       "provenance": [
@@ -204,13 +236,13 @@
           "q": "How can the README expose the Graphify map in a technical, visually impressive way that communicates codebase complexity?"
         }
       ],
-      "score": 0.999999979,
+      "score": 0.999799073,
       "source_file": "README.md",
       "status": "tentative",
       "uses": 1
     },
     "readme_graphify_reflection_lessons": {
-      "code_fingerprint": "57707685fc0f30dfe6a428493a3729bae2ea308d333cf0537857b50d21cb8609",
+      "code_fingerprint": "dc275f6ecc70ce416ce1f6f296df2c31fa2639f7f0f2b27bdf31028c1ae67662",
       "label": "Graphify Reflection Lessons",
       "last": "2026-07-29T05:57:08.768732+00:00",
       "provenance": [
@@ -220,7 +252,23 @@
           "q": "How can the README expose the Graphify map in a technical, visually impressive way that communicates codebase complexity?"
         }
       ],
-      "score": 0.999999979,
+      "score": 0.999799073,
+      "source_file": "README.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "readme_release_signing": {
+      "code_fingerprint": "dc275f6ecc70ce416ce1f6f296df2c31fa2639f7f0f2b27bdf31028c1ae67662",
+      "label": "Release signing",
+      "last": "2026-07-29T06:07:29.298886+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T06:07:29.298886+00:00",
+          "outcome": "useful",
+          "q": "How does Omniverse preserve Android upgrade compatibility while exporting GitHub Actions signing secrets?"
+        }
+      ],
+      "score": 0.999964994,
       "source_file": "README.md",
       "status": "tentative",
       "uses": 1

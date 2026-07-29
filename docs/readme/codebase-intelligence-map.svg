@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
   <title id="title">Omniverse Graphify codebase intelligence map</title>
-  <desc id="desc">A static topology map of 2,281 nodes, 5,092 relationships, 185 communities, and 119 indexed files across Apple, Android, desktop, CI, contributor knowledge, and shared product services.</desc>
+  <desc id="desc">A static topology map of 2,301 nodes, 5,105 relationships, 191 communities, and 122 indexed files across Apple, Android, desktop, CI, contributor knowledge, and shared product services.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0d121c"/>
@@ -49,24 +49,24 @@
   <rect x="1" y="1" width="1598" height="998" rx="37" fill="none" stroke="#ffffff" stroke-opacity=".1"/>
 
   <text x="70" y="65" fill="#ff5369" font-family="SFMono-Regular, Consolas, Liberation Mono, monospace" font-size="17" font-weight="700" letter-spacing="4">GRAPHIFY // CODEBASE INTELLIGENCE</text>
-  <text x="70" y="122" fill="#ffffff" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="43" font-weight="800">2,281 nodes. One navigable system.</text>
-  <text x="70" y="160" fill="#8791a1" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19">Static topology generated from the versioned knowledge graph · commit 094230e</text>
+  <text x="70" y="122" fill="#ffffff" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="43" font-weight="800">2,301 nodes. One navigable system.</text>
+  <text x="70" y="160" fill="#8791a1" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19">Static topology generated from the versioned knowledge graph · refreshed for v2.1.83</text>
 
   <g font-family="SFMono-Regular, Consolas, Liberation Mono, monospace">
     <g transform="translate(1040 48)">
       <rect width="146" height="48" rx="14" fill="#ffffff" fill-opacity=".045" stroke="#ffffff" stroke-opacity=".09"/>
       <text x="16" y="20" fill="#6f798a" font-size="11" letter-spacing="1.4">RELATIONS</text>
-      <text x="16" y="39" fill="#ffffff" font-size="18" font-weight="700">5,092</text>
+      <text x="16" y="39" fill="#ffffff" font-size="18" font-weight="700">5,105</text>
     </g>
     <g transform="translate(1200 48)">
       <rect width="146" height="48" rx="14" fill="#ffffff" fill-opacity=".045" stroke="#ffffff" stroke-opacity=".09"/>
       <text x="16" y="20" fill="#6f798a" font-size="11" letter-spacing="1.4">COMMUNITIES</text>
-      <text x="16" y="39" fill="#ffffff" font-size="18" font-weight="700">185</text>
+      <text x="16" y="39" fill="#ffffff" font-size="18" font-weight="700">191</text>
     </g>
     <g transform="translate(1360 48)">
       <rect width="170" height="48" rx="14" fill="#ffffff" fill-opacity=".045" stroke="#ffffff" stroke-opacity=".09"/>
       <text x="16" y="20" fill="#6f798a" font-size="11" letter-spacing="1.4">INDEXED FILES</text>
-      <text x="16" y="39" fill="#ffffff" font-size="18" font-weight="700">119</text>
+      <text x="16" y="39" fill="#ffffff" font-size="18" font-weight="700">122</text>
     </g>
     <g transform="translate(1200 110)">
       <circle cx="7" cy="7" r="4" fill="#49e3ad"/>
@@ -130,7 +130,7 @@
       <circle cx="1260" cy="605" r="100" fill="url(#knowledge)" stroke="#ff9a56" stroke-opacity=".55" stroke-width="2"/>
       <circle cx="1260" cy="605" r="86" fill="none" stroke="#ff9a56" stroke-opacity=".12"/>
       <text x="1260" y="575" text-anchor="middle" fill="#ffb47b" font-size="13" font-weight="800" letter-spacing="2.2">KNOWLEDGE LAYER</text>
-      <text x="1260" y="620" text-anchor="middle" fill="#ffffff" font-size="39" font-weight="800">203</text>
+      <text x="1260" y="620" text-anchor="middle" fill="#ffffff" font-size="39" font-weight="800">223</text>
       <text x="1260" y="647" text-anchor="middle" fill="#93a0ae" font-size="14">Docs · memory · release truth</text>
     </g>
 
@@ -161,12 +161,12 @@
   <g transform="translate(64 760)" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
     <rect width="910" height="176" rx="24" fill="#ffffff" fill-opacity=".025" stroke="#ffffff" stroke-opacity=".08"/>
     <text x="28" y="36" fill="#ffffff" font-size="17" font-weight="800">RELATIONSHIP MIX</text>
-    <text x="882" y="36" text-anchor="end" fill="#687383" font-family="SFMono-Regular, Consolas, Liberation Mono, monospace" font-size="12">5,092 TYPED EDGES</text>
+    <text x="882" y="36" text-anchor="end" fill="#687383" font-family="SFMono-Regular, Consolas, Liberation Mono, monospace" font-size="12">5,105 TYPED EDGES</text>
 
     <g font-family="SFMono-Regular, Consolas, Liberation Mono, monospace" font-size="12">
       <text x="28" y="70" fill="#9ca6b4">references</text><rect x="130" y="58" width="680" height="14" rx="7" fill="#ff5369"/><text x="830" y="70" fill="#dce3ea">2,012</text>
       <text x="28" y="96" fill="#9ca6b4">calls</text><rect x="130" y="84" width="446" height="14" rx="7" fill="#50dce9"/><text x="596" y="96" fill="#dce3ea">1,320</text>
-      <text x="28" y="122" fill="#9ca6b4">contains</text><rect x="130" y="110" width="242" height="14" rx="7" fill="#50e4a3"/><text x="392" y="122" fill="#dce3ea">717</text>
+      <text x="28" y="122" fill="#9ca6b4">contains</text><rect x="130" y="110" width="247" height="14" rx="7" fill="#50e4a3"/><text x="397" y="122" fill="#dce3ea">730</text>
       <text x="28" y="148" fill="#9ca6b4">method</text><rect x="130" y="136" width="240" height="14" rx="7" fill="#9e83ff"/><text x="390" y="148" fill="#dce3ea">711</text>
       <text x="706" y="148" fill="#747f8e">other 332</text>
     </g>

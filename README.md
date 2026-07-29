@@ -98,6 +98,7 @@ flowchart LR
 | :--- | :---: | :--- |
 | `npm test` | **15 / 15 passed** | AdShield telemetry, signed updater, deterministic macOS signing, trusted URLs, Electron isolation, secret scan |
 | `./gradlew testDebugUnitTest` | **20 / 20 passed** | Navigation, sync payloads, models, streams, progress, Android updater edges |
+| `python3 android/test_export_github_signing_secrets.py` | **5 / 5 passed** | Existing-key export, private permissions, overwrite guard, malformed input, certificate pin |
 | `xcodebuild … test` | **14 / 14 passed** | Sync compatibility, credentials, models, playback overrides, state edges |
 | `npm audit --audit-level=high` | **0 vulnerabilities** | Full desktop dependency tree, including development packaging tools |
 | `./gradlew lintDebug` | **Passed · 0 errors** | API-level compatibility and Android static checks |
@@ -137,7 +138,7 @@ Download current packages from [GitHub Releases](https://github.com/FiNiX-GaMmA/
 
 <a href="graphify-out/graph.html"><img src="docs/readme/codebase-intelligence-map.svg" alt="Graphify topology map of the Omniverse codebase" width="100%" /></a>
 
-<p align="center"><sub>Generated from the versioned graph at commit <code>094230e</code>. Select the map for the interactive explorer, or use <code>graphify query</code>, <code>path</code>, <code>explain</code>, and <code>affected</code> locally.</sub></p>
+<p align="center"><sub>Generated from the versioned Graphify snapshot for <code>v2.1.83</code>. Select the map for the interactive explorer, or use <code>graphify query</code>, <code>path</code>, <code>explain</code>, and <code>affected</code> locally.</sub></p>
 
 <details>
   <summary><strong>Repository map</strong></summary>
@@ -214,14 +215,25 @@ Omniverse talks directly to services using credentials you control. See the [com
 
 ## Release signing
 
-Desktop release versions are stamped by CI. Android signing is restored at build time from:
+Desktop release versions are stamped by CI. Android signing is restored at build time from four masked repository secrets:
 
 - `ANDROID_KEYSTORE_BASE64`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-For local Android release builds, copy `android/keystore.properties.example` to the ignored `android/keystore.properties` file and keep the keystore outside version control.
+If you have the original ignored `android/keystore.properties` and release keystore, generate a private, paste-ready export without printing any values to the terminal:
+
+```bash
+python3 android/export_github_signing_secrets.py
+```
+
+The helper validates the existing keystore and alias with `keytool`, requires its public certificate to match the versioned `android/release-signing-cert.sha256` continuity pin, writes the four values to `~/.omniverse/signing/github-actions-secrets.env` with `0600` permissions, and refuses to overwrite it unless `--force` is supplied. Paste the values into **GitHub → Settings → Secrets and variables → Actions**, then securely delete the export.
+
+> [!IMPORTANT]
+> Keep the original release keystore and its credentials in a secure, redundant backup. Omniverse distributes APKs directly and supports legacy Android devices, so replacing the signing key would prevent existing users from installing the new APK over their current app. The exporter deliberately has no key-generation mode.
+
+For local Android release builds, copy `android/keystore.properties.example` to the ignored `android/keystore.properties` file and keep all signing material outside version control.
 
 ## Privacy & sync
 

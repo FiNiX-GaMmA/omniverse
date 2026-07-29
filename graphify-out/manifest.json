@@ -475,9 +475,9 @@
     "semantic_hash": "9573d19c0652fb57fca5babf49b67cf3"
   },
   ".github/workflows/build.yml": {
-    "mtime": 1785303963.9110494,
-    "ast_hash": "121006bd4d1eb97b9035384291c48a7b",
-    "semantic_hash": "121006bd4d1eb97b9035384291c48a7b"
+    "mtime": 1785305301.7495584,
+    "ast_hash": "b6a4ebd7b42940ccec7520cc326b7dd2",
+    "semantic_hash": ""
   },
   "API_SETUP.md": {
     "mtime": 1785169176.3327556,
@@ -490,14 +490,14 @@
     "semantic_hash": "6aa736ad8ddd07c66af5ea44bd0bfc9e"
   },
   "CHANGELOG.md": {
-    "mtime": 1785304024.879314,
-    "ast_hash": "c48fbb0fed13a14796db298423f7e9ac",
-    "semantic_hash": "c48fbb0fed13a14796db298423f7e9ac"
+    "mtime": 1785305418.9945796,
+    "ast_hash": "864f18c0379ad2e389d3f20035f5bf76",
+    "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1785303130.2489142,
-    "ast_hash": "c831c75be0f37f4b0b02ef720ff9b725",
-    "semantic_hash": "c831c75be0f37f4b0b02ef720ff9b725"
+    "mtime": 1785305502.509141,
+    "ast_hash": "f0c83ba7b52bbb4db141529a53dc7d73",
+    "semantic_hash": ""
   },
   "SYNC_SPEC.md": {
     "mtime": 1783349580.53611,
@@ -590,8 +590,23 @@
     "semantic_hash": "b25669ec2cf73b01971c63b589a30e01"
   },
   "docs/readme/quality-dashboard.svg": {
-    "mtime": 1785304024.8807065,
-    "ast_hash": "9603a3ca8f6fb631f22eae8a2d6706fb",
-    "semantic_hash": "9603a3ca8f6fb631f22eae8a2d6706fb"
+    "mtime": 1785305418.9958234,
+    "ast_hash": "fd58c337ee57f0fc1f086a81411ad445",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260729_055708_how_can_the_readme_expose_the_graphify_map_in_a_te.md": {
+    "mtime": 1785304628.7693677,
+    "ast_hash": "5e959456bcc134c83f2e1f84bcc04505",
+    "semantic_hash": ""
+  },
+  "docs/readme/codebase-intelligence-map.svg": {
+    "mtime": 1785305502.5083025,
+    "ast_hash": "4ed8cc012d0f9b895b8e916c59e895ca",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260729_060729_how_does_omniverse_preserve_android_upgrade_compat.md": {
+    "mtime": 1785305347.7637548,
+    "ast_hash": "8b993e979aa35d4923228567017eb0da",
+    "semantic_hash": ""
   }
 }
