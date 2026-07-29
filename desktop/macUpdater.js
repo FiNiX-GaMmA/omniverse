@@ -7,6 +7,19 @@ const { assertTrustedDesktopUpdateUrl } = require("./securityPolicy");
 
 const execFileAsync = promisify(execFile);
 const EXPECTED_BUNDLE_ID = "com.finix.omniverse.desktop";
+const ELECTRON_ENTITLEMENTS = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+  <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+  <true/>
+</dict>
+</plist>
+`;
 
 function assertTrustedMacUpdateUrl(rawUrl) {
   return assertTrustedDesktopUpdateUrl(rawUrl, "darwin");
@@ -99,21 +112,156 @@ async function verifyAppSignature(appPath) {
   ]);
 }
 
+function sortCodeTargetsInsideOut(targets, appPath) {
+  const uniqueTargets = [...new Set(targets)];
+  const depth = (target) =>
+    path.resolve(target).split(path.sep).filter(Boolean).length;
+
+  return uniqueTargets.sort((left, right) => {
+    if (left === appPath) return 1;
+    if (right === appPath) return -1;
+    const depthDifference = depth(right) - depth(left);
+    if (depthDifference !== 0) return depthDifference;
+    return left.localeCompare(right);
+  });
+}
+
+async function isMachO(filePath) {
+  try {
+    const { stdout } = await execFileAsync("/usr/bin/file", ["-b", filePath]);
+    return stdout.includes("Mach-O");
+  } catch (_) {
+    return false;
+  }
+}
+
+async function collectCodeTargets(appPath) {
+  const bundleTargets = [];
+  const files = [];
+
+  function visit(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      if (entry.isSymbolicLink()) continue;
+      if (entry.isDirectory()) {
+        visit(target);
+        if (entry.name.endsWith(".framework") || entry.name.endsWith(".app")) {
+          bundleTargets.push(target);
+        }
+      } else if (entry.isFile()) {
+        files.push(target);
+      }
+    }
+  }
+
+  visit(appPath);
+  const machOTargets = [];
+  for (const file of files) {
+    if (await isMachO(file)) machOTargets.push(file);
+  }
+  return sortCodeTargetsInsideOut(
+    [...machOTargets, ...bundleTargets, appPath],
+    appPath,
+  );
+}
+
+async function hasCodeSignature(target) {
+  try {
+    await execFileAsync("/usr/bin/codesign", ["--display", target]);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function signingTeamIdentifier(target) {
+  const { stderr } = await execFileAsync("/usr/bin/codesign", [
+    "--display",
+    "--verbose=2",
+    target,
+  ]);
+  return String(stderr || "").match(/^TeamIdentifier=(.+)$/m)?.[1]?.trim() || "";
+}
+
+async function verifyNestedTeamIdentifiers(appPath, targets) {
+  const expectedTeam = await signingTeamIdentifier(appPath);
+  if (!expectedTeam || expectedTeam === "not set") {
+    throw new Error("The re-signed application has no Apple Team Identifier");
+  }
+  const mismatches = [];
+  for (const target of targets) {
+    const team = await signingTeamIdentifier(target);
+    if (team !== expectedTeam) {
+      mismatches.push(`${path.relative(appPath, target) || "."}: ${team || "missing"}`);
+    }
+  }
+  if (mismatches.length > 0) {
+    throw new Error(
+      `Nested code has a different Apple Team Identifier (${mismatches.join(", ")})`,
+    );
+  }
+}
+
+function needsElectronEntitlements(target) {
+  return (
+    target.endsWith(".app") ||
+    target.includes(`${path.sep}Contents${path.sep}MacOS${path.sep}`)
+  );
+}
+
+async function verifyElectronEntitlements(targets) {
+  for (const target of targets.filter(needsElectronEntitlements)) {
+    const { stdout, stderr } = await execFileAsync("/usr/bin/codesign", [
+      "--display",
+      "--entitlements",
+      "-",
+      target,
+    ]);
+    const entitlements = `${stdout || ""}${stderr || ""}`;
+    if (
+      !entitlements.includes("com.apple.security.cs.allow-jit") ||
+      !entitlements.includes("com.apple.security.cs.allow-unsigned-executable-memory")
+    ) {
+      throw new Error(
+        `Electron JIT entitlements are missing from ${path.basename(target)}`,
+      );
+    }
+  }
+}
+
 async function signAppWithLocalIdentity(appPath, identity) {
   if (!identity || !identity.hash) {
     throw new Error("A valid local Apple signing identity is required");
   }
-  await execFileAsync("/usr/bin/codesign", [
-    "--force",
-    "--deep",
-    "--options",
-    "runtime",
-    "--preserve-metadata=identifier,entitlements,flags,runtime",
-    "--timestamp=none",
-    "--sign",
-    identity.hash,
-    appPath,
-  ]);
+  const targets = await collectCodeTargets(appPath);
+  const entitlementsDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), "omniverse-entitlements-"),
+  );
+  const entitlementsPath = path.join(entitlementsDir, "entitlements.plist");
+  fs.writeFileSync(entitlementsPath, ELECTRON_ENTITLEMENTS, { mode: 0o600 });
+  try {
+    for (const target of targets) {
+      const applyEntitlements = needsElectronEntitlements(target);
+      const args = ["--force", "--options", "runtime"];
+      if (await hasCodeSignature(target)) {
+        args.push(
+          applyEntitlements
+            ? "--preserve-metadata=identifier,flags,runtime"
+            : "--preserve-metadata=identifier,entitlements,flags,runtime",
+        );
+      }
+      if (applyEntitlements) {
+        args.push("--entitlements", entitlementsPath);
+      }
+      args.push("--timestamp=none", "--sign", identity.hash, target);
+      await execFileAsync("/usr/bin/codesign", args);
+    }
+  } finally {
+    fs.rmSync(entitlementsDir, { recursive: true, force: true });
+  }
+  await verifyAppSignature(appPath);
+  await verifyNestedTeamIdentifiers(appPath, targets);
+  await verifyElectronEntitlements(targets);
 }
 
 async function clearQuarantine(appPath) {
@@ -332,8 +480,10 @@ module.exports = {
   findLocalAppleSigningIdentity,
   installedAppPathFromExecutable,
   launchMacUpdateHelper,
+  needsElectronEntitlements,
   parseSigningIdentities,
   prepareMacUpdate,
   selectLocalAppleSigningIdentity,
   signAppWithLocalIdentity,
+  sortCodeTargetsInsideOut,
 };

@@ -1,8 +1,8 @@
 import SwiftUI
 import UIKit
 
-/// Welcome glass card; optional Client ID + Secret fields when no Trakt app is
-/// configured; connect via external browser; prominent camera "Scan Sync QR"
+/// Welcome glass card with editable Client ID + Secret fields; connects via an
+/// external browser; prominent camera "Scan Sync QR"
 /// for instant cross-device sign-in (see SYNC_SPEC.md).
 struct TraktOnboardingScreen: View {
     @Environment(AppState.self) private var state
@@ -70,21 +70,26 @@ struct TraktOnboardingScreen: View {
                                 .padding(.bottom, 24)
                         }
 
-                        if !state.credentials.hasTraktApp {
-                            VStack(spacing: 12) {
-                                TextField("", text: $clientId, prompt: Text("Trakt Client ID").foregroundColor(.white.opacity(0.4)))
-                                    .textInputAutocapitalization(.never).autocorrectionDisabled()
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 12).padding(.vertical, 12)
-                                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.white.opacity(0.3), lineWidth: 1))
-                                SecureField("", text: $clientSecret, prompt: Text("Trakt Client Secret").foregroundColor(.white.opacity(0.4)))
-                                    .textInputAutocapitalization(.never).autocorrectionDisabled()
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 12).padding(.vertical, 12)
-                                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.white.opacity(0.3), lineWidth: 1))
-                            }
-                            .padding(.bottom, 24)
+                        VStack(spacing: 12) {
+                            Text("Trakt Developer Credentials")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(.white)
+                            Text("Paste the Client ID and Client Secret from Trakt API Applications. You can replace them here if Trakt rejects either value.")
+                                .font(.system(size: 13))
+                                .foregroundStyle(.white.opacity(0.62))
+                                .multilineTextAlignment(.center)
+                            TextField("", text: $clientId, prompt: Text("Trakt Client ID").foregroundColor(.white.opacity(0.4)))
+                                .textInputAutocapitalization(.never).autocorrectionDisabled()
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12).padding(.vertical, 12)
+                                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.white.opacity(0.3), lineWidth: 1))
+                            SecureField("", text: $clientSecret, prompt: Text("Trakt Client Secret").foregroundColor(.white.opacity(0.4)))
+                                .textInputAutocapitalization(.never).autocorrectionDisabled()
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12).padding(.vertical, 12)
+                                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.white.opacity(0.3), lineWidth: 1))
                         }
+                        .padding(.bottom, 24)
 
                         if state.traktConnecting {
                             VStack(spacing: 16) {
@@ -149,6 +154,8 @@ struct TraktOnboardingScreen: View {
             SyncScannerSheet { restoreFromQR($0) }
         }
         .onAppear {
+            clientId = state.credentials.traktClientId
+            clientSecret = state.credentials.traktClientSecret
             // Automatically initialize low-density pairing QR on launch
             startPairingPoll()
         }
@@ -201,16 +208,16 @@ struct TraktOnboardingScreen: View {
     private func connect() {
         errorMessage = nil
         Task {
-            if state.credentials.traktClientId.trimmed.isEmpty && clientId.trimmed.isEmpty {
+            let normalizedClientId = clientId.normalizedTraktCredential
+            let normalizedClientSecret = clientSecret.normalizedTraktCredential
+            if normalizedClientId.isEmpty {
                 errorMessage = "Please enter your Trakt Client ID."
                 return
             }
-            if !clientId.trimmed.isEmpty {
-                var c = state.credentials
-                c.traktClientId = clientId.trimmed
-                c.traktClientSecret = clientSecret.trimmed
-                await state.saveCredentials(c)
-            }
+            var c = state.credentials
+            c.traktClientId = normalizedClientId
+            c.traktClientSecret = normalizedClientSecret
+            await state.saveCredentials(c)
             guard let url = await state.startTraktBrowserAuth() else {
                 errorMessage = state.message ?? "Could not open Trakt sign in."
                 return

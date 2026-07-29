@@ -24,7 +24,7 @@ android {
         targetSdk = 35
         val runNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
         versionCode = runNumber
-        versionName = "2.1.$runNumber"
+        versionName = System.getenv("OMNIVERSE_RELEASE_VERSION")?.removePrefix("v") ?: "2.1.$runNumber"
         // Works on phones, tablets, and Android TV — single universal APK.
     }
 

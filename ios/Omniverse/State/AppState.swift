@@ -71,6 +71,11 @@ final class AppState {
     // MARK: - Lifecycle
 
     func initialize() async {
+        // Both the root view task and a cold-start OAuth callback can request
+        // initialization. MainActor serialization makes this guard sufficient
+        // to prevent duplicate Keychain loads, timers, and refresh tasks.
+        guard !initialized else { return }
+
         // First-Time Launch Detection: UserDefaults is cleared on uninstall, Keychain is not.
         // If app_installed_before is false, we wipe lingering Keychain items to ensure a 100% clean state!
         if !UserDefaults.standard.bool(forKey: "app_installed_before") {
@@ -701,6 +706,9 @@ final class AppState {
 
     func handleIncomingURL(_ url: URL) async {
         guard let scheme = url.scheme, scheme == "omniplay" || scheme == "omniverse" else { return }
+        // iOS can cold-start the app for this custom-scheme callback. Restore
+        // the Client ID and Secret from Keychain before exchanging the code.
+        await initialize()
         let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
         let q = comps?.queryItems ?? []
         if let code = q.first(where: { $0.name == "code" || $0.name == "token" })?.value?.trimmed, !code.isEmpty {

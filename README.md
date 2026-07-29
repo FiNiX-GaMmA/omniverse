@@ -96,7 +96,7 @@ flowchart LR
 
 | Check | Result | Coverage |
 | :--- | :---: | :--- |
-| `npm test` | **15 / 15 passed** | AdShield telemetry, signed updater, deterministic macOS signing, trusted URLs, Electron isolation, secret scan |
+| `npm test` | **20 / 20 passed** | AdShield telemetry, signed updater, deterministic macOS signing, trusted URLs, Electron isolation, secret scan |
 | `./gradlew testDebugUnitTest` | **20 / 20 passed** | Navigation, sync payloads, models, streams, progress, Android updater edges |
 | `python3 android/test_export_github_signing_secrets.py` | **5 / 5 passed** | Existing-key export, private permissions, overwrite guard, malformed input, certificate pin |
 | `xcodebuild … test` | **14 / 14 passed** | Sync compatibility, credentials, models, playback overrides, state edges |
@@ -129,6 +129,17 @@ flowchart LR
 | Linux | Electron | AppImage + Debian package | Linux x64 |
 
 Download current packages from [GitHub Releases](https://github.com/FiNiX-GaMmA/omniverse/releases/latest).
+
+### macOS: required step after an in-app update
+
+> [!IMPORTANT]
+> After Omniverse finishes installing an update through the app, fully quit Omniverse and run the following command in Terminal before reopening it. This clears macOS quarantine metadata from the updated application bundle:
+
+```bash
+xattr -cr /Applications/Omniverse.app
+```
+
+If Omniverse is installed somewhere other than `/Applications`, replace that path with the actual path to `Omniverse.app`.
 
 ## Architecture
 
@@ -214,6 +225,8 @@ Omniverse talks directly to services using credentials you control. See the [com
 | AniList | Anime discovery and account integration | Optional |
 
 ## Release signing
+
+The newest versioned heading in `CHANGELOG.md` is the release source of truth. GitHub Actions stamps that version into Android, iOS, and desktop packages and uses the matching section to generate the Git tag, release name, release description, installation matrix, and downloadable assets. Edit the current section to update its existing release page, or add a newer version heading to publish a new release.
 
 Desktop release versions are stamped by CI. Android signing is restored at build time from four masked repository secrets:
 

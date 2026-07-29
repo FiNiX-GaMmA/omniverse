@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -57,6 +58,8 @@ class AppState(context: Context) {
     var repos: Repositories = Repositories.live()
 
     private val scope = CoroutineScope(Dispatchers.Main)
+    private val initializationReady = CompletableDeferred<Unit>()
+    private var initializationStarted = false
 
     // MARK: - Compose-observable state
 
@@ -106,7 +109,9 @@ class AppState(context: Context) {
     // MARK: - Lifecycle
 
     fun initialize() {
-        scope.launch {
+        if (initializationStarted) return
+        initializationStarted = true
+        val initializationJob = scope.launch {
             val loadedSettings = settingsStore.loadSettings()
             val migratedSettings = normalizeSettings(loadedSettings)
             settings = migratedSettings
@@ -125,6 +130,7 @@ class AppState(context: Context) {
             hasScannedLiveTv = liveTv.isNotEmpty()
             watchHistory.clear(); watchHistory.addAll(settingsStore.loadWatchHistory())
             initialized = true
+            initializationReady.complete(Unit)
 
             // Always perform a silent refresh of all categories, watchlist, and anime on launch to ensure lists are 100% current every time the app opens.
             scope.launch { refreshAll(isManual = false) }
@@ -150,6 +156,22 @@ class AppState(context: Context) {
                 }
             }
         }
+        initializationJob.invokeOnCompletion { failure ->
+            if (failure != null && !initializationReady.isCompleted) {
+                initializationReady.completeExceptionally(failure)
+            }
+        }
+    }
+
+    /**
+     * OAuth redirects can cold-start the activity after Android reclaims the app
+     * while the browser is open. Wait for encrypted credentials to be restored
+     * before exchanging the short-lived authorization code.
+     */
+    suspend fun awaitInitialized() {
+        if (initialized) return
+        initialize()
+        initializationReady.await()
     }
 
     // MARK: - Refresh

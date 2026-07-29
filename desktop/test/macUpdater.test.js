@@ -6,8 +6,10 @@ const {
   buildMacUpdateHelperScript,
   compareVersions,
   installedAppPathFromExecutable,
+  needsElectronEntitlements,
   parseSigningIdentities,
   selectLocalAppleSigningIdentity,
+  sortCodeTargetsInsideOut,
 } = require("../macUpdater");
 
 test("accepts only official Omniverse macOS release images", () => {
@@ -88,5 +90,39 @@ test("derives the containing app bundle from its executable", () => {
   assert.throws(
     () => installedAppPathFromExecutable("/tmp/electron"),
     /packaged macOS/,
+  );
+});
+
+test("signs nested macOS code inside-out with the outer app last", () => {
+  const app = "/tmp/Omniverse.app";
+  const framework = `${app}/Contents/Frameworks/Electron Framework.framework`;
+  const library = `${framework}/Versions/A/Libraries/libffmpeg.dylib`;
+  const executable = `${app}/Contents/MacOS/Omniverse`;
+
+  assert.deepEqual(
+    sortCodeTargetsInsideOut([app, framework, library, executable, library], app),
+    [library, framework, executable, app],
+  );
+});
+
+test("applies Electron JIT entitlements to app bundles and executables", () => {
+  assert.equal(needsElectronEntitlements("/tmp/Omniverse.app"), true);
+  assert.equal(
+    needsElectronEntitlements(
+      "/tmp/Omniverse.app/Contents/Frameworks/Omniverse Helper.app",
+    ),
+    true,
+  );
+  assert.equal(
+    needsElectronEntitlements(
+      "/tmp/Omniverse.app/Contents/MacOS/Omniverse",
+    ),
+    true,
+  );
+  assert.equal(
+    needsElectronEntitlements(
+      "/tmp/Omniverse.app/Contents/Frameworks/libffmpeg.dylib",
+    ),
+    false,
   );
 });

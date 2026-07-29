@@ -58,7 +58,15 @@ class MainActivity : ComponentActivity() {
         val uri: Uri = intent?.data ?: return
         val scheme = uri.scheme ?: return
         if (scheme == "omniplay" || scheme == "omniverse") {
-            lifecycleScope.launch { AppGraph.appState.handleIncomingUri(uri) }
+            lifecycleScope.launch {
+                val state = AppGraph.appState
+                runCatching {
+                    state.awaitInitialized()
+                    state.handleIncomingUri(uri)
+                }.onFailure { failure ->
+                    state.message = "Could not finish Trakt sign in: ${failure.message ?: "app initialization failed"}"
+                }
+            }
         }
     }
 

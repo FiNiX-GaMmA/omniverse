@@ -42,6 +42,7 @@ import androidx.core.content.ContextCompat
 import com.finix.omniverse.AppGraph
 import com.finix.omniverse.Http
 import com.finix.omniverse.SimpleAES
+import com.finix.omniverse.normalizedTraktCredential
 import com.finix.omniverse.ui.theme.LiquidColors
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
@@ -57,8 +58,8 @@ fun OnboardingScreen() {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    var clientId by remember { mutableStateOf("") }
-    var clientSecret by remember { mutableStateOf("") }
+    var clientId by remember { mutableStateOf(state.credentials.traktClientId) }
+    var clientSecret by remember { mutableStateOf(state.credentials.traktClientSecret) }
     var error by remember { mutableStateOf<String?>(null) }
 
     var pairingId by remember { mutableStateOf("") }
@@ -125,12 +126,15 @@ fun OnboardingScreen() {
     fun connect() {
         error = null
         scope.launch {
-            if (state.credentials.traktClientId.trim().isEmpty() && clientId.trim().isEmpty()) {
+            val normalizedClientId = clientId.normalizedTraktCredential()
+            val normalizedClientSecret = clientSecret.normalizedTraktCredential()
+            if (normalizedClientId.isEmpty()) {
                 error = "Please enter your Trakt Client ID."; return@launch
             }
-            if (clientId.trim().isNotEmpty()) {
-                state.saveCredentials(state.credentials.copy(traktClientId = clientId.trim(), traktClientSecret = clientSecret.trim()))
-            }
+            state.saveCredentials(state.credentials.copy(
+                traktClientId = normalizedClientId,
+                traktClientSecret = normalizedClientSecret,
+            ))
             val uri = state.startTraktBrowserAuth()
             if (uri == null) { error = state.message ?: "Could not open Trakt sign in." }
             else context.startActivity(Intent(Intent.ACTION_VIEW, uri))
@@ -171,13 +175,15 @@ fun OnboardingScreen() {
                 contentAlignment = Alignment.Center,
             ) { Text("Scan Another Sync QR Instead", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
 
-            if (!state.credentials.hasTraktApp) {
-                OutlinedTextField(clientId, { clientId = it }, Modifier.fillMaxWidth(), singleLine = true,
-                    placeholder = { Text("Trakt Client ID", color = Color.White.copy(alpha = 0.4f)) }, colors = obColors())
-                OutlinedTextField(clientSecret, { clientSecret = it }, Modifier.fillMaxWidth(), singleLine = true,
-                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                    placeholder = { Text("Trakt Client Secret", color = Color.White.copy(alpha = 0.4f)) }, colors = obColors())
-            }
+            Text("Trakt Developer Credentials", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text("Paste the Client ID and Client Secret from Trakt API Applications. You can replace them here if Trakt rejects either value.",
+                color = Color.White.copy(alpha = 0.62f), fontSize = 13.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            OutlinedTextField(clientId, { clientId = it }, Modifier.fillMaxWidth(), singleLine = true,
+                placeholder = { Text("Trakt Client ID", color = Color.White.copy(alpha = 0.4f)) }, colors = obColors())
+            OutlinedTextField(clientSecret, { clientSecret = it }, Modifier.fillMaxWidth(), singleLine = true,
+                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                placeholder = { Text("Trakt Client Secret", color = Color.White.copy(alpha = 0.4f)) }, colors = obColors())
 
             if (state.traktConnecting) {
                 CircularProgressIndicator(color = LiquidColors.Rose)

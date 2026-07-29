@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [v2.1.86] - 2026-07-29
+
+> **Commit**: `fix(release): harden authentication recovery and update delivery`
+
+### 🔐 Mobile OAuth Completion
+- **Editable Recovery Credentials**: Android and iOS onboarding always displays and prefills the Trakt Client ID and Client Secret, allowing rejected developer credentials to be corrected without getting trapped behind the sign-in gate.
+- **Authoritative Retry Values**: Reconnect attempts use the visible, normalized form values instead of silently falling back to a rejected stored Client ID.
+- **Cold-Start Callback Safety**: Android and iOS wait for encrypted credentials to reload before exchanging Trakt's authorization code, preventing successful browser approval from bouncing back to onboarding after the OS restarts the app.
+- **Idempotent Initialization**: Mobile state restoration can be requested by both the root UI and an OAuth callback without duplicating credential loads, timers, or refresh work.
+
+### 🍎 Reliable macOS Sideload Updates
+- **Uniform Team Identity**: The in-app updater signs every nested Mach-O binary, framework, helper, and application bundle inside-out with the same local Apple identity, preventing dyld from rejecting libraries such as `libffmpeg.dylib`.
+- **Electron Runtime Entitlements**: JIT and unsigned-executable-memory permissions are reapplied and verified on the main app and helper executables, preventing V8 from aborting while reserving its code range.
+- **Runtime Integrity Gate**: Update staging rejects mixed or missing Team Identifiers and missing Electron entitlements before replacing the installed application—conditions that `codesign --deep --strict` alone does not detect.
+- **Installed-App Recovery Verified**: The affected macOS installation was repaired in place, passed strict signature verification, and remained running with its GPU, network, and renderer helpers.
+
+### 🚀 Changelog-Driven Releases
+- **One Version Source**: The newest versioned `CHANGELOG.md` heading now stamps Android, iOS, desktop packages, the Git tag, and the GitHub Release name.
+- **Dynamic Release Pages**: A tested renderer extracts only the matching changelog section and generates the complete GitHub Release body and installation matrix.
+- **Safe Release Updates**: Editing the current changelog section updates the existing release and assets under the same tag; adding a new version section creates the next release.
+- **Fail-Closed Notes**: Missing, empty, or mismatched release sections stop publishing instead of showing stale notes from another version.
+
+### 📖 Documentation & Verification
+- Added the required post-update macOS command, `xattr -cr /Applications/Omniverse.app`, to the README and generated release instructions.
+- Documented the changelog-driven versioning and release-page update workflow for contributors.
+- Android unit tests and compilation pass, all Swift sources parse, the non-UI iOS authentication core type-checks, and all 20 desktop tests pass.
+
+---
+
 ## 🚀 [v2.1.85] - 2026-07-29
 
 > **Commit**: `fix(auth): make Trakt reauthentication resilient across every platform`
