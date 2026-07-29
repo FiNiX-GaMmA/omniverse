@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T05:45:30.994942+00:00",
+  "generated_at": "2026-07-29T05:57:08.847837+00:00",
   "nodes": {
     "android_app_src_main_java_com_finix_omniverse_ui_omniverseroot_glasstabbar": {
       "code_fingerprint": "942ae65112d176e8b3d72448e27f56ae6afcf8e8d57a37810b999c64cad3f45a",
@@ -12,7 +12,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.998987282,
+      "score": 0.99880087,
       "source_file": "android/app/src/main/java/com/finix/omniverse/ui/OmniverseRoot.kt",
       "status": "tentative",
       "uses": 1
@@ -28,7 +28,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.998987282,
+      "score": 0.99880087,
       "source_file": "android/app/src/main/java/com/finix/omniverse/ui/OmniverseRoot.kt",
       "status": "tentative",
       "uses": 1
@@ -44,7 +44,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.998987282,
+      "score": 0.99880087,
       "source_file": "desktop/index.html",
       "status": "tentative",
       "uses": 1
@@ -60,7 +60,7 @@
           "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
         }
       ],
-      "score": 0.999999984,
+      "score": 0.999813383,
       "source_file": "desktop/scripts/afterPack.js",
       "status": "tentative",
       "uses": 1
@@ -76,7 +76,7 @@
           "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
         }
       ],
-      "score": 0.999999984,
+      "score": 0.999813383,
       "source_file": "desktop/scripts/afterPack.js",
       "status": "tentative",
       "uses": 1
@@ -92,7 +92,7 @@
           "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
         }
       ],
-      "score": 0.999999984,
+      "score": 0.999813383,
       "source_file": "desktop/scripts/afterPack.js",
       "status": "tentative",
       "uses": 1
@@ -108,13 +108,29 @@
           "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
         }
       ],
-      "score": 0.999999984,
+      "score": 0.999813383,
       "source_file": "desktop/test/afterPack.test.js",
       "status": "tentative",
       "uses": 1
     },
+    "docs_readme_architecture_shared_product_concepts": {
+      "code_fingerprint": "099311de35a6b1aa32424445c1cb8888ca40cc06b8d2d789cbe30b4605e39ff4",
+      "label": "Shared Product Concepts",
+      "last": "2026-07-29T05:57:08.768732+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T05:57:08.768732+00:00",
+          "outcome": "useful",
+          "q": "How can the README expose the Graphify map in a technical, visually impressive way that communicates codebase complexity?"
+        }
+      ],
+      "score": 0.999999979,
+      "source_file": "docs/readme/architecture.svg",
+      "status": "tentative",
+      "uses": 1
+    },
     "docs_readme_quality_dashboard_release_verification_gate": {
-      "code_fingerprint": "71339ac6109b52fa69158e98217320c3cbfaa1a53542697c966fb722fe4169a1",
+      "code_fingerprint": "05d2c4364441e801b31f2e3367dac8fb25070e424f1bbf0a33586940fa4226b6",
       "label": "Release Verification Gate",
       "last": "2026-07-29T05:45:30.936234+00:00",
       "provenance": [
@@ -124,7 +140,23 @@
           "q": "Why did the GitHub Actions macOS DMG job fail while signing the Intel Electron bundle?"
         }
       ],
-      "score": 0.999999984,
+      "score": 0.999813383,
+      "source_file": "docs/readme/quality-dashboard.svg",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_readme_quality_dashboard_verified_quality_signals": {
+      "code_fingerprint": "05d2c4364441e801b31f2e3367dac8fb25070e424f1bbf0a33586940fa4226b6",
+      "label": "Verified Quality Signals",
+      "last": "2026-07-29T05:57:08.768732+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T05:57:08.768732+00:00",
+          "outcome": "useful",
+          "q": "How can the README expose the Graphify map in a technical, visually impressive way that communicates codebase complexity?"
+        }
+      ],
+      "score": 0.999999979,
       "source_file": "docs/readme/quality-dashboard.svg",
       "status": "tentative",
       "uses": 1
@@ -140,7 +172,7 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.998987282,
+      "score": 0.99880087,
       "source_file": "ios/Omniverse/Screens/Components.swift",
       "status": "tentative",
       "uses": 1
@@ -156,8 +188,40 @@
           "q": "do a full UI and UX resign of the mobile variants like tat of the desktop variants. Redesign it to buautifully match the apple tv disney hotstar and other platforms UI as the dekstop variants are heavily insipred from the lordflix file you can use that too in your inspiration"
         }
       ],
-      "score": 0.998987282,
+      "score": 0.99880087,
       "source_file": "ios/Omniverse/Screens/HomeScreen.swift",
+      "status": "tentative",
+      "uses": 1
+    },
+    "readme": {
+      "code_fingerprint": "57707685fc0f30dfe6a428493a3729bae2ea308d333cf0537857b50d21cb8609",
+      "label": "README.md",
+      "last": "2026-07-29T05:57:08.768732+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T05:57:08.768732+00:00",
+          "outcome": "useful",
+          "q": "How can the README expose the Graphify map in a technical, visually impressive way that communicates codebase complexity?"
+        }
+      ],
+      "score": 0.999999979,
+      "source_file": "README.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "readme_graphify_reflection_lessons": {
+      "code_fingerprint": "57707685fc0f30dfe6a428493a3729bae2ea308d333cf0537857b50d21cb8609",
+      "label": "Graphify Reflection Lessons",
+      "last": "2026-07-29T05:57:08.768732+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-29T05:57:08.768732+00:00",
+          "outcome": "useful",
+          "q": "How can the README expose the Graphify map in a technical, visually impressive way that communicates codebase complexity?"
+        }
+      ],
+      "score": 0.999999979,
+      "source_file": "README.md",
       "status": "tentative",
       "uses": 1
     }

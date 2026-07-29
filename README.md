@@ -96,13 +96,13 @@ flowchart LR
 
 | Check | Result | Coverage |
 | :--- | :---: | :--- |
-| `npm test` | **14 / 14 passed** | AdShield telemetry, signed updater, trusted URLs, Electron isolation, secret scan |
+| `npm test` | **15 / 15 passed** | AdShield telemetry, signed updater, deterministic macOS signing, trusted URLs, Electron isolation, secret scan |
 | `./gradlew testDebugUnitTest` | **20 / 20 passed** | Navigation, sync payloads, models, streams, progress, Android updater edges |
 | `xcodebuild … test` | **14 / 14 passed** | Sync compatibility, credentials, models, playback overrides, state edges |
 | `npm audit --audit-level=high` | **0 vulnerabilities** | Full desktop dependency tree, including development packaging tools |
 | `./gradlew lintDebug` | **Passed · 0 errors** | API-level compatibility and Android static checks |
 | `xcodebuild … analyze` | **Passed** | Swift/Clang static analysis |
-| `npm run pack` | **Passed** | Electron 43 arm64 app packaged and signed locally |
+| `npm run dist:mac -- --publish never` | **Passed · 2 DMGs** | Electron 43 arm64 + x64 apps signed and both disk images checksum-verified |
 
 ### Security baseline
 
@@ -132,6 +132,12 @@ Download current packages from [GitHub Releases](https://github.com/FiNiX-GaMmA/
 ## Architecture
 
 <img src="docs/readme/architecture.svg" alt="Omniverse client, product core, and service architecture" width="100%" />
+
+### Graphify codebase intelligence
+
+<a href="graphify-out/graph.html"><img src="docs/readme/codebase-intelligence-map.svg" alt="Graphify topology map of the Omniverse codebase" width="100%" /></a>
+
+<p align="center"><sub>Generated from the versioned graph at commit <code>094230e</code>. Select the map for the interactive explorer, or use <code>graphify query</code>, <code>path</code>, <code>explain</code>, and <code>affected</code> locally.</sub></p>
 
 <details>
   <summary><strong>Repository map</strong></summary>

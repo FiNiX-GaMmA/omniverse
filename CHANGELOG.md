@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## 🚀 [v2.1.81] - 2026-07-29
+## 🚀 [v2.1.82] - 2026-07-29
 
-> **Commit**: `fix(macos): sign nested Electron code before sealing DMGs`
+> **Commit**: `docs(readme): map the codebase with Graphify intelligence`
+
+### 🕸️ Graphify Codebase Intelligence
+- **Complexity You Can See**: Adds a dense GitHub-safe topology map covering 2,281 nodes, 5,092 typed relationships, 185 communities, and 119 indexed files.
+- **Platform Topology**: Visualizes Apple, Android, desktop, shared services, CI, and contributor knowledge as connected graph zones with real node volumes.
+- **Technical Depth**: Surfaces relationship distribution, high-blast-radius domain hubs, extraction confidence, and a direct link to the interactive Graphify explorer.
 
 ### 🍎 Reliable Dual-Architecture DMGs
 - **True Inside-Out Signing**: Sorts every Mach-O binary and bundle deepest-first so `chrome_crashpad_handler` is signed before its enclosing Electron framework on both Apple Silicon and Intel builds.
