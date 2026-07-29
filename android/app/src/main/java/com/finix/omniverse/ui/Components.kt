@@ -168,16 +168,47 @@ fun GlassChip(text: String, modifier: Modifier = Modifier) {
 /// 2:3 poster card used in rows + grids.
 @Composable
 fun MediaPosterCard(item: MediaItem, wide: Boolean = false, onTap: (MediaItem) -> Unit) {
-    val width = if (wide) 168.dp else 140.dp
+    val width = if (wide) 168.dp else 126.dp
     Column(Modifier.width(width)) {
         Box(
             Modifier
                 .width(width)
                 .height(width * 1.5f)
-                .tvFocusable(onClick = { onTap(item) })
-                .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(16.dp))
+                .tvFocusable(onClick = { onTap(item) }, corner = 16)
+                .border(1.dp, Color.White.copy(alpha = 0.13f), RoundedCornerShape(16.dp))
         ) {
-            PosterImage(item.posterUrl ?: item.backdropUrl, Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)))
+            PosterImage(item.posterUrl ?: item.backdropUrl, Modifier.fillMaxSize())
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.verticalGradient(
+                        0.48f to Color.Transparent,
+                        1f to Color.Black.copy(alpha = 0.76f),
+                    )
+                )
+            )
+            Text(
+                item.type.label.uppercase(),
+                color = Color.White.copy(alpha = 0.90f),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 0.7.sp,
+                modifier = Modifier.align(Alignment.BottomStart).padding(9.dp),
+            )
+            if (item.rating > 0) {
+                Text(
+                    "★ ${String.format("%.1f", item.rating)}",
+                    color = Color.White,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.Black.copy(alpha = 0.62f))
+                        .padding(horizontal = 7.dp, vertical = 4.dp),
+                )
+            }
         }
         Spacer(Modifier.height(8.dp))
         Text(
@@ -188,13 +219,8 @@ fun MediaPosterCard(item: MediaItem, wide: Boolean = false, onTap: (MediaItem) -
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        Text(
-            subtitleFor(item),
-            color = Color.White.copy(alpha = 0.6f),
-            fontSize = 11.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Text(subtitleFor(item), color = Color.White.copy(alpha = 0.52f), fontSize = 10.sp,
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -206,13 +232,13 @@ private fun subtitleFor(item: MediaItem): String {
 /// Top-10 card with the giant translucent rank number behind the poster.
 @Composable
 fun Top10MediaCard(item: MediaItem, rank: Int, wide: Boolean = false, onTap: (MediaItem) -> Unit) {
-    val cardWidth = if (wide) 168.dp else 140.dp
-    val total = cardWidth + (if (wide) 50.dp else 40.dp)
+    val cardWidth = if (wide) 168.dp else 126.dp
+    val total = cardWidth + (if (wide) 50.dp else 36.dp)
     Box(Modifier.width(total), contentAlignment = Alignment.BottomEnd) {
         Text(
             "$rank",
             modifier = Modifier.align(Alignment.BottomStart),
-            fontSize = if (wide) 170.sp else 138.sp,
+            fontSize = if (wide) 170.sp else 124.sp,
             fontWeight = FontWeight.Black,
             color = Color.White.copy(alpha = 0.18f),
         )
@@ -227,27 +253,28 @@ fun CategoryRow(
     wide: Boolean = false,
     onItem: (MediaItem) -> Unit,
 ) {
-    Column(Modifier.padding(top = 18.dp)) {
-        Row(Modifier.padding(horizontal = if (wide) 54.dp else 28.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(category.title, color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Black)
+    Column(Modifier.padding(top = if (wide) 22.dp else 18.dp)) {
+        Row(Modifier.padding(horizontal = if (wide) 54.dp else 18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(category.title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black,
+                letterSpacing = (-0.3).sp)
         }
-        if (category.description.isNotEmpty()) {
+        if (wide && category.description.isNotEmpty()) {
             Text(
                 category.description, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp,
                 maxLines = 2, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = if (wide) 54.dp else 28.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = 54.dp, vertical = 4.dp),
             )
         }
         category.error?.takeIf { it.isNotEmpty() }?.let {
             Text(
                 it, color = LiquidColors.Rose.copy(alpha = 0.9f), fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = if (wide) 54.dp else 28.dp)
+                modifier = Modifier.padding(horizontal = if (wide) 54.dp else 18.dp)
             )
         }
         LazyRow(
             modifier = Modifier.padding(top = 8.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = if (wide) 54.dp else 28.dp),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = if (wide) 54.dp else 18.dp),
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(if (wide) 14.dp else 12.dp),
         ) {
             items(category.items, key = { it.id }) { item ->
                 MediaPosterCard(item, wide, onItem)
@@ -266,24 +293,38 @@ fun ContinueWatchingRow(
     Column(Modifier.padding(top = 18.dp)) {
         Text(
             "Continue Watching", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Black,
-            modifier = Modifier.padding(horizontal = 28.dp)
+            modifier = Modifier.padding(horizontal = 18.dp)
         )
         LazyRow(
             modifier = Modifier.padding(top = 8.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 28.dp),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp),
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
         ) {
             items(entries, key = { it.progressKey }) { entry ->
-                Column(Modifier.width(270.dp)) {
+                Column(Modifier.width(242.dp)) {
                     Box(
                         Modifier
-                            .width(270.dp).height(152.dp)
-                            .tvFocusable(onClick = { onItem(entry) })
+                            .width(242.dp).height(136.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .tvFocusable(onClick = { onItem(entry) }, corner = 16)
                     ) {
                         PosterImage(
                             entry.backdropUrl ?: entry.posterUrl,
-                            Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
+                            Modifier.fillMaxSize()
                         )
+                        Box(Modifier.fillMaxSize().background(
+                            Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)))
+                        ))
+                        Box(
+                            Modifier.align(Alignment.Center)
+                                .size(42.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(Color.Black.copy(alpha = 0.52f))
+                                .border(1.dp, Color.White.copy(alpha = 0.30f), androidx.compose.foundation.shape.CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.Filled.PlayArrow, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                        }
                         Box(
                             Modifier
                                 .align(Alignment.BottomStart)

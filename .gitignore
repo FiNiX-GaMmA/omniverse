@@ -50,6 +50,11 @@ capture/
 *.dex
 *.class
 
+# Android signing material (keep local; CI restores it from repository secrets)
+/android/keystore.properties
+/keystore/*.jks
+/keystore/*.keystore
+
 # Xcode & iOS Build Outputs
 ios/build/
 **/ios/build/

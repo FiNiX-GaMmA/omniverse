@@ -33,6 +33,34 @@ jobs:
           cd android
           ./gradlew testDebugUnitTest
 
+      - name: Run Android Lint
+        run: |
+          cd android
+          ./gradlew lintDebug
+
+      - name: Configure Android release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ] || \
+             [ -z "${ANDROID_KEYSTORE_PASSWORD:-}" ] || \
+             [ -z "${ANDROID_KEY_ALIAS:-}" ] || \
+             [ -z "${ANDROID_KEY_PASSWORD:-}" ]; then
+            echo "Android release signing secrets are not configured."
+            exit 1
+          fi
+          mkdir -p keystore
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > keystore/omniverse-release.jks
+          {
+            printf 'storeFile=../keystore/omniverse-release.jks\n'
+            printf 'storePassword=%s\n' "$ANDROID_KEYSTORE_PASSWORD"
+            printf 'keyAlias=%s\n' "$ANDROID_KEY_ALIAS"
+            printf 'keyPassword=%s\n' "$ANDROID_KEY_PASSWORD"
+          } > android/keystore.properties
+
       - name: Compile signed APK (Release)
         run: |
           cd android
@@ -67,6 +95,11 @@ jobs:
           cd ios
           xcodegen
 
+      - name: Stamp iOS release version
+        run: |
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.1.${{ github.run_number }}" ios/Omniverse/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" ios/Omniverse/Info.plist
+
       - name: Run Swift Unit Tests
         run: |
           xcodebuild -project ios/Omniverse.xcodeproj \
@@ -74,6 +107,15 @@ jobs:
                      -sdk iphonesimulator \
                      -destination 'platform=iOS Simulator,name=iPad mini (A17 Pro)' \
                      test
+
+      - name: Run Xcode Static Analysis
+        run: |
+          xcodebuild -project ios/Omniverse.xcodeproj \
+                     -scheme Omniverse \
+                     -sdk iphonesimulator \
+                     -destination 'generic/platform=iOS Simulator' \
+                     analyze \
+                     CODE_SIGNING_ALLOWED=NO
 
       - name: Compile and Archive Swift App Bundle (Unsigned)
         run: |
@@ -118,12 +160,18 @@ jobs:
         with:
           node-version: 24
           cache: "npm"
-          cache-dependency-path: desktop/package.json
+          cache-dependency-path: desktop/package-lock.json
 
       - name: Install dependencies
         run: |
           cd desktop
-          npm install
+          npm ci
+
+      - name: Run Desktop Tests and Dependency Audit
+        run: |
+          cd desktop
+          npm test
+          npm audit --audit-level=high
 
       # Stamp the exact release version (matches the publish-release tag
       # v2.1.<run_number>) into package.json so the built app reports its true

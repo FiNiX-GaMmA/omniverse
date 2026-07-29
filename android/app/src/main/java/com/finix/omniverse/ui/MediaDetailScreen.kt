@@ -469,7 +469,7 @@ private fun DetailHero(
         isSeries -> "Play First Episode"
         else -> "Play"
     }
-    Box(Modifier.fillMaxWidth().height(720.dp)) {
+    Box(Modifier.fillMaxWidth().height(if (wide) 720.dp else 660.dp)) {
         PosterImage(
             current.heroBackdropUrl ?: current.backdropUrl ?: current.posterUrl,
             Modifier.fillMaxSize(),

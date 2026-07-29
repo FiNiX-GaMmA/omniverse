@@ -83,47 +83,45 @@ struct GlassTabBar: View {
     @Binding var activeTabId: String
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(tabs) { tab in
-                    let selected = tab.id == activeTabId
-                    Button {
-                        withAnimation(.spring(response: 0.40, dampingFraction: 0.78)) {
-                            activeTabId = tab.id
-                        }
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: selected ? tab.selectedIcon : tab.icon)
-                                .font(.system(size: 16, weight: .semibold))
-                                .frame(width: 18)
-                            if selected {
-                                Text(tab.title)
-                                    .font(.system(size: 13, weight: .heavy))
-                                    .fixedSize()
-                                    .transition(.opacity.combined(with: .scale))
-                            }
-                        }
-                        .foregroundStyle(selected ? LiquidColors.ink : Color.white.opacity(0.75))
-                        .padding(.horizontal, selected ? 16 : 12)
-                        .frame(height: 42)
-                        .background {
-                            if selected {
-                                Capsule()
-                                    .fill(LiquidColors.cyan)
-                                    .shadow(color: LiquidColors.cyan.opacity(0.42), radius: 10, y: 3)
-                            }
-                        }
+        HStack(spacing: 2) {
+            ForEach(tabs) { tab in
+                let selected = tab.id == activeTabId
+                Button {
+                    withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
+                        activeTabId = tab.id
                     }
-                    .buttonStyle(.plain)
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: selected ? tab.selectedIcon : tab.icon)
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(selected ? LiquidColors.cyan : Color.white.opacity(0.62))
+                            .frame(width: 38, height: 28)
+                            .background {
+                                if selected {
+                                    Capsule().fill(LiquidColors.cyan.opacity(0.20))
+                                }
+                            }
+                        Text(tab.title)
+                            .font(.system(size: 9, weight: selected ? .heavy : .semibold))
+                            .foregroundStyle(selected ? Color.white : Color.white.opacity(0.52))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.72)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel(tab.title)
+                .accessibilityAddTraits(selected ? .isSelected : [])
             }
-            .padding(.horizontal, 8)
         }
-        .scrollIndicators(.hidden)
-        .padding(.vertical, 6)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
-        .shadow(color: .black.opacity(0.40), radius: 22, y: 10)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 7)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .background(Color.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous)
+            .strokeBorder(Color.white.opacity(0.13), lineWidth: 1))
+        .shadow(color: .black.opacity(0.46), radius: 24, y: 12)
     }
 }
 

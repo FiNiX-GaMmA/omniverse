@@ -1,6 +1,11 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { hasLocalAppleSigningIdentity } = require("../scripts/afterPack");
+const fs = require("node:fs");
+const path = require("node:path");
+const {
+  collectCodeTargets,
+  hasLocalAppleSigningIdentity,
+} = require("../scripts/afterPack");
 
 test("detects usable local Apple signing identities", () => {
   assert.equal(
@@ -16,4 +21,10 @@ test("detects usable local Apple signing identities", () => {
     true,
   );
   assert.equal(hasLocalAppleSigningIdentity("0 valid identities found"), false);
+  assert.equal(typeof collectCodeTargets, "function");
+  const entitlements = fs.readFileSync(
+    path.join(__dirname, "..", "entitlements.mac.plist"),
+    "utf8",
+  );
+  assert.match(entitlements, /com\.apple\.security\.cs\.allow-jit/);
 });

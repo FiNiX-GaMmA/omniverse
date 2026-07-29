@@ -48,8 +48,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import com.finix.omniverse.AppGraph
 import com.finix.omniverse.MediaEpisode
 import com.finix.omniverse.MediaItem
@@ -308,46 +306,58 @@ private fun GlassTabBar(
     modifier: Modifier,
     onSelect: (String) -> Unit
 ) {
-    val scrollState = rememberScrollState()
     Row(
         modifier
-            .clip(RoundedCornerShape(32.dp))
-            .background(Color.Black.copy(alpha = 0.65f))
-            .border(1.dp, Color.White.copy(alpha = 0.16f), RoundedCornerShape(32.dp))
-            .padding(horizontal = 8.dp, vertical = 6.dp)
-            .horizontalScroll(scrollState),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    listOf(Color(0xF21A1A20), Color(0xF20B0B0F))
+                )
+            )
+            .border(1.dp, Color.White.copy(alpha = 0.13f), RoundedCornerShape(28.dp))
+            .padding(horizontal = 6.dp, vertical = 7.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         tabs.forEach { tab ->
             val active = tab.id == activeId
-            Row(
+            Column(
                 Modifier
-                    .clip(RoundedCornerShape(24.dp))
-                    .then(if (active) Modifier.background(LiquidColors.Cyan) else Modifier)
+                    .weight(1f)
+                    .clip(RoundedCornerShape(20.dp))
                     .tvFocusable(
                         onClick = { onSelect(tab.id) },
-                        corner = 24,
+                        corner = 20,
                         focusRequester = if (active) focusRequester else null
                     )
-                    .padding(horizontal = if (active) 16.dp else 12.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
-                Icon(
-                    tab.icon,
-                    tab.title,
-                    tint = if (active) LiquidColors.Ink else Color.White.copy(alpha = 0.75f),
-                    modifier = Modifier.size(18.dp),
-                )
-                AnimatedVisibility(visible = active) {
-                    Text(
+                Box(
+                    Modifier
+                        .width(38.dp)
+                        .height(28.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .then(if (active) Modifier.background(LiquidColors.Cyan.copy(alpha = 0.20f)) else Modifier),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        tab.icon,
                         tab.title,
-                        color = LiquidColors.Ink,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        tint = if (active) LiquidColors.Cyan else Color.White.copy(alpha = 0.64f),
+                        modifier = Modifier.size(19.dp),
                     )
                 }
+                Text(
+                    tab.title,
+                    color = if (active) Color.White else Color.White.copy(alpha = 0.54f),
+                    fontSize = 9.sp,
+                    lineHeight = 10.sp,
+                    maxLines = 1,
+                    fontWeight = if (active) FontWeight.ExtraBold else FontWeight.SemiBold,
+                )
             }
         }
     }

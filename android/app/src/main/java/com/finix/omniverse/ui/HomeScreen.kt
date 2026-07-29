@@ -28,7 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -164,9 +164,11 @@ fun HomeScreen(nav: NavController, filterMode: String = "home") {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val wide = maxWidth >= 800.dp
             val landscape = maxWidth > maxHeight
-            val heroH: Dp =
-                if (landscape) minOf(maxWidth * 9f / 16f, maxHeight * 0.86f) * 1.2f   // 16:9 widescreen banner
-                else minOf(maxWidth * 1.5f, maxHeight * 0.72f) * 1.2f                 // tall poster area
+            val heroH: Dp = when {
+                wide -> minOf(maxWidth * 0.70f, maxHeight * 0.72f)
+                landscape -> minOf(maxWidth * 9f / 16f, maxHeight * 0.86f)
+                else -> minOf(maxWidth * 1.42f, maxHeight * 0.68f)
+            }
             val cats = displayCategories(filterMode)
 
             val filteredPicks = remember(state.heroPicks.toList(), filterMode) {
@@ -436,111 +438,115 @@ private fun HeroCarousel(
 
 @Composable
 private fun HeroPage(item: MediaItem, wide: Boolean, portrait: Boolean, onSelect: (MediaItem) -> Unit) {
-    androidx.compose.foundation.layout.BoxWithConstraints(
+    Box(
         Modifier.fillMaxSize().tvFocusable(onClick = { onSelect(item) }, corner = 0)
     ) {
-        // Portrait → tall 9:16 poster; landscape → 16:9 backdrop, so the image
-        // matches the frame and isn't blown up/cropped.
-        val heroUrl = if (portrait)
-            (imageUrl(item.posterPath, "original") ?: item.heroBackdropUrl ?: item.backdropUrl ?: item.posterUrl)
-        else
-            (item.heroBackdropUrl ?: item.backdropUrl ?: item.posterUrl)
+        // Phones now lead with cinematic backdrop art, matching the desktop
+        // shell and premium streaming apps; poster art remains the safe fallback.
+        val heroUrl = item.heroBackdropUrl ?: item.backdropUrl
+            ?: imageUrl(item.posterPath, "original") ?: item.posterUrl
         PosterImage(heroUrl, Modifier.fillMaxSize(), ContentScale.Crop)
-        // Gentle bottom dissolve so the banner melts into the rows below.
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.horizontalGradient(
+                    0f to Color.Black.copy(alpha = if (portrait) 0.12f else 0.72f),
+                    0.58f to Color.Transparent,
+                    1f to Color.Black.copy(alpha = 0.10f),
+                )
+            )
+        )
         Box(
             Modifier.fillMaxSize().background(
                 Brush.verticalGradient(
-                    0f to Color.Transparent,
-                    0.6f to Color.Transparent,
-                    0.92f to LiquidColors.Ink.copy(alpha = 0.85f),
+                    0f to Color.Black.copy(alpha = 0.22f),
+                    0.48f to Color.Transparent,
+                    0.88f to LiquidColors.Ink.copy(alpha = 0.88f),
                     1f to LiquidColors.Ink,
                 )
             )
         )
-        // Text colour is derived dynamically from the hero image (a light, vibrant
-        // swatch via Palette), falling back to white. A shadow keeps it legible.
-        val accent = rememberHeroTextColor(heroUrl)
+
+        Row(
+            Modifier.align(Alignment.TopStart).fillMaxWidth().statusBarsPadding()
+                .padding(horizontal = if (wide) 54.dp else 18.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "OMNIVERSE",
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.2.sp,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                "FEATURED",
+                color = Color.White.copy(alpha = 0.88f),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 1.1.sp,
+                modifier = Modifier.clip(RoundedCornerShape(20.dp))
+                    .background(Color.Black.copy(alpha = 0.42f))
+                    .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(20.dp))
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            )
+        }
+
         val textShadow = androidx.compose.ui.graphics.Shadow(
             Color.Black.copy(alpha = 0.85f), androidx.compose.ui.geometry.Offset(0f, 2f), 10f,
         )
         val ratingPart = if (item.rating > 0) "★ " + String.format("%.1f", item.rating) + " • " else ""
         val metaText = ratingPart + item.type.label +
                 (if (item.genres.isEmpty()) "" else " • " + item.genres.take(2).joinToString(" • "))
-        // Portrait shows ONLY the metadata, CENTERED on the image; landscape shows
-        // the name above it, left-aligned.
         Column(
             Modifier
-                .align(if (portrait) Alignment.BottomCenter else Alignment.BottomStart)
+                .align(Alignment.BottomStart)
                 .fillMaxWidth()
                 .padding(horizontal = if (wide) 54.dp else 20.dp)
-                .padding(bottom = if (wide) 60.dp else 44.dp),
-            horizontalAlignment = if (portrait) Alignment.CenterHorizontally else Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(bottom = if (wide) 60.dp else 48.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(9.dp),
         ) {
-            if (!portrait) {
+            Text(
+                item.title,
+                color = Color.White,
+                fontSize = if (wide) 46.sp else 31.sp,
+                lineHeight = if (wide) 49.sp else 33.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                style = androidx.compose.ui.text.TextStyle(shadow = textShadow),
+            )
+            if (item.overview.isNotBlank()) {
                 Text(
-                    item.title, color = accent, fontSize = if (wide) 46.sp else 32.sp,
-                    fontWeight = FontWeight.Black, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                    style = androidx.compose.ui.text.TextStyle(shadow = textShadow),
+                    item.overview,
+                    color = Color.White.copy(alpha = 0.76f),
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = if (wide) 620.dp else 330.dp),
                 )
             }
             Text(
                 metaText,
-                color = accent.copy(alpha = 0.95f), fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
-                textAlign = if (portrait) androidx.compose.ui.text.style.TextAlign.Center else androidx.compose.ui.text.style.TextAlign.Start,
+                color = Color.White.copy(alpha = 0.88f), fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Start,
                 style = androidx.compose.ui.text.TextStyle(shadow = textShadow),
             )
-            // Portrait gets a centered Play button (opens the title to play).
-            if (portrait) {
-                Row(
-                    Modifier
-                        .padding(top = 4.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(Color.White)
-                        .tvFocusable(onClick = { onSelect(item) }, corner = 50)
-                        .padding(vertical = 12.dp, horizontal = 32.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(Icons.Filled.PlayArrow, null, tint = Color.Black, modifier = Modifier.size(20.dp))
-                    Text("Play", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 16.sp)
-                }
+            Row(
+                Modifier.padding(top = 3.dp).clip(RoundedCornerShape(50))
+                    .background(Color.White)
+                    .tvFocusable(onClick = { onSelect(item) }, corner = 50)
+                    .padding(vertical = 12.dp, horizontal = 22.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(Icons.Filled.Info, null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                Text("View details", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 14.sp)
             }
         }
     }
-}
-
-/// Derives the hero text colour from the banner image: loads it, extracts a
-/// light/vibrant swatch via Palette, and lightens it if too dark to stay
-/// readable. Falls back to white. Recomputed per image URL.
-@Composable
-private fun rememberHeroTextColor(url: String?): Color {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val color = remember(url) { androidx.compose.runtime.mutableStateOf(Color.White) }
-    androidx.compose.runtime.LaunchedEffect(url) {
-        if (url.isNullOrBlank()) return@LaunchedEffect
-        val rgb: Int? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            runCatching {
-                val loader = coil.ImageLoader(context)
-                val req = coil.request.ImageRequest.Builder(context)
-                    .data(url).allowHardware(false).size(256).build()
-                val result = loader.execute(req)
-                val bmp = (result.drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap
-                    ?: return@runCatching null
-                val palette = androidx.palette.graphics.Palette.from(bmp).generate()
-                (palette.lightVibrantSwatch ?: palette.vibrantSwatch
-                ?: palette.lightMutedSwatch ?: palette.dominantSwatch)?.rgb
-            }.getOrNull()
-        }
-        if (rgb != null) {
-            var c = Color(rgb)
-            if (androidx.core.graphics.ColorUtils.calculateLuminance(rgb) < 0.5) {
-                c = androidx.compose.ui.graphics.lerp(c, Color.White, 0.6f)
-            }
-            color.value = c
-        }
-    }
-    return color.value
 }
 
 /// Top10 + genre-row shaping, ported from the Swift HomeScreen displayCategories.
@@ -695,26 +701,26 @@ private fun StudiosRow(wide: Boolean, onSelect: (String) -> Unit) {
 
     Column(Modifier.padding(top = 18.dp)) {
         Text(
-            text = "Studios",
+            text = "Watch by studio",
             color = Color.White,
-            fontSize = 19.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Black,
-            modifier = Modifier.padding(horizontal = if (wide) 54.dp else 28.dp)
+            modifier = Modifier.padding(horizontal = if (wide) 54.dp else 18.dp)
         )
         LazyRow(
             modifier = Modifier.padding(top = 8.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = if (wide) 54.dp else 28.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = if (wide) 54.dp else 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (wide) 14.dp else 10.dp),
         ) {
             items(studios, key = { it.id }) { studio ->
                 Box(
                     Modifier
-                        .width(160.dp)
-                        .height(90.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .width(if (wide) 160.dp else 124.dp)
+                        .height(if (wide) 90.dp else 68.dp)
+                        .clip(RoundedCornerShape(16.dp))
                         .background(studio.background)
-                        .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                        .tvFocusable(onClick = { onSelect(studio.id) }, corner = 12),
+                        .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
+                        .tvFocusable(onClick = { onSelect(studio.id) }, corner = 16),
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(
@@ -732,7 +738,7 @@ private fun StudiosRow(wide: Boolean, onSelect: (String) -> Unit) {
                         Text(
                             text = studio.name.uppercase(),
                             color = Color.White,
-                            fontSize = 13.sp,
+                            fontSize = if (wide) 13.sp else 10.sp,
                             fontWeight = FontWeight.Black,
                             letterSpacing = 1.sp,
                             maxLines = 1,

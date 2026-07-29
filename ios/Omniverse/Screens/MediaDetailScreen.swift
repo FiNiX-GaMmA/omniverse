@@ -5,6 +5,7 @@ struct MediaDetailScreen: View {
     let item: MediaItem
     @Environment(AppState.self) private var state
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var detailed: MediaItem?
     @State private var loading = true
@@ -130,7 +131,7 @@ struct MediaDetailScreen: View {
                 .frame(maxWidth: 720, alignment: .leading)
             }
         }
-        .frame(height: 720)
+        .frame(height: horizontalSizeClass == .compact ? 660 : 720)
     }
 
     private var badges: some View {

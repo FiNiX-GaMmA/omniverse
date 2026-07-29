@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.File
+import java.net.URI
 import java.util.concurrent.TimeUnit
 
 /// In-app update check + sideload installer utilizing the GitHub Releases API on-the-fly.
@@ -39,11 +40,8 @@ object UpdateChecker {
     /// Semantic version comparison (Major.Minor.Patch)
     /// Returns true if the remote version name is newer than the local one.
     fun isNewerVersion(current: String, remote: String): Boolean {
-        val currClean = current.trim().removePrefix("v").removePrefix("V")
-        val remoClean = remote.trim().removePrefix("v").removePrefix("V")
-        if (currClean == remoClean) return false
-        val currParts = currClean.split(".").mapNotNull { it.toIntOrNull() }
-        val remoParts = remoClean.split(".").mapNotNull { it.toIntOrNull() }
+        val currParts = parseVersion(current) ?: return false
+        val remoParts = parseVersion(remote) ?: return false
         val size = maxOf(currParts.size, remoParts.size)
         for (i in 0 until size) {
             val cVal = currParts.getOrNull(i) ?: 0
@@ -52,6 +50,39 @@ object UpdateChecker {
             if (rVal < cVal) return false
         }
         return false
+    }
+
+    private fun parseVersion(value: String): List<Int>? {
+        val clean = value.trim().removePrefix("v").removePrefix("V")
+        if (!clean.matches(Regex("\\d+(?:\\.\\d+)*"))) return null
+        return clean.split(".").map { it.toIntOrNull() ?: return null }
+    }
+
+    fun isTrustedApkUrl(rawUrl: String): Boolean = runCatching {
+        val uri = URI(rawUrl)
+        val rawPath = uri.rawPath ?: return@runCatching false
+        val path = uri.path ?: return@runCatching false
+        val prefix = "/FiNiX-GaMmA/omniverse/releases/download/"
+        val relative = path.removePrefix(prefix)
+        val parts = relative.split("/")
+        val fileName = parts.getOrNull(1).orEmpty().lowercase()
+        uri.scheme == "https" &&
+            uri.host == "github.com" &&
+            uri.userInfo == null &&
+            uri.query == null &&
+            uri.fragment == null &&
+            rawPath == path &&
+            path.startsWith(prefix) &&
+            parts.size == 2 &&
+            parts[0].isNotBlank() &&
+            fileName.startsWith("omniverse") &&
+            fileName.endsWith(".apk")
+    }.getOrDefault(false)
+
+    fun safeVersionFileName(version: String): String {
+        val clean = version.trim().removePrefix("v").removePrefix("V")
+        val safe = clean.replace(Regex("[^A-Za-z0-9._-]"), "-").take(64)
+        return safe.ifBlank { "update" }
     }
 
     /// Fetch the latest GitHub release manifest and check for available updates.
@@ -113,6 +144,9 @@ object UpdateChecker {
                 if (tagName.isBlank() || apkUrl.isBlank()) {
                     return@withContext CheckResult.UpToDate
                 }
+                if (!isTrustedApkUrl(apkUrl)) {
+                    return@withContext CheckResult.Error("The release contains an untrusted APK URL.")
+                }
 
                 val info = UpdateInfo(
                     versionCode = 0, // unused under semantic name comparison
@@ -137,9 +171,12 @@ object UpdateChecker {
         info: UpdateInfo,
         onProgress: ((Float) -> Unit)? = null
     ): String? = withContext(Dispatchers.IO) {
+        if (!isTrustedApkUrl(info.apkUrl)) {
+            return@withContext "Refusing an untrusted update download."
+        }
         runCatching {
             val dir = File(context.cacheDir, "updates").apply { mkdirs() }
-            val cleanTagName = info.versionName.removePrefix("v").removePrefix("V")
+            val cleanTagName = safeVersionFileName(info.versionName)
             val apk = File(dir, "omniverse-update-${cleanTagName}.apk")
             val req = Request.Builder().url(info.apkUrl).get().build()
             client.newCall(req).execute().use { resp ->

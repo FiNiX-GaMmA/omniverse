@@ -56,9 +56,10 @@ targets:
         UIStatusBarStyle: UIStatusBarStyleLightContent
         UIViewControllerBasedStatusBarAppearance: false
         UIRequiresFullScreen: false
-        # Allow the cleartext/self-signed stream + scraper hosts the app talks to.
+        # Keep API traffic under ATS while allowing user-selected media and web embeds.
         NSAppTransportSecurity:
-          NSAllowsArbitraryLoads: true
+          NSAllowsArbitraryLoadsForMedia: true
+          NSAllowsArbitraryLoadsInWebContent: true
           NSAllowsLocalNetworking: true
         # Custom URL scheme for Trakt + AniList OAuth deep links.
         CFBundleURLTypes:

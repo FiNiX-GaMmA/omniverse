@@ -100,6 +100,6 @@ object SyncCenter {
     }
 
     private fun putIfNotBlank(obj: JSONObject, key: String, value: String) {
-        if (value.trim().isNotEmpty()) obj.put(key, value)
+        value.trim().takeIf { it.isNotEmpty() }?.let { obj.put(key, it) }
     }
 }

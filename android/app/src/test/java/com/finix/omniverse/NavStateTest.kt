@@ -116,4 +116,27 @@ class NavStateTest {
         assertEquals(2, distinctList.size)
         assertEquals(listOf("cat_1", "cat_2"), distinctList.map { it.id })
     }
+
+    @Test
+    fun testImageUrlResolutionAcrossProviders() {
+        assertEquals(null, imageUrl(null, "w342"))
+        assertEquals("https://cdn.example/poster.jpg", imageUrl("https://cdn.example/poster.jpg", "w342"))
+        assertEquals("https://cdn.example/poster.jpg", imageUrl("//cdn.example/poster.jpg", "w342"))
+        assertEquals("https://artworks.thetvdb.com/banners/poster.jpg", imageUrl("banners/poster.jpg", "w342"))
+        assertEquals("https://image.tmdb.org/t/p/w342/poster.jpg", imageUrl("/poster.jpg", "w342"))
+    }
+
+    @Test
+    fun testDirectStreamDetectionHandlesQueriesAndCase() {
+        assertTrue(LiveTvEntry.directStream("https://cdn.example/live.M3U8?token=abc"))
+        assertTrue(LiveTvEntry.directStream("https://cdn.example/movie.mp4"))
+        assertFalse(LiveTvEntry.directStream("https://embed.example/watch/123"))
+    }
+
+    @Test
+    fun testWatchProgressFractionIsClamped() {
+        assertEquals(0.0, WatchProgress(itemId = "1", title = "A", type = MediaType.MOVIE, positionMs = 10, durationMs = 0, lastWatchedAt = 1).fraction, 0.0)
+        assertEquals(0.0, WatchProgress(itemId = "1", title = "A", type = MediaType.MOVIE, positionMs = -10, durationMs = 100, lastWatchedAt = 1).fraction, 0.0)
+        assertEquals(1.0, WatchProgress(itemId = "1", title = "A", type = MediaType.MOVIE, positionMs = 150, durationMs = 100, lastWatchedAt = 1).fraction, 0.0)
+    }
 }

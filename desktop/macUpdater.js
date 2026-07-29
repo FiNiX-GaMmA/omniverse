@@ -3,22 +3,13 @@ const os = require("os");
 const path = require("path");
 const { execFile, spawn } = require("child_process");
 const { promisify } = require("util");
+const { assertTrustedDesktopUpdateUrl } = require("./securityPolicy");
 
 const execFileAsync = promisify(execFile);
 const EXPECTED_BUNDLE_ID = "com.finix.omniverse.desktop";
-const UPDATE_URL_PREFIX = "/FiNiX-GaMmA/omniverse/releases/download/";
 
 function assertTrustedMacUpdateUrl(rawUrl) {
-  const url = new URL(rawUrl);
-  if (
-    url.protocol !== "https:" ||
-    url.hostname !== "github.com" ||
-    !url.pathname.startsWith(UPDATE_URL_PREFIX) ||
-    !url.pathname.toLowerCase().endsWith(".dmg")
-  ) {
-    throw new Error("Refusing an untrusted macOS update URL");
-  }
-  return url;
+  return assertTrustedDesktopUpdateUrl(rawUrl, "darwin");
 }
 
 function compareVersions(left, right) {

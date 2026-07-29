@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" role="img" aria-labelledby="title desc">
+  <title id="title">Omniverse architecture</title>
+  <desc id="desc">Native and desktop clients connect through shared product concepts to user-configured services.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#111722"/><stop offset=".55" stop-color="#080a0f"/><stop offset="1" stop-color="#16080d"/></linearGradient>
+    <linearGradient id="platform" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#321019"/><stop offset="1" stop-color="#171017"/></linearGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#08242a"/><stop offset="1" stop-color="#101820"/></linearGradient>
+    <linearGradient id="service" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1d1830"/><stop offset="1" stop-color="#13131b"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1600" height="760" rx="36" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1598" height="758" rx="35" fill="none" stroke="#fff" stroke-opacity=".09"/>
+  <text x="70" y="72" fill="#ff5369" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="800" letter-spacing="5">SYSTEM MAP</text>
+  <text x="70" y="126" fill="#fff" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="40" font-weight="800">Three clients. One product language.</text>
+  <text x="70" y="162" fill="#8791a1" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18">Platform-native interfaces share the same discovery, continuity, and playback concepts.</text>
+
+  <g fill="none" stroke="#526070" stroke-width="2" opacity=".72">
+    <path d="M430 292 C520 292 510 318 600 318"/><path d="M430 420 C520 420 510 386 600 386"/><path d="M430 548 C520 548 510 454 600 454"/>
+    <path d="M1000 318 C1090 318 1080 292 1170 292"/><path d="M1000 386 C1090 386 1080 420 1170 420"/><path d="M1000 454 C1090 454 1080 548 1170 548"/>
+  </g>
+  <g fill="#8190a2"><circle cx="600" cy="318" r="4"/><circle cx="600" cy="386" r="4"/><circle cx="600" cy="454" r="4"/><circle cx="1000" cy="318" r="4"/><circle cx="1000" cy="386" r="4"/><circle cx="1000" cy="454" r="4"/></g>
+
+  <g font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+    <text x="70" y="220" fill="#687485" font-size="15" font-weight="800" letter-spacing="3">CLIENTS</text>
+    <rect x="70" y="250" width="360" height="86" rx="20" fill="url(#platform)" stroke="#ff5369" stroke-opacity=".34"/>
+    <circle cx="113" cy="293" r="19" fill="#ff5369" fill-opacity=".14"/><text x="113" y="300" text-anchor="middle" fill="#ff6579" font-size="20" font-weight="800">A</text>
+    <text x="150" y="286" fill="#fff" font-size="21" font-weight="750">iOS &amp; iPadOS</text><text x="150" y="311" fill="#8f7f85" font-size="15">SwiftUI · AVPlayer</text>
+    <rect x="70" y="378" width="360" height="86" rx="20" fill="url(#platform)" stroke="#ff5369" stroke-opacity=".34"/>
+    <circle cx="113" cy="421" r="19" fill="#ff5369" fill-opacity=".14"/><text x="113" y="428" text-anchor="middle" fill="#ff6579" font-size="20" font-weight="800">G</text>
+    <text x="150" y="414" fill="#fff" font-size="21" font-weight="750">Android &amp; TV</text><text x="150" y="439" fill="#8f7f85" font-size="15">Compose · Media3</text>
+    <rect x="70" y="506" width="360" height="86" rx="20" fill="url(#platform)" stroke="#ff5369" stroke-opacity=".34"/>
+    <circle cx="113" cy="549" r="19" fill="#ff5369" fill-opacity=".14"/><text x="113" y="556" text-anchor="middle" fill="#ff6579" font-size="20" font-weight="800">D</text>
+    <text x="150" y="542" fill="#fff" font-size="21" font-weight="750">Desktop</text><text x="150" y="567" fill="#8f7f85" font-size="15">Electron · protected webviews</text>
+
+    <text x="600" y="220" fill="#687485" font-size="15" font-weight="800" letter-spacing="3">PRODUCT CORE</text>
+    <rect x="600" y="250" width="400" height="342" rx="28" fill="url(#core)" stroke="#42dced" stroke-opacity=".32"/>
+    <circle cx="800" cy="330" r="48" fill="#18bfd4" fill-opacity=".09" stroke="#42dced" stroke-opacity=".28" filter="url(#glow)"/>
+    <path d="M780 330h40M800 310v40" stroke="#56e0ef" stroke-width="5" stroke-linecap="round"/>
+    <text x="800" y="406" text-anchor="middle" fill="#fff" font-size="25" font-weight="800">Shared product concepts</text>
+    <text x="800" y="448" text-anchor="middle" fill="#8ba0aa" font-size="17">App state · repositories · media models</text>
+    <text x="800" y="480" text-anchor="middle" fill="#8ba0aa" font-size="17">source resolution · progress · sync payloads</text>
+    <rect x="680" y="520" width="240" height="42" rx="21" fill="#42dced" fill-opacity=".09"/><text x="800" y="547" text-anchor="middle" fill="#71e7f2" font-size="15" font-weight="750">PLATFORM-NATIVE EXECUTION</text>
+
+    <text x="1170" y="220" fill="#687485" font-size="15" font-weight="800" letter-spacing="3">USER-CONFIGURED SERVICES</text>
+    <rect x="1170" y="250" width="360" height="86" rx="20" fill="url(#service)" stroke="#a983ff" stroke-opacity=".3"/><text x="1210" y="286" fill="#fff" font-size="21" font-weight="750">Discovery</text><text x="1210" y="311" fill="#8f88a1" font-size="15">TMDB · TVDB · AniList</text>
+    <rect x="1170" y="378" width="360" height="86" rx="20" fill="url(#service)" stroke="#a983ff" stroke-opacity=".3"/><text x="1210" y="414" fill="#fff" font-size="21" font-weight="750">Continuity</text><text x="1210" y="439" fill="#8f88a1" font-size="15">Trakt · local stores · QR sync</text>
+    <rect x="1170" y="506" width="360" height="86" rx="20" fill="url(#service)" stroke="#a983ff" stroke-opacity=".3"/><text x="1210" y="542" fill="#fff" font-size="21" font-weight="750">Playback</text><text x="1210" y="567" fill="#8f88a1" font-size="15">Resolvers · Live TV · media sources</text>
+  </g>
+
+  <rect x="70" y="650" width="1460" height="50" rx="18" fill="#fff" fill-opacity=".035"/>
+  <text x="800" y="682" text-anchor="middle" fill="#788394" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">No central media host · credentials remain device-controlled · release artifacts built by GitHub Actions</text>
+</svg>

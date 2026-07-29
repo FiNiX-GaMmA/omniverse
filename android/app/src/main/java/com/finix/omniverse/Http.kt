@@ -12,16 +12,11 @@ import org.json.JSONArray
 import org.json.JSONObject
 import okhttp3.Dns
 import java.net.InetAddress
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLContext
-import javax.net.ssl.X509TrustManager
 
-/// Shared HTTP client. Mirrors the Flutter app's logging + permissive TLS
-/// (`badCertificateCallback => true`) so scraper/stream hosts with self-signed
-/// or mismatched certs still resolve. Ported from the iOS `Http` singleton.
+/// Shared HTTP client. Every client uses Android's platform trust store and
+/// hostname verification; invalid or self-signed certificates are rejected.
 object Http {
 
     /// Small, framework-agnostic response value used across repositories.
@@ -46,13 +41,6 @@ object Http {
 
     private const val JSON_MEDIA = "application/json; charset=utf-8"
 
-    // Trust-all manager (parity with Flutter's badCertificateCallback => true).
-    private val trustAllManager = object : X509TrustManager {
-        override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-        override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-    }
-
     private val loggingInterceptor = Interceptor { chain ->
         val req = chain.request()
         println("[API REQUEST] ${req.method} ${req.url}")
@@ -62,15 +50,10 @@ object Http {
     }
 
     private val bootstrapClient: OkHttpClient by lazy {
-        val sslContext = SSLContext.getInstance("TLS").apply {
-            init(null, arrayOf(trustAllManager), SecureRandom())
-        }
         OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(10, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
-            .sslSocketFactory(sslContext.socketFactory, trustAllManager)
-            .hostnameVerifier { _, _ -> true }
             .build()
     }
 
@@ -137,33 +120,22 @@ object Http {
     val dohDns: Dns by lazy { DohDns(bootstrapClient) }
 
     private val client: OkHttpClient by lazy {
-        val sslContext = SSLContext.getInstance("TLS").apply {
-            init(null, arrayOf(trustAllManager), SecureRandom())
-        }
         OkHttpClient.Builder()
             .connectTimeout(18, TimeUnit.SECONDS)
             .readTimeout(18, TimeUnit.SECONDS)
             .writeTimeout(18, TimeUnit.SECONDS)
             .callTimeout(40, TimeUnit.SECONDS)
-            .sslSocketFactory(sslContext.socketFactory, trustAllManager)
-            .hostnameVerifier { _, _ -> true }
             .addInterceptor(loggingInterceptor)
             .dns(dohDns)
             .build()
     }
 
-    /// Trust-all client for media streaming (ExoPlayer data source). No call
-    /// timeout — long videos must not be aborted. Accepts invalid/self-signed
-    /// certs (Pixeldrain, GameDrive bypass proxy, some VidSrc CDNs).
+    /// Media client with no call timeout so long videos are not aborted. TLS
+    /// certificates and hostnames are validated by the platform defaults.
     val streamingClient: OkHttpClient by lazy {
-        val sslContext = SSLContext.getInstance("TLS").apply {
-            init(null, arrayOf(trustAllManager), SecureRandom())
-        }
         OkHttpClient.Builder()
             .connectTimeout(20, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
-            .sslSocketFactory(sslContext.socketFactory, trustAllManager)
-            .hostnameVerifier { _, _ -> true }
             .dns(dohDns)
             .build()
     }

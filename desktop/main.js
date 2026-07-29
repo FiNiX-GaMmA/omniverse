@@ -28,6 +28,12 @@ const {
   launchMacUpdateHelper,
   prepareMacUpdate,
 } = require("./macUpdater");
+const { BLOCK_KINDS, createAdShieldTelemetry } = require("./adShieldStats");
+const {
+  assertHttpUrl,
+  assertSafeExternalUrl,
+  assertTrustedDesktopUpdateUrl,
+} = require("./securityPolicy");
 
 // RAM / Performance optimization switches
 app.commandLine.appendSwitch(
@@ -47,10 +53,23 @@ const DEBUG_PLAYER = true;
 // Global handles
 let mainWindow = null;
 let pipWindow = null;
-let adBlockStats = { adsBlocked: 0 };
 let mainBlocker = null;
 const blockerAttachedSessions = new WeakSet();
 let blockerEventsBound = false;
+
+function publishAdShieldStats(snapshot) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("adshield-stats", snapshot);
+  }
+}
+
+const adShieldTelemetry = createAdShieldTelemetry({
+  onChange: publishAdShieldStats,
+});
+
+function recordAdShieldBlock(kind) {
+  return adShieldTelemetry.record(kind);
+}
 
 
 // Extended list of ad network, tracker, popunder, and anti-devtool script domains
@@ -91,12 +110,9 @@ const BLOCKED_KEYWORDS = [
 function bindBlockerEventsOnce() {
   if (!mainBlocker || blockerEventsBound) return;
   mainBlocker.on("request-blocked", (request) => {
-    adBlockStats.adsBlocked++;
+    recordAdShieldBlock(BLOCK_KINDS.NETWORK);
     if (DEBUG_PLAYER && request && request.url) {
       console.log("[player-debug][adblock-blocked]", request.url);
-    }
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
     }
   });
   blockerEventsBound = true;
@@ -162,7 +178,7 @@ async function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
       webviewTag: true, // Required for secure embed containers
       backgroundThrottling: true,
       spellcheck: false,
@@ -180,10 +196,7 @@ async function createWindow() {
 
   // Block popup/new-window attempts from the main frame too (iframe path).
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    adBlockStats.adsBlocked++;
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
-    }
+    recordAdShieldBlock(BLOCK_KINDS.POPUP);
     if (DEBUG_PLAYER) {
       console.log("[player-debug][popup-blocked][main-frame]", url);
     }
@@ -194,14 +207,28 @@ async function createWindow() {
   mainWindow.webContents.on("will-navigate", (event, url) => {
     // Single-page Electron app shell should never navigate the main BrowserWindow top-level frame.
     event.preventDefault();
-    adBlockStats.adsBlocked++;
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
-    }
+    recordAdShieldBlock(BLOCK_KINDS.NAVIGATION);
     if (DEBUG_PLAYER) {
       console.log("[player-debug][nav-blocked][main-frame]", url);
     }
   });
+
+  // Clamp guest preferences before Electron creates an untrusted playback webview.
+  mainWindow.webContents.on(
+    "will-attach-webview",
+    (event, webPreferences, params) => {
+      try {
+        assertHttpUrl(params.src, "playback webview");
+      } catch (_) {
+        event.preventDefault();
+        return;
+      }
+      delete webPreferences.preload;
+      webPreferences.nodeIntegration = false;
+      webPreferences.contextIsolation = true;
+      webPreferences.sandbox = true;
+    },
+  );
 
   // Configure custom webview permissions and block window redirection popup actions
   mainWindow.webContents.on("did-attach-webview", async (_, wc) => {
@@ -210,10 +237,7 @@ async function createWindow() {
 
     // Completely deny permission to open popup windows / new tabs
     wc.setWindowOpenHandler(({ url }) => {
-      adBlockStats.adsBlocked++;
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send("ad-blocked", adBlockStats.adsBlocked);
-      }
+      recordAdShieldBlock(BLOCK_KINDS.POPUP);
       if (DEBUG_PLAYER) {
         console.log("[player-debug][popup-blocked][webview]", url);
       }
@@ -306,7 +330,7 @@ ipcMain.handle("download-update-file", async (event, url) => {
   let downloadDir = null;
   let preparedUpdate = null;
   try {
-    const parsed = new URL(url);
+    const parsed = assertTrustedDesktopUpdateUrl(url, process.platform);
     if (process.platform === "darwin") assertTrustedMacUpdateUrl(url);
     const signingIdentity =
       process.platform === "darwin"
@@ -437,6 +461,7 @@ ipcMain.handle(
   "iptv-fetch",
   async (_, { url, method = "GET", headers = {}, body = null }) => {
     try {
+      assertHttpUrl(url, "IPTV request");
       const mergedHeaders = {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -486,10 +511,11 @@ ipcMain.handle("player-stopped", () => {
   return true;
 });
 
-ipcMain.handle("get-adblock-stats", () => adBlockStats.adsBlocked);
+ipcMain.handle("get-adshield-stats", () => adShieldTelemetry.snapshot());
 
 ipcMain.handle("open-external", (_, url) => {
-  shell.openExternal(url);
+  const trustedUrl = assertSafeExternalUrl(url);
+  return shell.openExternal(trustedUrl.toString());
 });
 
 // Windows/Linux Titlebar Operations
@@ -541,7 +567,7 @@ ipcMain.handle("open-pip-window", async (_, { url, title }) => {
   pipWindow.loadURL(url);
 
   pipWindow.webContents.setWindowOpenHandler(() => {
-    adBlockStats.adsBlocked++;
+    recordAdShieldBlock(BLOCK_KINDS.POPUP);
     return { action: "deny" };
   });
 

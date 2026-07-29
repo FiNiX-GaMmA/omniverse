@@ -1,193 +1,240 @@
-<p align="center">
-  <img src="assets/branding/omniplay_icon_1024.png" alt="Omniverse Logo" width="130" height="130" />
-  <br>
-  <h1 align="center">🚀 Omniverse</h1>
-</p>
-
-<p align="center">
-  <strong>The ultimate, ultra-premium multi-platform media companion app. Completely native, blazing fast, private, and zero-ads.</strong>
-</p>
-
-<p align="center">
-  <a href="https://github.com/FiNiX-GaMmA/omniverse/stargazers">
-    <img src="https://img.shields.io/github/stars/FiNiX-GaMmA/omniverse?style=for-the-badge&logo=github&color=f59e0b" alt="GitHub Stars" />
-  </a>
-  <a href="https://github.com/FiNiX-GaMmA/omniverse/network/members">
-    <img src="https://img.shields.io/github/forks/FiNiX-GaMmA/omniverse?style=for-the-badge&logo=github&color=3b82f6" alt="GitHub Forks" />
-  </a>
-  <a href="https://github.com/FiNiX-GaMmA/omniverse/releases">
-    <img src="https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/total?style=for-the-badge&logo=github&color=06b6d4" alt="Total Downloads" />
-  </a>
-  <a href="https://github.com/FiNiX-GaMmA/omniverse/releases/latest">
-    <img src="https://img.shields.io/github/v/release/FiNiX-GaMmA/omniverse?style=for-the-badge&logo=github&color=10b981" alt="Latest Release" />
-  </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge" alt="License" />
-  </a>
-  <a href="CHANGELOG.md">
-    <img src="https://img.shields.io/badge/Changelog-v2.1.5-ec4899?style=for-the-badge&logo=git&logoColor=white" alt="Changelog" />
-  </a>
-</p>
-
----
-
-## 📊 Repository Growth & Contribution Activity
+<a id="readme-top"></a>
 
 <div align="center">
+  <img src="assets/branding/omniplay_icon_1024.png" alt="Omniverse" width="104" height="104" />
+  <h1>Omniverse</h1>
+  <p><strong>A cinematic media companion for every screen.</strong></p>
+  <p>Native on iPhone, iPad, Android, and TV. Immersive on Windows, macOS, and Linux.</p>
 
-<p><strong>Real-time commit telemetry, monthly code velocity, and development heatmaps</strong></p>
+  <p>
+    <a href="https://github.com/FiNiX-GaMmA/omniverse/releases/latest"><strong>Download</strong></a>
+    · <a href="API_SETUP.md">Configure</a>
+    · <a href="CHANGELOG.md">Changelog</a>
+    · <a href="https://github.com/FiNiX-GaMmA/omniverse/issues">Issues</a>
+  </p>
 
-### 📈 Contribution Velocity & Activity Curve
-<a href="https://github.com/FiNiX-GaMmA/omniverse">
-  <img src="https://github-readme-activity-graph.vercel.app/graph?username=FiNiX-GaMmA&repo=omniverse&theme=react-dark&bg_color=0d1117&color=38bdf8&line=0284c7&point=f59e0b&area=true&hide_border=true" alt="Contribution Graph" width="100%" />
-</a>
+  <p>
+    <a href="https://github.com/FiNiX-GaMmA/omniverse/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/FiNiX-GaMmA/omniverse/build.yml?branch=main&amp;style=for-the-badge&amp;label=multiplatform%20build&amp;color=ff2945" alt="Build status" /></a>
+    <a href="https://github.com/FiNiX-GaMmA/omniverse/releases/latest"><img src="https://img.shields.io/github/v/release/FiNiX-GaMmA/omniverse?style=for-the-badge&amp;color=12b8d0" alt="Latest release" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-151820?style=for-the-badge" alt="MIT license" /></a>
+  </p>
 
-<br>
-
-### 🔥 Monthly Code Volume & Lines Changed Heatmap
-
-| Month | Additions (+) | Deletions (-) | Total Churn | Heatmap Intensity | Release Phase |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| **Jan 2026** | <img src="https://img.shields.io/badge/+12.4K-10b981?style=flat-square" /> | <img src="https://img.shields.io/badge/-1.2K-ef4444?style=flat-square" /> | **13,650** | 🟩⬜⬜⬜⬜ | <img src="https://img.shields.io/badge/Core%20Setup-3b82f6?style=flat-square" /> |
-| **Feb 2026** | <img src="https://img.shields.io/badge/+18.9K-10b981?style=flat-square" /> | <img src="https://img.shields.io/badge/-2.4K-ef4444?style=flat-square" /> | **21,300** | 🟩🟩⬜⬜⬜ | <img src="https://img.shields.io/badge/Protocols-06b6d4?style=flat-square" /> |
-| **Mar 2026** | <img src="https://img.shields.io/badge/+24.1K-10b981?style=flat-square" /> | <img src="https://img.shields.io/badge/-4.8K-ef4444?style=flat-square" /> | **28,900** | 🟩🟩⬜⬜⬜ | <img src="https://img.shields.io/badge/Media%20Engine-06b6d4?style=flat-square" /> |
-| **Apr 2026** | <img src="https://img.shields.io/badge/+35.6K-10b981?style=flat-square" /> | <img src="https://img.shields.io/badge/-7.2K-ef4444?style=flat-square" /> | **42,800** | 🟩🟩🟩⬜⬜ | <img src="https://img.shields.io/badge/Multi--Platform-f59e0b?style=flat-square" /> |
-| **May 2026** | <img src="https://img.shields.io/badge/+58.2K-10b981?style=flat-square" /> | <img src="https://img.shields.io/badge/-12.4K-ef4444?style=flat-square" /> | **70,600** | 🟩🟩🟩🟩⬜ | <img src="https://img.shields.io/badge/UI%20Polish-8b5cf6?style=flat-square" /> |
-| **Jun 2026** | <img src="https://img.shields.io/badge/+168.4K-10b981?style=flat-square" /> | <img src="https://img.shields.io/badge/-115.2K-ef4444?style=flat-square" /> | **283,600** | 🟩🟩🟩🟩🟩 | <img src="https://img.shields.io/badge/Peak%20Build-ec4899?style=flat-square" /> |
-| **Jul 2026** | <img src="https://img.shields.io/badge/+435.8K-10b981?style=flat-square" /> | <img src="https://img.shields.io/badge/-260.1K-ef4444?style=flat-square" /> | **695,900** | 🟩🟩🟩🟩🟩 | <img src="https://img.shields.io/badge/v2.1.5%20Release-10b981?style=flat-square" /> |
-
-<br>
-
-### ⭐ Stars Over Time
-<a href="https://starchart.cc/FiNiX-GaMmA/omniverse">
-  <img src="https://starchart.cc/FiNiX-GaMmA/omniverse.svg?variant=adaptive" alt="Stars over time" width="80%" />
-</a>
-
+  <p>
+    <img src="https://img.shields.io/badge/iOS%2017+-SwiftUI-F05138?style=flat-square&amp;logo=swift&amp;logoColor=white" alt="iOS 17 or newer" />
+    <img src="https://img.shields.io/badge/Android%206+-Compose-3DDC84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Android 6 or newer" />
+    <img src="https://img.shields.io/badge/Desktop-Electron-47848F?style=flat-square&amp;logo=electron&amp;logoColor=white" alt="Electron desktop" />
+  </p>
 </div>
 
----
+<img src="docs/readme/omniverse-showcase.webp" alt="Omniverse installed on macOS with its iOS companion" width="100%" />
 
-## 💎 Build Status & Tech Stack Matrix
+<p align="center"><sub>Real installed macOS and iOS Simulator captures. The live pairing code is redacted.</sub></p>
 
-| Category | Badges |
-| :--- | :--- |
-| **CI/CD Build** | [![Native Enterprise Build Artifacts](https://github.com/FiNiX-GaMmA/omniverse/actions/workflows/build.yml/badge.svg)](https://github.com/FiNiX-GaMmA/omniverse/actions) |
-| **Downloads** | [![Total Downloads](https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/total?style=flat-square&logo=github&color=06b6d4)](https://github.com/FiNiX-GaMmA/omniverse/releases) [![Latest Release Downloads](https://img.shields.io/github/downloads/FiNiX-GaMmA/omniverse/latest/total?style=flat-square&logo=github&color=10b981)](https://github.com/FiNiX-GaMmA/omniverse/releases) |
-| **Platforms** | [![Platforms](https://img.shields.io/badge/Platforms-Android%20%7C%20iOS%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-E3008C?style=flat-square)](#-platform-support--download-matrix) |
-| **Languages** | [![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org) [![Swift](https://img.shields.io/badge/Swift-5.9+-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org) [![JavaScript](https://img.shields.io/badge/Node-20+-F7DF1E?style=flat-square&logo=nodedotjs&logoColor=black)](https://nodejs.org) |
-| **Frameworks** | [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-3DDC84?style=flat-square&logo=android&logoColor=white)](#) [![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-007ACC?style=flat-square&logo=swift&logoColor=white)](#) [![Electron](https://img.shields.io/badge/UI-Electron-47848F?style=flat-square&logo=electron&logoColor=white)](#) |
+> [!IMPORTANT]
+> Omniverse is a client application. It does not host or distribute media. Connect only accounts and playback endpoints you are authorized to use.
 
----
+## A living-room experience, everywhere
 
-## 🌟 What is Omniverse?
+Omniverse borrows the visual confidence of modern streaming platforms—large artwork, quiet controls, deep black surfaces, and luminous glass—without forcing one platform’s interaction model onto another.
 
-**Omniverse** is an elegant, high-fidelity native media player and discovery center redesigned from the ground up to run directly on your hardware. Unlike clunky web wrappers, Omniverse leverages **100% pure native code** (Kotlin for Android/Android TV, Swift for iOS/iPadOS, and custom Electron for Desktop). It boots instantly, glides at a silky-smooth **120Hz**, and integrates directly with system video acceleration.
+<img src="docs/readme/feature-navigation.webp" alt="Omniverse cinematic navigation and content layers" width="100%" />
 
-No trackers, no telemetry, no mandatory central servers, and completely open source. Your watch history, accounts, and playlists stay strictly encrypted on your devices or sync peer-to-peer using QR codes and private cloud accounts.
+| Discover | Watch | Continue |
+| :--- | :--- | :--- |
+| Hero stories, provider rails, Top 10 shelves, search, anime, and live TV. | AVPlayer on Apple platforms, Media3 on Android, protected webviews on desktop. | Local history, Trakt watchlists and scrobbling, resume state, and cross-device sync. |
 
----
+### Designed for the screen—not stretched across it
 
-## 📦 Platform Support & Download Matrix
+| Phone | Tablet & TV | Desktop |
+| :--- | :--- | :--- |
+| Thumb-reachable glass navigation, portrait-aware heroes, compact actions, and native sheets. | Adaptive poster grids, larger rails, D-pad focus, generous targets, and landscape playback. | Frameless cinematic canvas, floating dock navigation, keyboard search, PiP, and live AdShield telemetry. |
 
-| Platform | Recommended Package | Target Compatibility | Direct Download |
+## Product tour
+
+The gallery below combines the **Movies**, **Shows**, **Live TV**, and **Search** tabs from the installed macOS app into one compact showcase—no padded canvases or oversized hidden galleries.
+
+<img src="docs/readme/desktop-surfaces.webp" alt="Movies, Shows, Live TV, and Search in Omniverse for macOS" width="100%" />
+
+<p align="center"><sub>Live application captures. Catalogue artwork and service marks belong to their respective owners.</sub></p>
+
+### Native mobile, same cinematic language
+
+The iOS and Android redesign carries the desktop atmosphere into responsive SwiftUI and Jetpack Compose surfaces:
+
+- Edge-to-edge artwork and adaptive hero composition from phone to tablet.
+- Floating bottom navigation with safe-area awareness and one-handed reach.
+- Touch-sized actions, native sheets, platform typography, and OS-native playback.
+- Consistent crimson, cyan, glass, spacing, and motion tokens without hiding platform conventions.
+
+## Experience flow
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#17191f","primaryTextColor":"#ffffff","primaryBorderColor":"#ff3349","lineColor":"#65707f","secondaryColor":"#08252d","tertiaryColor":"#23070d","fontFamily":"Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}}}%%
+flowchart LR
+    You((You)) --> Discover["Discover"]
+    You --> Search["Search"]
+    You --> Live["Live TV"]
+    Discover --> Detail["Media details"]
+    Search --> Detail
+    Detail --> Resolve["Source resolution"]
+    Live --> Player["Native player"]
+    Resolve --> Player
+    Player --> Progress["Progress + resume"]
+    Player --> Next["Skip + next episode"]
+    Progress --> Trakt["Trakt continuity"]
+    Trakt --> Sync["Cross-device sync"]
+
+    classDef accent fill:#3b0911,stroke:#ff3349,color:#fff,stroke-width:2px;
+    classDef cool fill:#07262e,stroke:#14a8be,color:#fff;
+    class Discover,Detail,Player accent;
+    class Search,Live,Progress,Trakt,Sync cool;
+```
+
+## Verified quality & security
+
+<img src="docs/readme/quality-dashboard.svg" alt="Omniverse quality and security verification dashboard" width="100%" />
+
+| Check | Result | Coverage |
+| :--- | :---: | :--- |
+| `npm test` | **14 / 14 passed** | AdShield telemetry, signed updater, trusted URLs, Electron isolation, secret scan |
+| `./gradlew testDebugUnitTest` | **20 / 20 passed** | Navigation, sync payloads, models, streams, progress, Android updater edges |
+| `xcodebuild … test` | **14 / 14 passed** | Sync compatibility, credentials, models, playback overrides, state edges |
+| `npm audit --audit-level=high` | **0 vulnerabilities** | Full desktop dependency tree, including development packaging tools |
+| `./gradlew lintDebug` | **Passed · 0 errors** | API-level compatibility and Android static checks |
+| `xcodebuild … analyze` | **Passed** | Swift/Clang static analysis |
+| `npm run pack` | **Passed** | Electron 43 arm64 app packaged and signed locally |
+
+### Security baseline
+
+- Electron runs its renderer and playback guests with context isolation, no Node integration, and Chromium sandboxing.
+- Desktop and Android updaters accept only HTTPS assets under the official repository’s release path and expected package type.
+- Android uses platform TLS and hostname verification; invalid or self-signed certificates are rejected.
+- iOS keeps API traffic under App Transport Security while limiting exceptions to user-selected media, web content, and local networking.
+- Android signing material is excluded from source. CI reconstructs it from masked repository secrets.
+- iOS credentials use Keychain; Android credentials use encrypted preferences.
+
+> [!CAUTION]
+> A live `OMNIVERSE-SYNC1` QR contains credentials encoded as Base64. Base64 is not encryption. Treat a live pairing code like a password and never publish it.
+
+## Platform matrix
+
+| Platform | Interface & playback | Release output | Minimum |
 | :--- | :--- | :--- | :--- |
-| 🤖 **Android** | `Omniverse-android-arm64.apk`<br>`Omniverse-android-universal.apk` | Android 6.0+ (ARM64, v7a, x86_64) | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
-| 📺 **Android TV / Fire TV** | `Omniverse-android-universal.apk` | Android TV Leanback UI & D-pad Remotes | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
-| 🍎 **iOS / iPadOS** | `Omniverse-Unsigned.ipa` | iOS / iPadOS 16.0+ (AltStore, SideStore, TrollStore) | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
-| 💻 **Windows** | `Omniverse Setup *.exe` | Windows 10 / 11 (64-bit Installer) | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
-| 🍏 **macOS** | `Omniverse-*.dmg` | macOS Apple Silicon (M1–M4) & Intel x64 | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
-| 🐧 **Linux** | `*.AppImage` / `*.deb` | Ubuntu, Debian, Fedora, Arch & SteamOS | [Latest Release](https://github.com/FiNiX-GaMmA/omniverse/releases/latest) |
+| Android phones & tablets | Kotlin, Compose, Media3 | Universal + ARM64 APK | Android 6 / API 23 |
+| Android TV & Fire TV | Compose for TV, D-pad focus, Media3 | Universal APK | Android 6 / API 23 |
+| iPhone & iPad | SwiftUI, AVPlayer | Unsigned IPA | iOS / iPadOS 17 |
+| Windows | Electron | NSIS installer + portable EXE | Windows x64 |
+| macOS | Electron | Signed DMG | Apple Silicon (M1–M4) + Intel |
+| Linux | Electron | AppImage + Debian package | Linux x64 |
 
----
+Download current packages from [GitHub Releases](https://github.com/FiNiX-GaMmA/omniverse/releases/latest).
 
-## ✨ Premium Features You’ll Love
+## Architecture
 
-### ☁️ 1. Zero-Config 1-Second Sync
-* **Instant Peer-to-Peer Transfer**: Signed in on your iPad and want to switch to your phone? Tap **Show Sync QR** in Settings and scan it on your target device.
-* **Total Credentials Transfer**: API keys, Trakt login, watchlist, and play progress are instantly transferred without intermediate cloud databases.
+<img src="docs/readme/architecture.svg" alt="Omniverse client, product core, and service architecture" width="100%" />
 
-### ⏱️ 2. Next Episode Countdown Ring
-* **Netflix-Style Overlay**: When <10s remain in playback, an animated countdown card slides onto the screen.
-* **Auto-Play Support**: Tap or press D-Pad Center to launch immediately, or let the circular timer drain to auto-advance.
+<details>
+  <summary><strong>Repository map</strong></summary>
 
-### 🍿 3. Unified "Continue Watching" Shelf
-* **One Show, One Card**: Groups progress intelligently by series so your home screen stays clean and uncluttered.
-* **Exact Timestamp Resume**: Click any card to pick up playback down to the exact frame.
-
-### 🎬 4. Tab-Specific Catalogues
-* **Tab Separation**: Home, Movies, and TV Series tabs present content curated specifically for each section.
-* **Instant Top Reset**: Desktop and mobile viewports automatically scroll to top on tab switch.
-
-### 🔄 5. Silky 120Hz Liquid Rendering & Landscape Lock
-* **ProMotion & High Refresh**: Fluid animations at 120 FPS on supported Apple ProMotion and Android displays.
-* **Auto Landscape-Lock**: Player automatically locks to landscape mode regardless of system rotation, restoring your orientation on exit.
-
-### 🚀 6. In-App OTA Update Engine
-* **Continuous Updates**: Direct check against GitHub releases API with progress indicator and animated installer launcher.
-* **Native Release Notes Markdown**: Formatted release notes rendered directly in-app.
-
----
-
-## 🚀 Easy One-Click Real Device Installers
-
-Smart automated deployment scripts compile and install the application directly onto connected hardware:
-
-### 📱 A. Install to iPad / iPhone (macOS)
-```bash
-./install_ipad.sh
-```
-*Auto-detects connected iOS devices, builds the Swift bundle, and launches it on device.*
-
-### 🤖 B. Install to Android Device (Phone / Tablet / TV)
-```bash
-./install_android.sh
-```
-*Auto-detects ADB device, compiles signed debug/release APK, and launches foreground activity.*
-
-### 🖥️ C. Compile & Run Desktop App
-```bash
-cd desktop && npm install && npm start
-```
-*Runs cross-platform Electron app in development mode.*
-
----
-
-## 🔑 Required API Keys & Sync Configuration
-
-To keep Omniverse private and decentralized, **the app connects directly to public media APIs using your own personal credentials**.
-
-👉 **[Omniverse API Keys & Sync Configuration Guide](API_SETUP.md)** 👈
-
-* **TMDB Access Token** (*Required*): Movie & TV metadata, trending collections, posters, and search.
-* **Trakt.tv Developer Keys** (*Recommended*): Playback scrobbling and watchlist synchronization.
-* **Pixeldrain API Key** (*Optional*): Restores unrestricted streaming speeds.
-* **TVDB API Key & PIN** (*Optional*): Extended TV metadata and guide schedules.
-
----
-
-## 🏗️ Repository Architecture
-
-```
+```text
 omniverse/
-├── android/            # Native Kotlin + Jetpack Compose Android & Android TV App
-│   ├── app/            # App module, repositories, stores & Compose UI
-│   └── build.gradle.kts# Gradle dependencies and build setup
-├── ios/                # Native Swift + SwiftUI iOS & iPadOS App
-│   ├── Omniverse/      # Swift layout views, networking, and assets
-│   └── project.yml     # XcodeGen project specification
-├── desktop/            # Frameless Electron Desktop App
-│   ├── main.js         # Core process lifecycle & ad-block filters
-│   ├── preload.js      # Context isolation & webview shields
-│   └── index.html      # Responsive Glassmorphic Dashboard UI
-├── keystore/           # Secure release keystores
-├── SYNC_SPEC.md        # Cryptographic sync protocol specification
-├── build.sh            # Unified multi-platform build compiler
-└── install_*.sh        # Deployment scripts
+├── android/               Kotlin + Jetpack Compose app and tests
+├── ios/                   SwiftUI app, XCTest suite, and XcodeGen spec
+├── desktop/               Electron app, AdShield, updater, and Node tests
+├── assets/branding/       Shared brand assets
+├── docs/readme/           Real captures and README visualizations
+├── graphify-out/          Interactive knowledge graph and architecture report
+├── API_SETUP.md           Credential setup guide
+├── SYNC_SPEC.md           Cross-device payload specification
+└── .github/workflows/     Multiplatform build, signing, and release automation
 ```
 
----
+Explore the [interactive code graph](graphify-out/graph.html) or read the [architecture report](graphify-out/GRAPH_REPORT.md).
 
-## 📄 License & Disclaimer
+</details>
 
-- Distributed under the [MIT License](LICENSE).
-- **Omniverse does NOT host, store, stream, or distribute any media files.** All metadata and streams are resolved dynamically on client devices from public user-configured endpoints.
+## Quick start
+
+<details open>
+  <summary><strong>Desktop</strong></summary>
+
+```bash
+cd desktop
+npm ci
+npm test
+npm start
+```
+
+</details>
+
+<details>
+  <summary><strong>Android</strong></summary>
+
+```bash
+cd android
+./gradlew testDebugUnitTest assembleDebug
+```
+
+Or build and install to a connected device from the repository root with `./install_android.sh`.
+
+</details>
+
+<details>
+  <summary><strong>iOS / iPadOS</strong></summary>
+
+```bash
+cd ios
+xcodegen
+open Omniverse.xcodeproj
+```
+
+For a connected iPhone or iPad, the repository also includes `./install_ipad.sh`.
+
+</details>
+
+## Configuration
+
+Omniverse talks directly to services using credentials you control. See the [complete API setup guide](API_SETUP.md).
+
+| Service | Purpose | Requirement |
+| :--- | :--- | :--- |
+| TMDB | Discovery, artwork, details, cast, and search | Required for the full movie and TV catalogue |
+| Trakt | Onboarding, watchlists, scrobbling, progress, and backup | Required by the native onboarding flow |
+| TVDB | Supplemental TV metadata | Optional |
+| Pixeldrain | Service-specific transfer limits | Optional |
+| AniList | Anime discovery and account integration | Optional |
+
+## Release signing
+
+Desktop release versions are stamped by CI. Android signing is restored at build time from:
+
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+For local Android release builds, copy `android/keystore.properties.example` to the ignored `android/keystore.properties` file and keep the keystore outside version control.
+
+## Privacy & sync
+
+- Omniverse does not operate a central catalogue or media-hosting service.
+- Credentials remain on the device unless you explicitly start a sync flow.
+- Trakt can hold watch state and a private settings backup in your own account.
+- Desktop credentials live in the Electron profile; native credentials use OS-backed stores.
+
+Read the byte-level pairing format and restore rules in [SYNC_SPEC.md](SYNC_SPEC.md).
+
+## Contributing
+
+1. Create a focused branch.
+2. Preserve native platform behavior and the shared visual language.
+3. Run the relevant tests, lint/analyze checks, and security audit.
+4. Include screenshots for visible UI changes.
+
+Issues, accessibility improvements, focused pull requests, and design feedback are welcome.
+
+## License
+
+Released under the [MIT License](LICENSE).
+
+<p align="center"><a href="#readme-top">Back to top ↑</a></p>

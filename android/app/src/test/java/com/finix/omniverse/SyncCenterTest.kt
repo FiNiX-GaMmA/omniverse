@@ -39,5 +39,31 @@ class SyncCenterTest {
     fun testParseInvalid() {
         assertNull(SyncCenter.parse("INVALID-PREFIX:abc"))
         assertNull(SyncCenter.parse("OMNIVERSE-SYNC1:!!!invalid_base64!!!"))
+        assertNull(SyncCenter.parse("OMNIVERSE-SYNC1:"))
+        val nonObject = java.util.Base64.getEncoder().encodeToString("[]".toByteArray())
+        assertNull(SyncCenter.parse(SyncCenter.PREFIX + nonObject))
+    }
+
+    @Test
+    fun testPayloadTrimsValuesAndOmitsBlankOrLargeFields() {
+        val creds = ApiCredentials(
+            traktAccessToken = "  access-token  ",
+            traktUsername = "   ",
+            anilistAccessToken = "large-anilist-token"
+        )
+
+        val parsed = SyncCenter.parse(SyncCenter.buildSyncString(creds, UserSettings()))
+        assertNotNull(parsed)
+        assertEquals("access-token", parsed?.getString("trakt_access_token"))
+        assertTrue(parsed?.has("trakt_username") == false)
+        assertTrue(parsed?.has("anilist_access_token") == false)
+        assertTrue(parsed?.has("settings") == false)
+        assertEquals(1, parsed?.getInt("v"))
+    }
+
+    @Test
+    fun testParserAcceptsWhitespaceAroundPayload() {
+        val payload = SyncCenter.buildSyncString(ApiCredentials(tmdbToken = "tmdb"), UserSettings())
+        assertEquals("tmdb", SyncCenter.parse("\n $payload \t")?.getString("tmdb_token"))
     }
 }

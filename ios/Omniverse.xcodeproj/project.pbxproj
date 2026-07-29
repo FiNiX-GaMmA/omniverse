@@ -15,8 +15,6 @@
 		28152517806110B333079052 /* SyncPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD623CC54E5A9952AA82575 /* SyncPayloadTests.swift */; };
 		2A497648C322AF0445BEAB2A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B9DE79D777B1AC1C13B7C4 /* Models.swift */; };
 		3C336A87AA8C3B19FB804832 /* Http.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAA23F4629A957505B6BE7AC /* Http.swift */; };
-
-
 		50CCED14F72CF38C081A71C3 /* Repositories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67758C978CC2837209E83571 /* Repositories.swift */; };
 		6ABD78EB0366EB0923CF3555 /* AutoplayResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89065BB02F671F2FB4FC40E6 /* AutoplayResolver.swift */; };
 		6B9C484926FBBFC42245FD24 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B2FA9EB61FB1A74BEA4F68 /* HomeScreen.swift */; };
@@ -29,16 +27,15 @@
 		90B535DC880A8579D8E235BE /* LiveTvRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ED9FE5A40D7E1C0D19D080B /* LiveTvRepository.swift */; };
 		9BDF4DF80962516E0884DBD3 /* TraktRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1702EBE17E9CC3262D20AEB7 /* TraktRepository.swift */; };
 		A1271BA8C9FD7EB666DECAF4 /* TvdbRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C194CCE0DFF3E37937C942C /* TvdbRepository.swift */; };
-
 		AA9277AEDB8A1E7985EC3C40 /* TraktOnboardingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B4BAFEBDC0D814B58C2B9E2 /* TraktOnboardingScreen.swift */; };
 		BE024B1A87D271492CB05834 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1318A83A4D2B8F41A2045B8F /* SettingsScreen.swift */; };
 		C2783E7AFA35AE1262944740 /* PlayerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D672DE8C833A62A4868125 /* PlayerScreen.swift */; };
 		C47F1009465A41A888E5B806 /* LiveTvScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 555DA870223D4BE01A128F9C /* LiveTvScreen.swift */; };
+		CD148D570428A8802E28D97B /* NavStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D28D051D420F9B21A82DBD56 /* NavStateTests.swift */; };
 		CE6F9348BBF9A521CF706BF9 /* WebEmbedPlayerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4484D2C9556E6842C7C5D4C /* WebEmbedPlayerScreen.swift */; };
 		CEF16B576A2E33E55F191CBF /* VidsrcRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7929C59C5951F40DA1713D5C /* VidsrcRepository.swift */; };
 		D71DF3B4DD10D5CE4B26549E /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E305D97700087B1BC0D58D /* Components.swift */; };
 		E21E5E2616D6AD2E1A730D6B /* OmniverseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEDAFB3CDA4C11114BED2A7 /* OmniverseApp.swift */; };
-
 		EC10500401BB8496B67C9DB9 /* AppShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8375462CCFA8A74860EEBCBD /* AppShell.swift */; };
 		F3D9EBB4C750533DD82AF260 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F826764731B47B908379C757 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -60,7 +57,6 @@
 		1B4BAFEBDC0D814B58C2B9E2 /* TraktOnboardingScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TraktOnboardingScreen.swift; sourceTree = "<group>"; };
 		1C194CCE0DFF3E37937C942C /* TvdbRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TvdbRepository.swift; sourceTree = "<group>"; };
 		1FEDAFB3CDA4C11114BED2A7 /* OmniverseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmniverseApp.swift; sourceTree = "<group>"; };
-
 		46B2FA9EB61FB1A74BEA4F68 /* HomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreen.swift; sourceTree = "<group>"; };
 		4AA2A41855BB130DDC356346 /* Omniverse.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Omniverse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		555DA870223D4BE01A128F9C /* LiveTvScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTvScreen.swift; sourceTree = "<group>"; };
@@ -74,7 +70,6 @@
 		89065BB02F671F2FB4FC40E6 /* AutoplayResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoplayResolver.swift; sourceTree = "<group>"; };
 		91D5067C8D02567FBFB5C111 /* Stores.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stores.swift; sourceTree = "<group>"; };
 		9E32BD62CC791873C3A7A608 /* SearchScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchScreen.swift; sourceTree = "<group>"; };
-
 		BA5EB3E7F2AB1E730BBE5582 /* MediaDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailScreen.swift; sourceTree = "<group>"; };
 		BBE5FB38FD8FE5B487B86D93 /* SyncCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCenter.swift; sourceTree = "<group>"; };
 		BFFC1FE1B14C083EFD357DAD /* OmniverseTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OmniverseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -83,14 +78,13 @@
 		C8DA3D9C9A3428C32E36E370 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		D0CC028B7FEB0D27E22F73DF /* YarrlistRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YarrlistRepository.swift; sourceTree = "<group>"; };
 		D1E305D97700087B1BC0D58D /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		D28D051D420F9B21A82DBD56 /* NavStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavStateTests.swift; sourceTree = "<group>"; };
 		D4484D2C9556E6842C7C5D4C /* WebEmbedPlayerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebEmbedPlayerScreen.swift; sourceTree = "<group>"; };
 		DAA23F4629A957505B6BE7AC /* Http.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Http.swift; sourceTree = "<group>"; };
-
 		E56604E7184697AD1040472F /* VidsrcResolveScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VidsrcResolveScreen.swift; sourceTree = "<group>"; };
 		F65C1AA10BF5C2F6DE5694D6 /* RecommendationsEndOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationsEndOverlay.swift; sourceTree = "<group>"; };
 		F826764731B47B908379C757 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FAD623CC54E5A9952AA82575 /* SyncPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPayloadTests.swift; sourceTree = "<group>"; };
-
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -103,8 +97,6 @@
 				46B2FA9EB61FB1A74BEA4F68 /* HomeScreen.swift */,
 				555DA870223D4BE01A128F9C /* LiveTvScreen.swift */,
 				BA5EB3E7F2AB1E730BBE5582 /* MediaDetailScreen.swift */,
-
-
 				C8D672DE8C833A62A4868125 /* PlayerScreen.swift */,
 				F65C1AA10BF5C2F6DE5694D6 /* RecommendationsEndOverlay.swift */,
 				9E32BD62CC791873C3A7A608 /* SearchScreen.swift */,
@@ -137,6 +129,7 @@
 		22E6700E5C0218FDF4D7B454 /* OmniverseTests */ = {
 			isa = PBXGroup;
 			children = (
+				D28D051D420F9B21A82DBD56 /* NavStateTests.swift */,
 				FAD623CC54E5A9952AA82575 /* SyncPayloadTests.swift */,
 			);
 			path = OmniverseTests;
@@ -196,8 +189,6 @@
 		96DE58C114DD1CEF3AE5178C /* Repositories */ = {
 			isa = PBXGroup;
 			children = (
-
-
 				5ED9FE5A40D7E1C0D19D080B /* LiveTvRepository.swift */,
 				86FBA348377EC44BFBE7EC09 /* TmdbRepository.swift */,
 				1702EBE17E9CC3262D20AEB7 /* TraktRepository.swift */,
@@ -319,13 +310,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-
 				EC10500401BB8496B67C9DB9 /* AppShell.swift in Sources */,
 				75390981040835483AC53F3A /* AppState.swift in Sources */,
 				6ABD78EB0366EB0923CF3555 /* AutoplayResolver.swift in Sources */,
 				D71DF3B4DD10D5CE4B26549E /* Components.swift in Sources */,
 				8615B8974E95862BC71A5419 /* DeviceTuning.swift in Sources */,
-
 				6B9C484926FBBFC42245FD24 /* HomeScreen.swift in Sources */,
 				3C336A87AA8C3B19FB804832 /* Http.swift in Sources */,
 				83C42A15B663687AFF2B74A1 /* LiquidGlass.swift in Sources */,
@@ -334,8 +323,6 @@
 				6C67147DC015148137FC59B3 /* MediaDetailScreen.swift in Sources */,
 				2A497648C322AF0445BEAB2A /* Models.swift in Sources */,
 				E21E5E2616D6AD2E1A730D6B /* OmniverseApp.swift in Sources */,
-
-
 				C2783E7AFA35AE1262944740 /* PlayerScreen.swift in Sources */,
 				7E62CE9B2C0A27AD27B76623 /* RecommendationsEndOverlay.swift in Sources */,
 				50CCED14F72CF38C081A71C3 /* Repositories.swift in Sources */,
@@ -358,6 +345,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CD148D570428A8802E28D97B /* NavStateTests.swift in Sources */,
 				28152517806110B333079052 /* SyncPayloadTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

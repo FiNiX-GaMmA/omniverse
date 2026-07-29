@@ -1,13 +1,14 @@
 import SwiftUI
 
-/// Core palette aligned with Apple space-black and electric cyan liquid glass styling.
+/// Cinematic palette shared with the Lordflix-inspired desktop shell.
+/// Artwork stays dominant while crimson marks focus, progress and primary intent.
 enum LiquidColors {
-    static let ink = Color(hex: 0x05070C)
-    static let dusk = Color(hex: 0x0F141C)
-    static let deepTeal = Color(hex: 0x0A192F)
-    static let cyan = Color(hex: 0x38BDF8)
-    static let rose = Color(hex: 0x0284C7)
-    static let gold = Color(hex: 0x94A3B8)
+    static let ink = Color(hex: 0x050507)
+    static let dusk = Color(hex: 0x11121A)
+    static let deepTeal = Color(hex: 0x171020)
+    static let cyan = Color(hex: 0xFF1E27)
+    static let rose = Color(hex: 0xFF5A67)
+    static let gold = Color(hex: 0xF3C969)
 }
 
 extension Color {
@@ -20,17 +21,17 @@ extension Color {
 }
 
 /// The ambient backdrop behind every screen — a deep diagonal gradient that
-/// makes the translucent glass panels read vividly on top. This is the
-/// "Apple TV" canvas the rest of the UI floats over.
+/// makes the translucent glass panels read vividly on top. It combines the
+/// desktop shell's crimson identity with the restraint of a premium TV UI.
 struct LiquidBackdrop: View {
     var body: some View {
         ZStack {
             LinearGradient(
                 colors: [
                     Color.black,
-                    Color(hex: 0x05070C),
-                    Color(hex: 0x0A111E),
-                    Color(hex: 0x0F1B2E),
+                    Color(hex: 0x050507),
+                    Color(hex: 0x0C0C14),
+                    Color(hex: 0x151020),
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -44,12 +45,12 @@ struct LiquidBackdrop: View {
                 GeometryReader { geo in
                     ZStack {
                         Circle()
-                            .fill(LiquidColors.cyan.opacity(0.22))
+                            .fill(LiquidColors.cyan.opacity(0.17))
                             .frame(width: geo.size.width * 0.95 * scalePulse)
                             .blur(radius: 140)
                             .offset(x: -geo.size.width * 0.28 + driftX, y: -geo.size.height * 0.22 + driftY)
                         Circle()
-                            .fill(LiquidColors.rose.opacity(0.18))
+                            .fill(Color(hex: 0x4F46E5).opacity(0.13))
                             .frame(width: geo.size.width * 0.85 / scalePulse)
                             .blur(radius: 150)
                             .offset(x: geo.size.width * 0.38 - driftX, y: geo.size.height * 0.48 - driftY)
@@ -77,8 +78,7 @@ struct SpringTouchStyle: ButtonStyle {
 }
 
 /// Vivid frosted-glass panel. Uses a real system material for the live blur,
-/// then layers a white gradient sheen, a hairline border, and a crimson glow —
-/// matching the Flutter `GlassPanel` but pushing the glassmorphism further.
+/// then layers a restrained sheen, a hairline border, and a subtle crimson glow.
 struct GlassPanel<Content: View>: View {
     var cornerRadius: CGFloat = 24
     var opacity: Double = 0.12
@@ -157,25 +157,25 @@ struct GlassIconButton: View {
     }
 }
 
-/// Primary accent (crimson) capsule button — the "Play" call to action.
+/// Primary accent capsule button.
 struct AccentButtonStyle: ButtonStyle {
     var filled: Bool = true
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 16, weight: .heavy))
-            .foregroundStyle(.white)
+            .foregroundStyle(filled ? Color.white : Color.white.opacity(0.92))
             .padding(.vertical, 13)
             .padding(.horizontal, 22)
             .frame(maxWidth: .infinity)
             .background {
                 if filled {
-                    Capsule().fill(LiquidColors.cyan.opacity(configuration.isPressed ? 0.34 : 0.24))
+                    Capsule().fill(LiquidColors.cyan.opacity(configuration.isPressed ? 0.78 : 1.0))
                 } else {
                     Capsule().fill(Color.white.opacity(configuration.isPressed ? 0.14 : 0.06))
                 }
             }
             .overlay(Capsule().strokeBorder(
-                filled ? LiquidColors.cyan.opacity(0.5) : Color.white.opacity(0.22),
+                filled ? Color.white.opacity(0.14) : Color.white.opacity(0.22),
                 lineWidth: 1))
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)

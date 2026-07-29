@@ -34,7 +34,7 @@ enum class MediaType {
 /// Shared image URL resolver (ported from models.dart _imageUrl).
 fun imageUrl(path: String?, size: String): String? {
     if (path.isNullOrEmpty()) return null
-    if (path.startsWith("http")) return path
+    if (path.startsWith("https://") || path.startsWith("http://")) return path
     if (path.startsWith("//")) return "https:$path"
 
     if (path.startsWith("banners/") || path.startsWith("/banners/")) {

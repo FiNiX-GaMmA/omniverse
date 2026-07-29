@@ -84,8 +84,17 @@ fun SearchScreen(nav: NavController) {
     }
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
+        Column(Modifier.padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 6.dp)) {
+            Text("Search", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Black)
+            Text(
+                "Movies, series and everything in between",
+                color = Color.White.copy(alpha = 0.52f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
@@ -128,7 +137,7 @@ fun SearchScreen(nav: NavController) {
         } else {
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
                 val cols = when {
-                    maxWidth >= 1200.dp -> 6; maxWidth >= 900.dp -> 5; maxWidth >= 600.dp -> 4; else -> 3
+                    maxWidth >= 1200.dp -> 6; maxWidth >= 900.dp -> 5; maxWidth >= 600.dp -> 4; else -> 2
                 }
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(cols),
@@ -136,7 +145,7 @@ fun SearchScreen(nav: NavController) {
                         start = 16.dp,
                         end = 16.dp,
                         top = 8.dp,
-                        bottom = 32.dp
+                        bottom = 112.dp
                     ),
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                     verticalArrangement = Arrangement.spacedBy(18.dp),
@@ -150,11 +159,12 @@ fun SearchScreen(nav: NavController) {
                                         RouteArgs.detailFocus = null
                                         nav.navigate("detail")
                                     })
-                                    .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
                             ) {
                                 PosterImage(
                                     item.posterUrl ?: item.backdropUrl,
-                                    Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
+                                    Modifier.fillMaxSize()
                                 )
                             }
                             Text(

@@ -192,14 +192,13 @@ struct HomeScreen: View {
 
     private func heroHeight(_ geo: GeometryProxy) -> CGFloat {
         let w = geo.size.width, h = geo.size.height
-        // Hero banner enlarged by 20% over the previous sizing.
-        if w > h {
-            // Landscape: a large 16:9 widescreen banner (matches the 16:9 backdrop).
-            return min(w * 9.0 / 16.0, h * 0.86) * 1.2
+        if w >= 900 {
+            return min(w * 0.70, h * 0.72)
         }
-        // Portrait: a moderate poster area that shows the WHOLE poster scaled-to-fit
-        // (no cropping); side margins are filled with a blurred copy of the poster.
-        return min(w * 1.5, h * 0.6) * 1.2
+        if w > h {
+            return min(w * 9.0 / 16.0, h * 0.86)
+        }
+        return min(w * 1.42, h * 0.68)
     }
 
     // MARK: - Display category shaping (ported from home_screen.dart)
@@ -353,10 +352,31 @@ struct HeroCarousel: View {
                 )
                 .allowsHitTesting(false)
 
+                VStack {
+                    HStack {
+                        Text("OMNIVERSE")
+                            .font(.system(size: 15, weight: .black))
+                            .kerning(2.2)
+                            .foregroundStyle(.white)
+                        Spacer()
+                        Text("FEATURED")
+                            .font(.system(size: 9, weight: .heavy))
+                            .kerning(1.1)
+                            .foregroundStyle(.white.opacity(0.88))
+                            .padding(.horizontal, 10).padding(.vertical, 6)
+                            .background(.black.opacity(0.42), in: Capsule())
+                            .overlay(Capsule().strokeBorder(.white.opacity(0.18), lineWidth: 1))
+                    }
+                    .padding(.horizontal, wide ? 54 : 18)
+                    .padding(.top, 14)
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+
                 // Stable metadata overlay for the current item (hit-testable so the
                 // portrait Play button works; the rest of the banner still taps through).
                 heroMeta(limited[safeIdx])
-                    .padding(.bottom, 44)
+                    .padding(.bottom, 48)
                     .animation(.easeInOut(duration: 0.3), value: safeIdx)
 
                 // Dots
@@ -374,22 +394,11 @@ struct HeroCarousel: View {
         }
     }
 
-    /// The banner image for a page. Portrait shows the WHOLE poster (scaled to
-    /// fit, no crop) over a blurred copy of itself (so margins aren't hard bars);
-    /// landscape fills with the 16:9 backdrop.
-    /// Pick the HD image whose native aspect best FILLS the box, so it fills
-    /// cleanly (no blur bars, minimal crop). The portrait box is wider-than-tall
-    /// on iPad (so a 16:9 backdrop fits) but tall on phones (so a poster fits) —
-    /// choose by the box's actual aspect ratio. Landscape always uses the backdrop.
+    /// Prefer cinematic backdrop art on every phone orientation, matching the
+    /// desktop hero. Poster artwork remains a safe fallback for sparse metadata.
     private func heroImageURL(_ item: MediaItem, box: CGSize) -> String? {
-        if portrait {
-            let boxAspect = box.width / max(box.height, 1)
-            if boxAspect >= 1.0 {
-                return item.heroBackdropUrl ?? item.backdropUrl ?? imageUrl(item.posterPath, size: "original") ?? item.posterUrl
-            }
-            return imageUrl(item.posterPath, size: "original") ?? item.heroBackdropUrl ?? item.backdropUrl ?? item.posterUrl
-        }
-        return item.heroBackdropUrl ?? item.backdropUrl ?? item.posterUrl
+        item.heroBackdropUrl ?? item.backdropUrl
+            ?? imageUrl(item.posterPath, size: "original") ?? item.posterUrl
     }
 
     @ViewBuilder
@@ -397,14 +406,11 @@ struct HeroCarousel: View {
         let url = heroImageURL(item, box: box)
         ZStack {
             LiquidColors.ink
-            if portrait {
-                // FIT the whole image (no crop) over a blurred copy so any margins
-                // are a soft blur rather than hard bars.
-                heroAsync(url, fill: true).blur(radius: 32).opacity(0.6)
-                heroAsync(url, fill: false)
-            } else {
-                heroAsync(url, fill: true)   // landscape fills the 16:9 frame
-            }
+            heroAsync(url, fill: true)
+            LinearGradient(
+                colors: [.black.opacity(portrait ? 0.12 : 0.72), .clear, .black.opacity(0.10)],
+                startPoint: .leading, endPoint: .trailing
+            )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
@@ -422,41 +428,45 @@ struct HeroCarousel: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// Stable metadata overlay (name in landscape only; rating + metadata always),
-    /// centered in portrait / bottom-left in landscape.
+    /// Stable, honest metadata overlay. The CTA opens details rather than
+    /// pretending to start playback before a source has been selected.
     @ViewBuilder
     private func heroMeta(_ item: MediaItem) -> some View {
         let ratingPart = item.rating > 0 ? "★ \(String(format: "%.1f", item.rating)) • " : ""
         let metaText = "\(ratingPart)\(item.type.label)\(item.genres.isEmpty ? "" : " • " + item.genres.prefix(2).joined(separator: " • "))"
-        VStack(alignment: portrait ? .center : .leading, spacing: 8) {
-            // Title shown in both orientations now (centered in portrait).
+        VStack(alignment: .leading, spacing: 9) {
             Text(item.title)
-                .font(.system(size: wide ? 46 : 32, weight: .black))
+                .font(.system(size: wide ? 46 : 31, weight: .black))
                 .foregroundStyle(.white).lineLimit(2)
-                .multilineTextAlignment(portrait ? .center : .leading)
+                .multilineTextAlignment(.leading)
                 .shadow(color: .black.opacity(0.75), radius: 8, y: 2)
+            if !item.overview.isEmpty {
+                Text(item.overview)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.white.opacity(0.76))
+                    .lineLimit(2)
+                    .lineSpacing(3)
+                    .frame(maxWidth: wide ? 620 : 330, alignment: .leading)
+            }
             Text(metaText)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.92))
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(.white.opacity(0.88))
                 .lineLimit(2)
-                .multilineTextAlignment(portrait ? .center : .leading)
+                .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
                 .shadow(color: .black.opacity(0.85), radius: 6, y: 1)
-            // Portrait gets a centered Play button (opens the title to play).
-            if portrait {
-                Button { onSelect(item) } label: {
-                    Label("Play", systemImage: "play.fill")
-                        .font(.system(size: 16, weight: .heavy)).foregroundStyle(.black)
-                        .padding(.vertical, 12).padding(.horizontal, 32)
-                        .background(Capsule().fill(.white))
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 6)
-                .shadow(color: .black.opacity(0.4), radius: 8, y: 3)
+            Button { onSelect(item) } label: {
+                Label("View details", systemImage: "info.circle.fill")
+                    .font(.system(size: 14, weight: .heavy)).foregroundStyle(.black)
+                    .padding(.vertical, 12).padding(.horizontal, 22)
+                    .background(Capsule().fill(.white))
             }
+            .buttonStyle(.plain)
+            .padding(.top, 3)
+            .shadow(color: .black.opacity(0.4), radius: 8, y: 3)
         }
-        .padding(.horizontal, 24)
-        .frame(maxWidth: .infinity, alignment: portrait ? .center : .leading)
+        .padding(.horizontal, wide ? 54 : 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -479,12 +489,12 @@ struct ContinueWatchingRow: View {
     var body: some View {
         if !entries.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Continue Watching").font(.system(size: 19, weight: .black)).foregroundStyle(.white)
-                    .padding(.horizontal, 28)
+                Text("Continue Watching").font(.system(size: 20, weight: .black)).tracking(-0.3).foregroundStyle(.white)
+                    .padding(.horizontal, 18)
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 14) {
+                    LazyHStack(spacing: 12) {
                         ForEach(entries) { entry in continueCard(entry) }
-                    }.padding(.horizontal, 28)
+                    }.padding(.horizontal, 18)
                 }
             }
             .padding(.top, 18)
@@ -498,18 +508,27 @@ struct ContinueWatchingRow: View {
                 ZStack(alignment: .bottom) {
                     PosterImage(url: entry.backdropUrl ?? entry.posterUrl, fallbackSystemName: "play.rectangle")
                         .aspectRatio(16/9, contentMode: .fill)
-                        .frame(width: 270, height: 152).clipped()
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .frame(width: 242, height: 136).clipped()
+                    LinearGradient(colors: [.clear, .black.opacity(0.55)], startPoint: .top, endPoint: .bottom)
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 42, height: 42)
+                        .background(.black.opacity(0.52), in: Circle())
+                        .overlay(Circle().strokeBorder(.white.opacity(0.30), lineWidth: 1))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     GeometryReader { g in
                         Capsule().fill(LiquidColors.cyan)
                             .frame(width: g.size.width * entry.fraction, height: 4)
                             .frame(maxHeight: .infinity, alignment: .bottom)
-                    }.frame(width: 270, height: 152)
+                    }.frame(width: 242, height: 136)
                 }
+                .frame(width: 242, height: 136)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 Text(entry.title).font(.system(size: 14, weight: .bold)).foregroundStyle(.white).lineLimit(1)
                 Text(subtitle(entry)).font(.system(size: 11)).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
             }
-            .frame(width: 270)
+            .frame(width: 242)
         }.buttonStyle(.plain)
     }
 
@@ -625,19 +644,19 @@ struct StudioCard: View {
                         Color.white.opacity(0.06)
                     }
                 }
-                .frame(width: 24, height: 24)
+                .frame(width: 22, height: 22)
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
 
                 Text(name)
-                    .font(.system(size: 13, weight: .black, design: .rounded))
+                    .font(.system(size: 11, weight: .black, design: .rounded))
                     .foregroundStyle(.white)
                     .lineLimit(1)
             }
             .padding(.horizontal, 12)
-            .frame(width: 170, height: 64, alignment: .leading)
+            .frame(width: 132, height: 64, alignment: .leading)
             .background(gradient)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.white.opacity(0.10), lineWidth: 1))
             .shadow(color: .black.opacity(0.3), radius: 6, y: 4)
             .scaleEffect(hovered ? 1.04 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovered)
@@ -652,14 +671,14 @@ struct StudiosRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("PREMIUM NETWORKS")
-                .font(.system(size: 11, weight: .bold))
-                .kerning(1.2)
-                .foregroundStyle(.white.opacity(0.4))
-                .padding(.horizontal, 28)
+            Text("WATCH BY STUDIO")
+                .font(.system(size: 20, weight: .black))
+                .tracking(-0.3)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 18)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
+                HStack(spacing: 10) {
                     StudioCard(name: "Netflix", logoUrl: "https://image.tmdb.org/t/p/w154/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg", gradient: LinearGradient(colors: [Color(hex: 0x1f0808), Color(hex: 0x7c0e0e)], startPoint: .topLeading, endPoint: .bottomTrailing)) {
                         onSelected("Netflix")
                     }
@@ -691,7 +710,7 @@ struct StudiosRow: View {
                         onSelected("Amcplus")
                     }
                 }
-                .padding(.horizontal, 28)
+                .padding(.horizontal, 18)
             }
         }
         .padding(.vertical, 16)

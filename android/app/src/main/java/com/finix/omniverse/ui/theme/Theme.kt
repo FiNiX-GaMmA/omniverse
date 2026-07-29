@@ -23,14 +23,16 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
 
-/// Palette aligned with Apple liquid glass space-black and electric cyan visual system.
+/// Cinematic palette shared with the Lordflix-inspired desktop shell.
+/// Crimson is intentionally reserved for focus, progress and primary emphasis;
+/// the rest of the interface stays quiet so artwork remains the visual lead.
 object LiquidColors {
-    val Ink = Color(0xFF05070C)
-    val Dusk = Color(0xFF0F141C)
-    val DeepTeal = Color(0xFF0A192F)
-    val Cyan = Color(0xFF38BDF8)
-    val Rose = Color(0xFF0284C7)
-    val Gold = Color(0xFF94A3B8)
+    val Ink = Color(0xFF050507)
+    val Dusk = Color(0xFF11121A)
+    val DeepTeal = Color(0xFF171020)
+    val Cyan = Color(0xFFFF1E27)
+    val Rose = Color(0xFFFF5A67)
+    val Gold = Color(0xFFF3C969)
 }
 
 private val OmniverseColorScheme = darkColorScheme(
@@ -53,7 +55,7 @@ fun OmniverseTheme(content: @Composable () -> Unit) {
     )
 }
 
-/// Ambient diagonal backdrop — space black canvas with Apple cyan & deep slate blue drifting aurora glows.
+/// Ambient space-black canvas with slow crimson and indigo aurora glows.
 @Composable
 fun LiquidBackdrop(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "aurora")
@@ -71,33 +73,47 @@ fun LiquidBackdrop(modifier: Modifier = Modifier) {
         modifier
             .fillMaxSize()
             .background(
-                Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF0284C7).copy(alpha = 0.20f + pulse * 0.10f),
-                        Color(0xFF0A192F).copy(alpha = 0.15f + (1f - pulse) * 0.10f),
-                        Color(0xFF05070C),
-                    ),
-                    center = androidx.compose.ui.geometry.Offset(
-                        x = 300f + pulse * 200f,
-                        y = 400f + (1f - pulse) * 300f
-                    ),
-                    radius = 1200f
-                )
-            )
-            .background(
                 Brush.linearGradient(
                     0f to Color.Black,
-                    0.38f to Color(0xFF060911),
-                    0.72f to Color(0xFF0A111E),
-                    1f to Color(0xFF0F1B2E),
+                    0.42f to LiquidColors.Ink,
+                    0.72f to Color(0xFF0C0C14),
+                    1f to Color(0xFF151020),
                 )
             )
-    )
+    ) {
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        LiquidColors.Cyan.copy(alpha = 0.16f + pulse * 0.07f),
+                        Color.Transparent,
+                    ),
+                    center = androidx.compose.ui.geometry.Offset(
+                        x = 120f + pulse * 180f,
+                        y = 80f + (1f - pulse) * 260f,
+                    ),
+                    radius = 920f,
+                )
+            )
+        )
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        Color(0xFF4F46E5).copy(alpha = 0.11f + (1f - pulse) * 0.06f),
+                        Color.Transparent,
+                    ),
+                    center = androidx.compose.ui.geometry.Offset(900f, 1200f - pulse * 180f),
+                    radius = 1050f,
+                )
+            )
+        )
+    }
 }
 
 /// Sleek, minimal glass surface (Android leans cleaner than iOS per the brief,
 /// so blur is replaced by a crisp translucent fill + hairline border).
-fun Modifier.glassPanel(corner: Int = 20, fillAlpha: Float = 0.10f, borderAlpha: Float = 0.16f): Modifier =
+fun Modifier.glassPanel(corner: Int = 20, fillAlpha: Float = 0.08f, borderAlpha: Float = 0.14f): Modifier =
     this
         .clip(RoundedCornerShape(corner.dp))
         .background(Color.White.copy(alpha = fillAlpha))

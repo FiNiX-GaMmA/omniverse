@@ -38,17 +38,40 @@ struct MediaPosterCard: View {
     var onTap: (MediaItem) -> Void
 
     var body: some View {
-        let width: CGFloat = wide ? 168 : 140
+        let width: CGFloat = wide ? 168 : 126
         Button { onTap(item) } label: {
             VStack(alignment: .leading, spacing: 8) {
-                PosterImage(url: item.posterUrl ?? item.backdropUrl)
-                    .aspectRatio(2/3, contentMode: .fill)
-                    .frame(width: width, height: width * 1.5)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.white.opacity(0.12), lineWidth: 1))
-                    .shadow(color: .black.opacity(0.36), radius: 14, y: 8)
+                ZStack(alignment: .bottomLeading) {
+                    PosterImage(url: item.posterUrl ?? item.backdropUrl)
+                        .aspectRatio(2/3, contentMode: .fill)
+                    LinearGradient(
+                        stops: [.init(color: .clear, location: 0.48),
+                                .init(color: .black.opacity(0.76), location: 1)],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                    Text(item.type.label.uppercased())
+                        .font(.system(size: 9, weight: .heavy))
+                        .kerning(0.7)
+                        .foregroundStyle(.white.opacity(0.9))
+                        .padding(9)
+                }
+                .frame(width: width, height: width * 1.5)
+                .overlay(alignment: .topTrailing) {
+                    if item.rating > 0 {
+                        Text(String(format: "★ %.1f", item.rating))
+                            .font(.system(size: 9, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7).padding(.vertical, 4)
+                            .background(.black.opacity(0.62), in: Capsule())
+                            .padding(8)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.13), lineWidth: 1))
+                .shadow(color: .black.opacity(0.40), radius: 15, y: 9)
                 Text(item.title).font(.system(size: 14, weight: .bold)).foregroundStyle(.white).lineLimit(1)
-                Text(subtitle).font(.system(size: 11)).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
+                Text(subtitle).font(.system(size: 10)).foregroundStyle(.white.opacity(0.52)).lineLimit(1)
             }
             .frame(width: width)
         }
@@ -69,11 +92,11 @@ struct Top10MediaCard: View {
     var onTap: (MediaItem) -> Void
 
     var body: some View {
-        let cardWidth: CGFloat = wide ? 168 : 140
-        let total = cardWidth + (wide ? 50 : 40)
+        let cardWidth: CGFloat = wide ? 168 : 126
+        let total = cardWidth + (wide ? 50 : 36)
         ZStack(alignment: .bottomLeading) {
             Text("\(rank)")
-                .font(.system(size: wide ? 170 : 138, weight: .black, design: .rounded))
+                .font(.system(size: wide ? 170 : 124, weight: .black, design: .rounded))
                 .foregroundStyle(
                     LinearGradient(colors: [Color.white.opacity(0.34), Color.white.opacity(0.02)],
                                    startPoint: .top, endPoint: .bottom))
@@ -100,16 +123,20 @@ struct CategoryRow: View {
         VStack(alignment: .leading, spacing: 8) {
             Button { onHeader?(category) } label: {
                 HStack(spacing: 6) {
-                    Text(category.title).font(.system(size: 19, weight: .black)).foregroundStyle(.white)
+                    Text(category.title).font(.system(size: 20, weight: .black)).tracking(-0.3).foregroundStyle(.white)
                     Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)).foregroundStyle(.white.opacity(0.82))
                     Spacer()
                 }
-            }.buttonStyle(.plain)
-            if !category.description.isEmpty {
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, wide ? 54 : 18)
+            if wide && !category.description.isEmpty {
                 Text(category.description).font(.system(size: 13)).foregroundStyle(.white.opacity(0.6)).lineLimit(2)
+                    .padding(.horizontal, 54)
             }
             if let e = category.error, !e.isEmpty {
                 Text(e).font(.system(size: 12)).foregroundStyle(LiquidColors.rose.opacity(0.9))
+                    .padding(.horizontal, wide ? 54 : 18)
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 14) {
@@ -117,7 +144,7 @@ struct CategoryRow: View {
                         MediaPosterCard(item: item, wide: wide, onTap: onItem)
                     }
                 }
-                .padding(.horizontal, wide ? 54 : 28)
+                .padding(.horizontal, wide ? 54 : 18)
             }
         }
         .padding(.top, 18)

@@ -3820,13 +3820,59 @@ async function refreshCatalog(btn) {
   }
 }
 
-// Adblock Stats syncing
-function setupAdblockObserver() {
-  window.electron.onAdBlocked((count) => {
-    state.adBlockCount = count;
-    document.getElementById("adblock-counter").textContent = count;
-    document.getElementById("dashboard-ads-blocked").textContent = count;
-  });
+// AdShield live telemetry syncing
+function renderAdShieldStats(rawStats) {
+  const stats = rawStats && typeof rawStats === "object" ? rawStats : {};
+  const readCount = (key) => {
+    const value = Number(stats[key]);
+    return Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+  };
+  const setText = (id, value) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = String(value);
+  };
+
+  const total = readCount("totalBlocked");
+  state.adBlockCount = total;
+  setText("adblock-counter", total);
+  setText("dashboard-ads-blocked", total.toLocaleString());
+  setText("dashboard-network-blocked", readCount("networkBlocked").toLocaleString());
+  setText("dashboard-popups-blocked", readCount("popupsBlocked").toLocaleString());
+  setText(
+    "dashboard-navigation-blocked",
+    readCount("navigationsBlocked").toLocaleString(),
+  );
+  setText(
+    "dashboard-shield-status",
+    total > 0 ? "Active · protecting" : "Active · monitoring",
+  );
+
+  const lastBlockedAt = Number(stats.lastBlockedAt);
+  setText(
+    "dashboard-last-blocked",
+    Number.isFinite(lastBlockedAt) && lastBlockedAt > 0
+      ? `Last block ${new Date(lastBlockedAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })}`
+      : "Waiting for first interception",
+  );
+}
+
+async function setupAdblockObserver() {
+  if (!window.electron) return;
+
+  if (typeof window.electron.onAdShieldStats === "function") {
+    window.electron.onAdShieldStats(renderAdShieldStats);
+  }
+  if (typeof window.electron.getAdShieldStats === "function") {
+    try {
+      renderAdShieldStats(await window.electron.getAdShieldStats());
+    } catch (error) {
+      console.warn("Could not hydrate AdShield telemetry:", error);
+    }
+  }
 }
 
 // Save options inside settings

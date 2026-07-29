@@ -39,14 +39,14 @@ if (isMainApp) {
       ipcRenderer.on("update-progress", handler);
       return () => ipcRenderer.removeListener("update-progress", handler);
     },
-    getAdblockStats: () => ipcRenderer.invoke("get-adblock-stats"),
+    getAdShieldStats: () => ipcRenderer.invoke("get-adshield-stats"),
     clearCache: () => ipcRenderer.invoke("clear-cache"),
     showNotification: (title, body) =>
       ipcRenderer.invoke("show-notification", { title, body }),
-    onAdBlocked: (cb) => {
-      const handler = (_, count) => cb(count);
-      ipcRenderer.on("ad-blocked", handler);
-      return () => ipcRenderer.removeListener("ad-blocked", handler);
+    onAdShieldStats: (cb) => {
+      const handler = (_, stats) => cb(stats);
+      ipcRenderer.on("adshield-stats", handler);
+      return () => ipcRenderer.removeListener("adshield-stats", handler);
     },
     onWebviewFullscreen: (cb) => {
       const handler = (_, state) => cb(state);

@@ -53,4 +53,60 @@ final class NavStateTests: XCTestCase {
         XCTAssertEqual(seriesPicks.count, 1)
         XCTAssertEqual(seriesPicks.first?.title, "Series 1")
     }
+
+    func testCredentialCapabilityFlagsTrimWhitespace() {
+        var credentials = ApiCredentials()
+        credentials.traktRefreshToken = " refresh "
+        credentials.traktClientSecret = "  "
+        credentials.anilistAccessToken = " token "
+
+        XCTAssertFalse(credentials.canRefreshTrakt)
+        XCTAssertTrue(credentials.hasAnilist)
+
+        credentials.traktClientSecret = " secret "
+        XCTAssertTrue(credentials.canRefreshTrakt)
+    }
+
+    func testImageUrlResolutionAcrossProviders() {
+        XCTAssertNil(imageUrl(nil, size: "w342"))
+        XCTAssertEqual(imageUrl("https://cdn.example/poster.jpg", size: "w342"), "https://cdn.example/poster.jpg")
+        XCTAssertEqual(imageUrl("//cdn.example/poster.jpg", size: "w342"), "https://cdn.example/poster.jpg")
+        XCTAssertEqual(imageUrl("banners/poster.jpg", size: "w342"), "https://artworks.thetvdb.com/banners/poster.jpg")
+        XCTAssertEqual(imageUrl("/poster.jpg", size: "w342"), "https://image.tmdb.org/t/p/w342/poster.jpg")
+    }
+
+    func testDirectStreamDetectionHandlesQueriesAndCase() {
+        XCTAssertTrue(LiveTvEntry.directStream("https://cdn.example/live.M3U8?token=abc"))
+        XCTAssertTrue(LiveTvEntry.directStream("https://cdn.example/movie.mp4"))
+        XCTAssertFalse(LiveTvEntry.directStream("https://embed.example/watch/123"))
+    }
+
+    func testWatchProgressFractionIsClamped() {
+        func progress(position: Int, duration: Int) -> WatchProgress {
+            WatchProgress(
+                itemId: "1",
+                title: "Example",
+                type: .movie,
+                positionMs: position,
+                durationMs: duration,
+                lastWatchedAt: 1
+            )
+        }
+
+        XCTAssertEqual(progress(position: 10, duration: 0).fraction, 0)
+        XCTAssertEqual(progress(position: -10, duration: 100).fraction, 0)
+        XCTAssertEqual(progress(position: 150, duration: 100).fraction, 1)
+    }
+
+    func testPlaybackOverridesOnlyReplaceProvidedValues() {
+        var settings = UserSettings()
+        settings.subtitleLanguage = "en"
+        settings.subtitleUrl = "https://cdn.example/en.vtt"
+
+        let next = settings.applying(
+            PlaybackOverrides(subtitleLanguage: "fr", subtitleUrl: nil)
+        )
+        XCTAssertEqual(next.subtitleLanguage, "fr")
+        XCTAssertEqual(next.subtitleUrl, "https://cdn.example/en.vtt")
+    }
 }

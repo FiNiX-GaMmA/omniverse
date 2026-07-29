@@ -951,7 +951,7 @@
                                     </h3>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-4">
+                                <div class="grid grid-cols-2 gap-3">
                                     <div
                                         class="bg-brandDark p-4 rounded-lg border border-white/[0.04] text-center space-y-1"
                                     >
@@ -962,7 +962,7 @@
                                         >
                                         <span
                                             class="text-[10px] uppercase font-bold text-gray-500 block"
-                                            >Ads Bypassed</span
+                                            >Total blocked</span
                                         >
                                     </div>
                                     <div
@@ -970,20 +970,55 @@
                                     >
                                         <span
                                             class="text-2xl font-black text-emerald-400"
-                                            >100%</span
+                                            id="dashboard-network-blocked"
+                                            >0</span
                                         >
                                         <span
                                             class="text-[10px] uppercase font-bold text-gray-500 block"
-                                            >Devtool Block Safety</span
+                                            >Ads & trackers</span
                                         >
                                     </div>
+                                    <div
+                                        class="bg-brandDark p-4 rounded-lg border border-white/[0.04] text-center space-y-1"
+                                    >
+                                        <span
+                                            class="text-2xl font-black text-fuchsia-400"
+                                            id="dashboard-popups-blocked"
+                                            >0</span
+                                        >
+                                        <span
+                                            class="text-[10px] uppercase font-bold text-gray-500 block"
+                                            >Popups stopped</span
+                                        >
+                                    </div>
+                                    <div
+                                        class="bg-brandDark p-4 rounded-lg border border-white/[0.04] text-center space-y-1"
+                                    >
+                                        <span
+                                            class="text-2xl font-black text-amber-300"
+                                            id="dashboard-navigation-blocked"
+                                            >0</span
+                                        >
+                                        <span
+                                            class="text-[10px] uppercase font-bold text-gray-500 block"
+                                            >Hijacks stopped</span
+                                        >
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex items-center justify-between gap-3 rounded-lg border border-emerald-400/10 bg-emerald-400/[0.04] px-3 py-2"
+                                >
+                                    <span class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
+                                        <span id="dashboard-shield-status">Active · monitoring</span>
+                                    </span>
+                                    <span id="dashboard-last-blocked" class="text-[10px] text-gray-500">Waiting for first interception</span>
                                 </div>
                                 <p
                                     class="text-[10px] text-gray-500 text-center italic"
                                 >
-                                    Omniverse actively inspects embed iframe
-                                    requests and blocks known ad networks,
-                                    trackers, popunders, and devtool checkers.
+                                    Live session telemetry from request filters,
+                                    popup guards, and navigation-hijack protection.
                                 </p>
                             </div>
 

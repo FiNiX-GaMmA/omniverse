@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [v2.1.80] - 2026-07-29
+
+> **Commit**: `feat(reliability): redesign mobile, activate AdShield telemetry, and harden every release`
+
+### ✨ Cinematic Mobile Redesign
+- **Desktop-Level Atmosphere**: Rebuilt Android and iOS phone/tablet shells with edge-to-edge heroes, floating glass navigation, adaptive rails, refined search, and touch-native details inspired by modern living-room platforms.
+- **Native Interaction First**: Preserved SwiftUI and Compose behavior, safe areas, sheets, focus, gestures, typography, and playback conventions while unifying the crimson/cyan visual system.
+
+### 🛡️ Live AdShield Dashboard
+- **Telemetry That Actually Moves**: Replaced the broken counter path with a hydrated live snapshot for network filters, blocked popups, stopped navigation hijacks, totals, status, and last interception time.
+- **Reliable Protection Pipeline**: AdShield reporting can no longer interrupt blocking when the renderer is absent, and every dashboard update is null-safe.
+
+### 🔐 Security & Update Hardening
+- **Zero Known npm Vulnerabilities**: Upgraded to Electron 43 and electron-builder 26, patched vulnerable transitive archive tooling, and verified a signed arm64 package.
+- **M-Series Ready Packaging**: Re-signs nested Electron binaries inside-out, applies the required JIT entitlements, and verifies a native arm64 launch for Apple Silicon through M4.
+- **Trusted Update Boundaries**: Desktop and Android reject non-HTTPS, off-repository, wrong-type, credential-bearing, query-bearing, and traversal-shaped update URLs.
+- **Platform TLS Restored**: Removed Android's trust-all certificate and hostname bypass; iOS now limits ATS exceptions to media, web content, and local networking.
+- **Secret-Safe Signing**: Removed Android signing files from source control, added a local template, and moved CI signing to masked repository secrets.
+- **Sandboxed Desktop Guests**: Enabled Chromium sandboxing and clamp playback webview preferences before attachment.
+
+### ✅ 48-Test Quality Matrix
+- **Desktop**: 14 Node tests covering AdShield, updater rollback/signing, URL trust, IPC protocols, Electron isolation, and tracked-secret detection.
+- **Android**: 20 JUnit tests covering navigation, models, sync interoperability, update versions/URLs, filename traversal, streams, and progress edges.
+- **iOS**: 14 XCTest cases covering credentials, sync payloads, legacy settings, malformed input, models, streams, and playback overrides.
+- **Static Verification**: Android Lint passes with zero errors, Xcode Analyze passes, the full npm audit reports zero vulnerabilities, and Electron packaging succeeds.
+
+### 📖 README Showcase
+- Replaced oversized hidden galleries and the stretched mobile table with a compact real-app product tour.
+- Added cross-preview SVG architecture and quality dashboards plus a corrected GitHub Mermaid experience flow.
+- Documented the verified security baseline, release-signing secrets, platform matrix, and reproducible commands.
+
+---
+
 ## 🚀 [v2.1.79] - 2026-07-29
 
 > **Commit**: `feat(desktop): ship signed in-app macOS updates with fluid navigation`

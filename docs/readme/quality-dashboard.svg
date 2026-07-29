@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" role="img" aria-labelledby="title desc">
+  <title id="title">Omniverse quality and security dashboard</title>
+  <desc id="desc">Forty-eight tests pass across desktop, Android, and iOS. NPM audit has zero vulnerabilities, Android Lint has zero errors, and Xcode Analyze passes.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101520"/>
+      <stop offset="0.52" stop-color="#080a0f"/>
+      <stop offset="1" stop-color="#14080d"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff2945"/>
+      <stop offset="1" stop-color="#ff6a7d"/>
+    </linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#12b8d0"/>
+      <stop offset="1" stop-color="#62e8f6"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8667ff"/>
+      <stop offset="1" stop-color="#d68cff"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="760" rx="36" fill="url(#bg)"/>
+  <circle cx="1420" cy="80" r="180" fill="#ff2945" opacity=".08" filter="url(#glow)"/>
+  <circle cx="80" cy="720" r="220" fill="#12b8d0" opacity=".06" filter="url(#glow)"/>
+  <rect x="1" y="1" width="1598" height="758" rx="35" fill="none" stroke="#ffffff" stroke-opacity=".09"/>
+
+  <text x="72" y="74" fill="#ff5369" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="800" letter-spacing="5">VERIFIED QUALITY SIGNALS</text>
+  <text x="72" y="130" fill="#ffffff" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="42" font-weight="800">48 tests. Zero known npm vulnerabilities.</text>
+  <text x="72" y="166" fill="#8993a4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19">Desktop, Android, and iOS checks executed on 29 July 2026</text>
+
+  <rect x="72" y="210" width="930" height="470" rx="26" fill="#ffffff" fill-opacity=".035" stroke="#ffffff" stroke-opacity=".08"/>
+  <text x="112" y="262" fill="#ffffff" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="700">Unit test distribution</text>
+  <text x="932" y="262" text-anchor="end" fill="#6f798a" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">PASSING</text>
+
+  <text x="112" y="338" fill="#dfe4ec" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" font-weight="650">Desktop</text>
+  <text x="932" y="338" text-anchor="end" fill="#ff6579" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="800">14</text>
+  <rect x="112" y="358" width="820" height="18" rx="9" fill="#ffffff" fill-opacity=".07"/>
+  <rect x="112" y="358" width="574" height="18" rx="9" fill="url(#red)"/>
+
+  <text x="112" y="448" fill="#dfe4ec" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" font-weight="650">Android</text>
+  <text x="932" y="448" text-anchor="end" fill="#5ee7f4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="800">20</text>
+  <rect x="112" y="468" width="820" height="18" rx="9" fill="#ffffff" fill-opacity=".07"/>
+  <rect x="112" y="468" width="820" height="18" rx="9" fill="url(#cyan)"/>
+
+  <text x="112" y="558" fill="#dfe4ec" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" font-weight="650">iOS</text>
+  <text x="932" y="558" text-anchor="end" fill="#c88cff" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="800">14</text>
+  <rect x="112" y="578" width="820" height="18" rx="9" fill="#ffffff" fill-opacity=".07"/>
+  <rect x="112" y="578" width="574" height="18" rx="9" fill="url(#violet)"/>
+
+  <text x="112" y="642" fill="#6f798a" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">Updater trust • sync payloads • navigation • model edges • AdShield telemetry</text>
+
+  <g font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+    <rect x="1040" y="210" width="488" height="134" rx="24" fill="#0d1918" stroke="#47e5aa" stroke-opacity=".24"/>
+    <circle cx="1091" cy="277" r="22" fill="#47e5aa" fill-opacity=".12"/>
+    <path d="M1081 277l7 7 14-16" fill="none" stroke="#47e5aa" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1132" y="266" fill="#ffffff" font-size="24" font-weight="800">0 vulnerabilities</text>
+    <text x="1132" y="296" fill="#7f918c" font-size="16">npm audit · full dependency tree</text>
+
+    <rect x="1040" y="368" width="488" height="134" rx="24" fill="#0b151b" stroke="#4adcf1" stroke-opacity=".22"/>
+    <circle cx="1091" cy="435" r="22" fill="#4adcf1" fill-opacity=".12"/>
+    <path d="M1081 435l7 7 14-16" fill="none" stroke="#4adcf1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1132" y="424" fill="#ffffff" font-size="24" font-weight="800">0 lint errors</text>
+    <text x="1132" y="454" fill="#7a8b95" font-size="16">Android Lint · API 23 baseline</text>
+
+    <rect x="1040" y="526" width="488" height="154" rx="24" fill="#15101d" stroke="#b47cff" stroke-opacity=".22"/>
+    <circle cx="1091" cy="593" r="22" fill="#b47cff" fill-opacity=".12"/>
+    <path d="M1081 593l7 7 14-16" fill="none" stroke="#b47cff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1132" y="582" fill="#ffffff" font-size="24" font-weight="800">Analyze passed</text>
+    <text x="1132" y="612" fill="#8b8095" font-size="16">Xcode static analysis · simulator</text>
+    <text x="1132" y="642" fill="#8b8095" font-size="16">Electron signed packaging · passed</text>
+  </g>
+</svg>

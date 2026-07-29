@@ -5,7 +5,6 @@ import SwiftUI
 /// navigation to MediaDetailScreen via NavigationStack.
 struct SearchScreen: View {
     @Environment(AppState.self) private var state
-    @Environment(\.dismiss) private var dismiss
 
     @State private var query = ""
     @State private var currentQuery = ""
@@ -20,6 +19,7 @@ struct SearchScreen: View {
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
+                searchHeader
                 searchBar
                 if loading {
                     ProgressView()
@@ -51,13 +51,23 @@ struct SearchScreen: View {
 
     // MARK: - Search bar
 
+    private var searchHeader: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Search")
+                .font(.system(size: 30, weight: .black))
+                .foregroundStyle(.white)
+            Text("Movies, series and everything in between")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.52))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 18)
+        .padding(.top, 16)
+        .padding(.bottom, 6)
+    }
+
     private var searchBar: some View {
         HStack(spacing: 8) {
-            Button { dismiss() } label: {
-                Image(systemName: "xmark").font(.system(size: 18, weight: .semibold)).foregroundStyle(.white)
-                    .frame(width: 40, height: 40)
-            }
-            .buttonStyle(.plain)
             GlassCapsule(padding: EdgeInsets(top: 4, leading: 14, bottom: 4, trailing: 8)) {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass").font(.system(size: 18)).foregroundStyle(.white.opacity(0.7))
@@ -83,7 +93,7 @@ struct SearchScreen: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 16)
         .padding(.top, 10)
         .padding(.bottom, 6)
     }
@@ -100,7 +110,7 @@ struct SearchScreen: View {
                             .buttonStyle(.plain)
                     }
                 }
-                .padding(EdgeInsets(top: 8, leading: 16, bottom: 32, trailing: 16))
+                .padding(EdgeInsets(top: 8, leading: 16, bottom: 112, trailing: 16))
             }
             .scrollIndicators(.hidden)
         }
@@ -110,7 +120,7 @@ struct SearchScreen: View {
         if width >= 1200 { return 6 }
         if width >= 900 { return 5 }
         if width >= 600 { return 4 }
-        return 3
+        return 2
     }
 
     // MARK: - Empty hints

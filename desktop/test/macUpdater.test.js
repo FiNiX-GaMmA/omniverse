@@ -20,6 +20,9 @@ test("accepts only official Omniverse macOS release images", () => {
     "https://example.com/Omniverse.dmg",
     "https://github.com/another/repo/releases/download/v1/Omniverse.dmg",
     "https://github.com/FiNiX-GaMmA/omniverse/releases/download/v2.1.80/Omniverse.zip",
+    "https://github.com/FiNiX-GaMmA/omniverse/releases/download/v2.1.80/Omniverse.dmg?mirror=1",
+    "https://github.com/FiNiX-GaMmA/omniverse/releases/download/v2.1.80/../Omniverse.dmg",
+    "https://user@github.com/FiNiX-GaMmA/omniverse/releases/download/v2.1.80/Omniverse.dmg",
   ]) {
     assert.throws(() => assertTrustedMacUpdateUrl(rejected), /untrusted/);
   }
@@ -29,6 +32,8 @@ test("compares dotted release versions numerically", () => {
   assert.equal(compareVersions("2.1.80", "2.1.79"), 1);
   assert.equal(compareVersions("v2.1.79", "2.1.79"), 0);
   assert.equal(compareVersions("2.1.9", "2.1.10"), -1);
+  assert.equal(compareVersions("2.1", "2.1.0"), 0);
+  assert.equal(compareVersions("2.1.80.1", "2.1.80"), 1);
 });
 
 test("parses usable signing identities", () => {
@@ -56,6 +61,7 @@ test("prefers a local Apple Development identity", () => {
     },
   ];
   assert.equal(selectLocalAppleSigningIdentity(identities), identities[1]);
+  assert.equal(selectLocalAppleSigningIdentity([]), null);
 });
 
 test("installer validates, rolls back, and explicitly relaunches", () => {
